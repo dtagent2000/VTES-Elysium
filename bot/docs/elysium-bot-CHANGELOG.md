@@ -398,15 +398,16 @@
     (stale-doc, 6 of the round's 15 findings) now asks for the grep before each pass, the last pass's fix included.
     *Prediction* (D-93; registered before the runs): IDENTICAL to pass 2's bytes everywhere -- the 240 (so to the first bytes'
     too), the five starters' 120, the lasombra smoke 48/48: no sim emits the new discard line, and the other two changes are a
-    comment and a test.
+    comment and a test. *Observed*: the 240 IDENTICAL 240/240, the five starters' 120 IDENTICAL 120/120, the lasombra smoke
+    IDENTICAL 48/48; `ana-gates.py` PASS 6/6 on each. The prediction held.
   - *Tests*: section 185 (7 cases: a–e red on v0.6.238; f and g, the egress review's, red on the first bytes `5b8f55a7` and on
-    pass 1's `b62e6b96`; c–e through a whole turn, the server's draws arriving later). *Gates* (the bytes after pass 2,
-    `bd3de0c1` / `704594e9`, cardfx `fe5f60bf`, KRCG's dump of 24 Nov, recompiled in #103): the suite 2803/0 ×3, canary 235/0
+    pass 1's `b62e6b96`; c–e through a whole turn, the server's draws arriving later). *Gates* (the release bytes, after pass
+    3, `6e29f566` / `417c3c6e`, cardfx `fe5f60bf`, KRCG's dump of 24 Nov, recompiled in #103): the suite 2803/0 ×3, canary 235/0
     ×2, main's canary v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.187) 422/1 (the guide's
     embed), the arena smoke (one match, the four starters, the real clock) PASS 7/7, `client/check-versions.js` everything
     agrees. The first bytes (`5b8f55a7` / `fefbe871`) passed the same gates: the suite 2801/0 ×3 on cardfx `b937ae3d` and again
     on `fe5f60bf`, the arena smoke PASS 7/7 (the bot draws in other seats' turns now), the five starters' 120 PASS 6/6; pass 1's
-    bytes (`b62e6b96`) the same again (the suite 2803/0 ×3, the arena smoke PASS 7/7).
+    bytes (`b62e6b96`) and pass 2's (`bd3de0c1`) the same again (the suite 2803/0 ×3, the arena smoke PASS 7/7).
 - **v0.6.238 (24 Nov 2026; PR #105, on main by #106)** — Dreams of the Sphinx stays in play on its own (the sweep register 8.11; Johan, 24 Nov 17:03: "Ja
   Dreams kan rättas nu. Det är ju ett kort i spel som inte är fäst vid någon vampyr"). KRCG: "Put this card in play. Add 1 counter
   to this card each time you lock it … You can lock this card during your unlock phase to gain 1 pool if you have the Edge … Burn

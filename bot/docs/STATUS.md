@@ -9,10 +9,10 @@ and main's canary v1.5.0; the root's release is client v2.6.187 / srv-2.6.53 (th
 commits). **Open:** #107 this release (`bot-hand-replacement`, base main); main's #104 (client v2.6.188, no wire change):
 merged first, the root line above follows it. A merged PR's branch is deleted automatically (24 Nov).
 
-## Last gates (v0.6.239 after the egress review's pass 2, `bd3de0c1`, cardfx `fe5f60bf`)
+## Last gates (v0.6.239's release bytes, after the egress review's pass 3, `6e29f566`, cardfx `fe5f60bf`)
 24 Nov: the suite 2803/0 ×3 · canary 235/0 ×2 (the copies; the root's v2.6.187), main's v1.6.0 247/0 · hotseat 12/0 · HB1
 11/0 · lint clean · main's client suite (v2.6.187) 422/1 (the guide's embed) · section 185 7/0 · the arena smoke PASS 7/7 ·
-the 240 and the five starters' 120 IDENTICAL to the first bytes'; the lasombra smoke IDENTICAL to pass 1's (SAME-PLAY in its
+the 240 and the five starters' 120 IDENTICAL to the first bytes'; the lasombra smoke IDENTICAL to pass 2's (SAME-PLAY in its
 12 cancels against the first bytes) · `ana-gates.py` PASS 6/6. The first bytes' 240 against v0.6.238 and the predictions
 (D-93): the CHANGELOG.
 
