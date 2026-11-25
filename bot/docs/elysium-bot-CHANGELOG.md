@@ -320,7 +320,7 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
-- **v0.6.239 (24 Nov 2026)** — Hand size and replacement (the sweep register's class 14, D-135; the order of the rounds Claude's,
+- **v0.6.239 (24 Nov 2026; PR #107)** — Hand size and replacement (the sweep register's class 14, D-135; the order of the rounds Claude's,
   D-137). The rulebook, drawing cards: "Whenever you play a card from your hand, you draw another from your library to replace it
   (unless card text says otherwise). … Whenever an effect changes your hand size … immediately discard down to or draw up to
   match your hand size." Rules corrections, no knob (L-62).
