@@ -6027,7 +6027,7 @@ async function connectWithRetry(client, tries = 30){
   a.note('Trainbot is seated. I answer to: "bleed N".');
   ok(logs89(a).length === 2 && chats89(a).length === 0, '89a note() writes LOG lines, never chat');
   ok(logs89(a)[0] === 'Smiling Jack ticks \u2014 2 counter(s).', '89a ...a leading "Trainbot: " is dropped (the client already prefixes [name])');
-  ok(logs89(a)[1] === 'U (bot) is seated. I answer to: "bleed N".', '89a ...and the persona rewrite matches chat()');
+  ok(logs89(a)[1] === 'U (bot) is seated. I answer to: "bleed N".', '89a ...and the persona rewrite tags the name on the log tier ("NAME (bot)"; chat() writes the bare name since v0.6.240)');
 
   /* 89b) events moved off the chat tier: the oust, the greeting, the turn banner */
   const b = mk89();
@@ -16581,9 +16581,9 @@ async function connectWithRetry(client, tries = 30){
         const at = seat => { u._combatOpp = () => seat ? { seat, name: 'X', o: {}, rec: null } : null; return IF6(u, '_combatTell') ? u._combatTell(T) : 'no method'; };
         const g = { bot: at(2), human: at(3), unknown: at(0) };
         const tier = (seat, o) => { const w = mk6('Hanna', 1, P6(['Hanna', 'Viktor', 'Johan'], [true, true, false]), o); w._combatOpp = () => seat ? { seat, name: 'X', o: {}, rec: null } : null; return IF6(w, '_combatNoteToBot') ? w._combatNoteToBot() : 'no method'; };
-        const P3 = { paceMs: 3100 }, n = { bot: tier(2, P3), human: tier(3, P3), unknown: tier(0, P3), off: tier(2, { paceMs: 3100, combatNotes: 0 }), fast: tier(2), forced: tier(2, { combatNotes: 1 }) };
-        ok(g.bot === '' && g.human === T && g.unknown === T && n.bot === true && n.human === false && n.unknown === false && n.off === false && n.fast === false && n.forced === true,
-           '186c a combat line tells a human or unknown opponent "tell me if your side differs", a bot opponent nothing -- and to a bot at a table the floor paces it is a log line; a fast table keeps the bubble (combatNotes 0: the bubble, 1: the log line, at any pace) (got ' + JSON.stringify({ g, n }) + ') [new methods: red on the old bytes proves only that; 160n runs both tiers through a combat between two bots]'); }
+        const P3 = { paceMs: 3100 }, n = { bot: tier(2, P3), human: tier(3, P3), unknown: tier(0, P3), zero: tier(2, { paceMs: 3100, combatNotes: 0 }), noFloor: tier(2, { paceMs: 3100, chatFloor: 0 }), fast: tier(2), forced: tier(2, { combatNotes: 1 }) };
+        ok(g.bot === '' && g.human === T && g.unknown === T && n.bot === true && n.human === false && n.unknown === false && n.zero === true && n.noFloor === false && n.fast === false && n.forced === true,
+           '186c a combat line tells a human or unknown opponent "tell me if your side differs", a bot opponent nothing -- and to a bot at a table the floor paces it is a log line, whatever combatNotes says (a race is no knob); the floor off (chatFloor 0) or a fast table keeps the bubble; combatNotes 1 forces the log line (got ' + JSON.stringify({ g, n }) + ') [new methods: red on the old bytes proves only that; 160n runs both tiers through a combat between two bots]'); }
 
       // d) the event log types a question to bots as an ask, as it typed the one with the tail
       { const u = mk6('Hanna', 1, P6(['Hanna', 'Viktor'], [true, true]));
@@ -16629,7 +16629,7 @@ async function connectWithRetry(client, tries = 30){
       // h) _pace waits for a bubble of mine that the floor holds
       { const u = mk6('Viktor', 2, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300, chatPaceMs: 100 }); u.turnSeat = 2; const t0 = Date.now();
         u._floorUntil = t0 + 600; u.say('Pass'); await u._pace(); const dt = Date.now() - t0, out = u.wire.some(w => w.m.t === 'say');
-        ok(out && dt >= 600, '186h my next act waits until my held quick phrase is on the wire (and its beat after it): ' + dt + ' ms, the phrase out: ' + out); }
+        ok(out && dt >= 600 + 100 - 20, '186h my next act waits until my held quick phrase is on the wire (600 ms) and its beat after it (100 ms): ' + dt + ' ms, the phrase out: ' + out); }
 
       // i) the vote round driven by the previous voter
       { const P = P6(['Hanna', 'Mara', 'Viktor'], [true, true, true]);
@@ -16637,13 +16637,24 @@ async function connectWithRetry(client, tries = 30){
           u._refT = { who: 'Hanna', seat: 1, card: 'Kine Resources Contested', deltas: { 1: 4, 2: 4, 3: 4 }, at: Date.now(), applied: false };
           u._dispatch({ t: 'tally', who: 'Hanna', mode: 'vote', a: 1, b: 0 }); return u; };
         const spoke = u => u.wire.some(w => w.m.t === 'chat');
-        const v1 = mkV(P); await sleep(150); const early = spoke(v1); v1._dispatch({ t: 'chat', who: 'Mara', msg: 'No votes from me.' }); await until6(() => spoke(v1), 4000);
+        const v1 = mkV(P); const armed1 = !!v1._refHeardW; await sleep(150); const early = spoke(v1); v1._dispatch({ t: 'chat', who: 'Mara', msg: 'No votes from me.' }); const woke1 = armed1 && !v1._refHeardW; await until6(() => spoke(v1), 4000);
         const pv1 = IF6(v1, '_refPrevVoter') ? v1._refPrevVoter() : null;
-        const v2 = mkV(P6(['Hanna', 'Johan', 'Viktor'], [true, false, true])); const pv2 = IF6(v2, '_refPrevVoter') ? v2._refPrevVoter() : null; v2._dispatch({ t: 'chat', who: 'Hanna', msg: 'I vote 1 for.' }); await until6(() => spoke(v2), 4000);
+        const v2 = mkV(P6(['Hanna', 'Johan', 'Viktor'], [true, false, true])); const armed2 = !!v2._refHeardW; const pv2 = IF6(v2, '_refPrevVoter') ? v2._refPrevVoter() : null; v2._dispatch({ t: 'chat', who: 'Hanna', msg: 'I vote 1 for.' }); const woke2 = armed2 && !v2._refHeardW; await until6(() => spoke(v2), 4000);
         const v3 = mkV(P); const t3 = Date.now(); await until6(() => spoke(v3), 4000); const cap = Date.now() - t3;
         const v4 = mkV(P); await sleep(50); v4._dispatch({ t: 'tally', who: 'Hanna', mode: null, a: 0, b: 0 }); await sleep(100); const closed = !spoke(v4) && !v4._refHeardW;
-        ok(!early && spoke(v1) && !!pv1 && pv1.name === 'Mara' && !!pv2 && pv2.name === 'Hanna' && spoke(v2) && spoke(v3) && cap >= 800 - 30 && closed,
-           '186i the vote round: I vote after the bot before me in the ring has spoken (Mara), a human between us is skipped (the caller Hanna), the safety net (400 ms a seat, 2 seats) and the polls closing end the wait (got ' + JSON.stringify({ early, pv1, pv2, cap, closed }) + ')'); }
+        ok(!early && woke1 && spoke(v1) && !!pv1 && pv1.name === 'Mara' && !!pv2 && pv2.name === 'Hanna' && woke2 && spoke(v2) && spoke(v3) && cap >= 800 - 30 && closed,
+           '186i the vote round: I vote after the bot before me in the ring has spoken (Mara: her bubble ends my wait at once), a human between us is skipped (the caller Hanna), the safety net (400 ms a seat, 2 seats) and the polls closing end the wait (got ' + JSON.stringify({ early, woke1, pv1, pv2, woke2, cap, closed }) + ')');
+        // a new game while I wait: my turn in the old poll is over -- no vote, no abstain into the new game (L-95; the egress review)
+        const v5 = mkV(P); const armed5 = !!v5._refHeardW; v5._dispatch({ t: 'started', players: v5.players }); await sleep(1200);   // long enough for a queued bubble to drain
+        const fresh = armed5 && !spoke(v5) && !v5._sq.some(o => o && o.t === 'chat') && !v5.wire.some(w => w.m.t === 'tally' && w.m.mode === 'vote') && !v5._refHeardW;
+        // a voter whose reaction said nothing (Absolute Tyranny's cut against a bot caller) and who has no title votes still speaks: the voter after it waits for its bubble
+        const v6 = mk6('Viktor', 3, P, { paceMs: 300, refTurnCapMs: 400 }); v6.turnSeat = 1; v6.hand = []; v6.board = [];
+        v6._refT = { who: 'Hanna', seat: 1, card: 'Kine Resources Contested', deltas: { 1: 4, 2: 4, 3: 4 }, at: Date.now(), applied: false };
+        v6._tyrannyReactFor = () => ({ name: 'Absolute Tyranny' }); v6._playTyrannyReact = () => { v6._votedThisRef = true; return true; };   // the cut's own lines (fx, log) without a bubble
+        v6._dispatch({ t: 'tally', who: 'Hanna', mode: 'vote', a: 1, b: 0 }); v6._dispatch({ t: 'chat', who: 'Mara', msg: 'No votes from me.' }); await until6(() => spoke(v6), 4500);   // Mara's bubble holds the floor 3 s
+        const said6 = v6.wire.filter(w => w.m.t === 'chat').map(w => w.m.msg);
+        ok(fresh && JSON.stringify(said6) === JSON.stringify(['No votes from me.']),
+           '186i ...a new game while I wait ends my turn in the old poll (nothing said, no vote written), and a voter whose reaction said nothing still says its bubble (got ' + JSON.stringify({ armed5, fresh, said6 }) + ')'); }
 
       // k) my act waits for a free floor (an action's line and its question go out together, never after the answer to them)
       { const u = mk6('Hanna', 1, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300, chatPaceMs: 100 }); u.turnSeat = 1; const t0 = Date.now();
@@ -16657,7 +16668,16 @@ async function connectWithRetry(client, tries = 30){
         const bot = qf(2), human = qf(3); const z = mk6('Hanna', 1, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 0 }); z._ask = { target: 2, _qAt: t0, _qMs: 4000 }; const pace0 = IF6(z, '_qFloorLeft') ? z._qFloorLeft() : null;
         u._ask = null; z._ask = null;
         ok(bot !== null && bot >= 4000 + 750 - 30 && bot <= 4750 && human === 0 && pace0 === 0,
-           '186l a bot-only window keeps its silence clock until my question has left the screen (+' + bot + ' ms), not when a human is asked (' + human + ') nor at paceMs 0 (' + pace0 + ') [a new method: red on the old bytes proves only that]'); }
+           '186l a bot-only window keeps its silence clock until my question has left the screen (+' + bot + ' ms), not when a human is asked (' + human + ') nor at paceMs 0 (' + pace0 + ') [a new method: red on the old bytes proves only that]');
+        // ...through a real question held by the floor: stamped when it reaches the wire, for as long as its bubble shows, and the stopwatch armed after it
+        const w = mk6('Hanna', 1, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300, reactClockMs: 1000 }); w.turnSeat = 1;
+        w._actingVamp = { v: { id: 'r1', name: 'Ryan (G6)' }, n: 1, target: 2, kind: 'bleed', played: new Set() };
+        w._floorUntil = Date.now() + 500; const pa = w._askBlock('Trainbot: Ryan (G6) bleeds Viktor for 1. Block?', {}); const aw = w._ask, qAt0 = aw ? (aw._qAt || 0) : -1;
+        await until6(() => w.wire.some(x => x.m.t === 'chat'), 3000); await sleep(30);
+        const sentW = (w.wire.find(x => x.m.t === 'chat') || { m: {} }).m.msg, qMsW = aw && aw._qMs, qAtW = aw && aw._qAt, rcW = w._rcT ? w._rcT._idleTimeout : null;
+        w._answer('no', null); await pa.catch(() => null); if(w._ask && w._ask.timer) clearTimeout(w._ask.timer); if(w._rcT){ clearTimeout(w._rcT); w._rcT = null; }
+        ok(qAt0 === 0 && !!sentW && qMsW === bubbleMs6(sentW) && qAtW > 0 && rcW !== null && rcW >= 1000 + qMsW,
+           '186l ...a real question the floor held: unstamped until it is on the wire, its floor the bubble’s ' + qMsW + ' ms, the stopwatch armed ' + rcW + ' ms out (got ' + JSON.stringify({ qAt0, sentW, qMsW, rcW }) + ')'); }
 
       // m) the floor held my thinking line until my answer was queued behind it: the answer goes out alone; a thinking line with nothing behind it still goes
       { const mkT = () => { const u = mk6('Viktor', 2, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300 }); u.turnSeat = 1; u.pending = { who: 'Hanna', _thinkQ: true, amount: 1 }; return u; };
@@ -16671,9 +16691,9 @@ async function connectWithRetry(client, tries = 30){
 
       // n) the floor is on at a pace people read (1.5 s and more: the client's 3.1 s, the bot's default 1.5 s), off at the suite's fast paces and at 0
       { const on = (paceMs, chatFloor) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', paceMs, log: () => {} }, chatFloor === undefined ? {} : { chatFloor })); return IF6(u, '_floorOn') ? u._floorOn() : null; };
-        const g = { p0: on(0), p300: on(300), p1500: on(1500), p3100: on(3100), dflt: (() => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', log: () => {} }); return IF6(u, '_floorOn') ? u._floorOn() : null; })(), forced: on(300, 1), off: on(3100, 0) };
-        ok(g.p0 === false && g.p300 === false && g.p1500 === true && g.p3100 === true && g.dflt === true && g.forced === true && g.off === false,
-           '186n the floor: on from a 1.5 s pace (the client\u2019s 3.1 s, the bot\u2019s default), off at the suite\u2019s fast paces and at 0; chatFloor 1 forces it, 0 switches it off (got ' + JSON.stringify(g) + ')'); }
+        const g = { p0: on(0), p300: on(300), p1500: on(1500), p3100: on(3100), dflt: (() => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', log: () => {} }); return IF6(u, '_floorOn') ? u._floorOn() : null; })(), forced: on(300, 1), forced0: on(0, 1), off: on(3100, 0) };
+        ok(g.p0 === false && g.p300 === false && g.p1500 === true && g.p3100 === true && g.dflt === true && g.forced === true && g.forced0 === false && g.off === false,
+           '186n the floor: on from a 1.5 s pace (the client\u2019s 3.1 s, the bot\u2019s default), off at the suite\u2019s fast paces and at 0; chatFloor 1 forces it at any pace above 0, 0 switches it off (got ' + JSON.stringify(g) + ')'); }
 
       // j) L-95: a new game's floor is free and no vote round is in flight
       { const u = mk6('Viktor', 2, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300 }); u._floorUntil = Date.now() + 5000; u._refHeard = new Set(['Hanna']);

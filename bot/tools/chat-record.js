@@ -17,7 +17,7 @@ const fs = require('fs'), path = require('path');
 const B = path.resolve(__dirname, '..');
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const OUT = arg('--out', null);
-if(!OUT){ console.error('usage: node tools/chat-record.js --out FILE.jsonl [--bot FILE] [--client FILE] [--seed N] [--rounds N] [--pace MS] [--ask-secs S] [--decks a,b,c,d] [--names A,B,C,D]'); process.exit(2); }
+if(!OUT){ console.error('usage: node tools/chat-record.js --out FILE.jsonl [--bot FILE] [--client FILE] [--seed N] [--rounds N] [--pace MS] [--ask-secs S] [--decks a,b,c,d] [--names A,B,C,D] [--knob k=v ...]'); process.exit(2); }
 const o = {
   bot: path.resolve(arg('--bot', path.join(B, 'elysium-bot.js'))), client: path.resolve(arg('--client', path.join(B, 'elysium-vtes-bord.html'))),
   seed: +arg('--seed', 7), rounds: +arg('--rounds', 5), paceMs: +arg('--pace', 3100), askSecs: +arg('--ask-secs', 20),

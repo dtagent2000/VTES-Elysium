@@ -187,7 +187,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
 - **Prototype instrumentation**: wrap `Bot.prototype` methods in a scratch script to tag stashes and log every consumption; the
   same script is the post-fix proof.
 - **The guilt experiment**: disarm a suspect condition with `&& false`, rerun — green = guilty, everything else exonerated.
-- **Feed a classifier the SENT text** (`NAME (bot)`), never the template; specific shapes before generic ones.
+- **Feed a classifier the SENT text** (a note's `NAME (bot)`; a chat without it since v0.6.240), never the template; specific shapes first.
 - **A peek is not a take**: `_awaitOppStrikePeek` leaves the line pending; `_awaitOppStrike` consumes it.
 - **e2e waits**: `waitFor` walks and consumes, `waitAny` is cursorless — two messages with no causal order need `waitAny`; the
   server never echoes a sender's own log lines (prove the attacker's note in the DEFENDER's inbound).

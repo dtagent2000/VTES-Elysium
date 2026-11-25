@@ -9,7 +9,7 @@ phrase holds the floor 1.5 s), and which bubbles started over another seat's.
     one file     the report; --lines adds every chat line (digits as N, one example each) for a ruling line by line
     two files    both reports and the before / after table of the headline numbers and of the chat lines
     --gate       exit 1 when the LAST file has a bubble that started while another seat held the floor, or a bot's
-                 "(bot):" prefix, or a human's instruction tail on a bots-only table (the round's done-when)
+                 "(bot):" prefix, or a human's instruction tail on a bots-only table (D-137's floor, prefix and tails)
 
 The bubble, as the client draws it (elysium-vtes-bord.html sayBubble / sayBubbleMs / chatBubble / maybeVerdictPulse):
   chat     the text clamped at 180 characters + '...'; on screen max(3000, min(9000, 3000 + (n - 20) * 45)) ms at the
@@ -27,7 +27,7 @@ VERDICT_RE = [(re.compile(r'^Block: Stealth -?\d+ vs Intercept -?\d+ — block (
               (re.compile(r'^Vote: \d+ for vs \d+ against — vote (passes|fails)\.$'), lambda m: 'Vote ' + m.group(1) + '!')]
 PREFIX_RE = re.compile(r'^[^:]{1,40} \(bot\): ')
 # the human's instruction tails (D-137: a bot's question to a bot carries none); on a bots-only table every one is addressed to a bot
-TAIL_RE = re.compile(r'say "block" or "no"|say "no reaction"|say "no"|or say Pass|say Pass|Right-click|I wait for you|\(\d+ s\)|press the Bot button|'
+TAIL_RE = re.compile(r'say "block" or "no"|say "no reaction"|say "no"|or say Pass|say Pass|Right-click|I wait for you|\(\d+ ?s \u2192|press the Bot button|'
                      r'say "no" or "it resolves"|or play yours|tell me if your side|Tell me if your side')
 
 
