@@ -1578,5 +1578,23 @@ ok(fx.counts.libLock >= 140,
        'the real seed is frozen: a key swapped (the count kept), a key added to seed and backlog, an entry added to a seed row -- each fails on the pin in cardfx-sharing.js');
   }
 }
+
+/* v0.6.241 (the exactness round, RULINGS D-138): the fidelity file -- every card it names has a library entry, every gap it maps is an open
+   entry of docs/SWEEP-REGISTER.md (with the state an 'id@state' names), so a round that fixes and deletes an entry drops it here too.
+   The readers are gen-card-ledger.js's own (registerEntries, fidelityProblems): the ledger's page and this gate cannot disagree. */
+{
+  let fidF = null, fidErr = '', regT = null;
+  try { fidF = JSON.parse(fs.readFileSync(here('cardfx-fidelity.json'), 'utf8')); } catch (e) { fidErr = e.message; }
+  try { regT = fs.readFileSync(path.join(__dirname, 'docs', 'SWEEP-REGISTER.md'), 'utf8'); } catch (e) { fidErr = fidErr || e.message; }
+  ok(!!fidF && !!regT, 'cardfx-fidelity.json and docs/SWEEP-REGISTER.md read' + (fidErr ? ' (' + fidErr + ')' : ''));
+  if (fidF && regT){
+    const LG = require('./gen-card-ledger.js'), regE = LG.registerEntries(regT);
+    const P = LG.fidelityProblems(fidF, regE, n => Object.prototype.hasOwnProperty.call(fx.lib, n));
+    const cards = Object.keys(fidF.checked || {}), gaps = cards.reduce((a, n) => a + ((fidF.checked[n].gaps || []).length), 0);
+    ok(P.length === 0 && cards.length >= 92, 'the fidelity file: ' + cards.length + ' checked cards (the five starters\u2019 92 at least), ' + gaps + ' gaps, each an open register entry of ' + regE.size + (P.length ? '\n      ' + P.join('\n      ') : ''));
+    const stale = JSON.parse(JSON.stringify(fidF)); stale.checked[cards[0]] = { gaps: ['99.99', '7.3@active'] };
+    ok(LG.fidelityProblems(stale, regE, () => true).length === 2, 'planted: a gap no register entry has and a state the entry does not name are both reported');
+  }
+}
 console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green'));
 process.exit(failN ? 1 : 0);

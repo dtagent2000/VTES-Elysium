@@ -35,7 +35,7 @@ What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
 source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's and v0.6.239's egress reviews; Claude orders the rounds, D-137).
-Active entries: 7.1, 7.2, 8.3, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 12.2.
+Active entries: 8.3, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 12.2.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -132,6 +132,9 @@ is a handoff first. Bot-to-bot gaps are marked.
   Deep Song's rush carries the frenzy tag).
 - **4.19 The opponent's pumps** are not read before its strike (its strike line carries the result): the wave decision and the
   dodge do not see them. [w2] · reachable (bot-to-bot).
+- **4.20 A human's Mirror Walk [THA]** — a bot blocker reads a bot actor's line (BLOCKED_LOCK, v0.6.241), but a human's play line
+  names no level and nothing is said at the block: the bot's blocker begins its combat. [the exactness round] · human · the
+  human says it (a chat word the blocker reads, as `bounce`), or the client asks the level of an 'if blocked' card.
 
 ## 5. Maneuvers: direction and source
 Which way a maneuver goes, and where a maneuver comes from (a card, equipment, a grant).
@@ -162,14 +165,6 @@ A card in play is known by its name where its record should follow the card (its
 
 ## 7. Conditional and capped values
 A value the text conditions or caps, compiled as a plain number.
-- **7.1 Aire of Elation** — "[pre] +1 bleed, with an additional +1 bleed if this vampire is Toreador … [PRE] +2 bleed, with an
-  additional +1 bleed if this vampire is Toreador" (KRCG); the entry carries 1 and 2. [sweep §4.3: amber] · **active** (the
-  toreador smoke: 10 plays, all by Toreador vampires, each 1 bleed short) · the condition on the key, read by the bleed modifier
-  finder and its readers.
-- **7.2 The Warrens** — "+2 intercept, with an additional +1 intercept if this Nosferatu is titled" (KRCG); the entry carries 2.
-  [w6 §8; sweep §4.3: amber] · **active** (the 240: 178 plays, 116 of them by nosferatu's four titled vampires — Belinde a
-  prince, Larissa Moreira, Lenny Burkhead and The Dowager primogen — each 1 intercept short) · the condition on the key, as
-  7.1's, read by the intercept finders and the block estimates.
 - **7.3 Kevlar Vest** — 2 only against guns; `_equipPrevent` prevents 1 against everything (sweep §4.3 calls it a red). [w1; sweep
   §4.3] · latent (tremere holds the vest and the only gun).
 - **7.4 Night Moves** — the bleed is capped at 1 pool. [sweep §4.3: red] · latent (nothing in the sewer deck bleeds for more).
@@ -247,7 +242,9 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   entry carries the stealth only. [sweep §4.3: amber] · **missed** (the 240: 90 of its 306 plays by malkavian's three vampires
   with superior Obfuscate — Colette 41, Alexander Silverson 39, Dr. Stephen Norton 10 — always at [obf]: both modes carry +1
   stealth and `_bestStealthFor` replaces a pick only for more, so the first mode wins the tie) · the mode with the rider wins a
-  tie, and the lock is read (not Cloak the Gathering's [OBF], which another vampire plays: 8.7).
+  tie, and the lock is read (not Cloak the Gathering's [OBF], which another vampire plays: 8.7). v0.6.241 built the tie for a
+  rider the bot reads (Mirror Walk [THA]'s `blockedLockEnd`); this one's lock lands at resolution, after a failed blocker's
+  Deflection or Guard Dogs [ANK 20171017], on every minion that attempted and failed, across a bounce: a design of its own.
 - **10.2 Burning another's card in play, and Ventrue HQ** — Wasserschloss Anif, Austria's burn-it action ("Any minion can burn this
   card as a Ⓓ action"), Haven Uncovered's host burning the card, Pentex™ Subversion's ("Other minions can burn this card as a Ⓓ
   action": its entry carries `noBlockMinion` only); Ventrue Headquarters locked only in my own referendums. [O-23; B; pilot; pass 3
@@ -302,6 +299,10 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   their host burned. A burn by the table (`ctrl`), Archon Investigation and the Ravnos burn sweep them (v0.6.237's egress review:
   the table's burn by host and id too). What reads a card whose host is burned is not audited. [the playtest round's egress review]
   · reachable (any deck).
+- **10.16 Options the starters' curated entries leave out** — Anarch Troublemaker's "or burn an equipment on one of their minions"
+  (the entry carries the two locks only); Vessel's "you can burn a card named <Blood Doll> (if any)". [the exactness round's
+  fidelity pass] · reachable (ventrue ×1: Anarch Troublemaker, against tremere's equipment) / latent (Vessel: nosferatu and
+  tremere hold no Blood Doll) · the burn as the giver's choice when an equipment is worth more than the two locks.
 
 ## 11. Windows: who is asked, and when
 Who may answer an action or a card, and in which window; a line read after its window closed.
