@@ -16890,6 +16890,16 @@ async function connectWithRetry(client, tries = 30){
         ok(got.sup === 'THA' && got.inf === 'tha' && got.pl === 'Rosalina Cortez (G6) plays Mirror Walk [THA]: +1 stealth.' && got.booked && got.line === "Rosalina Cortez (G6) is blocked — Mirror Walk [THA]: Sven's Lisa is locked; the action ends unsuccessfully." && got.combat === false
            && got.cancel && got.hit === true && got.lisaLocked === true && got.kind === 'blocked-lock' && got.evBlocker === 'Lisa',
            '187i Mirror Walk [THA]: a superior Thaumaturgy vampire takes the rider mode on the tie ([tha] for an inferior one), its play line names the level; blocked, it locks the blocker and ends the action with no combat, and the blocker’s bot keeps its vampire locked with no combat (got ' + JSON.stringify(got) + '; v0.6.240 played [tha] and fought)');
+        // the action ended before block resolution: no 'after block resolution' card follows (Cats' Guidance [ani] stays in hand); the control unlocks
+        const pb = async withLine => { const b2 = mkI('Sven'); b2.seat = 3; b2.turnSeat = 2;
+          const ama = { id: 'i5', name: 'Amadeo (G2)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 }; b2.board = [ama]; b2.hand = ["Cats' Guidance"];
+          b2._myBlockOf = { vamp: 'Rosalina Cortez (G6)', at: Date.now() };
+          if(withLine) b2._onLog('Henrik', '<b>Rosalina Cortez (G6)</b> is blocked \u2014 <b>Mirror Walk</b> [THA]: <b>Sven</b>\'s <b>Amadeo (G2)</b> is locked; the action ends unsuccessfully.');
+          const hit = withLine ? b2._cotHit(ama) : null; await b2._maybePostBlockUnlock(ama, { kind: 'bleed' });
+          return { hit, kept: b2.hand.includes("Cats' Guidance"), locked: ama.locked }; };
+        const pbMW = await pb(true), pbCtl = await pb(false);
+        ok(pbMW.hit === true && pbMW.kept === true && pbMW.locked === true && pbCtl.kept === false && pbCtl.locked === false,
+           '187i a blocker Mirror Walk [THA] locked plays no after-block-resolution card (Cats\u2019 Guidance [ani] kept, still locked); after a real block the same hand unlocks (got ' + JSON.stringify({ pbMW, pbCtl }) + ')');
       }
       // j) Creeping Sabotage costs X blood, X the copies already in play (the fidelity pass; KRCG 'Cost: X blood')
       { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'J', persona: 'grinder', log: () => {} });

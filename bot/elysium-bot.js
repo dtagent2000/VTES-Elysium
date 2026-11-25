@@ -1292,7 +1292,7 @@ class Bot {
         this._jackDefer = null;   // v0.6.224 (the egress review): a new game waits for no Jack
         this._w5Loss = null; this._w5Hostages = null; this._w5Dia = null; this._w5Hunts = 0; this._w5RefPass = 0; this._w5Held = null; this._w5PbAnarch = false; this._w5BleedOk = null;   // v0.6.230 (the egress review): the wave's counts start again
         this._wonN = null; this._asp = null; this._aspLast = null; this._srSent = null; this._srSeenHuman = null; this._yawp = null; this._yawpFight = null; this._groveCancelled = null; this._quietHold = false;   // v0.6.232 (5b's egress review): the nightmare counters, the 'as played' window, the cancels and Yawp Court start again
-        this._turnSerial = (this._turnSerial | 0) + 1; this._monsterUsed = null; this._sgwEndUsed = null; this._lastCombat = null; this._cotCancel = null; this._myBlockOf = null;   // v0.6.217 (the egress review): Monster's and Guiding Wisdom's once-each-turn, the last combat, a Change of Target -- none carries into a new game
+        this._turnSerial = (this._turnSerial | 0) + 1; this._monsterUsed = null; this._sgwEndUsed = null; this._lastCombat = null; this._cotCancel = null; this._myBlockOf = null; this._blockedLockVamp = null;   /* v0.6.241: + the Mirror Walk-locked blocker (L-95) */   // v0.6.217 (the egress review): Monster's and Guiding Wisdom's once-each-turn, the last combat, a Change of Target -- none carries into a new game
         this._holdBy = new Set(); if(this._holdRemT){ clearTimeout(this._holdRemT); this._holdRemT = null; }   // v0.6.95: a fresh game holds for nobody
         this._ceBanRec = null; this._ceBanCombat = null; this._ntg = null; this._ntgCombat = null; this._eachMvUsed = null;   // v0.6.236 (the Banu Haqim pilot; L-95): a new game carries no rush card's ban, no Night Terrors' strike, no maneuvers each combat used
         this._replHold = []; this._perUnlock = new Map();   // v0.6.235 (the finished decks' round): a new game holds no replacement and has played no once-between-unlocks card
@@ -4740,7 +4740,7 @@ class Bot {
     const c = this._cotCancel; if(!c || Date.now() - c.at > 30000) return false;
     const opp = (myVamp && this._combatOppOf && this._combatOppOf.get(myVamp.id)) || this._combatOppName || null; if(opp && opp !== c.vamp) return false;   // v0.6.221 (the Jack round, D-113): the combat's OWN opponent first -- v0.6.220's 600, match 528: a later block's combat had rewritten the shared name, so The Dowager's cancelled combat read Catalina and fought on
     this._cotCancel = null;
-    if(c.lock){ if(myVamp && myVamp.zone === 'ready' && !myVamp.locked){ myVamp.locked = true; this.push(); } }   // v0.6.241: Mirror Walk [THA] locks the blocker, whatever lets it block unlocked [ANK 20191204]
+    if(c.lock){ if(myVamp && myVamp.zone === 'ready' && !myVamp.locked){ myVamp.locked = true; this.push(); } this._blockedLockVamp = myVamp ? { id: myVamp.id, at: Date.now() } : null; }   // v0.6.241: Mirror Walk [THA] locks the blocker, whatever lets it block unlocked [ANK 20191204]; the action ended before block resolution, so no 'after block resolution' card follows (_maybePostBlockUnlock)
     else if(myVamp && myVamp.zone === 'ready' && myVamp.locked){ myVamp.locked = false; this.push(); }
     this._emit('cot-cancelled', Object.assign({ vamp: myVamp ? myVamp.name : null, actor: c.vamp }, c.lock ? { lock: true } : null));
     return true;
@@ -6046,6 +6046,7 @@ class Bot {
     return true;
   }
   async _maybePostBlockUnlock(blocker, act){   // N1: Cats' Guidance -- after block resolution, a LOCKED blocker with a postBlock unlock refreshes the wall
+    { const bl = this._blockedLockVamp; if(bl && blocker && bl.id === blocker.id){ this._blockedLockVamp = null; return; } }   // v0.6.241: an action Mirror Walk [THA] ended before block resolution has no 'after block resolution' (Cats' Guidance [ani] stays in hand)
     if(!blocker || !blocker.locked || blocker.zone !== 'ready' || this.out) return;
     const un = this._bestUnlockReactFor(blocker, 'postBlock', act || { kind: null });   // v0.6.233 (the egress review, finding 7): a play, so the action it followed (its kind, read at the verdict) -- never _dirOk's no-action estimate
     if(!un) return;
