@@ -412,7 +412,7 @@
     2841/0 ×3, section 187 alone 19/0, canary 235/0 ×2 (the copies; the root's v2.6.188), main's canary v1.6.0 247/0, `test-cardfx.js`
     503/0, hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.188) 430/1 (the guide's embed), the arena smoke (one
     match, the four starters, the real clock) PASS 7/7, the 240 and the 14 smokes as above, `gen-card-ledger.js --self-test`
-    81/81, `tools/doc-budget.sh` PASS (the bootstrap 49,913 / 50,000), `client/check-versions.js` everything agrees.
+    81/81, `tools/doc-budget.sh` PASS (the bootstrap 49,914 / 50,000), `client/check-versions.js` everything agrees.
 - **v0.6.240 (25 Nov 2026; PR #108)** — The chat round (D-137, Johan's kör of 24 Nov 21:25; BOARD's chat-round line): what a
   table of people sees in the bubbles. The bubbles stay and keep their content; one speaker at a time; no "(bot):" prefix; a
   question to a bot without the human's tail. The recorder and the analyser are in the repo now (`tools/chat-record.js`,
