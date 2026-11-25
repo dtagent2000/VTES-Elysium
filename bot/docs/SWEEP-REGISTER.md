@@ -35,7 +35,7 @@ What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
 source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's and v0.6.239's egress reviews; Claude orders the rounds, D-137).
-Active entries: 8.3, 10.17, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 10.16, 12.2.
+Active entries: 7.5, 8.3, 10.17, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 10.16, 12.2, 13.10.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -132,9 +132,12 @@ is a handoff first. Bot-to-bot gaps are marked.
   Deep Song's rush carries the frenzy tag).
 - **4.19 The opponent's pumps** are not read before its strike (its strike line carries the result): the wave decision and the
   dodge do not see them. [w2] · reachable (bot-to-bot).
-- **4.20 A human's Mirror Walk [THA]** — a bot blocker reads a bot actor's line (BLOCKED_LOCK, v0.6.241), but a human's play line
-  names no level and nothing is said at the block: the bot's blocker begins its combat. [the exactness round] · human · the
-  human says it (a chat word the blocker reads, as `bounce`), or the client asks the level of an 'if blocked' card.
+- **4.20 A human's Mirror Walk [THA]** — a bot blocker reads a bot actor's lines (RIDER_STEALTH, BLOCKED_LOCK; v0.6.241), not a
+  human's: the client writes the level into a human's play line by default (`playLineHtml`; the table helper `modeChoice`, off in
+  tournament mode or when the host locks it): `VAMP plays Mirror Walk [THA].`, or `Mirror Walk [THA] was played.` with no acting
+  vampire named. RIDER_STEALTH reads only the bot's `: +N stealth.` shape and nothing is said at the block, so the bot's blocker
+  begins its combat. [the exactness round; its egress review, pass 3] · human · a reader for the client's play line (the level;
+  the actor from the line or the action); with the helper off, the human says it (a chat word the blocker reads, as `bounce`).
 
 ## 5. Maneuvers: direction and source
 Which way a maneuver goes, and where a maneuver comes from (a card, equipment, a grant).
@@ -168,6 +171,15 @@ A value the text conditions or caps, compiled as a plain number.
 - **7.3 Kevlar Vest** — 2 only against guns; `_equipPrevent` prevents 1 against everything (sweep §4.3 calls it a red). [w1; sweep
   §4.3] · latent (tremere holds the vest and the only gun).
 - **7.4 Night Moves** — the bleed is capped at 1 pool. [sweep §4.3: red] · latent (nothing in the sewer deck bleeds for more).
+- **7.5 The `plusIf` row's other cards** — `_plusIf` (v0.6.241) reads a condition on my own vampire (`selfClan`, `selfTitled`) and
+  fails any other closed, and these entries carry the plain value: Protection Racket's "with an additional +1 intercept if the
+  acting minion is titled" (KRCG; `{intercept: 1}`), Ministry's additional +1 intercept if the acting vampire is Sabbat, Sense the
+  Sin [dai]'s if the acting minion has corruption counters, The Mausoleum, Venice's additional +1 vote while Ventrue Headquarters
+  is not in play (`cardfx-sharing.json`'s plusIf row: owed). [the exactness round's egress review, pass 3] · **active**
+  (Protection Racket: v0.6.241's V5 smokes, 13 plays, gangrel 8 and ravnos 5; 7 against a titled actor, Donny Kowalczyk ×2,
+  Alexander Silverson, The Dowager, Lloyd Brooks ×2 and Larissa Moreira, each booked at +1) / latent (Ministry, Sense the Sin,
+  The Mausoleum: no deck) · conditions on the acting minion (titled, sect, corruption) read where the intercept is summed against
+  a known actor; the Mausoleum's a check of the table.
 
 ## 8. Requirements, conditions and gates
 A requirement or a condition the text prints and a finder does not ask (the five playability layers' second and third, HARNESS), or
@@ -303,8 +315,8 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
 - **10.16 Options the starters' curated entries leave out** — Anarch Troublemaker's "or burn an equipment on one of their minions"
   (the entry carries the two locks only); Vessel's "you can burn a card named <Blood Doll> (if any)": any Blood Doll in play,
   another Methuselah's too [LSJ 20071012, LSJ 20090811]. [the exactness round's fidelity pass; its egress review: Vessel's state]
-  · missed (Vessel; v0.6.241's 240: 594 of its 890 plays came after another seat's Blood Doll in the same match, 170 matches; no
-  bot burns one) / reachable (ventrue ×1: Anarch Troublemaker, against tremere's equipment) · the burn of
+  · missed (Vessel; v0.6.241's 240: 366 of the 570 Vessels placed came after another seat had placed a Blood Doll in the same
+  match, 156 matches; no bot burns one) / reachable (ventrue ×1: Anarch Troublemaker, against tremere's equipment) · the burn of
   an opponent's Blood Doll when Vessel is played; the equipment burn as the giver's choice when it is worth more than two locks.
 - **10.17 Bonding [DOM] spent for its stealth** — "+1 stealth and +1 bleed (limited)" (KRCG): `_spendStealthCard` adds the stealth
   only, never the +1 bleed, and takes no limited slot, so Conditioning (limited) can follow in the same action ("one limited action
@@ -329,8 +341,7 @@ Who may answer an action or a card, and in which window; a line read after its w
   of the 36 `oot` cards wait for their own triggers; two bots' Sudden Reversals at one human master (no arbiter). [w5 §12.10; w3] ·
   reachable (lasombra holds Sudden Reversal ×2, ravnos Archon Investigation ×1) / human (the two Reversals at a human's master).
 - **11.4 The before-range step** — Saulot's Guiding Wisdom's combat end in a combat my vampire did not start as the acting minion
-  (no before-range handshake between bots); after its first wait a bot blocker does not look for the actor's Change of Target
-  again before its own before-range plays (Carrion Crows, Wall of Filth, a strength pump). [w4] · reachable (salubri, toreador).
+  (no before-range handshake between bots). [w4] · reachable (salubri).
 - **11.5 A second block of the same action** [LSJ 20010814-2] — One With the Land's restriction again; Night Terrors' strike again.
   [w6 §8; pilot] · reachable (tzimisce, ravnos).
 - **11.6 Night Terrors before an attempt** [LSJ 20020612], or by another of my vampires. [w6 §8] · reachable (ravnos ×4).
@@ -395,8 +406,9 @@ Decisions on Claude's priors; each needs a design to Johan before it changes (D-
 - **13.9 Forced Confessional [dom]** unseen in 12 matches: a pricing question first (L-9). [w6 §8] · reachable (salubri ×4).
 - **13.10 A host's income with no host ends the master phase** — a Blood Doll or Vessel picked with no vampire to carry it `break`s
   the master phase's loop, so a later candidate (Dreams of the Sphinx, a Location) waits a turn; Guardian Angel's own case tries
-  the next. [v0.6.238's egress] · reachable (the first v0.6.238 bytes' 240: Dreams behind such a pick 4 times, never with no
-  vampire).
+  the next. [v0.6.238's egress; v0.6.241's egress review, pass 3: the count] · missed (v0.6.241's 240: 312 picks of the two in
+  round 1, before the picker has a vampire, none placed and the phase over; 120 of them with another master waiting, as The
+  Barrens; v0.6.240's the same).
 
 ## 14. Hand size and replacement
 The rulebook, drawing cards: "Whenever you play a card from your hand, you draw another from your library to replace it (unless

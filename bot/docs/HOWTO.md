@@ -40,7 +40,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   every page (`--self-test` prints it); a classifier miss or a curated crypt key with no class in `FX_CLASS` fails the run, so a round
   adds its new keys' classes there.
   Fidelity (v1.3.0, D-138): `cardfx-fidelity.json` names the cards read clause by clause against KRCG's text and each one's register
-  gaps (`id@state`: a compound entry's half); the page prints per deck `text-checked` and `exact` and fails (as `test-cardfx.js`
+  gaps (`id@state`: a compound entry's half; not a mention, another card's reading of it, class 13: its `about`); the page prints per deck `text-checked` and `exact` and fails (as `test-cardfx.js`
   does) on a gap the register no longer lists.
   Regenerate it from the release bytes' runs: the 240 and the V5 smoke (each of the 14 new keys:
   `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`). All 12

@@ -30,7 +30,9 @@ the level too: a bot that may block hears the rider there (`RIDER_STEALTH`, `/^(
 stealth\.$/`, the card's mode at that level carrying `blockedLockEnd`) and, at its own successful verdict, locks its vampire and
 begins no combat, without waiting for section 2's line. The line is no longer only the tally net's (`NET_STEALTH`, your canary's
 note at line 189): it belongs pinned, with a canary case. Your client and server read no stealth play line (we grepped
-`elysium-vtes-bord.html`, `elysium-server.js` and your tests).
+`elysium-vtes-bord.html`, `elysium-server.js` and your tests). A human's play line already names the level when your table helper
+`modeChoice` is on (`playLineHtml`: `VAMP plays Mirror Walk [THA].`); the bots do not read that shape yet (our register's 4.20):
+nothing for you to build.
 
 ## 4. Timing
 Under Turn-based a contest a human's Pass ended no longer leaves its 4-minute net armed into the next question (the net fired "no
@@ -47,4 +49,7 @@ said while the bot waits on the table (a poll, a combat step, a verdict). Your c
    weigh first (RULINGS O-53); nothing to build before he has.
 
 ## 6. Run here
-RUN-HERE
+On the release bytes (the sha256 in the PR body): your canary on `bot/`'s copies and on the root's v2.6.188 (235/0 each), your
+canary v1.6.0 (247/0), your client suite in a scratch copy of `client/` with this bundle beside it (430/1, the guide's embed),
+the bot's suite (2841/0 ×3), the hotseat gate (12/0), HB1 (11/0), the sim's 240 (`ana-gates.py` PASS 6/6) and the arena smoke
+(PASS 7/7). The root is a byte copy of `bot/`'s bundle (your `check-versions.js`: everything agrees).

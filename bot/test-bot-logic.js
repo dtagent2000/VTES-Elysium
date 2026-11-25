@@ -16977,6 +16977,28 @@ async function connectWithRetry(client, tries = 30){
         ok(got.crows && got.wall && got.locked,
            '187k a BLOCKED_LOCK line heard under a before-range gate spends nothing: Carrion Crows stays in hand (the step’s re-check), Wall of Filth too (its helper’s), the blockers stay locked (got ' + JSON.stringify(got) + ')');
       }
+      // l) the same for Change of Target's line (the egress review, pass 3: the register's 11.4, its second half -- the step's and the
+      //    helpers' re-checks read `_cotCancel`, which `_onCot` sets for either line; v0.6.240 spent both cards)
+      { const cfL = JSON.parse(require('fs').readFileSync(__dirname + '/elysium-cardfx.json', 'utf8'));
+        let aniSup = null; for(const nm in cfL.crypt){ const d = cfL.crypt[nm].disc; if(d && d.sup && d.sup.includes('ani')){ aniSup = nm; break; } }
+        const mkL = (hand, vampName) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Sven', persona: 'grinder', paceMs: 0, log: () => {} });
+          u.seat = 3; u.turnSeat = 2; u.started = true; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }];
+          u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.evs = []; u.onEvent = (t, d) => u.evs.push({ t, d });
+          u._awaitOppManeuver = () => Promise.resolve(null); u._awaitOppPress = () => Promise.resolve(null); u._awaitOppTaken = () => Promise.resolve(null);
+          u._awaitOppStrike = () => Promise.resolve({ vamp: 'Rosalina Cortez (G6)', dodge: true, dealt: 0 });
+          const v = { id: 'l1', name: vampName, kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 8 }; u.board = [v]; u.hand = hand.slice();
+          u._myBlockOf = { vamp: 'Rosalina Cortez (G6)', at: Date.now() };
+          let fired = false; u._combatGate = async () => { if(!fired){ fired = true; u._onLog('Henrik', '<b>Rosalina Cortez (G6)</b> plays <b>Change of Target</b> — unlocks; the action ends unsuccessfully.'); } };
+          return { u, v }; };
+        const L1 = mkL(['Carrion Crows'], aniSup), L2 = mkL(['Wall of Filth'], 'Trevon Parker (G6)');
+        await Promise.race([L1.u._resolveCombat(L1.v, 'Rosalina Cortez (G6)'), sleep(6000)]);
+        await Promise.race([L2.u._resolveCombat(L2.v, 'Rosalina Cortez (G6)'), sleep(6000)]);
+        const rounds = U => U.evs.filter(e => e.t === 'bot:combat-round').length, told = U => U.evs.some(e => e.t === 'bot:cot-cancelled');
+        const got = { aniSup: !!aniSup, crows: L1.u.hand.includes('Carrion Crows') && !L1.u._carrionCrows,
+          wall: L2.u.hand.includes('Wall of Filth') && !L2.u.board.some(c => c.name === 'Wall of Filth'), rounds: rounds(L1.u) + rounds(L2.u), told: told(L1.u) && told(L2.u) };
+        ok(got.aniSup && got.crows && got.wall && got.rounds === 0 && got.told,
+           '187l a Change of Target line heard under a before-range gate spends nothing either: Carrion Crows and Wall of Filth stay in hand, no combat round, the cancel told (the register’s 11.4, its second half; v0.6.240 spent both) (got ' + JSON.stringify(got) + ')');
+      }
     }
 
 

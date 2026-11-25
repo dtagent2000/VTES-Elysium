@@ -9,19 +9,20 @@ the root's release is client v2.6.188 / srv-2.6.53 (the canary's second run).
 **Deploy state:** `main` carries v0.6.239 (#107) and client v2.6.188 (#104). **Open:** #108 v0.6.240 (`bot-chat-round`) and
 this release, stacked on it (`bot-exact-round`; merge #108 first, L-84); Johan's rulings on the chat lines (O-51).
 
-## Last gates (v0.6.241's release bytes)
-GATES-STATUS
+## Last gates (v0.6.241's release bytes, `d797e1fd`, test `a8557422`, cardfx `4627ff1c`)
+26 Nov: the suite 2841/0 ×3 · canary 235/0 ×2, main's v1.6.0 247/0 · cardfx 503/0 · hotseat 12/0 · HB1 11/0 · lint clean ·
+main's client suite 430/1 (the guide's embed) · the arena smoke PASS 7/7 · the 240 against v0.6.240 DIVERGED 196 / SAME-PLAY
+44, `ana-gates.py` PASS 6/6. The predictions (D-93): the CHANGELOG.
 
 ## Next
-1. **Johan's rulings on the chat lines** (O-51) and on the playtests' questions (the project's two playtest docs of 25 Nov,
-   claude/playtest-claude-game1 and -game2: the bounce after "No block", voting as a human, the caller's last word, the resolution panel) and the pool floor
-   (O-52): what he asks for is built next.
+1. **Johan's rulings** on the chat lines (O-51), the playtests' questions (O-53) and the pool floor (O-52): what he asks for is
+   built next.
 2. The fidelity pass (D-138, BOARD): the other 13 V5 decks' cards, a deck a round or with C's families; CARDS.md's `exact`
    column is the measure (the five starters: malkavian 51/77, nosferatu 51/77, toreador 68/77, tremere 52/77, ventrue 59/77).
-3. The register's active entries 8.3 and 11.1 (D-135, D-137), then class 1 (R-47); the missed options wait in their classes
-   (10.1 Faceless Night [OBF] among them, its own design).
-4. v2.6.187 and v2.6.188 consumed: the guide's hub, ring and bot box (main's ask 2), the read-only copies refreshed; the canary case
-   for v0.6.241's `BLOCKED_LOCK` line once main's §12 has it.
+3. The register's active entries 7.5, 8.3, 10.17 and 11.1 (D-135, D-137), then class 1 (R-47); the missed options wait in
+   their classes (10.1 Faceless Night [OBF] among them, its own design).
+4. v2.6.187 and v2.6.188 consumed: the guide's hub, ring and bot box (main's ask 2), the read-only copies refreshed; the canary cases
+   for v0.6.241's `BLOCKED_LOCK` and `RIDER_STEALTH` lines once main's §12 has them.
 5. **C**, concentrated (spec-card-sweep §11.8, D-132): C1 the cross-check tool, then the first reader's round (§11.6).
 6. Johan, asked 20 Nov (no kör yet): the pilot's flow proposals; the D line on KRCG's MCP; deleting `bot-sweep-pilot-fix2`;
    BOARD's read-through; class 1's design question.
@@ -32,5 +33,5 @@ GATES-STATUS
 Client v2.6.187 (PR #102, the bot ring) and v2.6.188 (#104, no wire change): the guide and the copies next (Next 4). Handed to
 main, unanswered (`docs/handoffs/`): the queued bridge (19 Nov; its ask: the canary's five cardfx checks skip loudly, token
 `SKIPPED`), v0.6.235's bundle (19 Nov), the guide for v2.6.179 and the licence (20 Nov, D-128), v0.6.236's lines (20 Nov),
-v0.6.237's (24 Nov), v0.6.240's (25 Nov: the chat's shape; re-embed the guide), v0.6.241's (25 Nov: the `BLOCKED_LOCK` line for
-§12; re-embed the guide).
+v0.6.237's (24 Nov), v0.6.240's (25 Nov: the chat's shape; re-embed the guide), v0.6.241's (25 Nov: the `BLOCKED_LOCK` and
+`RIDER_STEALTH` lines for §12; re-embed the guide).

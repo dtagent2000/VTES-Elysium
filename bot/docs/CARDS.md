@@ -251,7 +251,7 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Organized Resistance | Reaction | auto | FULL | playable | brujah 6 (5/12), tzimisce 3 (2/12) | 5 | 14a, 14d |  | — |
 | Quickness | Combat | curated | FULL | playable | banuhaqim 4 (15/12), brujah 5 (19/12) | 1 | 159, 161 |  | — |
 | Bewitching Oration | Action Modifier | auto | FULL | playable | toreador 4 (7/12), ventrue 4 (159/408) | 1 | 96e |  | checked |
-| Carrion Crows | Combat | auto | FULL | playable | gangrel 6 (18/12), nosferatu 2 (366/408) | 1 | 37l, 37m, 37n, 46e, 79a, 79b, 92b, 107 +5 |  | 12.3 reachable, 11.4 reachable |
+| Carrion Crows | Combat | auto | FULL | playable | gangrel 6 (18/12), nosferatu 2 (366/408) | 1 | 37l, 37m, 37n, 46e, 79a, 79b, 92b, 107 +5 |  | 12.3 reachable |
 | Cloak the Gathering | Action Modifier | auto | FULL | playable | malkavian 4 (715/408), ravnos 4 (8/12) | 3 | 2, 69c, 71, 94d, 117, 118, 122, 125 +1 |  | 8.7 latent |
 | Conditioning | Action Modifier | auto | FULL | playable | malkavian 4 (568/408), ventrue 4 (520/408) | 0 | 27b, 27c, 31, 42j, 87, 87c, 87g, 89b +11 |  | checked |
 | Enthrall | Action | auto | FULL | playable | pathcathari 8 (27/12) | 2 | — |  | — |
@@ -314,7 +314,7 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Raven Spy | Retainer | auto | FULL | playable | gangrel 2 (2/12), nosferatu 2 (290/408) | 2 | 46a, 46b, 46c, 46d, 65, 106, 117, 127 +2 |  | 1.3 reachable |
 | Relentlessness | Action Modifier | curated | FULL | playable | pathpower 4 (3/12) | 1 | — |  | — |
 | Revelations | Action | curated | FULL | playable | malkavian 4 (510/408) | 1 | 42, 42a, 42b, 42c, 42d, 42g, 42h, 91e +7 |  | 11.1 active, 10.2 missed |
-| Scalpel Tongue | Action Modifier/Reaction | curated | FULL | playable | toreador 4 (3/12) | 1 | 162, 173, 174 |  | 10.8 reachable |
+| Scalpel Tongue | Action Modifier/Reaction | curated | FULL | playable | toreador 4 (3/12) | 1 | 162, 173, 174 |  | 10.8 reachable, 4.12 reachable |
 | Sculpt the Flesh | Combat | curated | FULL | playable | tzimisce 4 (7/12) | 0 | 159, 181 |  | — |
 | Sense the Savage Way | Reaction | auto | FULL | playable | pathcaine 4 (11/12) | 4 | 178 |  | — |
 | Sentry Signal | Reaction | auto | FULL | playable | pathcaine 4 (12/12) | 4 | 178 |  | — |
@@ -343,7 +343,7 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Bear's Skin | Combat | auto | FULL | playable | gangrel 2 (2/12) | 0 | — |  | — |
 | Blood Rage | Combat | auto | FULL | playable | banuhaqim 2 (12/12) | 4 | 181 |  | — |
 | Bowl of Convergence | Equipment | curated | FULL | playable | salubri 1 (2/12), tremere 1 (54/408) | 0 | 45a, 45d, 45e, 45f, 83b, 83h, 83i, 127 +1 |  | checked |
-| Change of Target | Action Modifier | curated | FULL | playable | toreador 2 (4/12) | 9 | 162, 163, 165, 166 |  | checked |
+| Change of Target | Action Modifier | curated | FULL | playable | toreador 2 (4/12) | 9 | 162, 163, 165, 166, 187 |  | checked |
 | Claws of the Dead | Combat | curated | FULL | playable | gangrel 2 (4/12) | 1 | 159, 181 |  | — |
 | Club Illusion | Master | curated | FULL | playable | ministry 1 (36/12), ravnos 1 (7/12) | 1 | 161 |  | — |
 | Daring the Dawn | Action Modifier | auto | FULL | playable | pathpower 1 (0/12), ventrue 1 (63/408) | 3 | 101a, 101e, 101f, 102a, 102b, 103, 103c, 155 |  | checked |

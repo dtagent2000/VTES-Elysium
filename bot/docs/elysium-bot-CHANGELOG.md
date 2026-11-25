@@ -355,11 +355,16 @@
     text, each with the open register entries that are its own gaps. `gen-card-ledger.js` v1.3.0: per deck `text-checked` and `exact`
     (playable, checked, no gap that changes play: active, missed, reachable) and a row's fidelity; a gap the register no longer lists
     fails the ledger and `test-cardfx.js`. On the release bytes' 240 and V5 smokes: text-checked 77/77 for each starter, exact
-    malkavian 51, nosferatu 51, toreador 68, tremere 52, ventrue 59 of 77.
-  - *The register* — 7.1 and 7.2 deleted; 4.20 a human's Mirror Walk [THA] (the bot blocker cannot know it); 10.16 Anarch
-    Troublemaker's equipment burn and Vessel's Blood Doll burn (any Blood Doll in play [LSJ 20071012], missed: 594 of the 240's 890
-    Vessel plays came after another seat's Blood Doll); 10.2 names Creeping Sabotage's and Revelations [AUS]'s burn; 10.1 notes the
-    tie half built. Left with their reasons: Faceless Night [OBF] (10.1: its lock lands at resolution, after a failed blocker's
+    malkavian 51, nosferatu 51, toreador 68, tremere 52, ventrue 59 of 77. The mapping leaves out another card's reading of a card
+    and class 13's choices (when to play it, not its text); with 13.10 mapped on Blood Doll and Vessel, malkavian 47 and ventrue 56.
+  - *The register* — 7.1 and 7.2 deleted; 4.20 a human's Mirror Walk [THA] (the client writes the level into a human's play line;
+    no bot reads that line yet); 10.16 Anarch Troublemaker's equipment burn and Vessel's Blood Doll burn (any Blood Doll in play
+    [LSJ 20071012], missed: 366 of the 240's 570 Vessels placed came after another seat had placed a Blood Doll); 10.2 names Creeping
+    Sabotage's and Revelations [AUS]'s burn; 10.1 notes the tie half built; 7.5 the `plusIf` row's other cards (Protection Racket
+    active: 7 of the V5 smokes' 13 plays met a titled actor and booked +1; Ministry, Sense the Sin [dai] and The Mausoleum, Venice
+    latent); 11.4 keeps only Saulot's Guiding Wisdom (its Change of Target half went with the before-range re-checks: `_onCot` sets
+    the cancel for either line, 187l); 13.10 counted (missed: 312 round-1 picks of Blood Doll and Vessel before the picker has a
+    vampire, 120 with another master waiting; v0.6.240's the same). Left with their reasons: Faceless Night [OBF] (10.1: its lock lands at resolution, after a failed blocker's
     Deflection or Guard Dogs [ANK 20171017], across a bounce), Cloak the Gathering (8.7, latent), Raven Spy (1.3: class 1).
   - *Tools* — arena v1.4.17 (`riderTie` in the `--knob` whitelist); `gen-deck-coverage.js` v1.1.56 (`plusIf`, `blockedLockEnd`); `cardfx-sharing.json` (`plusIf`: Aire of Elation,
     Ministry, Protection Racket, Sense the Sin, The Mausoleum, Venice, The Warrens; `blockedLockEnd`: Claiming the Body, Mirror Walk,
@@ -374,7 +379,10 @@
     paid (72 at 1 blood, 12 at 2, 1 at 3) — held. (7) VP a match within ±0.05: malkavian 1.63 → 1.61, ventrue 1.19 → **1.33**,
     nosferatu 0.60 → **0.54**, tremere 0.59 → **0.52** — missed for three decks: a woken vampire now bounces with no wake card
     left (bounces ventrue 264 → 299, tremere 108 → 127, malkavian 249 → 256), which Claude counted as a card saved, not bounces
-    gained. The 14 V5 smokes: PASS 6/6 but banuhaqim's ledger (one steal pair, the victim lost 2, the stealer booked 1: BOARD's
+    gained. The paired 240 with `riderTie` 0 on the same bytes (the review's pass 3 asked): the rider never fires (0 of 315 Mirror
+    Walk plays), DIVERGED 94 / SAME-PLAY 146 against `riderTie` 1, `ana-gates.py` PASS 6/6, VP malkavian 1.57, ventrue 1.32,
+    nosferatu 0.61, tremere 0.51: the knob explains none of tremere's fall, and nosferatu's 0.61 against 0.54 lies inside the noise
+    (±0.07 each). The 14 V5 smokes: PASS 6/6 but banuhaqim's ledger (one steal pair, the victim lost 2, the stealer booked 1: BOARD's
     measurement debt "a steal's victim lost > stole"; v0.6.240's run of that smoke played other games in 11 of 12 matches).
   - *The egress review* — pass 1 (9 findings: rule-missed 5, unproven 2, half-done 1, stale-doc 1), all fixed: the blocker's race
     with BLOCKED_LOCK (above); the handoff's purge names `elysium-cardfx.json`; Mirror Walk [THA] on a leave-torpor action; the
@@ -386,12 +394,25 @@
     both lines in §12; BOARD's lists; Mirror Walk's curated note (recompiled, the note only); ARCHITECTURE's rows; Life in the
     City's target (10.18, latent); the fidelity file's counts; the playtests' questions as O-53; and Bonding [DOM] (10.17, active:
     spent for its stealth it adds no bleed and takes no limited slot, 18 of the 240's actions followed it with Conditioning, v0.6.240
-    19), registered for a release of its own (D-135) and mapped on Bonding, so exact fell where Bonding sits. EGRESS-PASS-3
-  - *Tests*: section 187 (a–k, 18 checks): a–d the table bugs, e Aire of Elation, f The Warrens, g Life in the City, h the second
+    19), registered for a release of its own (D-135) and mapped on Bonding, so exact fell where Bonding sits. Pass 3 (a new reviewer, the
+    last D-133 allows; 9 findings: stale-doc 5, unproven 3, rule-missed 1), all fixed: Protection Racket's +1 against a titled
+    actor, found and not registered (7.5, active, with the row's other cards); 11.4's Change of Target half, built by pass 2's
+    re-checks (narrowed; 187l); 4.20's claim that a human's line names no level (the client's `modeChoice` writes it); STATUS's
+    active entries and both new lines; room in the bootstrap for the gate line; the mapping rule in the fidelity file's `about`
+    (4.12 added on Scalpel Tongue; 13.10's evidence and state); 10.16's counts (Vessels placed, not picked); this entry's 59c;
+    README's row for `cardfx-fidelity.json`. Its three questions go to Johan in the PR: Faceless Night's deferral, 13.10 and exact,
+    `riderTie`'s default (the paired 240 above).
+  - *Tests*: section 187 (a–l, 19 checks): a–d the table bugs, e Aire of Elation, f The Warrens, g Life in the City, h the second
     wake, i Mirror Walk [THA] (the tie and its knob, the line, the blocker on both paths, the after-block card, leave torpor), j
-    Creeping Sabotage (the finder and the branch), k a cancel heard under a before-range gate — green on the new bytes; red on v0.6.240 and, for the review's cases, on the
-    bytes before each fix; e, f and i red on the new bot with the data from before their merges. 59c, 104d and 121f follow the
-    sources. *Gates*: GATES-BELOW.
+    Creeping Sabotage (the finder and the branch), k and l a cancel heard under a before-range gate (the lock line; Change of
+    Target's) — green on the new bytes; red on v0.6.240 and, for the review's cases, on the
+    bytes before each fix; e, f and i red on the new bot with the data from before their merges. 104d and 121f follow the
+    sources. *Gates* (the release bytes, `elysium-bot.js` `d797e1fd`, test `a8557422`, cardfx
+    `4627ff1c`; the bot and cardfx bytes unchanged since pass 2's fixes, whose test bytes `341eec63` passed 2840/0 ×3): the suite
+    2841/0 ×3, section 187 alone 19/0, canary 235/0 ×2 (the copies; the root's v2.6.188), main's canary v1.6.0 247/0, `test-cardfx.js`
+    503/0, hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.188) 430/1 (the guide's embed), the arena smoke (one
+    match, the four starters, the real clock) PASS 7/7, the 240 and the 14 smokes as above, `gen-card-ledger.js --self-test`
+    81/81, `tools/doc-budget.sh` PASS (the bootstrap 49,913 / 50,000), `client/check-versions.js` everything agrees.
 - **v0.6.240 (25 Nov 2026; PR #108)** — The chat round (D-137, Johan's kör of 24 Nov 21:25; BOARD's chat-round line): what a
   table of people sees in the bubbles. The bubbles stay and keep their content; one speaker at a time; no "(bot):" prefix; a
   question to a bot without the human's tail. The recorder and the analyser are in the repo now (`tools/chat-record.js`,
