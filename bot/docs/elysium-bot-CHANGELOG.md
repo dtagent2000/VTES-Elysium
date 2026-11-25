@@ -344,8 +344,9 @@
     [PIB 20121216]. A bot blocker hears the rider at the actor's stealth line (`RIDER_STEALTH`, `pending.riderLock`): at its own
     successful verdict its vampire is locked [ANK 20191204] and no combat begins, so nothing of one is spent and no "after block
     resolution" card follows; one that missed it reads the line (`_onCot` with lock), and the before-range step re-checks a cancel
-    before each card. **Life in the City** is held while I control no ready vampire (`_masterHold`; the advanced rules 3.1.3: no
-    legal object, no play). **The second wake**: the block route records a wake on the action's pending (`p.woken`, `_markWoken`),
+    before each card, as Wall of Filth and the pumps do under their own gates (`_cotPending`). **Life in the City** is held while I
+    control no ready vampire (`_masterHold`): no legal object in the first round (the advanced rules 3.1.3); where only another seat
+    has one, a choice (register 10.18). **The second wake**: the block route records a wake on the action's pending (`p.woken`, `_markWoken`),
     the bounce and the reduce read it (`_awake`), so a vampire woken for its block bounces with no second wake, and one with no
     wake card left still can; the vote reacts keep their own wake (in a poll `this.pending` can be another action's: the suite's
     59c caught a stale record waking a locked vampire). **Creeping Sabotage**: "Cost: X blood", X the copies already in play,
@@ -354,13 +355,13 @@
     text, each with the open register entries that are its own gaps. `gen-card-ledger.js` v1.3.0: per deck `text-checked` and `exact`
     (playable, checked, no gap that changes play: active, missed, reachable) and a row's fidelity; a gap the register no longer lists
     fails the ledger and `test-cardfx.js`. On the release bytes' 240 and V5 smokes: text-checked 77/77 for each starter, exact
-    malkavian 55, nosferatu 51, toreador 68, tremere 58, ventrue 59 of 77.
+    malkavian 51, nosferatu 51, toreador 68, tremere 52, ventrue 59 of 77.
   - *The register* — 7.1 and 7.2 deleted; 4.20 a human's Mirror Walk [THA] (the bot blocker cannot know it); 10.16 Anarch
     Troublemaker's equipment burn and Vessel's Blood Doll burn (any Blood Doll in play [LSJ 20071012], missed: 594 of the 240's 890
     Vessel plays came after another seat's Blood Doll); 10.2 names Creeping Sabotage's and Revelations [AUS]'s burn; 10.1 notes the
     tie half built. Left with their reasons: Faceless Night [OBF] (10.1: its lock lands at resolution, after a failed blocker's
     Deflection or Guard Dogs [ANK 20171017], across a bounce), Cloak the Gathering (8.7, latent), Raven Spy (1.3: class 1).
-  - *Tools* — `gen-deck-coverage.js` v1.1.56 (`plusIf`, `blockedLockEnd`); `cardfx-sharing.json` (`plusIf`: Aire of Elation,
+  - *Tools* — arena v1.4.17 (`riderTie` in the `--knob` whitelist); `gen-deck-coverage.js` v1.1.56 (`plusIf`, `blockedLockEnd`); `cardfx-sharing.json` (`plusIf`: Aire of Elation,
     Ministry, Protection Racket, Sense the Sin, The Mausoleum, Venice, The Warrens; `blockedLockEnd`: Claiming the Body, Mirror Walk,
     Mirror's Visage, Red Herring [CHI]); cardfx curated 218 → 221 (three merges; the compile changes only those entries).
   - *Prediction* (D-93; registered 25 Nov 20:32 UTC, after the first run started, before any output was read) and *observed* (the
@@ -379,10 +380,16 @@
     with BLOCKED_LOCK (above); the handoff's purge names `elysium-cardfx.json`; Mirror Walk [THA] on a leave-torpor action; the
     fidelity file's missing gaps (Vessel 10.16 missed, Creeping Sabotage and Revelations 10.2); the tie behind `riderTie`; Red
     Herring [CHI] in the sharing row; the doc budgets (the round's lines cut first, then RULINGS, LESSONS and the total raised);
-    this entry's figures on the final bytes; the creep branch's payment tested. EGRESS-PASS-2
-  - *Tests*: section 187 (a–j, 17 checks): a–d the table bugs, e Aire of Elation, f The Warrens, g Life in the City, h the second
+    this entry's figures on the final bytes; the creep branch's payment tested. Pass 2 (a new reviewer; 11 findings: stale-doc 5,
+    unproven 3, half-done 2, rule-missed 1), all fixed or registered: Wall of Filth and the pumps check for a cancel under their gates
+    and 187k drives the line path through `_resolveCombat`; the arena's whitelist; the handoff names `RIDER_STEALTH` and asks for
+    both lines in §12; BOARD's lists; Mirror Walk's curated note (recompiled, the note only); ARCHITECTURE's rows; Life in the
+    City's target (10.18, latent); the fidelity file's counts; the playtests' questions as O-53; and Bonding [DOM] (10.17, active:
+    spent for its stealth it adds no bleed and takes no limited slot, 18 of the 240's actions followed it with Conditioning, v0.6.240
+    19), registered for a release of its own (D-135) and mapped on Bonding, so exact fell where Bonding sits. EGRESS-PASS-3
+  - *Tests*: section 187 (a–k, 18 checks): a–d the table bugs, e Aire of Elation, f The Warrens, g Life in the City, h the second
     wake, i Mirror Walk [THA] (the tie and its knob, the line, the blocker on both paths, the after-block card, leave torpor), j
-    Creeping Sabotage (the finder and the branch) — green on the new bytes; red on v0.6.240 and, for the review's cases, on the
+    Creeping Sabotage (the finder and the branch), k a cancel heard under a before-range gate — green on the new bytes; red on v0.6.240 and, for the review's cases, on the
     bytes before each fix; e, f and i red on the new bot with the data from before their merges. 59c, 104d and 121f follow the
     sources. *Gates*: GATES-BELOW.
 - **v0.6.240 (25 Nov 2026; PR #108)** — The chat round (D-137, Johan's kör of 24 Nov 21:25; BOARD's chat-round line): what a
@@ -2464,6 +2471,7 @@
 - **elysium-bot-table.js v1.1.0 (11 Sep 2026)** — `--decks a,b,c` rotates the registered ARCHETYPES over the seats (every live-table bot used to play DEFAULT_DECK); CLI main guarded, `parseArgs`/`resolveDeck` exported for the suite.
 
 ## Arena
+- **v1.4.17 (25 Nov 2026)** — the `--knob` whitelist gains `riderTie` (bot v0.6.241).
 - **v1.4.16 (24 Nov 2026)** — the `--knob` whitelist gains `spreadIncome` (bot v0.6.237).
 - **v1.4.8 (17 Oct 2026)** — the `--knob` whitelist gains `dodgeOut` (bot v0.6.205's knob; `--knob dodgeOut=0` was ignored with a warning) and `probeHold` (bot v0.6.206).
 - **v1.4.3 (22 Sep 2026)** — `--knob` whitelist + `combatMind` (bot v0.6.156).

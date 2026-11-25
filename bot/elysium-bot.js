@@ -4741,6 +4741,11 @@ class Bot {
     this._cotCancel = { vamp: vampName, who, at: Date.now(), lock: !!lock };
     if(this._inCombat && typeof this._maneuverWaiter === 'function'){ const w = this._maneuverWaiter; this._maneuverWaiter = null; try { w({ none: true, cot: true }); } catch(e){} }   // my first wait was for the acting minion's line: it will not come
   }
+  _cotPending(myVamp){             // v0.6.241 (the egress review, pass 2): a cancel waiting for THIS combat (_cotHit's tests, not consumed) -- a helper whose gate heard it spends nothing; the step's _cotHit then ends the combat
+    const c = this._cotCancel; if(!c || Date.now() - c.at > 30000) return false;
+    const opp = (myVamp && this._combatOppOf && this._combatOppOf.get(myVamp.id)) || this._combatOppName || null;
+    return !(opp && opp !== c.vamp);
+  }
   _cotHit(myVamp){                  // v0.6.217: is the combat I am in the one a Change of Target ended? The blocker never locked (the card comes before it does [LSJ 19980224]): it unlocks
     const c = this._cotCancel; if(!c || Date.now() - c.at > 30000) return false;
     const opp = (myVamp && this._combatOppOf && this._combatOppOf.get(myVamp.id)) || this._combatOppName || null; if(opp && opp !== c.vamp) return false;   // v0.6.221 (the Jack round, D-113): the combat's OWN opponent first -- v0.6.220's 600, match 528: a later block's combat had rewritten the shared name, so The Dowager's cancelled combat read Catalina and fought on
@@ -9764,6 +9769,7 @@ class Bot {
   async _playWallOfFilth(myVamp){    // the before-range step: no downside to play it once (the burn is a later decision), so the first round I can
     const wf = this._bestWallFor(myVamp); if(!wf) return false;
     const ct = this._combatTok; await this._combatGate(true); if(ct !== this._combatTok) return false;   // v0.6.222: superseded while the gate waited
+    if(this._cotPending(myVamp)) return false;   // v0.6.241 (the egress review, pass 2): a cancel heard under the gate (Change of Target, BLOCKED_LOCK) -- the card stays in hand
     const j = this.hand.indexOf(wf.name); if(j < 0) return false;
     this.hand.splice(j, 1); this._drawOwed = (this._drawOwed || 0) + 1;
     if(wf.cost) myVamp.blood = Math.max(0, (myVamp.blood | 0) - wf.cost);
@@ -9937,6 +9943,7 @@ class Bot {
       this.o.log('before-range (' + myVamp.name + '): ' + d.why);
       if(!d.play) break;
       await this._combatGate(true); if(ct !== this._combatTok) return played;   // a hold stops it; a watched bot duel gets its beat (v0.6.222: superseded while it waited)
+      if(this._cotPending(myVamp)) return played;   // v0.6.241 (the egress review, pass 2): a cancel heard under the gate -- no further pump
       if(!this._brPlay(myVamp, best.c, best.nx)) break;
       played = true;
     }

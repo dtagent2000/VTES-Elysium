@@ -27,7 +27,7 @@ Sim: `fin-240` — 240 matches, bot v0.6.241 on client v2.6.179, malkavian,treme
 | gangrel | 65 | 2 | 2 | 8 | 0 | 12 | 36/77 | 20/77 |
 | hecata | 50 | 4 | 0 | 23 | 0 | 12 | 17/77 | 6/77 |
 | lasombra | 57 | 4 | 2 | 14 | 0 | 12 | 29/77 | 22/77 |
-| malkavian | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 55/77 |
+| malkavian | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 51/77 |
 | ministry | 64 | 1 | 9 | 3 | 0 | 12 | 29/77 | 21/77 |
 | nosferatu | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 51/77 |
 | pathcaine | 51 | 8 | 0 | 18 | 0 | 12 | 8/77 | 3/77 |
@@ -35,9 +35,9 @@ Sim: `fin-240` — 240 matches, bot v0.6.241 on client v2.6.179, malkavian,treme
 | pathdeath | 41 | 6 | 1 | 29 | 0 | 12 | 12/77 | 7/77 |
 | pathpower | 49 | 10 | 0 | 18 | 0 | 12 | 35/77 | 24/77 |
 | ravnos | 51 | 4 | 13 | 9 | 0 | 12 | 31/77 | 31/77 |
-| salubri | 57 | 3 | 5 | 12 | 0 | 12 | 35/77 | 16/77 |
+| salubri | 57 | 3 | 5 | 12 | 0 | 12 | 35/77 | 12/77 |
 | toreador | 76 | 1 | 0 | 0 | 0 | 12 | 77/77 | 68/77 |
-| tremere | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 58/77 |
+| tremere | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 52/77 |
 | tzimisce | 59 | 1 | 9 | 8 | 0 | 12 | 27/77 | 23/77 |
 | ventrue | 77 | 0 | 0 | 0 | 0 | 408 | 77/77 | 59/77 |
 
@@ -230,7 +230,7 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Majesty | Combat | auto | FULL | playable | pathpower 3 (4/12), ravnos 4 (9/12), toreador 6 (21/12), ventrue 6 (672/408) | 1 | 97, 97a, 97c, 97d, 101c, 101e, 117, 127 +7 |  | checked |
 | Cats' Guidance | Reaction | curated | FULL | playable | gangrel 4 (9/12), nosferatu 4 (569/408), ravnos 4 (10/12), tzimisce 4 (14/12) | 2 | 42j, 47a, 47d, 147, 187 |  | checked |
 | Lost in Crowds | Action Modifier | auto | FULL | playable | malkavian 4 (559/408), ministry 4 (6/12), nosferatu 4 (375/408), ravnos 4 (10/12) | 0 | 2, 10, 11, 38, 69c, 94d, 115, 117 +7 |  | 8.7 latent |
-| Bonding | Action Modifier | auto | FULL | playable | malkavian 4 (527/408), salubri 4 (13/12), tremere 6 (848/408) | 2 | 27b, 27c, 42j, 94d, 157, 180 |  | checked |
+| Bonding | Action Modifier | auto | FULL | playable | malkavian 4 (527/408), salubri 4 (13/12), tremere 6 (848/408) | 2 | 27b, 27c, 42j, 94d, 157, 180 |  | 10.17 active |
 | Swallowed by the Night | Action Modifier/Combat | auto | FULL | playable | banuhaqim 6 (13/12), malkavian 4 (435/408), ravnos 4 (1/12) | 0 | 2, 37j, 94d, 125, 127 |  | checked |
 | Parity Shift | Political Action | auto | FULL | playable | banuhaqim 2 (3/12), lasombra 2 (4/12), toreador 4 (5/12), ventrue 5 (425/408) | 4 | 95, 96a, 96b, 96d, 98c, 103a, 105, 127 +4 |  | checked |
 | Deep Song | Action | curated | FULL | playable | gangrel 6 (20/12), nosferatu 6 (776/408) | 2 | 48, 48b, 48c, 61, 63, 63a, 65, 66b +17 |  | checked |
@@ -274,7 +274,7 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Revelation of the Serpent | Action Modifier | auto | FULL | playable | ministry 6 (14/12) | 1 | — |  | — |
 | Rolling with the Punches | Combat | auto | FULL | playable | hecata 4 (11/12), salubri 2 (6/12) | 3 | — |  | — |
 | Unholy Sacrament | Master | handler | HANDLER | playable | pathcaine 3 (4/12), pathpower 3 (4/12) | 0 | 161 |  | — |
-| Wall of Filth | Combat | curated | FULL | playable | pathcaine 6 (21/12) | 3 | 159, 166 |  | — |
+| Wall of Filth | Combat | curated | FULL | playable | pathcaine 6 (21/12) | 3 | 159, 166, 187 |  | — |
 | Bait and Switch | Reaction | auto | FULL | playable | brujah 2 (2/12), tzimisce 3 (5/12) | 6 | 14a, 19h, 28, 29, 29c, 32, 32a, 32b +2 |  | — |
 | Earth Meld | Combat | auto | FULL | playable | ministry 5 (11/12) | 1 | — |  | — |
 | Flash | Combat | curated | FULL | playable | banuhaqim 5 (19/12) | 1 | 160, 161 |  | — |
@@ -354,7 +354,7 @@ Every library entry of `elysium-cardfx.json` by the verdict the rows of the ledg
 | Information Highway | Master | curated | FULL | playable | lasombra 1 (0/12), ventrue 1 (120/408) | 0 | 24, 71, 102d, 177 |  | checked |
 | Ivory Bow | Equipment | auto | FULL | playable | ministry 1 (12/12), salubri 1 (3/12) | 0 | 159, 181 |  | — |
 | KRCG News Radio | Master | curated | FULL | playable | pathdeath 1 (7/12), salubri 1 (4/12) | 1 | — |  | — |
-| Life in the City | Master | handler | HANDLER | playable | malkavian 2 (403/408) | 0 | 187 |  | checked |
+| Life in the City | Master | handler | HANDLER | playable | malkavian 2 (403/408) | 0 | 187 |  | 10.18 latent |
 | Magic of the Smith | Action | curated | FULL | playable | tremere 2 (280/408) | 6 | 45e, 46c, 91e, 139, 150, 156 |  | checked |
 | Oblivion | Master | curated | FULL | playable | hecata 1 (2/12), lasombra 1 (2/12) | 0 | 162, 163, 164, 179, 185 |  | — |
 | Pentex™ Subversion | Master | curated | FULL | playable | pathcathari 1 (0/12), tremere 1 (150/408) | 0 | 44, 44a, 44c, 44d, 157 |  | 10.2 missed, 10.14 reachable, 6.2 reachable |

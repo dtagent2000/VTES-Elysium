@@ -1,5 +1,5 @@
 {
- "about": "The fidelity pass (RULINGS D-138; 25 Nov 2026, the exactness round, bot v0.6.241): the cards whose cardfx entry someone read clause by clause against KRCG's text, and for each the open docs/SWEEP-REGISTER.md entries that are its own gaps -- the reader's mapping: an entry that only mentions a card as an example is not its gap; 'id@state' names the half of a compound entry that is the card's. gen-card-ledger.js (v1.3.0) counts a deck's copies text-checked when their card is here, exact when they are also playable in the deck and no gap is in a state that changes a sim deck's own play (active, missed, reachable); it fails its run on a gap the register no longer lists (a fixed entry is deleted: drop its id here in the same round). First pass: the five base starters' 92 library cards -- Claude's spot check of 30 auto entries (claude/card-fidelity-spotcheck-2026-11-25.md in the project) and this round's pass over the other 62 (58 curated, the three equipment, the four political actions).",
+ "about": "The fidelity pass (RULINGS D-138; 25 Nov 2026, the exactness round, bot v0.6.241): the cards whose cardfx entry someone read clause by clause against KRCG's text, and for each the open docs/SWEEP-REGISTER.md entries that are its own gaps -- the reader's mapping: an entry that only mentions a card as an example is not its gap; 'id@state' names the half of a compound entry that is the card's. gen-card-ledger.js (v1.3.0) counts a deck's copies text-checked when their card is here, exact when they are also playable in the deck and no gap is in a state that changes a sim deck's own play (active, missed, reachable); it fails its run on a gap the register no longer lists (a fixed entry is deleted: drop its id here in the same round). First pass: the five base starters' 92 library cards -- Claude's spot check of 30 of the then 37 auto entries (the project's card-fidelity spot check of 25 Nov) and this round's pass over the other 62 (the 55 entries curated then, Life in the City's included, the three equipment and the four political actions); three of the 37 are curated merges since (Aire of Elation, The Warrens, Mirror Walk): 58 curated and 34 auto in all.",
  "checked": {
   ".44 Magnum": {"on": "2026-11-25", "by": "Claude", "gaps": ["5.2", "12.5"]},
   "Academic Hunting Ground": {"on": "2026-11-25", "by": "Claude"},
@@ -12,7 +12,7 @@
   "Asylum Hunting Ground": {"on": "2026-11-25", "by": "Claude"},
   "Bewitching Oration": {"on": "2026-11-25", "by": "Claude"},
   "Blood Doll": {"on": "2026-11-25", "by": "Claude"},
-  "Bonding": {"on": "2026-11-25", "by": "Claude"},
+  "Bonding": {"on": "2026-11-25", "by": "Claude", "gaps": ["10.17"]},
   "Bowl of Convergence": {"on": "2026-11-25", "by": "Claude"},
   "Carrion Crows": {"on": "2026-11-25", "by": "Claude", "gaps": ["12.3@reachable", "11.4"]},
   "Cats' Guidance": {"on": "2026-11-25", "by": "Claude"},
@@ -46,7 +46,7 @@
   "Intimidation": {"on": "2026-11-25", "by": "Claude"},
   "Kevlar Vest": {"on": "2026-11-25", "by": "Claude", "gaps": ["7.3"]},
   "Kine Resources Contested": {"on": "2026-11-25", "by": "Claude"},
-  "Life in the City": {"on": "2026-11-25", "by": "Claude"},
+  "Life in the City": {"on": "2026-11-25", "by": "Claude", "gaps": ["10.18"]},
   "Lost in Crowds": {"on": "2026-11-25", "by": "Claude", "gaps": ["8.7"]},
   "Magic of the Smith": {"on": "2026-11-25", "by": "Claude"},
   "Majesty": {"on": "2026-11-25", "by": "Claude"},

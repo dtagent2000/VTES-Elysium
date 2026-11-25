@@ -58,11 +58,11 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   compares the card score with and without the streak.
 
 ## The sweep register (D-135): `SWEEP-REGISTER.md` by class; a round takes one; *done when* its class is empty
-- **The active entries** (8.3 Bait and Switch by a non-baron; 11.1 Revelations' predator never asked; 7.1 and 7.2 were fixed in
-  v0.6.241): rules broken in the 240 or a smoke, each a release of its own (D-135; Claude orders them, D-137). The missed
+- **The active entries** (8.3 Bait and Switch by a non-baron; 10.17 Bonding [DOM]'s bleed and limit; 11.1 Revelations' predator
+  never asked): rules broken in the 240 or a smoke, each a release of its own (D-135; Claude orders them, D-137). The missed
   options (4.6 the onward bounce, 5.2 the .44 Magnum's maneuver, 8.6 Freak Drive after a failed referendum, 9.8 Form of Mist's
-  continue, 10.1 Faceless Night [OBF], 10.2 burning another's card, 12.2 Precognition and Spirit's Touch [AUS]) wait in their
-  classes until their class's round.
+  continue, 10.1 Faceless Night [OBF], 10.2 burning another's card, 10.16 Vessel's and Anarch Troublemaker's burns, 12.2
+  Precognition and Spirit's Touch [AUS]) wait in their classes until their class's round.
 - **The fidelity pass** (D-138): `cardfx-fidelity.json` and CARDS.md's `text-checked` / `exact` per deck; the five base starters
   were read in v0.6.241. Next the other 13 V5 decks' cards, a deck a round or riding with C's families (D-132). *Done when* every
   deck's text-checked is N/N and each gap it finds is in the register.

@@ -16729,6 +16729,8 @@ async function connectWithRetry(client, tries = 30){
        check): a superior Thaumaturgy vampire takes the rider mode on the stealth tie, and its play line names the level; blocked, the
        blocker is locked and the action ends with no combat (BLOCKED_LOCK), the blocker's bot keeps its vampire locked, no combat.
        (j) Creeping Sabotage's 'Cost: X blood' (the fidelity pass): X the copies already in play, paid by the acting vampire.
+       (k) the egress review, pass 2: a cancel heard under a before-range gate (BLOCKED_LOCK after a bounce) spends nothing --
+       Carrion Crows by the step's re-check, Wall of Filth by its helper's.
        LAST LINE OF 187 is the closing brace below. */
     {
       console.log('\n[187] v0.6.241 -- the exactness round: the playtests’ table bugs and the base starters’ card gaps');
@@ -16955,6 +16957,25 @@ async function connectWithRetry(client, tries = 30){
         const JB = await runJ('block'), JT = await runJ('no');
         ok(!JB.terr && !JT.terr && JB.paidAt === 2 && JB.blood === 3 && JB.returned && JB.copies === 1 && JT.paidAt === 2 && JT.blood === 2 && !JT.returned && JT.copies === 2,
            '187j the creep branch pays the X blood at announce (3 -> 2 while the block is asked), gives it back when the action is blocked (no copy added) and keeps it paid when it succeeds (the second copy in play) (got ' + JSON.stringify({ JB, JT }) + ')');
+      }
+      // k) a cancel heard under a before-range gate spends nothing (the egress review, pass 2: the line path, which a bounce's new target takes)
+      { const cfK = JSON.parse(require('fs').readFileSync(__dirname + '/elysium-cardfx.json', 'utf8'));
+        let aniSup = null; for(const nm in cfK.crypt){ const d = cfK.crypt[nm].disc; if(d && d.sup && d.sup.includes('ani')){ aniSup = nm; break; } }
+        const mkK = (hand, vampName) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Sven', persona: 'grinder', paceMs: 0, log: () => {} });
+          u.seat = 3; u.turnSeat = 2; u.started = true; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }];
+          u.sent = []; u.send = m => u.sent.push(m); u.push = () => {};
+          u._awaitOppManeuver = () => Promise.resolve(null); u._awaitOppPress = () => Promise.resolve(null); u._awaitOppTaken = () => Promise.resolve(null);
+          u._awaitOppStrike = () => Promise.resolve({ vamp: 'Rosalina Cortez (G6)', dodge: true, dealt: 0 });
+          const v = { id: 'k1', name: vampName, kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 8 }; u.board = [v]; u.hand = hand.slice();
+          u._myBlockOf = { vamp: 'Rosalina Cortez (G6)', at: Date.now() };
+          let fired = false; u._combatGate = async () => { if(!fired){ fired = true; u._onLog('Henrik', '<b>Rosalina Cortez (G6)</b> is blocked — <b>Mirror Walk</b> [THA]: <b>Sven</b>\'s <b>' + vampName + '</b> is locked; the action ends unsuccessfully.'); } };
+          return { u, v }; };
+        const K1 = mkK(['Carrion Crows'], aniSup), K2 = mkK(['Wall of Filth'], 'Trevon Parker (G6)');
+        await Promise.race([K1.u._resolveCombat(K1.v, 'Rosalina Cortez (G6)'), sleep(6000)]);
+        await Promise.race([K2.u._resolveCombat(K2.v, 'Rosalina Cortez (G6)'), sleep(6000)]);
+        const got = { crows: K1.u.hand.includes('Carrion Crows') && !K1.u._carrionCrows, wall: K2.u.hand.includes('Wall of Filth') && !K2.u.board.some(c => c.name === 'Wall of Filth'), locked: K1.v.locked && K2.v.locked };
+        ok(got.crows && got.wall && got.locked,
+           '187k a BLOCKED_LOCK line heard under a before-range gate spends nothing: Carrion Crows stays in hand (the step’s re-check), Wall of Filth too (its helper’s), the blockers stay locked (got ' + JSON.stringify(got) + ')');
       }
     }
 

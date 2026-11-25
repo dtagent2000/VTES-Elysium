@@ -1,6 +1,6 @@
 # STATUS — Elysium Bots (rewritten at every release; 25 November 2026)
 
-**Bot v0.6.241** (25 Nov 2026, the exactness round) · arena v1.4.16 · sim table v1.1.0 · cardfx compiler v1.11.4, curated 221 ·
+**Bot v0.6.241** (25 Nov 2026, the exactness round) · arena v1.4.17 · sim table v1.1.0 · cardfx compiler v1.11.4, curated 221 ·
 hotseat tool v1.5.0 · coverage tool v1.1.56 · card ledger v1.3.0 · review sheet v1.0.1 · precon generator v1.1.1 · `krcg-v5.js`
 v1.0.0 · `ana-gates.py` v1.1.4 · the chat recorder and `tools/ana-chat.py` v1.0.0 ·
 the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51;
@@ -17,7 +17,7 @@ GATES-STATUS
    claude/playtest-claude-game1 and -game2: the bounce after "No block", voting as a human, the caller's last word, the resolution panel) and the pool floor
    (O-52): what he asks for is built next.
 2. The fidelity pass (D-138, BOARD): the other 13 V5 decks' cards, a deck a round or with C's families; CARDS.md's `exact`
-   column is the measure (the five starters: malkavian 55/77, nosferatu 51/77, toreador 68/77, tremere 58/77, ventrue 59/77).
+   column is the measure (the five starters: malkavian 51/77, nosferatu 51/77, toreador 68/77, tremere 52/77, ventrue 59/77).
 3. The register's active entries 8.3 and 11.1 (D-135, D-137), then class 1 (R-47); the missed options wait in their classes
    (10.1 Faceless Night [OBF] among them, its own design).
 4. v2.6.187 and v2.6.188 consumed: the guide's hub, ring and bot box (main's ask 2), the read-only copies refreshed; the canary case

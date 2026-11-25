@@ -35,7 +35,7 @@ What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
 source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's and v0.6.239's egress reviews; Claude orders the rounds, D-137).
-Active entries: 8.3, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 10.16, 12.2.
+Active entries: 8.3, 10.17, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 10.16, 12.2.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -306,6 +306,16 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   · missed (Vessel; v0.6.241's 240: 594 of its 890 plays came after another seat's Blood Doll in the same match, 170 matches; no
   bot burns one) / reachable (ventrue ×1: Anarch Troublemaker, against tremere's equipment) · the burn of
   an opponent's Blood Doll when Vessel is played; the equipment burn as the giver's choice when it is worth more than two locks.
+- **10.17 Bonding [DOM] spent for its stealth** — "+1 stealth and +1 bleed (limited)" (KRCG): `_spendStealthCard` adds the stealth
+  only, never the +1 bleed, and takes no limited slot, so Conditioning (limited) can follow in the same action ("one limited action
+  modifier may increase the bleed amount per action", the advanced rules 3.7.1). [the exactness round's egress review, pass 2]
+  · **active** (v0.6.241's 240: 208 stealth plays, 110 of their bleeds through without the +1, 18 followed by Conditioning in the
+  same action; v0.6.240's: 217, 118, 19) · the stealth spend applies the mode's bleed to the running amount and its limited slot,
+  as `_playBleedModifier` does.
+- **10.18 Life in the City on another Methuselah's vampire** — "Add 1 blood to a ready vampire" names no controller (the advanced
+  rules 6.1.4); the entry's `own-ready` and the handler pick only mine, and v0.6.241 holds the card while I have no ready vampire:
+  no legal object in the first round, a choice where another seat has one. [the exactness round's egress review, pass 2] · latent
+  (no bot gives another seat blood: no ally is modelled).
 
 ## 11. Windows: who is asked, and when
 Who may answer an action or a card, and in which window; a line read after its window closed.
