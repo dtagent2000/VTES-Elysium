@@ -320,6 +320,69 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.240 (25 Nov 2026; PR #PRNUM)** — The chat round (D-137, Johan's kör of 24 Nov 21:25; BOARD's chat-round line): what a
+  table of people sees in the bubbles. The bubbles stay and keep their content; one speaker at a time; no "(bot):" prefix; a
+  question to a bot without the human's tail. The recorder and the analyser are in the repo now (`tools/chat-record.js`,
+  `tools/ana-chat.py`; HOWTO), and every line before and after went to Johan in a ruling doc (O-51): the BOARD line stays until
+  he has ruled. No new verb or field; the wire's text and timing change (the handoff to main).
+  - *The prefix* — `chat()` drops "Name (bot): " and every "(bot)": the client's bubble names its speaker, the log line names the
+    seat. Notes keep `NAME (bot)` (`L12.debugOn` / `debugOff`, `_evClassify`). The readers were checked first: `_onChat`'s last
+    prefix parser went in v0.6.106, `_evClassify` strips either shape, and the client, the server, main's canary and tests read none.
+  - *The tail* — a question only bots are asked ends at its "?" (`_askBlock`); a human asked keeps `— say "block" or "no" (20s →
+    no)`. A round's combat summary says "tell me if your side differs" only to a human or an unknown opponent (`_combatTell`).
+    `_evClassify` types a tail-less question as an ask.
+  - *The floor* — another seat's chat holds the floor as long as the client shows it (`bubbleMs`: `sayBubbleMs` at multiplier 1.0,
+    the 180-character clamp), a quick phrase or a verdict pulse 1.5 s (`_floorSeen`; a spectator's none). A bubble of mine waits in
+    `_drain` until the floor is free, plus 250 ms a ring step from the turn seat (also from the last table event: two seats moved by
+    one line speak in ring order). Only where the table is paced for people (`_floorOn`: paceMs 1.5 s or more and an ask clock of
+    10 s or more, the client's 3.1 s and 20 s); `o.chatFloor` 0 switches it off (v0.6.239's timing and tiers; the text stays
+    D-137's), 1 forces it at any pace above 0 (the tests).
+  - *The bots' protocol rides on bubbles* (L-99), found by the recording and the 240: acts and a window's opening line wait for a
+    free floor (`_floorClear`, awaited only when held: a free floor or paceMs 0 keeps a line and its window in one tick, the window
+    rule); a bot-only window's silence clock starts when its question has left the screen (`_qStamp`, `_qFloorLeft`); the bleed
+    total re-reads the bleed after a wait; the vote round is driven by the previous bot voter (`_refTurnWait`: its bubble ends the
+    wait; a 6 s safety net a seat, the polls closing or a new game end it too), and a voter whose reaction said nothing still says
+    its bubble (`_refSpoke`); a thinking "Hold on…" the floor held until the answer was queued behind it is dropped; a round's
+    combat summary to a bot opponent is a log line where the floor paces the table (`_combatNoteToBot`: as a bubble it held the floor
+    ~9 s, two a round, and the 240's handshake fell to 95 %; no switch brings it back under the floor, `o.combatNotes` 1 forces the
+    log line in tests). The last two ship ahead of Johan's ruling (O-51).
+  - *Tools* — `tools/chat-record.js` v1.0.0, `tools/ana-chat.py` v1.0.0; the hotseat tool v1.5.0 (`names`, `onWire`).
+  - *Prediction* (D-93; registered 25 Nov ~07:40 before the after-recording and the 240): (1) bubbles over another seat's floor 79
+    of 138 → 0; (2) prefixes 28 → 0, tails 31 → 0; (3) over another seat's bubble still on screen 94 (68 %) → at most 25 %; (4) cut
+    short by the three-bubble limit 33 → 0, most on screen 6 → 2; (5) seconds a turn 34.9 → +10–30 %; (6) bubbles by kind within
+    ±15 % (chat 68, say 66); (7) the silent verdict waits stay (not built); (8) the Reaction stopwatch rings 0 → at most 2; (9) the
+    240 DIVERGED in most matches, with chatFloor 0 IDENTICAL in every match (the version normalized), `ana-gates.py` PASS.
+    *Observed* (one recording each, the same seed, `ana-chat.py --gate` PASS; the 240 on the release bytes): (1) 79 of 138 → 0
+    of 116: held. (2) 28 → 0 and 31 → 0: held. (3) 93 of 138 (67 %) → 32 of 116 (28 %): missed by 3 points — a quick phrase shows 3 s and holds the floor 1.5 s, as D-137 asks. (4) cut short 33 → 0 held;
+    most on screen 6 → 3, not 2. (5) 34.9 → 39.7 s a turn (+14 %): held. (6) chat 68 → 63 (−7 %) held; say 66 → 49 (−26 %)
+    failed: the thinking "Hold on…" 18 → 1, dropped where the floor held it until the answer (a change the prediction did not
+    know of). (7) the verdict waits unchanged (13.8–24.3 s from the attempt to the verdict, the same three before and after):
+    held. (8) the stopwatch rings 3 → 3: the premise (0) was wrong, the baseline's re-recording rang 3; no rise. (9) the 240
+    against v0.6.239: DIVERGED 76 (42 with the same outcome; 15 winners changed, 6 VP splits, 13 only the rounds), SAME-PLAY
+    132, SAME-PLAY* 32 — not "most": the floor moves the clock, and most matches still make the same decisions; VP/match within
+    ±0.02 a deck (paired SE 0.02–0.03); `ana-gates.py` PASS 6/6 (handshake 9,910/9,910, ledger 0, zeroPool 0); with chatFloor
+    0 every row is v0.6.239's but the result row's knob list (the tool's SAME-PLAY 240): held. The bot-only bleed total now
+    waits out its question (median 200 ms → 7.1 s over the 240), which `ana-windows.py` reads as "ran out" (BOARD). The
+    recording ran on pass 1's bytes; pass 2's touch none of its four decks (the 240 IDENTICAL 240/240 to pass 1's).
+  - *The egress review* — pass 1 (15 findings: rule-missed 4, half-done 4, test-weakened 3, stale-doc 3, unproven 1): the doc
+    budget raised after cutting the round's own lines; a new game or the polls closing end a waiting voter's turn; a voter whose
+    reaction said nothing still speaks (`_refSpoke`); the floor needs a pace above 0; no switch brings the combat summary back
+    under the floor (`combatNotes` 0 is gone: a race is never behind a knob); the Spying Mission wait only with a bank; 186c,
+    186h, 186i, 186l and 186n stricter; comments, CLAUDE.md's tier and event-log rules, HOWTO, the tools' nits; the snapshot's
+    numbers re-recorded on the bytes. Listed: the two departures that ship ahead of Johan's ruling (O-51, the PR). Pass 2 (a
+    new reviewer, 6 findings: half-done 3, stale-doc 2, rule-missed 1), all fixed: Haqim's Law's wait only when its add will
+    come, the predicates matched to the plays (`_spyAddMay`, `_haqimAddMay`; 157l, 161g); the floor wants an ask clock of
+    10 s or more (a short clock closed a bot-only window or a poll before the floor let the answer out; 186n); 186i's polls
+    generous; `chatFloor` 0 is v0.6.239's timing and tiers, not its text; the handoff purges only the bot file; a question to
+    a bot carries no instruction (a bounce re-announce has no "?"). PASS3
+  - *Tests*: section 186 (a–n, 16 checks; red on v0.6.239 where they pin a new behaviour, on the pre-fix bytes for the reviews'
+    cases); 160n (the same combat with the summaries on the log tier); 157l and 161g (the add predicates); 183a, 183e, 183f3
+    and 145h read the lines as sent now; 89a's message. *Gates* (the release bytes `e29c0185` / test `890067de`, cardfx
+    `fe5f60bf`): the suite 2822/0 ×3, canary 235/0 ×2 (the copies; the root's v2.6.188), main's
+    canary v1.6.0 247/0, hotseat 12/0, HB1 11/0, lint clean, main's client suite (v2.6.188) 430/1 (the guide's embed), the
+    arena smoke (one match, the four starters, the real clock) PASS 7/7, `client/check-versions.js` everything agrees. A first
+    run of the suite on pass 1's bytes missed 186f once by its 1 s poll (2819/1; the other two 2820/0): widened, the times still
+    asserted.
 - **v0.6.239 (24 Nov 2026; PR #107)** — Hand size and replacement (the sweep register's class 14, D-135; the order of the rounds Claude's,
   D-137). The rulebook, drawing cards: "Whenever you play a card from your hand, you draw another from your library to replace it
   (unless card text says otherwise). … Whenever an effect changes your hand size … immediately discard down to or draw up to

@@ -103,7 +103,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <li><a href="#setup">Setting up a table</a></li>
   <li><a href="#play">How a bot plays</a></li>
   <li><a href="#controls">Controls</a></li>
-  <li class="ver">bot v0.6.239 · client v2.6.179</li>
+  <li class="ver">bot v0.6.240 · client v2.6.179</li>
 </ul></nav>
 
 <header class="hero">
@@ -382,6 +382,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
     <tr><td><strong>Adaptive</strong></td><td>The slider is the ceiling. The bot measures how fast you actually answer (a running median over your last answers) and waits about one and a half times that — never under 0.8 s, never over the ceiling. It also <em>skips</em> a question you cannot act on: no block question while you have no minion that could block (none up, or every one locked with an empty hand), no “anything before …?” in combat with an empty hand. Your strike and your press are always asked — a press is a decision, not a capability.</td></tr>
   </table></div>
   <p>Bots waiting on <em>each other</em> keep their own short windows in every tempo — the tempo governs only waits on humans. Each wait is written to the bot's log as a <code>wait</code> row (what, which tempo, how long, how it ended), so a session can be measured with <code>ana-wait.py</code>.</p>
+  <p>The bots speak <strong>one at a time</strong> (bot v0.6.240): a bot's bubble waits until another player's has left the screen (a quick phrase holds the floor 1.5 s), and a question one bot asks another carries no instruction — the instructions are for you.</p>
 
   <h3 id="chat-intercept">Chat commands</h3>
   <p>Chat is the fallback and the correction channel. A bot reads every line; a bare command reaches the bot it naturally concerns, and <code>@Name …</code> aims one at a specific bot when several sit at the table. Type <code>help</code> and the bot lists what it understands.</p>
@@ -474,7 +475,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.239</b>, client <b>v2.6.179</b> / server srv-2.6.51, cardfx 218 curated / 1,696 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 20 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.240</b>, client <b>v2.6.179</b> / server srv-2.6.51, cardfx 218 curated / 1,696 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 25 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 
 <script>
