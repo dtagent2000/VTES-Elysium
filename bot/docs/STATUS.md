@@ -6,8 +6,8 @@ v1.0.0 · `ana-gates.py` v1.1.4 · the chat recorder and `tools/ana-chat.py` v1.
 the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51;
 the root's release is client v2.6.188 / srv-2.6.53 (the canary's second run).
 
-**Deploy state:** `main` carries v0.6.241 (#108 and #109 merged 26 Nov) and client v2.6.188 (#104). **Open:** W1, the workflow
-round (D-139, no bot change).
+**Deploy state:** `main` carries v0.6.241 (#108 and #109 merged 26 Nov) and client v2.6.188 (#104). **Open:** W1 (#110), the
+workflow round (D-139, no bot change).
 
 ## Last gates (v0.6.241's release bytes, `d797e1fd`, test `a8557422`, cardfx `4627ff1c`)
 26 Nov: the suite 2841/0 ×3 · canary 235/0 ×2, main's v1.6.0 247/0 · cardfx 503/0 · hotseat 12/0 · HB1 11/0 · lint clean ·

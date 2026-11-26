@@ -33,8 +33,8 @@ client, server and start scripts from `client/` to `/`. Nothing at the root is e
 
 ## Gates (summary — the full lists live in each half's CLAUDE.md)
 - Bot (the complete list: `bot/CLAUDE.md` "Gates"): `bot/tools/gates.sh` runs the fixed local ones (`node --check`, the
-  canary against the copies in `bot/` and the root's release, `test-cardfx.js` with `vtes.json` beside it — see below, HB1, the
-  hotseat gate); CI runs `test-bot-logic.js` ×3 in parallel, the release gate (bot RULINGS D-139).
+  canary against the copies in `bot/` and the root's release, `test-cardfx.js` with `vtes.json` beside it — see below, HB1; the
+  hotseat gate when the diff touches it); CI runs `test-bot-logic.js` ×3 in parallel, the release gate (bot RULINGS D-139).
   Run everything from inside `bot/` — the suites, the arena and the tools expect their files beside them.
 - Client: see `client/CLAUDE.md`.
 

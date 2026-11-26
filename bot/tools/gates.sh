@@ -48,7 +48,7 @@ count(){   # the gate's own count line, as its tool prints it (a composite gate'
   c=$(grep -E '^RESULT: ' "$l" | tail -1 | cut -c9-); [ -n "$c" ] && { echo "$c"; return; }
   c=$(grep -oE '^[0-9]+/[0-9]+ — (all green|FAIL)' "$l" | tail -1 | cut -d' ' -f1); [ -n "$c" ] && { echo "$c"; return; }
   c=$(grep -oE '[0-9]+ pass / [0-9]+ fail / [0-9]+ skip' "$l" | tail -1 | awk '{print $1"/"$4" ("$7" skip)"}'); [ -n "$c" ] && { echo "$c"; return; }
-  c=$(grep -oE '[0-9]+ of [0-9]+ checks passed' "$l" | tail -1 | awk '{print $1"/"$3}'); [ -n "$c" ] && { echo "$c"; return; }
+  c=$(grep -oE '[0-9]+ of [0-9]+ checks passed' "$l" | tail -1 | awk '{print $1"/"$3-$1}'); [ -n "$c" ] && { echo "$c"; return; }   # passed/failed, as the others
   c=$(grep -oE '[0-9]+ checks, [0-9]+ failed' "$l" | tail -1 | awk '{print $1-$3"/"$3}'); [ -n "$c" ] && { echo "$c"; return; }
   c=$(grep -oE '[0-9]+ precons, no problems' "$l" | tail -1); [ -n "$c" ] && { echo "$c"; return; }
   c=$(grep -oE '^[0-9]+ matches: .*' "$l" | tail -1); [ -n "$c" ] && { echo "$c"; return; }

@@ -59,7 +59,7 @@ Three findings of one class across rounds become a rule in CLAUDE.md or a lesson
 
 **Review until clean** (D-133, D-139). The lead fixes what a pass finds and the gates run again; then a NEW reviewer, one that took
 no part in an earlier pass and did none of the work, checks the fixes and the whole diff. Pass 1 runs on the reviewer's own model;
-every later pass on Fable (`model: fable`), so the pass that can end the loop is another model's than the executor's. A round that
+every later pass on a model other than the lead's (Fable, `model: fable`, while the lead is on Opus). A round that
 changes no bot behaviour may end on a clean pass 1 (Claude's reading of D-139, for Johan to confirm), said in the PR. The loop ends at a clean pass or
 after three, and what is still open goes to Johan in the PR. Where the rules or the text do not reach, it stops and asks him.
 KRCG's text, the rulings and zero-vtes stay the witnesses outside every model. High-stakes work is also checked by an agent that has
