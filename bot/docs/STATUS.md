@@ -10,8 +10,8 @@ the root's release is client v2.6.188 / srv-2.6.53 (the canary's second run).
 cleanup release (#114; D-141 – D-143), with the private data repo's #5 (D-143's words); C1's first part (#112, a draft, to rebase
 on main after #114).
 
-## Last gates (v0.6.242's release bytes, `154debea`, cardfx `52477ed1`; the suite file `0e306ac2`)
-26 Nov, on bb857db: `tools/gates.sh --sim` PASS 15/15 (canary 235/0 ×2 · cardfx 503/0 · hotseat 12/0 · HB1 11/0 · lint clean ·
+## Last gates (v0.6.242's release bytes, `0abee43c`, cardfx `52477ed1`; the suite file `bae2970e`)
+26 Nov, on 279a3f1: `tools/gates.sh --sim` PASS 15/15 (canary 235/0 ×2 · cardfx 503/0 · hotseat 12/0 · HB1 11/0 · lint clean ·
 precon 18 · doc-budget · public-scan 0 hits, the tree 0) · CI's suite 2841/0 ×3 · main's client suite beside these bytes 430/1
 (the guide's embed) · the 240 against v0.6.241 SAME-PLAY 240, IDENTICAL 240 with the version put back and the decide rows' changed
 attribution replaced by one token on both sides (only the results' wall and cpu times differ), `ana-gates.py` PASS 6/6.

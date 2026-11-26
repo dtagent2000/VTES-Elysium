@@ -782,7 +782,7 @@ prose describing it ("cash in") was imprecise, since corrected in-code and in th
 can be had the same game, since the pool bonus never spends the Edge.
 
 **Design conversation → three decisions, then built the same session:**
-1. **"Always play A master if you hold one"** (the owner) — the base rule, independent of
+1. **Always play a master when holding one** (the owner's rule) — the base rule, independent of
    whether the bot recognizes the specific card's effect. The library defines WHAT a card
    does; the persona/decide() picks WHICH one when there's a choice; an UNCURATED master
    still gets played (cost paid, placed as its own standalone permanent, no host — we don't
