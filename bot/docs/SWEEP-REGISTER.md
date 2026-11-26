@@ -138,6 +138,16 @@ is a handoff first. Bot-to-bot gaps are marked.
   vampire named. RIDER_STEALTH reads only the bot's `: +N stealth.` shape and nothing is said at the block, so the bot's blocker
   begins its combat. [the exactness round; its egress review, pass 3] · human · a reader for the client's play line (the level;
   the actor from the line or the action); with the helper off, the human says it (a chat word the blocker reads, as `bounce`).
+- **4.21 A human's Carrion Crows** — the environmental damage of a human's Crows (1R [ani], 2R [ANI], each round during normal strike
+  resolution) is not applied to the bot's minion: the bot narrates the strike alone and does not read a later change on the counter.
+  Not 12.3 (the bot's own prevention against Crows). [Claude's playtest game 2, 25 Nov, 1474.3 and 2817; the 26 Nov handoff's
+  check] · human · a reader of a human's Crows play line (its level) that adds the damage in each round's strike resolution.
+- **4.22 A human's The Dowager (+1 intercept during directed actions)** — at Claude's playtest table the printed +1 was not counted
+  on the block counter (the panel's point 4; game 1 had the human's Ventrue starter, game 2 a Ventrue bot holding The Dowager). The
+  bot blocker writes its own crypt intercept (`_cryptIntercept`); which side missed it at that table is not traced. [Claude's
+  playtests, 25 Nov; D-111 (6), BOARD's measurement debt] · human · trace it at the next human table: a bot's Dowager blocking a
+  human's directed action, and a human's Dowager blocking a bot's (the bot could seed a human blocker's printed intercept into an
+  untouched counter, as it seeds a human actor's stealth).
 
 ## 5. Maneuvers: direction and source
 Which way a maneuver goes, and where a maneuver comes from (a card, equipment, a grant).
