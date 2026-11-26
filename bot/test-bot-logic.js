@@ -91,10 +91,10 @@ async function connectWithRetry(client, tries = 30){
     console.log('Trainbot end-to-end gate (real server on :' + PORT + ')');
 
     /* 1) host creates a lobby room, claims seat 1, loads a deck */
-    const host = mkClient('Johan');
+    const host = mkClient('Jonna');
     await connectWithRetry(host);
     const ROOM = 'bt' + Date.now().toString(36).slice(-6);
-    host.send({ t: 'create', room: ROOM, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+    host.send({ t: 'create', room: ROOM, pass: 'x', name: 'Jonna', lobby: true, v: '2.6.0' });
     const hj = await host.waitFor(m => m.t === 'joined', 'host joined');
     ok(hj.seat === 1 && hj.lobby === true, 'host created a lobby room as seat 1');
     host.send({ t: 'seat', seat: 1 });
@@ -109,7 +109,7 @@ async function connectWithRetry(client, tries = 30){
     const bot = new Bot({ server: URL, room: ROOM, pass: 'x', name: 'Trainbot',
                           paceMs: 120, askSecs: 3, log: (...a) => botLog5.push(a.join(' ')),
                           /* v0.5.2 (14 July): pinned to the ORIGINAL sample "Weenie Bleed" deck
-                             explicitly, decoupled from DEFAULT_DECK (now Johan's real
+                             explicitly, decoupled from DEFAULT_DECK (now the owner's real
                              "Leveraging my Hacking Skills") -- sections 1-9 below depend on THIS
                              exact composition: §8 resolves the alias ladder via "zip" (needs Zip
                              in the crypt), and the discard test at §5b needs an Obfuscate-gated
@@ -178,7 +178,7 @@ async function connectWithRetry(client, tries = 30){
              if(answered === 1) host.send({ t: 'tally', b: 2 });   // VC review -- THE 13/1 ROOT (16 July's original flake, finally solved): the harness answered 'block' but never wrote its intercept, so the actor's verdict (iB >= sA) read b=0. Pre-VC it hung whenever stale-a happened to exceed 0; VC's hunt default a=1 made it deterministic whenever the shuffle put a HUNT first. A human blocker sets their intercept in the UI -- the harness now does the same (b=2 covers the +1 default; absent-field preserve keeps a).
              host.send({ t: 'chat', msg: answered === 1 ? 'block' : 'no' }); }
     }, 60);
-    await host.waitFor(m => m.t === 'log' && m.who === 'Trainbot' && /Blocked by Johan\. Combat begins\./.test(m.html), 'block acknowledged, combat begins');
+    await host.waitFor(m => m.t === 'log' && m.who === 'Trainbot' && /Blocked by Jonna\. Combat begins\./.test(m.html), 'block acknowledged, combat begins');
     const combat = await host.waitFor(m => m.t === 'chat' && m.who === 'Trainbot' &&
       /Trainbot combat/.test(m.msg), 'combat resolution line', 9000);
     blocked = true;
@@ -269,7 +269,7 @@ async function connectWithRetry(client, tries = 30){
     ok(true, 'turn change discarded the unresolved bleed with a polite note (never auto-applied)');
     await host.waitFor(m => m.t === 'chat' && m.who === 'Trainbot' && /Block\?/.test(m.msg), 'ask #1 (turn 4)');
     host.send({ t: 'log', html: 'Block: Stealth 0 vs Intercept 9 — block succeeds.' });
-    await host.waitFor(m => m.t === 'log' && m.who === 'Trainbot' && /Blocked by Johan\. Combat begins\./.test(m.html), 'the §12 Block line answered the ask (M2: combat begins, then resolves)');
+    await host.waitFor(m => m.t === 'log' && m.who === 'Trainbot' && /Blocked by Jonna\. Combat begins\./.test(m.html), 'the §12 Block line answered the ask (M2: combat begins, then resolves)');
     ok(true, "a live Block-resolve LINE answers the bot's own Block? question (multi-channel)");
     const anserer4 = setInterval(() => {
       const q = host.inbox.find(m => m.t === 'chat' && m.who === 'Trainbot' && /Block\?/.test(m.msg) && !m._a4);
@@ -363,8 +363,8 @@ async function connectWithRetry(client, tries = 30){
       const shk = u.decide('spend-stealth', { pInt: 0.65, stakes: 2 }).spend;
       ok(nov === true && shk === false, 'the insight knob separates personas: novice spends into a hot read, shark saves the card (stakes:2 = a typical bleed, the v0.5+ stakes-weight baseline that reproduces the pre-stakes formula exactly)');
 
-      /* v0.5+ (Johan, 14 July): "every action treated fundamentally the
-         same" (the mechanism always CAN answer Block! with stealth) --
+      /* v0.5+ (the owner, 14 July): every action treated fundamentally the
+         same (the mechanism always CAN answer Block! with stealth) --
          but the NEW stakes weight lets a persona care less about a
          low-value action. Same persona, same read, only stakes differs. */
       u.persona = Object.assign({}, PERSONAS.novice);
@@ -479,7 +479,7 @@ async function connectWithRetry(client, tries = 30){
       const fx6 = await h6.waitFor(m => m.t === 'fx' && m.card && /Computer Hacking/.test(m.card.name || ''), 'fx clone', 9000);
       ok(/bleeds for 2/.test(fx6.verb || ''), 'card plays ANIMATE: an fx clone with the verb rides the announce (' + fx6.verb + ')');
       await h6.waitFor(m => m.t === 'chat' && m.who === 'Trainbot' && /Block\?/.test(m.msg), 'r6 ask');
-      const rc = await h6.waitFor(m => m.t === 'decide' && m.who === 'Trainbot', 'the Reaction timer rings', 12000);   // v0.6.109 (#13): o.reactClockMs went 5000 -> 7000 (Johan: the stopwatch started too fast), which left this 8000 ceiling only 1 s of headroom under the suite's shared-server load -- the exact shape of the latency flakes section 5 already documents. 12000 restores the old ~3 s margin.
+      const rc = await h6.waitFor(m => m.t === 'decide' && m.who === 'Trainbot', 'the Reaction timer rings', 12000);   // v0.6.109 (#13): o.reactClockMs went 5000 -> 7000 (the owner: the stopwatch started too fast), which left this 8000 ceiling only 1 s of headroom under the suite's shared-server load -- the exact shape of the latency flakes section 5 already documents. 12000 restores the old ~3 s margin.
       ok((rc.secs | 0) === 5, "after 5 s of silence the bot rings the table's EXISTING Reaction timer (decide verb, the room's default 5 s) — and still waits its own full window");
       h6.send({ t: 'say', i: SI('Block!') });
       await sleep(350);
@@ -524,9 +524,9 @@ async function connectWithRetry(client, tries = 30){
 
     /* 14) M2 — the defense pass (spec §7.5): informed block, reactions, combat v1 */
     {
-      const h7 = mkClient('Johan'); await connectWithRetry(h7);
+      const h7 = mkClient('Jonna'); await connectWithRetry(h7);
       const R7 = 'm2' + Date.now().toString(36).slice(-6);
-      h7.send({ t: 'create', room: R7, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+      h7.send({ t: 'create', room: R7, pass: 'x', name: 'Jonna', lobby: true, v: '2.6.0' });
       await h7.waitFor(m => m.t === 'joined', 'h7 joined');
       h7.send({ t: 'seat', seat: 1 });
       h7.send({ t: 'deck', name: 'D7', library: [{ name: 'Govern the Unaligned', qty: 60 }],
@@ -544,10 +544,10 @@ async function connectWithRetry(client, tries = 30){
       h7.send({ t: 'pass' });
       await h7.waitFor(m => m.t === 'turn' && m.seat === 1, 'turn back (r7 t1)', 9000);
 
-      /* 14a) BOUNCE LEGALITY (Johan, 13 July, source-verified against the rulebook:
+      /* 14a) BOUNCE LEGALITY (the owner, 13 July, source-verified against the rulebook:
          "you can never bleed yourself" + bounce's own "another Methuselah OTHER
          THAN the acting minion's controller"): in this 2-LIVE-player room, MY OWN
-         prey IS the actor (Johan) -- there is no legal bounce destination at all,
+         prey IS the actor (Jonna) -- there is no legal bounce destination at all,
          so Bait and Switch must be correctly WITHHELD, falling through to the
          normal informed-block path instead (never offered, not even attempted). */
       bot7.hand = ['Organized Resistance', 'Elder Intervention', 'Bait and Switch'];   // v0.6.13: genuine REACT intercepts, DISTINCT names (the once-per-action ledger dedupes duplicates): 1+2=3 meets a:3; Elder costs 1 blood (Zip 2->1, 14b's second Elder still affordable at 1, 14d is cost-free). Bloodstone is EQUIPMENT-typed, #7 in the 72-card exposure list -- the old fixture had codified the reaction-family misplay
@@ -561,7 +561,7 @@ async function connectWithRetry(client, tries = 30){
 
       /* 14b) no bounce available: informed block commits, writes tally.b, ledger blocks a repeat */
       bot7.hand = ['Elder Intervention', 'Elder Intervention'];   // v0.6.13: genuine REACT +2 intercept (costs 1 blood -- Zip 2->1, budgeted); keeps the hardcoded tally.b === 2 and '(+2 intercept)' expectations intact
-      h7.send({ t: 'tally', mode: 'block', a: 2, b: 0 });   // v0.6.169: the actor shows 2 stealth -- intercept is spent only when stealth beats the blocker's free intercept (Johan: no card against a 0-stealth declared bleed)
+      h7.send({ t: 'tally', mode: 'block', a: 2, b: 0 });   // v0.6.169: the actor shows 2 stealth -- intercept is spent only when stealth beats the blocker's free intercept (the owner: no card against a 0-stealth declared bleed)
       h7.send({ t: 'log', html: 'Ghoul bleeds for 5.' });
       await h7.waitFor(m => m.t === 'say' && m.who === 'Trainbot' && m.i === SI('Block!'), 'Block! announced (14b)', 9000);
       const ic7 = await h7.waitFor(m => m.t === 'log' && m.who === 'Trainbot' && /Elder Intervention.*\+2 intercept\./.test(m.html), 'intercept card played');
@@ -592,7 +592,7 @@ async function connectWithRetry(client, tries = 30){
       bot7.close(); h7.ws.close();
     }
 
-    /* 15) bot-elements exception (Johan, 13 July 2026): a bot seat self-declares
+    /* 15) bot-elements exception (the owner, 13 July 2026): a bot seat self-declares
        via bot:true (create/join) -- the SERVER relays it in the lobby roster, and
        the bot's own new 'ctrl' handler applies ANY sender's action to its own
        cards (no owner check -- that gate is client-side/menu-only, and only
@@ -644,7 +644,7 @@ async function connectWithRetry(client, tries = 30){
       bot8.close(); h8.ws.close();
     }
 
-    /* 16) OFFLINE units (Johan, live test) — v0.4.5's collision-free zone
+    /* 16) OFFLINE units (the owner, live test) — v0.4.5's collision-free zone
        placement (_openSlot): slot(zone,idx) is a pure idx->{x,y} formula
        with no memory of who's already there. A raw "current zone
        population count" as idx only holds while a zone stays contiguous
@@ -724,7 +724,7 @@ async function connectWithRetry(client, tries = 30){
     /* 19) OFFLINE units — v0.5 (§7.6): masters, hunt, pool economy. Mirrors
        the established pattern (17, 18): pure logic, no network, no flakiness. */
 
-    /* 19a) the Edge cash-in (Johan, 13 July): bots ALWAYS take it -- rulebook
+    /* 19a) the Edge cash-in (the owner, 13 July): bots ALWAYS take it -- rulebook
        (vekn.net): "if you have the Edge, you may gain 1 pool", optional and
        use-it-or-lose-it for a human, but there is no reason for a bot to
        ever decline free pool. Holding the Edge is not consumed by using it. */
@@ -742,7 +742,7 @@ async function connectWithRetry(client, tries = 30){
     }
 
     /* 19b) _applyPhaseIncome — the PHASE-EXACT distinction is the whole point
-       of Johan's choice (fas-exakt over a single fixed point): Blood Doll
+       of the owner's choice (phase-exact over a single fixed point): Blood Doll
        fires in the MASTER phase, Vessel a full phase later at UNLOCK. Each
        must be silent at the OTHER's phase, or the "phase-exact" claim is
        just cosmetic. Also: it is a TRANSFER (vampire<->pool), never a gift —
@@ -861,7 +861,7 @@ async function connectWithRetry(client, tries = 30){
     /* 19d-2) OFFLINE units -- v1.4.2 (14 July): _ashScoreFor, Ashur Tablets'
        retrieval scoring. Each of the three factors isolated in turn (the
        OTHER two held equal between the compared candidates), matching the
-       general-foundation-not-persona-tuned scope Johan asked for. */
+       general-foundation-not-persona-tuned scope the owner asked for. */
     {
       const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', log: () => {} });
       const origLookup = u.fxLookup.bind(u);
@@ -885,7 +885,7 @@ async function connectWithRetry(client, tries = 30){
         { id: 'x8', name: 'Scarce Card', kind: 'lib', zone: 'ash' }, { id: 'x9', name: 'Scarce Card', kind: 'lib', zone: 'ash' }
       ];   // 9 of 10 Scarce Card already visible -- only ~1 could still be undrawn
       const sCommon = u._ashScoreFor('Common Card'), sScarce = u._ashScoreFor('Scarce Card');
-      ok(sScarce > sCommon, "Scarcity: Johan's \"few copies left\" idea -- Scarce Card (9/10 already visible, ~1 left) scores higher than Common Card (0/10 seen, all 10 presumably still in the library) (" + sScarce + ' vs ' + sCommon + ')');
+      ok(sScarce > sCommon, "Scarcity: the owner's few-copies-left idea -- Scarce Card (9/10 already visible, ~1 left) scores higher than Common Card (0/10 seen, all 10 presumably still in the library) (" + sScarce + ' vs ' + sCommon + ')');
     }
     {
       const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', log: () => {} });
@@ -896,11 +896,11 @@ async function connectWithRetry(client, tries = 30){
       u.deck = { library: [] };
       u.hand = ['Hand Card']; u.board = [];
       const sHave = u._ashScoreFor('Already Have Type'), sNew = u._ashScoreFor('New Type');
-      ok(sNew > sHave, "Mix: Johan's \"good mix of card types\" idea -- a type ABSENT from hand (mod) scores higher than one the hand already has (action) (" + sNew + ' vs ' + sHave + ')');
+      ok(sNew > sHave, "Mix: the owner's good-mix-of-card-types idea -- a type ABSENT from hand (mod) scores higher than one the hand already has (action) (" + sNew + ' vs ' + sHave + ')');
     }
 
-    /* 19e) decide('master-play') — v0.5+ (Johan, 14 July): "always play A
-       master" is the base rule; the only real choices are (1) trifle+known
+    /* 19e) decide('master-play') — v0.5+ (the owner, 14 July): always play A
+       master is the base rule; the only real choices are (1) trifle+known
        plain FIRST when both are available (the bonus MPA affords the
        second the SAME phase), (2) any other KNOWN income asset otherwise,
        (3) whatever master we DO have as the last resort, even uncurated. */
@@ -917,7 +917,7 @@ async function connectWithRetry(client, tries = 30){
       const unknownA = { idx: 0, name: 'Ashur Tablets', cost: 0, trifle: false, known: false };
       const unknownB = { idx: 1, name: 'Effective Management', cost: 0, trifle: false, known: false };
       const d = u._decide('master-play', { cands: [unknownA, unknownB] });
-      ok(!!d.pick && /uncurated/.test(d.why), '"always play A master" (Johan, 14 July): with ZERO known income assets in hand, the bot still plays one of the uncurated masters it DOES have, rather than playing nothing');
+      ok(!!d.pick && /uncurated/.test(d.why), 'always play A master (the owner, 14 July): with ZERO known income assets in hand, the bot still plays one of the uncurated masters it DOES have, rather than playing nothing');
     }
     {
       const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', log: () => {} });
@@ -926,8 +926,8 @@ async function connectWithRetry(client, tries = 30){
       ok(u._decide('master-play', { cands: [known, unknown] }).pick.name === 'Blood Doll', 'a KNOWN income asset is still preferred over an uncurated one when both are candidates');
     }
 
-    /* 19f) decide('hunt-or-bleed') — the persona gradient Johan asked for
-       ("även frivilligt, persona-vägt"). Uses a name NOT in the cardfx
+    /* 19f) decide('hunt-or-bleed') — the persona gradient the owner asked for
+       (voluntary too, weighted by persona). Uses a name NOT in the cardfx
        library so fxCryptCap falls back to a clean, controllable cap of 99
        (real crypt caps are 1-12 -- too coarse to show a gradient cleanly). */
     {
@@ -944,7 +944,7 @@ async function connectWithRetry(client, tries = 30){
     }
 
     /* 19g) _modeUsableBy widened for bounce in a 2-live-player collapse
-       (Johan's ask, discovered while discussing discard priority): a bounce
+       (the owner's ask, discovered while discussing discard priority): a bounce
        needs "another Methuselah" per the rulebook -- with only 2 live
        players my predator IS my prey, so no legal destination ever exists.
        Same fact M2's _reactWindow already established per-actor; this is
@@ -981,7 +981,7 @@ async function connectWithRetry(client, tries = 30){
       u.seat = 1; u.players = [{ seat: 1, name: 'Me', out: false }, { seat: 2, name: 'Them', out: false }];
       u.hand = ['Bait and Switch'];   // the same real bounce card the M2 live test (14a) uses
       const vamps = [{ name: 'Zip (G3)', zone: 'ready', kind: 'crypt', locked: false }];
-      ok(u._deadHandIndex(vamps) === 0, 'discard now correctly treats a bounce-only card as fodder in a 2-live-player table (Johan\u2019s ask) -- via the shared _modeUsable check, no parallel special-case');
+      ok(u._deadHandIndex(vamps) === 0, 'discard now correctly treats a bounce-only card as fodder in a 2-live-player table (the owner\u2019s ask) -- via the shared _modeUsable check, no parallel special-case');
     }
 
     /* 19i) buildPub() relays host/attached — without these two fields a
@@ -999,7 +999,7 @@ async function connectWithRetry(client, tries = 30){
       ok(host && Array.isArray(host.attached) && host.attached.includes('m1'), "buildPub() relays the host's attached[] list too");
     }
 
-    /* 19j) OFFLINE units -- v0.5+ (Johan, 14 July): the generalized phase-
+    /* 19j) OFFLINE units -- v0.5+ (the owner, 14 July): the generalized phase-
        action economy (Master/Influence/Discard share one mechanism now,
        mirroring the client's own phaseActs/phaseUsed pair). */
     {
@@ -1033,7 +1033,7 @@ async function connectWithRetry(client, tries = 30){
       const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', log: () => {} });
       u.phaseBonus = { master: 0, influence: 0, discard: 0 }; u._trifleBonusUsed = false;
       ok(u._grantTrifleBonus() === true && u.phaseBonus.master === 1, 'the FIRST trifle played this turn grants its +1 bonus');
-      ok(u._grantTrifleBonus() === false && u.phaseBonus.master === 1, 'a SECOND trifle the SAME turn grants nothing more -- Trifle is capped at +1 total per turn, no matter how many are played (Johan, 14 July)');
+      ok(u._grantTrifleBonus() === false && u.phaseBonus.master === 1, 'a SECOND trifle the SAME turn grants nothing more -- Trifle is capped at +1 total per turn, no matter how many are played (the owner, 14 July)');
     }
 
     /* 19k) OFFLINE units -- v1.4.0 (14 July): _considerTurnActGrants, the
@@ -1117,7 +1117,7 @@ async function connectWithRetry(client, tries = 30){
          'effective-management handler: an EMPTY crypt sends nothing -- the same cryptN>0 guard the paid path already relies on, not a new invented one');
     }
 
-    /* 19l-2) v1.6.3/v1.6.4 (Johan's "push Inside Dirt to 100%" GO): CARD_HANDLERS
+    /* 19l-2) v1.6.3/v1.6.4 (the owner's go-ahead to push Inside Dirt to 100 %): CARD_HANDLERS
        ['life-in-the-city']. "Add 1 blood to a ready vampire" -- a genuine target
        CHOICE (which vampire?), reusing the same "highest-capacity, still wants
        blood" spirit _bestBloodStockFor already established for the sibling 'unc'
@@ -1146,7 +1146,7 @@ async function connectWithRetry(client, tries = 30){
       ok(almostFull.blood === 8, 'life-in-the-city handler: correctly caps at capacity when the +1 would otherwise exceed it (7+1=8, at cap exactly)');
     }
 
-    /* 19l-3) v1.6.4/v0.6.31 (Johan's "push Inside Dirt to 100%" GO): _considerLockIncome
+    /* 19l-3) v1.6.4/v0.6.31 (the owner's go-ahead to push Inside Dirt to 100 %): _considerLockIncome
        (Dreams of the Sphinx). Same shape as _considerTurnActGrants, generalized for
        income -- tested directly against the reader, not just via curated-data plumbing. */
     {
@@ -1199,7 +1199,7 @@ async function connectWithRetry(client, tries = 30){
       ok(u6.pool === 10, '_considerLockIncome: an ALREADY-locked card is correctly skipped entirely (the shared board-scan guard, same as _considerTurnActGrants)');
     }
 
-    /* 19l-4) v0.6.32 (Johan's ask, continuing Dreams of the Sphinx): the hand-size
+    /* 19l-4) v0.6.32 (the owner's ask, continuing Dreams of the Sphinx): the hand-size
        choice. Source-verified vekn.net first: hand size is an ACTIVE target, not a
        passive ceiling -- "immediately discard down to or draw up to your hand size"
        whenever it changes. VTES's universal base is 7. */
@@ -1241,7 +1241,7 @@ async function connectWithRetry(client, tries = 30){
       ok(u2.hand.length === 7, '_revertHandSizeBonus: no active bonus (0) -- correctly a no-op, hand untouched');
     }
 
-    /* 19l-6) v1.6.6/v0.6.33 (Johan's "sweep it while it's fresh" GO, hand-size
+    /* 19l-6) v1.6.6/v0.6.33 (the owner's go-ahead to sweep it while it is fresh, hand-size
        family): the passive-permanent shape (Elder Library and 9 siblings measured
        and tagged), plus the unification fix so permanent and temporary sources
        stack correctly instead of being computed in isolation. */
@@ -1285,7 +1285,7 @@ async function connectWithRetry(client, tries = 30){
          '_revertHandSizeBonus: reverts to base+PERMANENT (7+1=8), not flat 7 -- Elder Library\'s still-active permanent contribution is correctly preserved when only the TEMPORARY bonus expires');
     }
 
-    /* 19l-7) v0.6.34 (Johan's standing question, checking the hand-size sweep for
+    /* 19l-7) v0.6.34 (the owner's standing question, checking the hand-size sweep for
        uncertainty -- found live): _outOfPlay and the WIDER pre-existing gap it fixes.
        A card that leaves play (discarded to the ash heap, or burned/removed from the
        game) remains an entry in this.board with its zone changed, rather than being
@@ -1324,11 +1324,11 @@ async function connectWithRetry(client, tries = 30){
       ok(u5.pool === 10, '_considerLockIncome: a BURNED Dreams of the Sphinx no longer offers its pool-gain choice');
     }
 
-    /* 19l-8) v1.6.7/v0.6.35 (Johan's ask, "build the counter, as general as possible"):
+    /* 19l-8) v1.6.7/v0.6.35 (the owner's ask to build the counter as general as possible):
        _addCounter/_burnIfCounters (a general utility, measured against 10 similar
        cards -- only Dreams of the Sphinx and Total Insanity share the clean
        "accumulates via any use, auto-burns at a fixed threshold" shape) + the full
-       closed loop Johan specifically asked about: does the temporary hand-size bonus
+       closed loop the owner specifically asked about: does the temporary hand-size bonus
        still hold to end of turn even if the SAME lock that grants it also burns the
        card (verified live before writing these tests). */
     {
@@ -1365,10 +1365,10 @@ async function connectWithRetry(client, tries = 30){
          'the closed loop, part 1: locking for hand-size on the 3rd use both burns the card AND correctly grants the +2 bonus in the same action');
       u3._revertHandSizeBonus();
       ok(u3.hand.length === 7 && u3._handSizeBonus === 0,
-         'the closed loop, part 2 (Johan\'s exact question): the bonus still correctly reverts to base at end of turn even though the granting card burned mid-turn, in the SAME lock that granted it -- _handSizeBonus is independent bot state, not re-derived from the card\'s continued existence');
+         'the closed loop, part 2 (the owner\'s exact question): the bonus still correctly reverts to base at end of turn even though the granting card burned mid-turn, in the SAME lock that granted it -- _handSizeBonus is independent bot state, not re-derived from the card\'s continued existence');
     }
 
-    /* 19l-9) v0.6.36 (Johan's standing question, checking the counter/burn mechanic
+    /* 19l-9) v0.6.36 (the owner's standing question, checking the counter/burn mechanic
        for uncertainty -- found live): Dreams of the Sphinx's bloodAdd and handSize
        modes both carry phase:'master', so a SINGLE _considerLockIncome('master')
        call considers both for the SAME card in one inner loop. If the FIRST mode's
@@ -1392,7 +1392,7 @@ async function connectWithRetry(client, tries = 30){
          'exactly ONE of the two same-phase modes fired (whichever the inner loop reached first) -- the other correctly found the card already out-of-play and did not also apply');
     }
 
-    /* 19l-10) v0.6.37 (Johan's ask, Wider View -- the last Inside Dirt card):
+    /* 19l-10) v0.6.37 (the owner's ask, Wider View -- the last Inside Dirt card):
        source-verified vekn.net first -- normal crypt draw costs 4 transfers +
        1 pool; Wider View's 1-transfer swap is cheaper but forces removing an
        existing uncontrolled duplicate. Extracted the whole influence-phase
@@ -1438,7 +1438,7 @@ async function connectWithRetry(client, tries = 30){
          'Wider View Ability 2 correctly NOT used when a better option exists (crypt still has cards) -- the normal 4-transfer/1-pool draw fires instead, Wider View stays unburned for a future turn');
     }
 
-    /* 19l-11) v0.6.38 (Johan's standing question, checking Wider View for
+    /* 19l-11) v0.6.38 (the owner's standing question, checking Wider View for
        uncertainty -- found live): Wider View is NOT unique (confirmed against
        vtes.json directly), so more than one copy can be in play. Burning was
        using `break`, borrowed from the async normal-draw branch just above it
@@ -1466,7 +1466,7 @@ async function connectWithRetry(client, tries = 30){
       ok(u2.pool === 7 && wv3.zone === 'burned', 'sanity: the common single-copy, exactly-4-transfers case is unaffected by the fix');
     }
 
-    /* 19l-12) v0.6.39 (Johan's ask, Chantry -- the last card on phase-income-v2-
+    /* 19l-12) v0.6.39 (the owner's ask, Chantry -- the last card on phase-income-v2-
        plan.md): source-verified vekn.net first, both card text and official
        ruling (Rescue-from-Torpor cost splits between payer and rescued
        vampire). _considerLockRescue kept separate from _considerLockIncome
@@ -1512,7 +1512,7 @@ async function connectWithRetry(client, tries = 30){
          'Chantry: a non-Tremere torpored vampire is correctly ignored (req.clan gating)');
     }
 
-    /* 19l-13) v0.6.40 (Johan's ask, "take the cheapest win first" -- Arcane
+    /* 19l-13) v0.6.40 (the owner's ask to take the cheapest win first -- Arcane
        Library): the shape _considerLockIncome already reads (lock+phase+
        bloodAdd+bloodAddTo:'unc'), predicted back at Dreams of the Sphinx's own
        delivery, only needed phase/bloodAddTo curated. The one new wrinkle: the
@@ -1536,8 +1536,8 @@ async function connectWithRetry(client, tries = 30){
       ok(anyClan.blood === 3, 'regression: Dreams of the Sphinx (no req.clan at all) still targets ANY uncontrolled vampire -- the new clan filter is a correct no-op when req.clan is absent');
     }
 
-    /* 19l-14) v0.6.41 (Johan's ask, "process the hunting ground family, gives many
-       free to other decks"): _considerHuntingGround. Measured 40 cards, 23 share
+    /* 19l-14) v0.6.41 (the owner's ask to process the hunting ground family, as it
+       gives many cards to other decks for free): _considerHuntingGround. Measured 40 cards, 23 share
        the clean shape; verified live before writing tests. */
     {
       const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', log: () => {} });
@@ -1589,7 +1589,7 @@ async function connectWithRetry(client, tries = 30){
       ok(vamp5.blood === 5, 'calling with the wrong phase (master, not unlock) correctly does nothing');
     }
 
-    /* 19l-15) v0.6.42 (Johan's ask, The Barrens -- from the 19 July backlog note):
+    /* 19l-15) v0.6.42 (the owner's ask, The Barrens -- from the 19 July backlog note):
        _considerHandCycle. Reuses _deadHandIndex verbatim -- only trades a genuinely
        dead card for a fresh one, never a live one. */
     {
@@ -1613,7 +1613,7 @@ async function connectWithRetry(client, tries = 30){
     }
 
     /* 19m) OFFLINE units -- v1.4.2 (14 July): CARD_HANDLERS['ashur-tablets'] +
-       decide('ashur-retrieve'). The mandatory threshold (Johan confirmed:
+       decide('ashur-retrieve'). The mandatory threshold (the owner confirmed:
        immediate, not optional), the own-copy removal to 'burned', the +3
        pool, and the scored ash-heap retrieval + pileBulk shuffle-back. */
     {
@@ -1674,8 +1674,8 @@ async function connectWithRetry(client, tries = 30){
       ok(d1.pick === 'Low', "decide('ashur-retrieve') trusts the CALLER's sort (index 0) rather than re-sorting itself -- same division of labour as master-play (gather+score outside, pick inside)");
     }
 
-    /* 19n) OFFLINE units -- v1.4.3 (14 July, Johan: "kan vi trigga bottens
-       beteende när en MÄNSKLIG spelare spelar sin 3e?"): _checkAshurTableWide
+    /* 19n) OFFLINE units -- v1.4.3 (14 July, the owner asked whether the bot's
+       behaviour can trigger when a HUMAN player plays their 3rd): _checkAshurTableWide
        + _ashurResolve(false). Purely observational (no wire verb), tracking
        each OTHER seat's 'burned' Ashur Tablets count turn over turn -- NOT
        "does anyone show 3 in ready right now" (that signal is gone by the
@@ -1742,9 +1742,9 @@ async function connectWithRetry(client, tries = 30){
        bot turn over the wire. askSecs:1 keeps this fast — Hunt now asks
        Block? too, same as Bleed, so a turn can carry two asks not one. */
     {
-      const h9 = mkClient('Johan'); await connectWithRetry(h9);
+      const h9 = mkClient('Jonna'); await connectWithRetry(h9);
       const R9 = 'v05' + Date.now().toString(36).slice(-6);
-      h9.send({ t: 'create', room: R9, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+      h9.send({ t: 'create', room: R9, pass: 'x', name: 'Jonna', lobby: true, v: '2.6.0' });
       await h9.waitFor(m => m.t === 'joined', 'h9 joined');
       h9.send({ t: 'seat', seat: 1 });
       h9.send({ t: 'deck', name: 'D9', library: [{ name: 'Govern the Unaligned', qty: 60 }],
@@ -1795,7 +1795,7 @@ async function connectWithRetry(client, tries = 30){
       ok((bot9._drawOwed || 0) === 0, 'master-play\u2019s draw-back was actually flushed, not silently deferred (a genuine gap _flushDraws fixed: hunt\u2019s continue used to skip straight past the old inline drain)');
     }
 
-    /* 21) LIVE integration — v0.5+ (Johan, 14 July): "always play A master"
+    /* 21) LIVE integration — v0.5+ (the owner, 14 July): always play A master
        even when nothing in hand is a RECOGNIZED-INCOME asset. Ashur Tablets
        is curated as of v1.4.0 (persistent:true, note-only -- no `phase`/
        `actGrant`, its threshold mechanic is deliberately unmodelled, see
@@ -1803,9 +1803,9 @@ async function connectWithRetry(client, tries = 30){
        played, placed as its own STANDALONE persistent permanent (no host:
        a Location never attaches to a vampire). */
     {
-      const h10 = mkClient('Johan'); await connectWithRetry(h10);
+      const h10 = mkClient('Jonna'); await connectWithRetry(h10);
       const R10 = 'v05b' + Date.now().toString(36).slice(-6);
-      h10.send({ t: 'create', room: R10, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+      h10.send({ t: 'create', room: R10, pass: 'x', name: 'Jonna', lobby: true, v: '2.6.0' });
       await h10.waitFor(m => m.t === 'joined', 'h10 joined');
       h10.send({ t: 'seat', seat: 1 });
       h10.send({ t: 'deck', name: 'D10', library: [{ name: 'Govern the Unaligned', qty: 60 }],
@@ -1839,7 +1839,7 @@ async function connectWithRetry(client, tries = 30){
          "v1.4.0: the chat line carries NO \"(uncurated — adjust if needed)\" suffix -- Ashur Tablets IS curated now (src:'hand'), just without a recognized income fx; the messaging gate moved from `known` to `curated`");
     }
 
-    /* 22) LIVE integration — v0.5+ (Johan, 14 July): hunt can now ANSWER a
+    /* 22) LIVE integration — v0.5+ (the owner, 14 July): hunt can now ANSWER a
        Block! with stealth, same wiring as bleed (_actingVamp -> 
        _onBlockAttempt -> decide('spend-stealth')). shark/pInt-at-prior
        (0.15, nothing observed yet) clears the stakes-weighted threshold
@@ -1848,9 +1848,9 @@ async function connectWithRetry(client, tries = 30){
        stealth card (fxLookup patched, at:null) keeps this test about the
        WIRING, not about which real vampire has which discipline. */
     {
-      const h11 = mkClient('Johan'); await connectWithRetry(h11);
+      const h11 = mkClient('Jonna'); await connectWithRetry(h11);
       const R11 = 'v05c' + Date.now().toString(36).slice(-6);
-      h11.send({ t: 'create', room: R11, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+      h11.send({ t: 'create', room: R11, pass: 'x', name: 'Jonna', lobby: true, v: '2.6.0' });
       await h11.waitFor(m => m.t === 'joined', 'h11 joined');
       h11.send({ t: 'seat', seat: 1 });
       h11.send({ t: 'deck', name: 'D11', library: [{ name: 'Govern the Unaligned', qty: 60 }],
@@ -1876,7 +1876,7 @@ async function connectWithRetry(client, tries = 30){
       h11.send({ t: 'pass' });
       await h11.waitFor(m => m.t === 'chat' && m.who === 'Trainbot' && /hunts\. Block\?/.test(m.msg), 'hunt ask');
       h11.send({ t: 'say', i: SI('Block!') });
-      /* v0.6.152 (Johan's 1v1 report): the hunt announces at stealth 1 (Zip's crypt mod), so the counter reads 1-0 at the shout -- the bot no longer burns a
+      /* v0.6.152 (the owner's 1v1 report): the hunt announces at stealth 1 (Zip's crypt mod), so the counter reads 1-0 at the shout -- the bot no longer burns a
          stealth card on the shout; it says where it stands and waits for played intercept. The human then books "+1" by chat (the new grammar) and the
          stealth card answers THAT. */
       await h11.waitFor(m => m.t === 'chat' && m.who === 'Trainbot' && /currently has 1 stealth/.test(m.msg), 'v0.6.152: ahead at 1-0, the bot says so instead of spending', 9000);
@@ -1886,7 +1886,7 @@ async function connectWithRetry(client, tries = 30){
         /plays Test Stealth: \+\d stealth\./.test(String(m.html).replace(/<[^>]*>/g, '')), 'stealth answers the hunt block', 9000);
       ok(h11.sawAny(m => m.t === 'tally' && m.mode === 'block' && m.b === 1), 'v0.6.152 INTERCEPT BY CHAT: "+1" from the blocker was booked on the shared counter (b 0 -> 1)');
       ok(!h11.sawAny(m => m.t === 'log' && m.who === 'Trainbot' && /Blocked by/.test(m.html)),
-         '"every action treated fundamentally the same" (Johan, 14 July): a Block! against HUNT is now answered with stealth exactly like a bleed -- no combat, the ask stayed open');
+         'every action treated fundamentally the same (the owner, 14 July): a Block! against HUNT is now answered with stealth exactly like a bleed -- no combat, the ask stayed open');
       ok(!bot11.hand.includes('Test Stealth'), 'the stealth card left the hand');
     }
 
@@ -1897,9 +1897,9 @@ async function connectWithRetry(client, tries = 30){
        board as a standalone permanent the way Ashur Tablets (test 21,
        genuinely persistent) correctly does. */
     {
-      const h12 = mkClient('Johan'); await connectWithRetry(h12);
+      const h12 = mkClient('Jonna'); await connectWithRetry(h12);
       const R12 = 'v14a' + Date.now().toString(36).slice(-6);
-      h12.send({ t: 'create', room: R12, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+      h12.send({ t: 'create', room: R12, pass: 'x', name: 'Jonna', lobby: true, v: '2.6.0' });
       await h12.waitFor(m => m.t === 'joined', 'h12 joined');
       h12.send({ t: 'seat', seat: 1 });
       h12.send({ t: 'deck', name: 'D12', library: [{ name: 'Govern the Unaligned', qty: 60 }],
@@ -1955,9 +1955,9 @@ async function connectWithRetry(client, tries = 30){
        slot lets BOTH Effective Management and Information Highway (both
        free) get played the SAME turn instead of just one. */
     {
-      const h13 = mkClient('Johan'); await connectWithRetry(h13);
+      const h13 = mkClient('Jonna'); await connectWithRetry(h13);
       const R13 = 'v14b' + Date.now().toString(36).slice(-6);
-      h13.send({ t: 'create', room: R13, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+      h13.send({ t: 'create', room: R13, pass: 'x', name: 'Jonna', lobby: true, v: '2.6.0' });
       await h13.waitFor(m => m.t === 'joined', 'h13 joined');
       h13.send({ t: 'seat', seat: 1 });
       h13.send({ t: 'deck', name: 'D13', library: [{ name: 'Govern the Unaligned', qty: 60 }],
@@ -2016,9 +2016,9 @@ async function connectWithRetry(client, tries = 30){
        including the bot's FIRST-EVER use of pileBulk (drawCrypt had a proven
        precedent; this verb didn't). */
     {
-      const h14 = mkClient('Johan'); await connectWithRetry(h14);
+      const h14 = mkClient('Jonna'); await connectWithRetry(h14);
       const R14 = 'v14c' + Date.now().toString(36).slice(-6);
-      h14.send({ t: 'create', room: R14, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+      h14.send({ t: 'create', room: R14, pass: 'x', name: 'Jonna', lobby: true, v: '2.6.0' });
       await h14.waitFor(m => m.t === 'joined', 'h14 joined');
       h14.send({ t: 'seat', seat: 1 });
       h14.send({ t: 'deck', name: 'D14', library: [{ name: 'Govern the Unaligned', qty: 60 }],
@@ -2049,7 +2049,7 @@ async function connectWithRetry(client, tries = 30){
       await h14.waitFor(m => m.t === 'turn' && m.seat === 1, 'turn back (r14 t1)', 20000);
 
       ok(h14.sawAny(m => m.t === 'log' && m.html.includes('removes 3 copies of <b>Ashur Tablets</b>')),
-         'the threshold fires the instant the 3rd copy is played -- mandatory (Johan confirmed), not a decide()-gated choice');
+         'the threshold fires the instant the 3rd copy is played -- mandatory (the owner confirmed), not a decide()-gated choice');
       const copies = bot14.board.filter(c => c.name === 'Ashur Tablets');
       ok(copies.length === 3 && copies.every(c => c.zone === 'burned'),
          "all 3 copies removed to 'burned' (removed from the game) -- not 'ash', a different zone entirely");
@@ -2060,8 +2060,8 @@ async function connectWithRetry(client, tries = 30){
       ok(!bot14.board.some(c => c.id === 'ash1'), 'left the ash-heap board tracking once retrieved');
     }
 
-    /* 26) LIVE integration — v1.4.3 (14 July, Johan: "kan vi trigga bottens
-       beteende när en MÄNSKLIG spelare spelar sin 3e?"): TWO real, separately
+    /* 26) LIVE integration — v1.4.3 (14 July, the owner asked whether the bot's
+       behaviour can trigger when a HUMAN player plays their 3rd): TWO real, separately
        connected Bot instances at the SAME table (a 3-seat game: a light
        bookkeeping host at seat 1, Bot A at seat 2, Bot B at seat 3) --
        genuinely new test territory this session (every earlier live test was
@@ -2073,9 +2073,9 @@ async function connectWithRetry(client, tries = 30){
        `pub.cards`, the same data regardless of whether the other seat is a
        bot or a person. */
     {
-      const h15 = mkClient('Johan'); await connectWithRetry(h15);
+      const h15 = mkClient('Jonna'); await connectWithRetry(h15);
       const R15 = 'v14d' + Date.now().toString(36).slice(-6);
-      h15.send({ t: 'create', room: R15, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+      h15.send({ t: 'create', room: R15, pass: 'x', name: 'Jonna', lobby: true, v: '2.6.0' });
       await h15.waitFor(m => m.t === 'joined', 'h15 joined');
       h15.send({ t: 'seat', seat: 1 });
       h15.send({ t: 'deck', name: 'D15', library: [{ name: 'Govern the Unaligned', qty: 60 }],
@@ -2221,9 +2221,9 @@ async function connectWithRetry(client, tries = 30){
 
       /* 27d) attacker-side bounce-target-tracking (_onLog): MY OWN acting
          vampire re-announced with a Target: suffix updates _actingVamp.target
-         — the exact signal Johan pre-answered ("man sätter target ... och
-         spelar kortet, som då genom klonamination och logg visar vem som är
-         target"). A re-announce for a DIFFERENT vampire must not touch it. */
+         — the exact signal the owner pre-answered (one sets the target and
+         plays the card, which then shows through the clone and the log who
+         the target is). A re-announce for a DIFFERENT vampire must not touch it. */
       u.started = true;
       u.players = [{ seat: 1, name: 'Alice' }, { seat: 2, name: 'U' }, { seat: 3, name: 'BotDefender' }];
       u._actingVamp = { v: { name: 'Lucinde, Alastor' }, n: 2, played: new Set(), target: 3 };
@@ -2264,7 +2264,7 @@ async function connectWithRetry(client, tries = 30){
       await h16.waitFor(m => m.t === 'deckok', 'h16 deckok');
 
       const botAtk = new Bot({ server: URL, room: R16, pass: 'x', name: 'BotAttacker', seat: 2,
-                               paceMs: 0, askSecs: 3, log: () => {}, lateBounce: 0,   // v0.6.144: this section pins the MECHANICS of a modifier played against a post-bounce target (target tracking, the re-announce); since v0.6.144 a bot does not pump a bounced bleed by default (Johan) -- the knob keeps the old path alive for exactly this coverage
+                               paceMs: 0, askSecs: 3, log: () => {}, lateBounce: 0,   // v0.6.144: this section pins the MECHANICS of a modifier played against a post-bounce target (target tracking, the re-announce); since v0.6.144 a bot does not pump a bounced bleed by default (the owner) -- the knob keeps the old path alive for exactly this coverage
 
                                deck: { name: 'ATK', crypt: [{ name: 'Zip', qty: 12 }],
                                        library: [{ name: 'Govern the Unaligned', qty: 60 }] } });
@@ -2416,8 +2416,8 @@ async function connectWithRetry(client, tries = 30){
     /* 31) LIVE integration — steg 4 end-to-end: a REAL bot with BOTH
        Conditioning (limited) and Leverage (not limited, exempt from the
        cap) plays BOTH in the SAME action — proving the limited cap allows
-       exactly the combination Johan asked for ("Leverage kan spelas ihop
-       med vardera av dem"), in the correct order (biggest first), with the
+       exactly the combination the owner asked for (Leverage can be played
+       together with either of them), in the correct order (biggest first), with the
        correct final amount and edge state throughout. */
     {
       const h18 = mkClient('Alice'); await connectWithRetry(h18);
@@ -2513,12 +2513,12 @@ async function connectWithRetry(client, tries = 30){
       ok(u.decide('combat-strike', { dodge: dg, vamp: zipD }).dodge === true,
          "decide('combat-strike'): fragile (blood 1 — the assumed incoming 1 would torpor) → dodge to survive");
       ok(u.decide('combat-strike', { dodge: dg, vamp: { blood: 2 } }).dodge === false,
-         "decide('combat-strike'): healthy (blood 2) → strike for value, save the dodge — deliberately dumb v1, per Johan");
+         "decide('combat-strike'): healthy (blood 2) → strike for value, save the dodge — deliberately dumb v1, per the owner");
       await u._resolveCombatRound(zipD);
       ok(zipD.blood === 1 && zipD.zone === 'ready' && !u.hand.includes('Dodge'),
          '_resolveCombatRound with a dodge: card spent, NO damage taken (blood unchanged), NO torpor — no damage in either direction this round');
 
-      /* 32d) v0.6.12 — finder TYPE filters (Johan's standing question, 18 July): the
+      /* 32d) v0.6.12 — finder TYPE filters (the owner's standing question, 18 July): the
          window defines the card type. Non-matching carriers of the fx key must never
          be offered from hand — the actStealth sweep's sibling class, living in the
          READERS instead of the database (147 stealth / 70 bleed / 9 dodge / 24 strike
@@ -2541,7 +2541,7 @@ async function connectWithRetry(client, tries = 30){
          'type filters: the REAL combat card is still found — no over-filtering');
     }
 
-    /* 32e) v0.6.14 — the blood-placement family (Johan's superior-Govern GO):
+    /* 32e) v0.6.14 — the blood-placement family (the owner's superior-Govern GO):
        _bestBloodStockFor picks a LEGAL uncontrolled target (younger = strictly
        lower CAPACITY per the rulebook's age rule, and it must still want blood),
        highest-cap first; _raiseNeed is the payoff (pre-stocked blood discounts
@@ -2585,7 +2585,7 @@ async function connectWithRetry(client, tries = 30){
          '_bestBloodStockFor: Enchant Kindred (a GENUINE Govern-shaped modal alternative, [pre] bleed / [PRE] standalone stock) IS found for a superior-Presence vampire -- the guard rejects the RIDER shape specifically, not bloodAdd-bearing cards in general');
     }
 
-    /* 32g) v0.6.20 (Johan's combat GO, strike-bonus family) — _bestStrikeFor gained the
+    /* 32g) v0.6.20 (the owner's combat GO, strike-bonus family) — _bestStrikeFor gained the
        SAME req-flag + co-located-maneuver/press guards _bestStealStrikeFor already had. */
     {
       const u5 = new Bot({ server: URL, room: 'x', pass: 'x', name: 'U5', log: () => {} });
@@ -2606,7 +2606,7 @@ async function connectWithRetry(client, tries = 30){
       ok(u5._bestStrikeFor(vamp32g) === null, '_bestStrikeFor: .44 Magnum (EQUIPMENT-typed) never offered from hand — attached-weapon consumption is still a future board-scan, not a hand play (the type filter, unchanged)');
     }
 
-    /* 32f) v0.6.18 (Johan's standing question, round 3) — the rig mechanism's
+    /* 32f) v0.6.18 (the owner's standing question, round 3) — the rig mechanism's
        duplicate-copy warning: a name in BOTH rig.unc and rig.ready silently produced
        extra board entries unrelated to the deck's own printed quantity. Verify the
        post-rig scan warns exactly when the board count exceeds deck.crypt's qty --
@@ -2727,7 +2727,7 @@ async function connectWithRetry(client, tries = 30){
         ok(badCr.length === 0, "archetype '" + aname + "': every crypt vampire resolves in cardfx" + (badCr.length ? ' — MISSING: ' + badCr.join(', ') : ''));
         const libN = deck.library.reduce((a, c) => a + (c.qty || 1), 0);
         const crN  = deck.crypt.reduce((a, c) => a + (c.qty || 1), 0);   // fas A: SUM the qty fields -- the sewer crypt uses qty>1 rows (2x Skulk etc.), and counting ROWS (8) instead of cards (12) was the guard's own bug, caught by its first qty-bearing archetype
-        ok(libN >= 60 && libN <= 90 && crN >= 12, "archetype '" + aname + "': legal sizes (60-90 lib / >=12 crypt, VTES constructed rules) — got " + libN + '/' + crN);   // DEFAULT_DECK is Johan's real 62-card build -- the guard enforces LEGALITY, not an exact count
+        ok(libN >= 60 && libN <= 90 && crN >= 12, "archetype '" + aname + "': legal sizes (60-90 lib / >=12 crypt, VTES constructed rules) — got " + libN + '/' + crN);   // DEFAULT_DECK is the owner's real 62-card build -- the guard enforces LEGALITY, not an exact count
       }
     }
 
@@ -2830,7 +2830,7 @@ async function connectWithRetry(client, tries = 30){
       await u._resolveCombatRound(zD);
       ok(zD.blood === 2 && zD.zone === 'ready', 'silent opponent (human table): the askSecs timeout falls back to the rulebook default 1 — old behaviour preserved');
 
-      /* 37f) v0.6.19 (Johan's combat GO, steal-blood family, source-verified vekn.net
+      /* 37f) v0.6.19 (the owner's combat GO, steal-blood family, source-verified vekn.net
          19 July): "Steal Blood... does NOT count as damage... occurs before the mend
          damage step... excess drains off immediately." */
       const nw37f = JSON.parse(require('fs').readFileSync(__dirname + '/elysium-cardfx.json', 'utf8'));
@@ -2857,7 +2857,7 @@ async function connectWithRetry(client, tries = 30){
       u.send = oldSend37f;
     }
 
-    /* 37g) v0.6.21 (Johan's combat GO, Taste of Vitae -- completing the half-finished
+    /* 37g) v0.6.21 (the owner's combat GO, Taste of Vitae -- completing the half-finished
        work found via standing-question review). Source rule (vekn.net, matching
        Theft of Vitae's own precedent): gains blood equal to what the OPPONENT LOST
        this round, capped at capacity; not usable by a vampire itself going to torpor. */
@@ -2907,7 +2907,7 @@ async function connectWithRetry(client, tries = 30){
       u.chat = oldChat37g; u.send = oldSend37g;
     }
 
-    /* 37h) v0.6.22 (Johan's combat GO, the multi-round loop): _resolveCombat, the
+    /* 37h) v0.6.22 (the owner's combat GO, the multi-round loop): _resolveCombat, the
        outer press-driven wrapper. _awaitOppStrike/_awaitOppTaken mocked to a FIXED
        "opponent dodges" outcome every round (so round-by-round arithmetic stays
        exact and testable without racing real chat parsing); _awaitOppPress
@@ -2955,7 +2955,7 @@ async function connectWithRetry(client, tries = 30){
          '37h: torpor stops the loop immediately -- I go to torpor in round 1 (blood 1, cap 1, taking 5), the wrapper returns without even checking press (Apportation stays unplayed, matching the rulebook: cards not usable by a vampire going to torpor)');
     }
 
-    /* 37i) v0.6.23 (Johan's standing question, checking the multi-round loop): the
+    /* 37i) v0.6.23 (the owner's standing question, checking the multi-round loop): the
        PHANTOM DAMAGE fix. This bot cannot see the opponent's board -- if MY round-1
        strike burned/torpored them, I have no way to know before choosing whether to
        press for round 2. A round-2+ timeout on the STRIKE handshake specifically
@@ -2992,7 +2992,7 @@ async function connectWithRetry(client, tries = 30){
       ok(zRound1.blood === 2, '37i: round 1 behaviour is UNCHANGED -- a genuinely silent round-1 opponent (human table, hasn\'t typed the grammar yet) still assumes the rulebook default 1 damage (3-1=2), exactly as before this fix; the new fail-safe applies ONLY to continued (round 2+) rounds');
     }
 
-    /* 37j) v0.6.24 (Johan's combat GO, the range concept -- maneuvers): source-
+    /* 37j) v0.6.24 (the owner's combat GO, the range concept -- maneuvers): source-
        verified vekn.net first (a hand strike is ALWAYS choosable but deals 0 if the
        range doesn't match -- "you can definitely play close range strikes at long
        range... but the strike would not be effective"). _bestManeuverFor's clean
@@ -3048,7 +3048,7 @@ async function connectWithRetry(client, tries = 30){
          '37j: the OPPONENT maneuvers alone (I have no maneuver card at all) -- their single uncancelled maneuver still flips the range to long, and Death of the Drum becomes playable purely from THEIR action, matching the rulebook: only one side needs to maneuver');
     }
 
-    /* 37k) v0.6.25 (Johan's standing question, checking the range concept for
+    /* 37k) v0.6.25 (the owner's standing question, checking the range concept for
        uncertainty): the WANT-LONG bug. The original heuristic asked "is there a
        rangeLong strike/steal card in hand" -- not "can THIS vampire actually use it"
        (discipline) or "can it still afford the card's own cost". A vampire holding
@@ -3070,7 +3070,7 @@ async function connectWithRetry(client, tries = 30){
          '37k: a vampire with THA but NEITHER cel nor mel does NOT maneuver for Death of the Drum -- it could never play the card regardless of range, so wasting the maneuver on it would be a pure misplay; Apportation stays in hand, unspent');
     }
 
-    /* 37l) v0.6.26 (Johan's combat GO, Carrion Crows -- the persistent-this-combat
+    /* 37l) v0.6.26 (the owner's combat GO, Carrion Crows -- the persistent-this-combat
        modifier concept). Source rule (vekn.net, official 2024 clarification):
        environmental damage cannot be dodged, combines into the same mend/torpor
        math (this bot models no First Strike, the one documented skip-case), and
@@ -3124,7 +3124,7 @@ async function connectWithRetry(client, tries = 30){
          '37l: 2 sequential rounds, 1 environmental damage each, no re-announcement needed AND the flag itself is never consumed/cleared by applying it (still n=1 after both rounds) -- 8-1-1=6');
     }
 
-    /* 37m) v0.6.27 (Johan's standing question, checking Carrion Crows for uncertainty
+    /* 37m) v0.6.27 (the owner's standing question, checking Carrion Crows for uncertainty
        -- the DODGE-BYPASSES-ENVIRONMENTAL-DAMAGE bug). The dodge branch used to
        `return` before the code that applies the opponent's active Carrion Crows ever
        ran -- a dodging vampire took 0 environmental damage, contradicting the
@@ -3154,7 +3154,7 @@ async function connectWithRetry(client, tries = 30){
          '37m: without an active enemy Carrion Crows, dodge is completely unchanged from before this fix -- blood untouched, stays ready');
     }
 
-    /* 37n) v0.6.28 (Johan's combat GO, Immortal Grapple -- the strike-type
+    /* 37n) v0.6.28 (the owner's combat GO, Immortal Grapple -- the strike-type
        restriction concept). Source rule (vekn.net + official FAQ 3.16): "restricts
        both minions in the combat to only using 'hand strikes'". Per-ROUND (unlike
        Carrion Crows' per-combat), symmetric ("by either combatant" -- one shared
@@ -3226,7 +3226,7 @@ async function connectWithRetry(client, tries = 30){
       ok(maneuverCalls === 0 && u._range === 'close' && u._forceCloseNextRound === false,
          '37n: superior Immortal Grapple\'s "skip the determine range step" correctly bypasses the maneuver decision ENTIRELY next round (never even calls _bestManeuverFor) -- range stays close by the same default, and the one-shot flag is consumed');
 
-      /* (f) v0.6.28 (Johan's standing question, checking the half-finished Immortal
+      /* (f) v0.6.28 (the owner's standing question, checking the half-finished Immortal
          Grapple work for uncertainty before trusting it -- found on disk, BOT_VERSION
          never bumped, matching the earlier Taste of Vitae pattern). Two real bugs the
          existing 37n coverage above did NOT catch, both source-verified independently:
@@ -3515,7 +3515,7 @@ async function connectWithRetry(client, tries = 30){
     /* 41) R2 -- the hand-intel foundation (elysium-bot-revelations-plan.md section 4):
        legal ground truth via revealHand/openHandGrant/openHandRevoke, honest decay in
        _onBoard, the _pCat ground-truth override of readP, and _pickForcedDiscard
-       (Johan's ladder). Every fixture resolves through the REAL cardfx ladder. */
+       (the owner's ladder). Every fixture resolves through the REAL cardfx ladder. */
     {
       const u = new Bot({ server:'ws://127.0.0.1:1', room:'x', pass:'x', name:'U', persona:'grinder', paceMs:0, askSecs:1, log:()=>{} });
       u.seat = 2; u.started = true;
@@ -3546,7 +3546,7 @@ async function connectWithRetry(client, tries = 30){
     /* 42) R3 -- Revelations both sides (plan section 5): finder + decide, the frozen
        L12 grammars + the HUMAN R1 play-log grammar, pending kind:'peek' comply for
        BOTH modes, the logTo discard command, open-hand sync/revoke, the reveal
-       waiter, and the picker ladder v2 (Johan's Malkavian baseline). */
+       waiter, and the picker ladder v2 (the owner's Malkavian baseline). */
     {
       const u = new Bot({ server:'ws://127.0.0.1:1', room:'x', pass:'x', name:'U', persona:'grinder', paceMs:0, askSecs:1, log:()=>{} });
       u.players = [{ seat:1, name:'Opp' }, { seat:2, name:'U' }];
@@ -3634,7 +3634,7 @@ async function connectWithRetry(client, tries = 30){
     }
 
 
-    /* 43) M1 -- Misdirection (elysium-bot-tremere-plan.md): Johan's frozen targeting
+    /* 43) M1 -- Misdirection (elysium-bot-tremere-plan.md): the owner's frozen targeting
        heuristic in _bestNeutralizeTarget, the frozen L12.lockM grammar, and the
        target-side comply. */
     {
@@ -3648,7 +3648,7 @@ async function connectWithRetry(client, tries = 30){
         { id:'x2', name:'Adana de Sforza (G4)', kind:'crypt', zone:'ready', locked:false }
       ] }, seen:new Set() };
       const t1 = u._bestNeutralizeTarget(1, {});
-      ok(!!t1 && t1.name === 'Adana de Sforza (G4)', '43a targeter: CAPACITY primary per Johan (Adana cap 11 basic-aus, 13p, over sup-loaded Aisling cap 5, 10p) -- discipline weight is the modifier, not the ruler');
+      ok(!!t1 && t1.name === 'Adana de Sforza (G4)', '43a targeter: CAPACITY primary per the owner (Adana cap 11 basic-aus, 13p, over sup-loaded Aisling cap 5, 10p) -- discipline weight is the modifier, not the ruler');
       u.table[1].pub.cards[1].locked = true;
       const t2 = u._bestNeutralizeTarget(1, { needUnlocked: true });
       ok(!!t2 && t2.name === 'Aisling Sturbridge', '43a needUnlocked (the Misdirection REQUIREMENT) filters the locked giant -- the unlocked bouncer remains the pick');
@@ -3764,7 +3764,7 @@ async function connectWithRetry(client, tries = 30){
       u._equipManeuverUsed = true;
       ok(u._equipCombatOption(u.board[0], 'maneuver') === null, '45c the maneuver is once per combat (flag respected)');
       u._equipManeuverUsed = false;
-      /* 45d) Johan's frozen fetch ladder */
+      /* 45d) the owner's frozen fetch ladder */
       ok(u._equipLadderTier('Bowl of Convergence', u.board[0]) === 0, '45d a borne copy blocks re-equipping the same name (one-per-minion guard)');
       u.board = [ { id:'v1', name:'Aisling Sturbridge', kind:'crypt', zone:'ready', locked:false, blood:3, attached:[] } ];   // fresh board: the LOOSE test Bowls above correctly tripped the unique-in-play guard -- proof it works, and exactly why the ladder fixtures need a clean table
       ok(u._equipLadderTier('Bowl of Convergence', u.board[0]) === 1, '45d Bowl = tier 1 for an aus bearer (usable intercept-equip tops the ladder; a clean table -- loose copies rightly trip the unique guard)');
@@ -4214,7 +4214,7 @@ async function connectWithRetry(client, tries = 30){
       const r2 = u._bestRecruitFor(u.board[0]);
       ok(!!r2 && r2.life === 1 && r2.at === 'ani', '56a basic-ani Ryan gets the 1-life version -- the gate degrades');
       u.pool = 1;
-      ok(u._bestRecruitFor(u.board[0]) !== null, '56a the pool guard no longer applies to the Stray: it costs 1 BLOOD (Johan\u2019s ruling 18 Sep), so pool 1 is fine');
+      ok(u._bestRecruitFor(u.board[0]) !== null, '56a the pool guard no longer applies to the Stray: it costs 1 BLOOD (the owner\u2019s ruling 18 Sep), so pool 1 is fine');
       u.board[0].blood = 0;
       ok(u._bestRecruitFor(u.board[0]) === null, '56a ...and a bloodless recruiter cannot pay it');
       u.pool = 6;
@@ -4293,7 +4293,7 @@ async function connectWithRetry(client, tries = 30){
     }
 
 
-    /* 59) the wake combo (Johan's call): a LOCKED reactor + a wake in hand --
+    /* 59) the wake combo (the owner's call): a LOCKED reactor + a wake in hand --
        the bounce steg-6 pattern now serves reduce AND votes. */
     {
       const u = new Bot({ server:'ws://127.0.0.1:1', room:'x', pass:'x', name:'U', persona:'grinder', paceMs:0, askSecs:1, log:()=>{} });
@@ -4435,12 +4435,12 @@ async function connectWithRetry(client, tries = 30){
       ok(!!r1 && r1.tPays === 2 && r1.mine === 0 && r1.seat === 3, '63a the FREE rescue: a blood-2 famed torpor target pays the whole forced split (they 2, me 0) -- rulebook 6.5.3, the acting controller chooses');
       u.table[3].pub.cards[0].blood = 0;
       const r2 = u._bestEnemyRescueFor(ME);
-      ok(!!r2 && r2.tPays === 0 && r2.mine === 2, '63a Johan\'s nuance LIVE: torpor usually means EMPTY blood -- my actor shoulders both (t=0, mine=2), still offered because the rush gate holds (3 pool awaits)');
+      ok(!!r2 && r2.tPays === 0 && r2.mine === 2, '63a the owner\'s nuance LIVE: torpor usually means EMPTY blood -- my actor shoulders both (t=0, mine=2), still offered because the rush gate holds (3 pool awaits)');
       ME.blood = 2;
       ok(u._bestEnemyRescueFor(ME) === null, '63a ...but blood 2 cannot pay 2 and keep 1: the actor guard refuses the over-sacrifice');
       ME.blood = 4;
       u.hand = [];
-      ok(u._bestEnemyRescueFor(ME) === null, '63a NO rush in hand -> no rescue: the 3-pool re-torpor is the combo\'s whole point (the gate Johan named)');
+      ok(u._bestEnemyRescueFor(ME) === null, '63a NO rush in hand -> no rescue: the 3-pool re-torpor is the combo\'s whole point (the gate the owner named)');
       u.hand = ['Deep Song'];
       u._famedSeen = {};
       ok(u._bestEnemyRescueFor(ME) === null, '63a an UNFAMED torpor enemy is never rescued -- charity is not doctrine');
@@ -4519,7 +4519,7 @@ async function connectWithRetry(client, tries = 30){
     }
 
 
-    /* 66) Johan's rush-expectation weighting: expected combat outcome scores
+    /* 66) the owner's rush-expectation weighting: expected combat outcome scores
        the rush -- no combat cards wants 0-1 blood targets. */
     {
       const u = new Bot({ server:'ws://127.0.0.1:1', room:'x', pass:'x', name:'U', persona:'shark', paceMs:0, askSecs:1, log:()=>{} });
@@ -4541,7 +4541,7 @@ async function connectWithRetry(client, tries = 30){
       u.fxLookup = n => n === 'Preternatural Strength' ? { name:n, kind:'lib', e:{ modes:[ { fx:{ strengthBonus: 2 } } ] } } : realFx(n);
       u._modeUsableBy = () => true;
       ex = u._rushExpectation(H);
-      ok(ex.expDmg === 3, '66a a played Preternatural (attached +2) makes the bare hand hit 3 -- Johan\'s named exception');
+      ok(ex.expDmg === 3, '66a a played Preternatural (attached +2) makes the bare hand hit 3 -- the owner\'s named exception');
       /* 66b) the multiplier in the action scorer -- same target, three hands */
       u.fxLookup = realFx; H.attached = [];
       const baseCtx = tb => ({ plain: { n: 2, seat: 3 }, card: null, pd: null, stock: null, peek: null, equip: null, fetch: null, creep: null, strength: null, recruit: null, enemyRescue: null, readyCrypt: 1, edge: false, rush: { idx: 0, name: 'Deep Song', kind: 'rush', target: { name: 'T', blood: tb, tBlood: tb, w: 6 }, st: 0, n: 1, exp: u._rushExpectation(H) } });
@@ -4556,7 +4556,7 @@ async function connectWithRetry(client, tries = 30){
     }
 
 
-    /* 67) the influence planner v1 -- Johan's opening-book design: the raise
+    /* 67) the influence planner v1 -- the owner's opening-book design: the raise
        pick is scored (supFit / reactFit / tempo), the guards untouched. */
     {
       const u = new Bot({ server:'ws://127.0.0.1:1', room:'x', pass:'x', name:'U', persona:'grinder', paceMs:0, askSecs:1, log:()=>{} });
@@ -4571,7 +4571,7 @@ async function connectWithRetry(client, tries = 30){
       ok(pick === H, '67a with Deep Song in hand the SUP-ANI Horace is preferred over basic-ani Wauneka at equal cap -- the Baixinho bottleneck cured at the raise');
       const ip = emits.find(e => e.n === 'influence-pick');
       ok(!!ip && ip.d.picked === 'Horace Radcliffe (G6)' && ip.d.considered[0].supFit > ip.d.considered[1].supFit, '67a ...and the emit carries the score parts (the dossier will show the reasoning)');
-      /* 67b) tempo: Johan's seat-capacity insight -- reachable-now beats one-more-round */
+      /* 67b) tempo: the owner's seat-capacity insight -- reachable-now beats one-more-round */
       emits.length = 0; u.hand = [];
       const BIG = { id:'b', name:'Belinde (G6)', kind:'crypt', zone:'uncontrolled', cap:6, blood:0 };
       const SMALL = { id:'s', name:'Baixinho (G6)', kind:'crypt', zone:'uncontrolled', cap:3, blood:0 };
@@ -4612,7 +4612,7 @@ async function connectWithRetry(client, tries = 30){
     }
 
 
-    /* 69) v0.6.79 -- the match improvements + Johan's cycling reflection */
+    /* 69) v0.6.79 -- the match improvements + the owner's cycling reflection */
     {
       const u = new Bot({ server:'ws://127.0.0.1:1', room:'x', pass:'x', name:'U', persona:'grinder', paceMs:0, askSecs:1, log:()=>{} });
       u.seat = 2; u.started = true;
@@ -4634,14 +4634,14 @@ async function connectWithRetry(client, tries = 30){
       u.hand = ['Lost in Crowds', 'Lost in Crowds', 'Cloak the Gathering', 'Computer Hacking'];
       u._unblockedStreak = 3;
       const si = u._surplusStealthIndex(u.board);
-      ok(si >= 0 && /Lost in Crowds|Cloak/.test(u.hand[si]), '69c three stealth + streak 3 -> one PURE-stealth judged dead weight (Johan\'s starve-out reflection)');
+      ok(si >= 0 && /Lost in Crowds|Cloak/.test(u.hand[si]), '69c three stealth + streak 3 -> one PURE-stealth judged dead weight (the owner\'s starve-out reflection)');
       u._unblockedStreak = 1;
       ok(u._surplusStealthIndex(u.board) === -1, '69c ...but a low streak keeps the hand intact (the table still blocks -- stealth is live)');
       u._unblockedStreak = 5; u.hand = ['Lost in Crowds', 'Computer Hacking', 'Computer Hacking'];
       ok(u._surplusStealthIndex(u.board) === -1, '69c ...and under three stealth cards nothing cycles (no clog, no cure)');
     }
 
-    /* 70) v0.6.80 -- VA: the crypt-ability consumers (elysium-bot-vampire-plan.md, Johan's kör 2 Aug) */
+    /* 70) v0.6.80 -- VA: the crypt-ability consumers (elysium-bot-vampire-plan.md, the owner's go-ahead 2 Aug) */
     {
       const u = new Bot({ server:'ws://127.0.0.1:1', room:'x', pass:'x', name:'U', persona:'grinder', paceMs:0, askSecs:1, log:()=>{} });
       u.seat = 2; u.started = true;
@@ -4680,7 +4680,7 @@ async function connectWithRetry(client, tries = 30){
       ok(!!bb && bb.n === 3, '70c the card-bleed option carries Lenny\'s +1 from birth (Computer Hacking 2 -> 3)');
       const bb2 = u._bestBleedCardFor(W);
       ok(!!bb2 && bb2.n === 2, '70c ...and a vanilla keeps the printed n (2) -- the modifier finder stays bonus-free (no double count)');
-      /* 70d) the review round (Johan's utred-ask, 2 Aug): SOURCE-VERIFIED raw model (rulebook: 'even below 0'; FAQ 3.22) + the accumulator + peek directedness */
+      /* 70d) the review round (the owner's ask to investigate, 2 Aug): SOURCE-VERIFIED raw model (rulebook: 'even below 0'; FAQ 3.22) + the accumulator + peek directedness */
       const u2 = new Bot({ server:'ws://127.0.0.1:1', room:'x', pass:'x', name:'U2', persona:'grinder', paceMs:0, askSecs:1, log:()=>{} });
       u2.seat = 2; u2.started = true; u2.chat = ()=>{}; u2.push = ()=>{}; u2._emit = ()=>{}; u2.caps = { tally: true }; u2.pool = 10;
       const tw = [];   // capture tally writes; emulate srv-2.6.17's absent-field preserve so u2.tally mirrors the wire echo
@@ -4831,12 +4831,12 @@ async function connectWithRetry(client, tries = 30){
       ok(u77._lastBlockerName === 'Blythe Candeleria', '73d a non-block log line leaves the name untouched');
       u77._announceTallyA && u77._announceTallyA(0);
       ok(u77._lastBlockerName === null, '73d every new announce clears the name -- a human blocker can never inherit a stale one');
-      /* 63d chain-pricing (Johan's option ii, 4 Aug): the rescue score carries the re-torpor chain */
+      /* 63d chain-pricing (the owner's option ii, 4 Aug): the rescue score carries the re-torpor chain */
       const u63d = mkC(); u63d.hand = []; u63d.board = u63d.board || []; u63d.players = u63d.players || []; u63d.persona = Object.assign({}, u63d.persona || {}, { aggression: 1.3 });
       const r63a = u63d._decide('action', { enemyRescue: { kind: 'enemyRescue', name: 'Bait', tPays: 0, mine: 2, seat: 2, st: 0, n: 1 }, readyCrypt: 1 });
       ok(r63a && r63a.pick && r63a.pick.kind === 'enemyRescue' && String(r63a.why).includes('+chain'), '63d a pay-it-all rescue with a live chain is picked, why carries +chain');
       const s63a = (1.3 + 0.35*0 + 1.05) * 1.3;   // ~3.055 -- float-safe INTERVAL assert (the bar IS the test), not an exact toFixed comparison
-      ok(s63a > 2*1.3 && s63a < 3*1.3, '63d t=0 chain-priced (~3.05) -- beats the n=2 bar (2.6), still loses to n=3 (3.9): Johan\u2019s worth-it bar exactly');
+      ok(s63a > 2*1.3 && s63a < 3*1.3, '63d t=0 chain-priced (~3.05) -- beats the n=2 bar (2.6), still loses to n=3 (3.9): the owner\u2019s worth-it bar exactly');
       const s63b = (1.3 + 0.35*2 + 1.05) * 1.3;   // ~3.965
       ok(s63b > 3*1.3, '63d a FREE rescue (t=2) with a live chain outbids even n=3 -- the free-and-loaded case tops the ladder');
       /* 73e B-55b: endgame posture -- the revert fallback retains defense */
@@ -4872,7 +4872,7 @@ async function connectWithRetry(client, tries = 30){
       u80.hand = ['Deflection','Cloak the Gathering','Computer Hacking','Computer Hacking','Computer Hacking','Computer Hacking','Computer Hacking','Computer Hacking'];
       u80._revertHandSizeBonus();
       ok(caught80.some(c => c[0] === 'posture') && caught80.some(c => c[0] === 'revert' && c[1].shed === 'Cloak the Gathering'), '73f the posture-kept case emits BOTH: posture (kept) and revert (the non-defense that fell)');
-      /* 73g the table block climate (Johan's design): READ is BASE, consumers earn their way in */
+      /* 73g the table block climate (the owner's design): READ is BASE, consumers earn their way in */
       const u82 = mkC(); u82.o = Object.assign({}, u82.o || {}, { name: 'Me' }); u82._tableBlockAttempts = 0; u82.ownTurns = 4;
       u82.started = true;   // v0.6.106 (#14): log-line carriers; own attempts are noted at _commitBlock (the server never echoes my log lines)
       u82._onLog('Other', '<b>Tsigane</b> attempts to block.');
@@ -5038,7 +5038,7 @@ async function connectWithRetry(client, tries = 30){
 
 
     /* ------------- 76: the general table HOLD (bot v0.6.95) -----------------
-       Johan's Hold on\u2026 pause: a HUMAN's SAY[0] (or anchored chat) pauses the
+       the owner's Hold on\u2026 pause: a HUMAN's SAY[0] (or anchored chat) pauses the
        bot's visible play at the _pace gate until the sayer's next flow phrase.
        Humans only -- the roster bot flag filters, so arena bots never pause
        each other via their own thinking announces.                          */
@@ -5139,7 +5139,7 @@ async function connectWithRetry(client, tries = 30){
 
     /* ------------- 77: the classic opening (bot v0.6.98) --------------------
        A classic-mode deal carries no uncontrolled; the bot must draw its four
-       FREE (the fetch price is bookkeeping, not the verb). Johan's question. */
+       FREE (the fetch price is bookkeeping, not the verb). The owner's question. */
     {
       console.log('\n[77] the classic opening (free 4 drawCrypt at a classic dealt)');
       const mk77 = (boardMode, unc, cryptN) => {
@@ -5492,7 +5492,7 @@ async function connectWithRetry(client, tries = 30){
       ok(evs.length === 1 && evs[0].T === 'T2' && evs[0].role === 'prey' && evs[0].sub === 'equip' && typeof evs[0].score === 'number' && evs[0].parts && evs[0].parts.axis === 0.7, '83i block-eval carries T, role, sub, score and parts (the dossier\u2019s grading input)');
     }
 
-    /* 84) v0.6.109 — Johan's online feedback round: the widget seam (#1), the
+    /* 84) v0.6.109 — the owner's online feedback round: the widget seam (#1), the
        two timing knobs (#13), the master-cost narration (#5), the unlock
        attribution (#4) and the influence secrecy (#3a). */
     {
@@ -5545,7 +5545,7 @@ async function connectWithRetry(client, tries = 30){
 
       /* 84f) #13 \u2014 the reaction beat is its own knob and is FASTER than the table pace */
       const t84 = mk84({ paceMs: 2000 });
-      ok(t84.decide('react-delay', {}).ms === 2000, '84f #13 (v0.6.152, Johan 22 Sep: one beat everywhere): react-delay defaults to 1.0 \u00d7 paceMs (was 0.6 \u00d7 -- 0.9 s of a 1.5 s beat read as "before" the human\'s act)');
+      ok(t84.decide('react-delay', {}).ms === 2000, '84f #13 (v0.6.152, the owner 22 Sep: one beat everywhere): react-delay defaults to 1.0 \u00d7 paceMs (was 0.6 \u00d7 -- 0.9 s of a 1.5 s beat read as "before" the human\'s act)');
       ok(mk84({ paceMs: 2000, reactPaceMs: 300 }).decide('react-delay', {}).ms === 300, '84f ...the knob overrides it');
       ok(mk84({ paceMs: 0 }).decide('react-delay', {}).ms === 40, '84f ...and paceMs 0 still zeroes it: the suite and the arena keep the fast lane');
       const persona84 = mk84({ paceMs: 2000, persona: { thinkMs: 9000 } });
@@ -5574,7 +5574,7 @@ async function connectWithRetry(client, tries = 30){
                    { id: 'm1', name: 'Vessel', kind: 'lib', zone: 'ready', host: 'v1', blood: 0 }];
       i84._applyPhaseIncome('unlock');
       ok(i84.pool === 11 && log84.some(l => /^Vessel: 1 blood/.test(l)), '84i #4: the unlock-phase income fires and the LOG names the card that caused it');
-      ok(fx84.some(f => /^Vessel:1 blood/.test(f)), '84i ...and the card itself flies up with its own caption \u2014 Johan\u2019s \u201clet the bot Target the card producing the effect\u201d');
+      ok(fx84.some(f => /^Vessel:1 blood/.test(f)), '84i ...and the card itself flies up with its own caption \u2014 the owner\u2019s rule: let the bot Target the card producing the effect');
 
       /* 84j) #4 \u2014 the unlock syncs BEFORE the phase's other effects narrate */
       const u84 = mk84(); u84.pool = 10; u84.edge = false;
@@ -5585,7 +5585,7 @@ async function connectWithRetry(client, tries = 30){
       u84._emitSnapshot = () => {}; u84._menaceUnlockEngine = () => {}; u84._maybeWarsawRescue = () => {};
       u84._rolloverPredPressure = () => {}; u84._considerLockIncome = async () => {}; u84._considerHuntingGround = async () => {};
       await u84._unlockPhase();
-      ok(seq84[0] === 'push:0' && seq84[1] === 'announce', '84j #4: the unlock itself reaches the felt BEFORE the phase announce and before any income line \u2014 the push-ordering bug Johan actually saw');
+      ok(seq84[0] === 'push:0' && seq84[1] === 'announce', '84j #4: the unlock itself reaches the felt BEFORE the phase announce and before any income line \u2014 the push-ordering bug the owner actually saw');
 
       /* 84k) #3a \u2014 a partial influence fill names nothing */
       const n84 = mk84(); n84.pool = 20; n84.inf = 2; n84.o.poolFloor = 6;
@@ -5610,7 +5610,7 @@ async function connectWithRetry(client, tries = 30){
       q84._ask = null;
     }
 
-    /* 85) v0.6.110 — R2 of Johan's online feedback round: SAY 8/9 mirrored, the
+    /* 85) v0.6.110 — R2 of the owner's online feedback round: SAY 8/9 mirrored, the
        client's `NAME blocks.` parsed beside `attempts to block.`, the short-term
        action memory (decision A), the pool-question ladder on `Any blocks?` /
        `Any reaction?` that collapses into a T1 pending (decision B: askSecs clock,
@@ -5731,7 +5731,7 @@ async function connectWithRetry(client, tries = 30){
 
     }
 
-    /* 86) v0.6.111 — R3 of Johan's online feedback round: politics. The client's
+    /* 86) v0.6.111 — R3 of the owner's online feedback round: politics. The client's
        Vote submenu lines parsed (§12 frozen), a political action opens R2's pool
        question by itself, and the bot casts its own TITLE votes — direction taken
        from the R2 answer, stake held until the actor's It resolves. */
@@ -5837,12 +5837,12 @@ async function connectWithRetry(client, tries = 30){
   i._onVoteClose();
   ok(i.pending && i.pending.amount === 4 && i.pool === 20, '86i the pending SURVIVES the whole referendum \u2014 no pool moves while the table votes');
   i._onSay({ i: 4, who: 'Alice' });
-  ok(i.pool === 16 && !i.pending && i._obs === null, '86i ...and the actor\u2019s It resolves deducts the 4, exactly as with a bleed (Johan\u2019s \u201challer i informationen tills handlingen \u00e4r Resolved\u201d)');
+  ok(i.pool === 16 && !i.pending && i._obs === null, '86i ...and the actor\u2019s It resolves deducts the 4, exactly as with a bleed (the owner\u2019s rule: hold the information until the action is Resolved)');
   tidy86(i);
 
     }
 
-    /* 87) v0.6.112 — R4 of Johan's online feedback round: the DEBUG mode (#3b, the
+    /* 87) v0.6.112 — R4 of the owner's online feedback round: the DEBUG mode (#3b, the
        item the 14 Sep handoff omitted entirely). Open hand to the table that stays
        live, crypt face up, decision weighting in the log — off by default, armed on
        the deal, announced in chat. */
@@ -5932,7 +5932,7 @@ async function connectWithRetry(client, tries = 30){
 
     }
 
-    /* 88) v0.6.113 — THE HELPER GATE (Johan, 16 Sep 2026). After the client's v2.6.111
+    /* 88) v0.6.113 — THE HELPER GATE (the owner, 16 Sep 2026). After the client's v2.6.111
        helper-lock fix the bot went quiet about its phases. caps.tally -- set only by
        OBSERVING a resolver counter, never by the helper policy -- had been gating the
        phase lines, the actor-side tally write, both block verdicts and the Block!
@@ -6010,7 +6010,7 @@ async function connectWithRetry(client, tries = 30){
     }
 
     /* 89) v0.6.114 — THE THREE TIERS, the acting minion, the hidden influence, the
-       reactions-only window and the stopwatch re-stamp (Johan, 16 Sep 2026). */
+       reactions-only window and the stopwatch re-stamp (the owner, 16 Sep 2026). */
     {
   const mk89 = (o) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U',
     persona: 'grinder', paceMs: 0, askSecs: 3, log: () => {} }, o || {}));
@@ -6058,7 +6058,7 @@ async function connectWithRetry(client, tries = 30){
   const vamp = { id: 'u1', name: 'Lauren', kind: 'crypt', zone: 'uncontrolled', cap: 3, blood: 0, faceDown: true, x: 1, y: 1 };
   d.board = [vamp]; d.unc = [vamp];
   await d._influenceLoop();
-  ok(vamp.blood === 2 && vamp.zone === 'uncontrolled' && vamp.faceDown === true, '89d two transfers on a cap-3 vampire: blood 2, still uncontrolled, STILL FACE DOWN (Johan: the identity is secret until she enters play)');
+  ok(vamp.blood === 2 && vamp.zone === 'uncontrolled' && vamp.faceDown === true, '89d two transfers on a cap-3 vampire: blood 2, still uncontrolled, STILL FACE DOWN (the owner: the identity is secret until she enters play)');
   ok(d.buildPub().cards[0].faceDown === true && d.buildPub().cards[0].blood === 2, '89d ...the pub shows a face-down card with 2 blood on it, as on a physical table');
   d.inf = 1;
   await d._influenceLoop();
@@ -6118,7 +6118,7 @@ async function connectWithRetry(client, tries = 30){
   ok(kAns && kAns.what === 'no', '89g ...and the second ring re-stamps the window, which closes at stopwatch-end + grace, not at 30 s');
     }
 
-    /* [90] v0.6.116 — THE UNPAID BLEED (Johan's Tremere test, 16 Sep 2026): Govern
+    /* [90] v0.6.116 — THE UNPAID BLEED (the owner's Tremere test, 16 Sep 2026): Govern
        the Unaligned [dom] bled for 3 without paying its 1 blood. _bestBleedCardFor
        never read cost.blood (no gate, nothing carried) and the bleed-ACTION branch
        never paid it -- only the stock branch (v0.6.14, section 32e) and
@@ -6174,7 +6174,7 @@ async function connectWithRetry(client, tries = 30){
          '90j the play site pays: spending Forgotten Labyrinth against Bob\u2019s block attempt costs Skulk 1 blood (4 -> 3) -- played free before v0.6.116');
     }
 
-    /* 91) v0.6.117 — THE SPOKEN PHASES + cardfx v1.6.14's inherited costs (Johan's
+    /* 91) v0.6.117 — THE SPOKEN PHASES + cardfx v1.6.14's inherited costs (the owner's
        finlir round, 16 Sep 2026): the bot's own duplicates of what the table already
        shows (the play line + fx, the server ledger online, `Turn passed.`) are gone;
        what a human says aloud is ONE chat bubble in table words. And the curated
@@ -6197,7 +6197,7 @@ async function connectWithRetry(client, tries = 30){
   ok(a._influenceSentence([{ rise: false, n: 2 }]) === 'I influence 2 blood to an uncontrolled vampire.',
      '91a one partial fill: nameless (the v0.6.114 secret stands)');
   ok(a._influenceSentence([{ rise: true, name: 'Nassir', n: 3 }, { rise: false, n: 1 }]) === 'I influence 3 blood to Nassir, who enters play, and 1 blood to an uncontrolled vampire.',
-     '91a rise + partial: Johan\u2019s exact sentence');
+     '91a rise + partial: the owner\u2019s exact sentence');
   ok(a._influenceSentence([{ rise: false, n: 1 }, { rise: false, n: 1 }, { rise: true, name: 'Zip', n: 2 }]) === 'I influence 1 blood to an uncontrolled vampire, 1 blood to another uncontrolled vampire, and 2 blood to Zip, who enters play.',
      '91a three parts: commas, "another" for the second nameless card, "and" before the last');
   ok(a._influenceSentence([{ kind: 'draw', transfers: 4 }]) === 'I use 4 transfers to draw a new vampire.',
@@ -6265,7 +6265,7 @@ async function connectWithRetry(client, tries = 30){
     const jack = e.fxLookup('Smiling Jack, The Anarch');
     ok(jack && !jack.e.cost, '91e a curated card the data prices at 0 (Smiling Jack) stays free -- inheritance adds nothing to say');
     const stray = e.fxLookup('Underbridge Stray');
-    ok(stray && stray.e.cost && stray.e.cost.blood === 1 && !stray.e.cost.pool, '91e Underbridge Stray costs 1 BLOOD (Johan\u2019s ruling 18 Sep -- the curated entry now agrees with the data; the referee mismatch is gone)');
+    ok(stray && stray.e.cost && stray.e.cost.blood === 1 && !stray.e.cost.pool, '91e Underbridge Stray costs 1 BLOOD (the owner\u2019s ruling 18 Sep -- the curated entry now agrees with the data; the referee mismatch is gone)');
   } else ok(false, '91e cardfx not loaded beside the suite');
     }
 
@@ -6294,7 +6294,7 @@ async function connectWithRetry(client, tries = 30){
   ok(oA.readyN === 2 && oA.uncN === 1, '92a readyN 2, uncN 1 from the pub');
   ok(oA.vamps['Skulk (G5)'] && oA.vamps['Skulk (G5)'].clan === 'Nosferatu antitribu' && (oA.vamps['Skulk (G5)'].disc.all || []).includes('ani'), '92a Skulk: clan + disciplines read through cardfx');
   ok(oA.clans['Nosferatu antitribu'] === 1 && oA.disc.ani && oA.disc.obf, '92a clans and discipline coverage aggregated');
-  ok(oA.vamps['Skulk (G5)'].equip.includes('.44 Magnum') && oA.equip['.44 Magnum'] && oA.equip['.44 Magnum'].includes('strike'), '92a the attached .44 Magnum is read as a strike weapon (equipment counts -- Johan\u2019s answer 2)');
+  ok(oA.vamps['Skulk (G5)'].equip.includes('.44 Magnum') && oA.equip['.44 Magnum'] && oA.equip['.44 Magnum'].includes('strike'), '92a the attached .44 Magnum is read as a strike weapon (equipment counts -- the owner\u2019s answer 2)');
   const cA0 = a.oppCombat(1);
   ok(cA0 > 0.3, '92a oppCombat from the PRIOR alone (ani + a weapon, no card played yet): ' + cA0);
   const b0 = mk92(); b0._onBoard({ seat: 1, pub: pub92([{ id: 'c1', kind: 'crypt', name: 'Lauren', zone: 'ready', blood: 3, locked: false }]) });
@@ -6325,7 +6325,7 @@ async function connectWithRetry(client, tries = 30){
   ok(mM && mM.bleeds === 1 && mM.bleedSum === 1, '92c Marcus: one bleed of 1');
   ok(c._opp(1).stealthUsed.length === 1 && c._opp(1).stealthUsed[0] === 1, '92c the announced stealth (tally a=1) is remembered per action: ' + JSON.stringify(c._opp(1).stealthUsed));
   const fc = c.oppForecast(1);
-  ok(Math.abs(fc - (3 * 0.5 + 1 * 1.0)) < 0.01, '92c forecast = Lauren 3 x hit 0.5 (blocked 1 of 2) + Marcus 1 x 1.0 (never blocked) = 2.5 -- got ' + fc + ' (Johan\u2019s per-minion statistic, answer 3)');
+  ok(Math.abs(fc - (3 * 0.5 + 1 * 1.0)) < 0.01, '92c forecast = Lauren 3 x hit 0.5 (blocked 1 of 2) + Marcus 1 x 1.0 (never blocked) = 2.5 -- got ' + fc + ' (the owner\u2019s per-minion statistic, answer 3)');
   c.pool = 4;
   ok(c.turnsToOust(1) <= 1.2 && c.turnsToOust(1) > 0, '92c pool 4 vs forecast 2.3 inside the oust range: turns to oust ' + c.turnsToOust(1));
   c.pool = 20;
@@ -6629,7 +6629,7 @@ async function connectWithRetry(client, tries = 30){
   for(let k = 0; k < 3; k++) d._onLog('Alice', '<b>Royce</b> bleeds for 3.');
   d._onBoard({ seat: 3, pub: { pool: 28, edge: false, counts: { hand: 7 }, cards: [] } });
   const actorsD = d.board.slice();
-  ok(d._keepBlocker(actorsD[0], actorsD, 0) === null, '94c the LAST body acts when it holds a wake it can play (Johan: a wake lets you play more aggressively)');
+  ok(d._keepBlocker(actorsD[0], actorsD, 0) === null, '94c the LAST body acts when it holds a wake it can play (the owner: a wake lets you play more aggressively)');
   d.hand = []; ok(!!d._keepBlocker(actorsD[0], actorsD, 0), '94c ...and stays home without one (the v0.6.118 rule, unchanged)');
 
   /* 94d) THE STEALTH GLUT */
@@ -6721,7 +6721,7 @@ async function connectWithRetry(client, tries = 30){
 
   /* 96c) the voter v0 */
   const vt = mk96();
-  ok(vt._refVoteDir({ 2: -1, 3: -3 }).dir === 'against', '96c it costs me pool -> against (even when my prey loses more: Johan, 15 Sep)');
+  ok(vt._refVoteDir({ 2: -1, 3: -3 }).dir === 'against', '96c it costs me pool -> against (even when my prey loses more: the owner, 15 Sep)');
   ok(vt._refVoteDir({ 3: -3, 4: -1 }).dir === 'for', '96c my prey loses, I do not -> for');
   ok(vt._refVoteDir({ 1: -3, 4: -1 }).dir === null, '96c nothing in it for me -> abstain');
   ok(vt._refVoteDir({ 2: 3, 1: -3 }).dir === 'for' && vt._refVoteDir({ 2: 1, 3: 2 }).dir === 'against', '96c gains: for when my ledger beats my prey\'s, AGAINST when my prey gains more (v0.6.124 -- was an abstain)');
@@ -6769,7 +6769,7 @@ async function connectWithRetry(client, tries = 30){
     await sleep(250); u._onLog('Bob', '<b>Bob</b> casts <b>2</b> votes <b>against</b>.'); u._onLog('Alice', '<b>Ayelech</b> casts <b>2</b> votes <b>against</b>.'); u._onSay({ who: 'Alice', i: SAY_IDX('It resolves') });
     await pr; const L = logs(u);
     ok(L.indexOf('Vote: 3 for vs 4 against \u2014 vote fails.') > 0 && L[L.length - 1] === 'Referendum fails \u2014 Kine Resources Contested: no effect.', '96e outvoted 3-4: fails, no effect');
-    ok(u.events.some(e => e.t === 'bot:referendum' && /resolved by Alice/.test(e.d.closed)), '96e Johan: a human\'s "It resolves" ends the wait at once'); }
+    ok(u.events.some(e => e.t === 'bot:referendum' && /resolved by Alice/.test(e.d.closed)), '96e the owner: a human\'s "It resolves" ends the wait at once'); }
   { const { u, act } = mkCall(); u.hand.push('Bewitching Oration'); const pr = u._callReferendum(u.board[0], act);
     await sleep(250); u._onLog('Bob', '<b>Bob</b> casts <b>2</b> votes <b>against</b>.'); u._onLog('Alice', '<b>Ayelech</b> casts <b>2</b> votes <b>against</b>.'); u._onSay({ who: 'Alice', i: SAY_IDX('It resolves') });
     await sleep(250); u._onSay({ who: 'Alice', i: SAY_IDX('It resolves') });
@@ -6788,7 +6788,7 @@ async function connectWithRetry(client, tries = 30){
     await sleep(250); u._onSay({ who: 'Alice', i: SAY_IDX('Hold on\u2026') }); await sleep(1300);
     ok(u._refCall && !u._refCall.closed, '96e Hold on from a human stops the vote clock (askSecs 1 has passed, still polling)');
     u._onLog('Alice', '<b>Ayelech</b> casts <b>2</b> votes <b>against</b>.'); await sleep(1300);
-    ok(u._refCall && !u._refCall.closed, '96e ...v0.6.198 (Johan\u2019s principle, agreed with main 12 Oct): her vote is an answer, not a release -- the clock stands while the table hold does (v0.6.197 ran it out 1 s after the vote)');
+    ok(u._refCall && !u._refCall.closed, '96e ...v0.6.198 (the owner\u2019s principle, agreed with main 12 Oct): her vote is an answer, not a release -- the clock stands while the table hold does (v0.6.197 ran it out 1 s after the vote)');
     const tp = Date.now(); u._onSay({ who: 'Alice', i: SAY_IDX('Pass') }); await pr;   // the release (Pass: no more votes from me) -- the clock starts again from the beginning
     ok(Date.now() - tp >= 990 && logs(u).indexOf('Vote: 3 for vs 2 against \u2014 vote passes.') > 0, '96e ...the release (her Pass) starts the 1 s clock again from the beginning and it runs out normally (' + (Date.now() - tp) + ' ms after the Pass)'); }
   { const u = mkCall().u; u.hand = ['Kine Resources Contested']; const act = u._bestPoliticalFor(u.board[0]); u.hand.splice(act.idx, 1); u._actingVamp = { v: u.board[0], n: act.n, played: new Set() };
@@ -6853,7 +6853,7 @@ async function connectWithRetry(client, tries = 30){
   const o = mk97(); o._inCombat = true; o._onLog('Alice', 'Combat ends \u2014 <b>Majesty</b>.'); ok(o._oppEndedCombat === true, '97d the OPPONENT side: the line marks the combat as over (no press into it)');
   const o2 = mk97(); o2._onLog('Alice', 'Combat ends \u2014 <b>Majesty</b>.'); ok(!o2._oppEndedCombat, '97d ...only while I am in a combat');
     }
-    /* 98) v0.6.124 — the self-review round (Johan, 18 Sep): votes no longer overwrite each other, the terms live as long as
+    /* 98) v0.6.124 — the self-review round (the owner, 18 Sep): votes no longer overwrite each other, the terms live as long as
        the action, the voter rule is symmetric; Ventrue Headquarters' vote lock finally exercised. */
     {
   const SAY_IDX98 = require('./elysium-bot.js').sayIdx;
@@ -6965,7 +6965,7 @@ async function connectWithRetry(client, tries = 30){
   ok(c._handSizePermanentTotal() === 0 && c._replaceCounterCard() === null, '99c a burned Capuchin is out of play');
   const lk = c.fxLookup('Visit from the Capuchin').e; ok(lk.enterCounters === 4 && lk.unique === true && lk.src === 'hand', '99c the entry: enterCounters 4, unique, curated');
     }
-    /* 100) v0.6.126 — self-review points 6-9 (Johan, 18 Sep: before the null): the KRC split never over-kills the prey, a blocked
+    /* 100) v0.6.126 — self-review points 6-9 (the owner, 18 Sep: before the null): the KRC split never over-kills the prey, a blocked
        referendum returns the card's cost, a human's political action opens a block window for prey and predator only. */
     {
   const mk100 = (seat, name) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'shark', paceMs: 0, askSecs: 1, log: () => {} });
@@ -6991,7 +6991,7 @@ async function connectWithRetry(client, tries = 30){
   const b = mk100(); const v = vm('v1', 'Alexa Draper', 4, true); b.board = [v]; b.pool = 15;
   b._askBlock = () => Promise.resolve({ what: 'block', who: 'Bob' }); b._resolveCombat = () => Promise.resolve(); b._actingVamp = { v, n: 3, played: new Set() };
   await b._callReferendum(v, { name: 'Kine Resources Contested', kind: 'political', n: 3, cost: { blood: 1, pool: 2 }, deltas: { 3: -3, 4: -1 }, value: 3, pass: 0.85, mine: 3, agst: 0 });
-  ok(v.blood === 4 && b.pool === 15 && b.events.some(e => e.t === 'bot:cost-returned' && e.d.blood === 1 && e.d.pool === 2), '100b blocked: the 1 blood and 2 pool paid at announce come back (Johan\'s ruling: parked, returned)');
+  ok(v.blood === 4 && b.pool === 15 && b.events.some(e => e.t === 'bot:cost-returned' && e.d.blood === 1 && e.d.pool === 2), '100b blocked: the 1 blood and 2 pool paid at announce come back (the owner\'s ruling: parked, returned)');
   const b2 = mk100(); const v2 = vm('v1', 'Alexa Draper', 4, true); b2.board = [v2]; b2.pool = 15; b2.table[1] = { pub: { pool: 20, cards: [] } }; b2.table[3] = { pub: { pool: 20, cards: [] } };
   b2._askBlock = () => Promise.resolve({ what: 'no', who: null }); b2._settleOust = () => Promise.resolve(); b2._actingVamp = { v: v2, n: 3, played: new Set() };
   const pr = b2._callReferendum(v2, { name: 'Kine Resources Contested', kind: 'political', n: 3, cost: { blood: 1, pool: 2 }, deltas: { 3: -3, 4: -1 }, value: 3, pass: 0.85, mine: 3, agst: 0 });
@@ -7058,7 +7058,7 @@ async function connectWithRetry(client, tries = 30){
   ok(a2._voteBoosts(a2.board[0]).length === 0, '101c no Alexa, no boost');
   const a3 = mk101(); a3.board = [vm('v1', 'Alexa Draper', 4)]; a3.hand = ['Conditioning', 'Majesty'];
   const v0 = a3._votesToCast('against', 0); ok(v0.n === 2 && a3.hand.length === 2, '101c voting with nothing at stake: her 2 title votes, no card spent');
-  const v1 = a3._votesToCast('against', 3); ok(v1.n === 2 && v1.boost === 0 && a3.hand.length === 2, '101c (v0.6.129, Johan) a VOTER never forces the discard -- a live Conditioning stays in hand');
+  const v1 = a3._votesToCast('against', 3); ok(v1.n === 2 && v1.boost === 0 && a3.hand.length === 2, '101c (v0.6.129, the owner) a VOTER never forces the discard -- a live Conditioning stays in hand');
   a3.hand = ['Conditioning', 'Conditioning', 'Majesty']; const v1b = a3._votesToCast('against', 3); ok(v1b.n === 3 && v1b.boost === 1 && a3.hand.length === 2, '101c ...a DUPLICATE is a free lunch: 2 + 1');
 
   /* 101d) Silverson's tax */
@@ -7148,7 +7148,7 @@ async function connectWithRetry(client, tries = 30){
   const logs = u => u.sent.filter(m => m.t === 'log').map(m => m.html.replace(/<[^>]+>/g, ''));
   console.log('\n[102] v0.6.128 -- mitigable or worth it, leave torpor, given, Anarch Troublemaker');
 
-  /* 102a) Johan's rule */
+  /* 102a) the owner's rule */
   const base = (hand, board, preyPool) => { const u = mk102(); u.board = board; u.hand = hand; u.table[3] = { pub: { pool: preyPool, cards: [vm('b1', 'Lauren', 3)] } }; u._actingVamp = { v: board[0], n: 3, played: new Set() }; return u; };
   const a1 = base(['Daring the Dawn'], [vm('v1', 'Brock Sterling', 4, true)], 12);
   ok(a1._maybeBlockBar(a1.board[0], { n: 3 }, 3) === false && a1.hand.length === 1, '102a a bleed of 3 at a 12-pool prey, alone, no Freak Drive, no votes: HELD -- nothing brings Brock back');
@@ -7226,7 +7226,7 @@ async function connectWithRetry(client, tries = 30){
   ok(g._maybeGiveLock() === true && g.sent.some(m => m.t === 'give' && m.seat === 4 && m.gid === 'botX_1'), '102d the bot that was GIVEN the card passes it on to its own prey, same id');
     }
 
-    /* 103) v0.6.129 — Johan's rulings round */
+    /* 103) v0.6.129 — the owner's rulings round */
     {
   const mk103 = (seat, name) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'shark', paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = seat || 2; u.started = true; u.pool = 20; u.ownTurns = 4; u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.said = []; u.say = p => u.said.push(p); u.chats = []; u.chat = t => u.chats.push(t);
@@ -7252,7 +7252,7 @@ async function connectWithRetry(client, tries = 30){
   const a2 = mk103(); const hor = vm('v1', 'Horst von Br\u00fchl', 5); a2.board = [hor]; a2._turnActs = {};
   a2._noteTurnAct(hor, { idx: 0, name: 'Govern the Unaligned', n: 3 });
   ch = a2._decideAction(hor, { plain: { n: 1 }, stock: { idx: 0, name: 'Govern the Unaligned', kind: 'stock', n: 2 }, readyCrypt: 1 });
-  ok(ch.pick === null, '103a Govern [dom] then Govern [DOM]: the same NAMED card twice is illegal (Johan\'s example) -- not even the 99-point stock');
+  ok(ch.pick === null, '103a Govern [dom] then Govern [DOM]: the same NAMED card twice is illegal (the owner\'s example) -- not even the 99-point stock');
   const other = vm('v2', 'Naomi Stewart', 5); ch = a2._decideAction(other, { plain: { n: 1 }, readyCrypt: 3 });
   ok(ch.pick && ch.pick.n === 1, '103a the ledger is per MINION: another vampire bleeds freely');
 
@@ -7386,7 +7386,7 @@ async function connectWithRetry(client, tries = 30){
   const bleedSide = { idx: 0, name: 'Deep Song', n: 2, st: 0, cost: null };
   const d3 = a.decide('action', { plain: { n: 1 }, rush: r3, card: bleedSide, readyCrypt: 2 });
   ok(d3.scores.rushParts.tb === 3 && d3.scores.rushParts.mult === 0.55, '107a bare hands (1) against 3 blood: outmatched, mult 0.55 (was 1.35 on every live rush)');
-  ok(d3.pick === bleedSide, '107b ...so Deep Song BLEEDS (Johan: the stronger bleed is the play without combat cards): ' + d3.why);
+  ok(d3.pick === bleedSide, '107b ...so Deep Song BLEEDS (the owner: the stronger bleed is the play without combat cards): ' + d3.why);
   preyV.blood = 0; const r0 = a._bestRushFor(dow); const d0 = a.decide('action', { plain: { n: 1 }, rush: r0, card: bleedSide, readyCrypt: 2 });
   ok(d0.scores.rushParts.mult === 1.35 && d0.pick === r0, '107c an empty vampire is still rushed with bare hands (the three torpors of the series)');
   preyV.blood = 4; a.hand = ['Deep Song', 'Roundhouse']; const rR = a._bestRushFor(dow);
@@ -7404,7 +7404,7 @@ async function connectWithRetry(client, tries = 30){
   const e = mk107(); const act = { id: 'v1', kind: 'crypt', name: 'The Dowager (G6)', zone: 'ready', blood: 4, locked: false, attached: [] }; e.board = [act]; e.hand = ['Deep Song'];
   e._famedSeen = { 'Famous One': true };
   e.table[1] = { pub: { pool: 20, cards: [{ id: 'q1', kind: 'crypt', name: 'Famous One', zone: 'torpor', blood: 1, cap: 5 }] } }; e.table[3] = { pub: { pool: 20, cards: [] } };
-  ok(e._bestEnemyRescueFor(act) === null, '107g a famed vampire in my PREDATOR\'s torpor is not rescued (Johan: only the prey\'s -- the rest is table talk)');
+  ok(e._bestEnemyRescueFor(act) === null, '107g a famed vampire in my PREDATOR\'s torpor is not rescued (the owner: only the prey\'s -- the rest is table talk)');
   e.table[3].pub.cards = e.table[1].pub.cards; e.table[1].pub.cards = [];
   ok(!!e._bestEnemyRescueFor(act), '107g ...the same vampire in my PREY\'s torpor is (the Fame need not be mine)');
     }
@@ -7422,9 +7422,9 @@ async function connectWithRetry(client, tries = 30){
   ok(d1.drain === false && d1.tag === 'keeps-action' && /Enchant Kindred/.test(d1.why), '108a THE LOOP: 2/5 with an Enchant Kindred in hand -- the drain would push her under the hunt bar and cost the action: held. ' + d1.why);
   a._applyPhaseIncome('master'); ok(ch.blood === 2 && a.pool === 20 && a.events.some(e => e.t === 'bot:income-drain' && e.d.drain === false && e.d.tag === 'keeps-action'), '108a ...end to end through _applyPhaseIncome: no blood moved, the trace says why');
   a.hand = []; const d2 = a.decide('income-drain', a._drainCtx(ch));
-  ok(d2.drain === true && d2.tag === 'nothing-better', '108b Johan: no sensible action for her anyway -> 1 pool now and a hunt: ' + d2.why);
+  ok(d2.drain === true && d2.tag === 'nothing-better', '108b the owner: no sensible action for her anyway -> 1 pool now and a hunt: ' + d2.why);
   a.hand = ['Enchant Kindred']; a.pool = 4; const d3 = a.decide('income-drain', a._drainCtx(ch));
-  ok(d3.drain === true && d3.tag === 'survival', '108c Johan: on the edge of an oust it is worth it anyway (pool 4 <= floor): ' + d3.why);
+  ok(d3.drain === true && d3.tag === 'survival', '108c the owner: on the edge of an oust it is worth it anyway (pool 4 <= floor): ' + d3.why);
   a.pool = 20; a.plan = { posture: 'hold', phase: 'mid', reads: { myTto: 1.2, preyTto: 6, myFc: 2 } };
   ok(a.decide('income-drain', a._drainCtx(ch)).tag === 'survival', '108c ...and when the plan says 1.2 turns from falling'); a.plan = null;
   ch.blood = 1; ok(a.decide('income-drain', a._drainCtx(ch)).tag === 'hunting-anyway' || a.decide('income-drain', a._drainCtx(ch)).tag === 'last-blood', '108d the last blood stays outside survival (v0.6.104 #13 kept)');
@@ -7475,7 +7475,7 @@ async function connectWithRetry(client, tries = 30){
   const a = mk110(); seed(a, [['Govern Guy', 6], ['Second', 3]]);
   ok(a.predBurst() === 9, '110a predBurst: a minion seen landing 6 (Govern + Conditioning) and one landing 3 = 9 in the worst predator turn');
   const c0 = a._critPool(); ok(c0.crit === 9 && c0.burst === 9 && c0.stopped === 0 && c0.floor === 6, '110a no body of mine, nothing in hand: the critical level is 9, not the fixed 6 (' + JSON.stringify(c0) + ')');
-  const off = mk110({ critRisk: 0 }); seed(off, [['Govern Guy', 6], ['Second', 3]]); ok(off._critPool().crit === 6, '110b the switch: critRisk 0 = the fixed floor (the original, kept so both can be measured -- Johan)');
+  const off = mk110({ critRisk: 0 }); seed(off, [['Govern Guy', 6], ['Second', 3]]); ok(off._critPool().crit === 6, '110b the switch: critRisk 0 = the fixed floor (the original, kept so both can be measured -- the owner)');
   const half = mk110({ critRisk: 0.5 }); seed(half, [['Govern Guy', 6], ['Second', 3]]); ok(half._critPool().crit === 8, '110b a persona\'s appetite: critRisk 0.5 sits halfway (6 + 0.5 x 3 -> 8)');
   a.board = [{ id: 'v1', kind: 'crypt', name: 'Colette (G6)', zone: 'ready', blood: 3, locked: false, attached: [] }];
   const c1 = a._critPool(); ok(c1.stopped > 0 && c1.crit < 9 && c1.crit >= 6, '110c an unlocked body that can block pulls it down: stopped ' + c1.stopped + ' -> crit ' + c1.crit);
@@ -7512,11 +7512,11 @@ async function connectWithRetry(client, tries = 30){
   const s = mk111({ deckName: 'sewer' }); s.board = [body('m1', 'Skulk'), body('m2', 'Blister'), body('m3', 'Aaron')]; s.hand = []; s._onBoard({ seat: 3, pub: pub([], 24) }); bleeders(s, 2, 3);
   const pS = s._strategize('unlock'); const sOld = mk111({ deckName: 'sewer', homeWeight: 0 }); sOld.board = [body('m1', 'Skulk'), body('m2', 'Blister'), body('m3', 'Aaron')]; sOld.hand = []; sOld._onBoard({ seat: 3, pub: pub([], 24) }); bleeders(sOld, 2, 3);
   ok(s._posture() === 'resisting' && !pS.reads.pricedHome && pS.home === sOld._strategize('unlock').home, '111c THE REGRESSION GUARD: a racing deck (sewer) with no bounce in hand adds nothing -- same home as the original (' + pS.home + ')');
-  s.pool = 6; const pS6 = s._strategize('unlock'); ok(!pS6.reads.pricedHome, '111c v0.6.138: ...and the edge no longer makes a racing deck price (serie-home1: malkavian held at 26 % of unlocks and dealt less) -- only Johan\'s bounce rule does (section 112)');
+  s.pool = 6; const pS6 = s._strategize('unlock'); ok(!pS6.reads.pricedHome, '111c v0.6.138: ...and the edge no longer makes a racing deck price (serie-home1: malkavian held at 26 % of unlocks and dealt less) -- only the owner\'s bounce rule does (section 112)');
   const nl = mk111({ deckName: 'nosferatu' }); nl.board = [body('m1', 'Horace Radcliffe (G6)'), body('m2', 'Ryan (G6)')]; nl.hand = []; nl._onBoard({ seat: 3, pub: pub([], 3) }); bleeders(nl, 2, 3);
   ok(nl._strategize('unlock').home === 0, '111d a prey at 3 pool: nobody stays (a lunge beats a wall)');
   const nw = mk111({ deckName: 'nosferatu' }); nw.board = [body('m1', 'Horace Radcliffe (G6)'), body('m2', 'Ryan (G6)'), body('m3', 'Baixinho (G6)')]; nw.hand = ['On the Qui Vive', 'On the Qui Vive']; nw._onBoard({ seat: 3, pub: pub([], 24) }); bleeders(nw, 2, 3);
-  ok(nw._strategize('unlock').home === 0, '111e Johan: with wakes in hand one can act -- two wakes cover both predator hits, nobody needs to stay');
+  ok(nw._strategize('unlock').home === 0, '111e the owner: with wakes in hand one can act -- two wakes cover both predator hits, nobody needs to stay');
   const nb = mk111({ deckName: 'nosferatu' }); nb.board = [body('m1', 'Horace Radcliffe (G6)'), body('m2', 'Ryan (G6)')]; nb.hand = []; nb._onBoard({ seat: 3, pub: pub([], 24) }); bleeders(nb, 2, 3);
   ok(nb._strategize('unlock').home <= 1, '111f never the whole bench (2 bodies -> at most 1 home)');
   const av = n._actValue(body('x', 'Ryan (G6)', 0)); ok(av === null, '111g a 0-blood body hunts: no candidate');
@@ -7526,9 +7526,9 @@ async function connectWithRetry(client, tries = 30){
   const cx = f._actAgainCtx(alice, fd); ok(cx.priced && cx.actLeft === false && cx.unlockValue > 0, '111h nothing legal left (bled and voted): the card buys an unlocked body worth ' + cx.unlockValue + ' -- ' + cx.unlockWhy);
   const dF = f.decide('act-again', Object.assign({ vamp: alice, card: fd, outcome: 'through', inTorpor: false }, cx)); ok(['unlocked-body', 'de-clog', 'not-worth-it'].includes(dF.tag), '111h the decision names its branch: ' + dF.tag + ' -- ' + dF.why);
   const cxW = (() => { f.hand = ['Freak Drive', 'Wake with Evening\'s Freshness']; return f._actAgainCtx(alice, fd); })();
-  ok(cxW.unlockValue <= cx.unlockValue && /hit #2/.test(cxW.unlockWhy), '111i Johan: wake + Freak Drive = two blocks -- with a wake in hand the card prices the SECOND hit (' + cxW.unlockValue + ' <= ' + cx.unlockValue + ')');
+  ok(cxW.unlockValue <= cx.unlockValue && /hit #2/.test(cxW.unlockWhy), '111i the owner: wake + Freak Drive = two blocks -- with a wake in hand the card prices the SECOND hit (' + cxW.unlockValue + ' <= ' + cx.unlockValue + ')');
   const dL = f.decide('act-again', { vamp: alice, card: fd, outcome: 'through', inTorpor: false, priced: true, actLeft: false, saveForLunge: 'my prey falls in 1.5 of my turns and the hand holds a bleed and a referendum', unlockValue: 9 });
-  ok(dL.play === false && dL.tag === 'save-for-lunge', '111j Johan\'s first weight: saved for the lunge turn even when the body would be worth it');
+  ok(dL.play === false && dL.tag === 'save-for-lunge', '111j the owner\'s first weight: saved for the lunge turn even when the body would be worth it');
   const dC = f.decide('act-again', { vamp: alice, card: fd, outcome: 'through', inTorpor: false, priced: true, actLeft: false, unlockValue: 0, unlockWhy: 'x', clogged: true }); ok(dC.play === true && dC.tag === 'de-clog', '111j ...the last weight: a clogged hand cycles it');
   const dA = f.decide('act-again', { vamp: alice, card: fd, outcome: 'through', inTorpor: false, priced: true, actLeft: true }); ok(dA.play === true && !dA.tag, '111k an action is left: as before');
   const fo = mk111({ deckName: 'ventrue', homeWeight: 0 }); ok(fo._actAgainCtx(alice, fd).priced === false, '111k homeWeight 0: the original act-again');
@@ -7544,7 +7544,7 @@ async function connectWithRetry(client, tries = 30){
   const bleeders = (u, n, amt) => { const names = ['Royce', 'Julius', 'Samson'].slice(0, n); u._onBoard({ seat: 1, pub: pub(names.map((nm, i) => ({ id: 'p' + i, kind: 'crypt', name: nm, zone: 'ready', blood: 2, locked: false })), 25) });
     names.forEach(nm => { for(let k = 0; k < 3; k++) u._onLog('Alice', '<b>' + nm + '</b> bleeds for ' + amt + '.'); }); };
   const preyBodies = (u, n, pool) => u._onBoard({ seat: 3, pub: pub(['Q1', 'Q2', 'Q3', 'Q4'].slice(0, n).map((nm, i) => ({ id: 'q' + i, kind: 'crypt', name: nm, zone: 'ready', blood: 2, locked: false })), pool) });
-  console.log('\n[112] v0.6.138 -- the forward gear; grinding decks unpriced; a racing deck stays up only for a bounce (Johan); act-again in pool');
+  console.log('\n[112] v0.6.138 -- the forward gear; grinding decks unpriced; a racing deck stays up only for a bounce (the owner); act-again in pool');
   const five = () => [body('m1', 'Horace Radcliffe (G6)'), body('m2', 'Ryan (G6)'), body('m3', 'Baixinho (G6)'), body('m4', 'Wauneka (G6)'), body('m5', 'Aunt Linda (G6)')];
   const n = mk112({ deckName: 'nosferatu' }); n.board = five(); n.hand = []; preyBodies(n, 3, 24); bleeders(n, 3, 3);
   const pN = n._strategize('unlock'); ok(pN.home <= 3 && n.board.length - pN.home >= 2, '112a THE FORWARD GEAR: five bodies against three proven bleeders -- at most three stay, two always go forward (home ' + pN.home + ')');
@@ -7555,7 +7555,7 @@ async function connectWithRetry(client, tries = 30){
   const t0 = mk112({ deckName: 'tremere', homeWeight: 0 }); t0.board = [body('m1', 'Ayelech (G6)'), body('m2', 'Trevon Parker (G6)'), body('m3', 'Rosalina (G6)')]; t0.hand = []; preyBodies(t0, 2, 24); bleeders(t0, 2, 3);
   const pT = t._strategize('unlock'); ok(t._posture() === 'grinding' && pT.reads.pricedHome === null && pT.home === t0._strategize('unlock').home, '112b a GRINDING deck (tremere) keeps its design quota and gets no pricing on top -- the same home as the original (' + pT.home + '); it turtled in serie-home1 (dealt -34 %)');
   const r = mk112({ deckName: 'malkavian' }); const mk = () => [body('m1', 'Colette (G6)'), body('m2', 'Gelasia Fotiou (G6)')]; r.board = mk(); r.hand = ['Deflection']; preyBodies(r, 2, 24); bleeders(r, 2, 3);
-  const pR = r._strategize('unlock'); ok(r._posture() === 'resisting' && pR.home === 1 && /stays up for the Deflection/.test(pR.why), '112c JOHAN\'S RACING RULE: a bounce in hand, no wake, a predator hitting for 3, a body with only a bleed of 1 -> ONE stays up. ' + pR.why.slice(-150));
+  const pR = r._strategize('unlock'); ok(r._posture() === 'resisting' && pR.home === 1 && /stays up for the Deflection/.test(pR.why), '112c THE OWNER\'S RACING RULE: a bounce in hand, no wake, a predator hitting for 3, a body with only a bleed of 1 -> ONE stays up. ' + pR.why.slice(-150));
   const rw = mk112({ deckName: 'malkavian' }); rw.board = mk(); rw.hand = ['Deflection', 'On the Qui Vive']; preyBodies(rw, 2, 24); bleeders(rw, 2, 3); ok(rw._strategize('unlock').home === 0, '112c ...with a wake in hand too: everyone acts (wake, then bounce)');
   const rn = mk112({ deckName: 'malkavian' }); rn.board = mk(); rn.hand = []; preyBodies(rn, 2, 24); bleeders(rn, 2, 3); ok(rn._strategize('unlock').home === 0, '112c ...without a bounce: a racing deck goes forward');
   const rl = mk112({ deckName: 'malkavian' }); rl.board = mk(); rl.hand = ['Deflection']; preyBodies(rl, 2, 24); bleeders(rl, 2, 1); ok(rl._strategize('unlock').home === 0, '112c ...against a predator that bleeds for 1: not worth a body');
@@ -7650,7 +7650,7 @@ async function connectWithRetry(client, tries = 30){
   const u = mk116(); const horst = { id: 'v1', kind: 'crypt', name: 'Horst von Brühl (G6)', zone: 'ready', blood: 5, locked: false, attached: [] }; u.board = [horst]; u.hand = ['Hidden Strength'];
   const pv = u._bestPreventFor(horst); ok(pv && pv.name === 'Hidden Strength' && pv.n === 1 && pv.x === true, '116a the finder marks Hidden Strength as an X card (free floor 1, x: true)');
   ok(u._preventXFor(pv, 1, horst) === 0, '116b a hit of 1: the free floor covers it, no blood paid');
-  ok(u._preventXFor(pv, 3, horst) === 2, '116b a hit of 3 (a Roundhouse): pays 2, prevents it ALL (Johan: no real downside)');
+  ok(u._preventXFor(pv, 3, horst) === 2, '116b a hit of 3 (a Roundhouse): pays 2, prevents it ALL (the owner: no real downside)');
   ok(u._preventXFor(pv, 4, Object.assign({}, horst, { blood: 2 })) === 1, '116c ...never the last blood: at 2 blood against 4 it pays 1 and prevents 2');
   ok(u._preventXFor({ name: 'Other', n: 1, x: false }, 3, horst) === 0, '116c a plain prevent card pays nothing extra');
   const fxe = u.fxLookup('Hidden Strength').e; ok(fxe.modes.every(m => m.fx.prevent === 1 && m.fx.preventX === true) && fxe.modes[1].fx.press === true, '116d cardfx: both modes carry preventX; the superior press stays');
@@ -7666,17 +7666,17 @@ async function connectWithRetry(client, tries = 30){
   const mk117 = (o) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'shark', deckName: 'malkavian', paceMs: 0, askSecs: 1, log: () => {} }, o || {}));
     u.seat = 2; u.started = true; u.pool = 20; u.ownTurns = 5; u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.say = () => {}; u._pace = () => Promise.resolve(); u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.hand = [];
     u.players = [{ seat: 1, name: 'Alice', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Bob', online: true }]; u.table = {}; return u; };
-  console.log('\n[117] v0.6.143 -- Johan\'s stealth-bleed doctrine: contest by stack, hold the Govern, probe then punch');
+  console.log('\n[117] v0.6.143 -- the owner\'s stealth-bleed doctrine: contest by stack, hold the Govern, probe then punch');
   const m = mk117(); const col = { id: 'm1', kind: 'crypt', name: 'Colette (G6)', zone: 'ready', blood: 4, locked: true, attached: [] }; m.board = [col];
   m.hand = ['Lost in Crowds', 'Cloak the Gathering', 'Lost in Crowds']; const st2 = m._stealthStack(col, new Set());
   ok(st2.S === 2, '117a the stack counts DIFFERENT playable stealth cards (two Lost in Crowds + a Cloak = 2: the same name plays once per action)');
   const D = (S, sum, need, pInt, stakes, axis, extra) => m.decide('spend-stealth', Object.assign({ pInt, pIntEff: pInt, need, stakes, announced: 1, pump: stakes - 1, stack: { S, sum }, axis, pDraw: 0 }, extra || {}));
   ok(D(2, 2, 1, 0.9, 1, true).spend === true && D(2, 2, 1, 0.9, 1, true).tag === 'stack', '117b two stealth against 1 needed now + a probable intercept card: I beat both -> contest (the old rule said no at P 0.9 whatever the hand)');
-  ok(D(3, 3, 1, 0.9, 4, true).tag === 'strong-stack', '117b three + a bleed that can become 4: Johan\'s "really good"');
+  ok(D(3, 3, 1, 0.9, 4, true).tag === 'strong-stack', '117b three + a bleed that can become 4: the owner\'s really good');
   ok(D(2, 2, 3, 0.2, 4, true).spend === false && D(2, 2, 3, 0.2, 4, true).tag === 'cannot-reach', '117b THE PUBLIC TALLY: a blocker already showing +2 (a Raven Spy, The Warrens) needs 3 -- my whole stack of 2 cannot reach it: the cards are kept (the first cut would have thrown them at the wall)');
   ok(D(1, 1, 1, 0.9, 4, true).spend === true && D(1, 1, 1, 0.9, 4, true).tag === 'gamble', '117c one stealth card, they may still answer, the bleed can become 4: the GAMBLE is taken');
   ok(D(1, 1, 1, 0.9, 1, true).spend === false && D(1, 1, 1, 0.9, 1, true).tag === 'outstacked', '117c ...not for a bleed of 1 with nothing behind it');
-  ok(D(1, 1, 1, 0.9, 2, true, { pDraw: 0.3 }).tag === 'gamble-draw', '117c Johan\'s top-deck: a bleed of 2 with a 30 % chance to draw the next stealth card -> gamble');
+  ok(D(1, 1, 1, 0.9, 2, true, { pDraw: 0.3 }).tag === 'gamble-draw', '117c the owner\'s top-deck: a bleed of 2 with a 30 % chance to draw the next stealth card -> gamble');
   ok(D(1, 1, 1, 0.9, 1, true, { pIntEff: 0.32, attempts: 2 }).spend === true, '117c THE PUNCH READS THE PROBE: after two block attempts already drawn this turn the expected intercept falls (0.9 -> 0.32) and the same single card is enough');
   ok(D(1, 1, 1, 0.2, 1, false).spend === true, '117c one card against a blocker who probably has none: contest');
   ok(D(0, 0, 1, 0.2, 4, true).spend === false && D(0, 0, 1, 0.2, 4, true).tag === 'no-stealth', '117c never with none');
@@ -7740,14 +7740,14 @@ async function connectWithRetry(client, tries = 30){
     u.pending = { who: 'Alice', amount: 3, kind: 'bleed', contested: true, reacted: new Set(), blockerVamp: lar }; return u; };
   const b1 = mkB(); b1.hand = ['Instinctive Reaction', 'The Warrens']; b1.tally = { mode: 'block', a: 2, b: 1 };
   b1._interceptSecondLook(); const i1 = b1.events.filter(e => e.t === 'bot:intercept-stack').pop();
-  ok(i1 && i1.d.answer === true && b1.tally.b >= 2 && b1.hand.length === 1 && b1.events.some(e => e.t === 'bot:play' && e.d.window === 'react-intercept'), '118e JOHAN\'S BUG: the actor raised its stealth to 2 against my intercept 1 -- the blocker now plays a SECOND intercept card (it used to play one card and watch the block fail with more in hand): ' + JSON.stringify(i1 && { need: i1.d.need, tag: i1.d.tag }));
+  ok(i1 && i1.d.answer === true && b1.tally.b >= 2 && b1.hand.length === 1 && b1.events.some(e => e.t === 'bot:play' && e.d.window === 'react-intercept'), '118e THE OWNER\'S BUG: the actor raised its stealth to 2 against my intercept 1 -- the blocker now plays a SECOND intercept card (it used to play one card and watch the block fail with more in hand): ' + JSON.stringify(i1 && { need: i1.d.need, tag: i1.d.tag }));
   const b2 = mkB(); b2.hand = ['Instinctive Reaction']; b2.tally = { mode: 'block', a: 4, b: 1 }; b2._interceptSecondLook();
   ok(b2.events.filter(e => e.t === 'bot:intercept-stack').pop().d.tag === 'cannot-reach' && b2.hand.length === 1, '118e ...a stealth of 4 that my one +1 card cannot reach: the card is kept');
   const b3 = mkB(); b3.hand = ['The Warrens']; b3.tally = { mode: 'block', a: 1, b: 1 }; b3._interceptSecondLook(); ok(b3.events.filter(e => e.t === 'bot:intercept-stack').length === 0, '118e ...a block that already succeeds is left alone');
   const b4 = mkB(); b4.pending.amount = 1; b4.hand = ['Instinctive Reaction', 'Cats\' Guidance']; b4.tally = { mode: 'block', a: 3, b: 1 }; b4._interceptSecondLook();
   ok(['not-worth-two', 'cannot-reach', 'answer'].includes(b4.events.filter(e => e.t === 'bot:intercept-stack').pop().d.tag), '118e a bleed of 1 is not chased with two cards (' + b4.events.filter(e => e.t === 'bot:intercept-stack').pop().d.tag + ')');
   const src118b = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
-  ok(/heavy >= 2 && \(maxS === 0 \|\| \(maxS === 1 && preyInt >= 0\.5\)\)/.test(src118b), '118f JOHAN\'S PROBE RULE: the bleed of 1 first is reserved for NO stealth in hand (or one card against an intercept-heavy prey) -- with stealth in hand the deck rolls its cards instead');
+  ok(/heavy >= 2 && \(maxS === 0 \|\| \(maxS === 1 && preyInt >= 0\.5\)\)/.test(src118b), '118f THE OWNER\'S PROBE RULE: the bleed of 1 first is reserved for NO stealth in hand (or one card against an intercept-heavy prey) -- with stealth in hand the deck rolls its cards instead');
     }
 
     /* 119) v0.6.144 — the late bounce and the clog */
@@ -7758,7 +7758,7 @@ async function connectWithRetry(client, tries = 30){
   console.log('\n[119] v0.6.144 -- the bounce is played on the TOTAL; a stealth bleeder\'s bleed of 1 is clogged');
   const u = mk119(); const D = c => u.decide('block-as-target', Object.assign({ T: 'T1', role: 'target', icp: 0, stealthA: 0, hasBounce: true, blockAllowed: true, amount: 3, edge: false }, c));
   const first = D({}); ok(first.bounce === false, '119a FIRST WINDOW, a bounce in hand, a Govern for 3: NOT bounced at the announce (it was 11 of 11 in serie-bal5): ' + (first.tag || 'falls to the block question'));
-  const tot = D({ blockAllowed: false, amount: 6 }); ok(tot.bounce === true && tot.tag === 'bounce-total' && /stands at 6/.test(tot.why), '119b THE TOTAL: after the modifiers the bleed stands at 6 -> NOW the bounce (Johan\'s "a 6 bleed with 1 stealth" sent on): ' + tot.why);
+  const tot = D({ blockAllowed: false, amount: 6 }); ok(tot.bounce === true && tot.tag === 'bounce-total' && /stands at 6/.test(tot.why), '119b THE TOTAL: after the modifiers the bleed stands at 6 -> NOW the bounce (the owner\'s 6 bleed with 1 stealth sent on): ' + tot.why);
   const one = D({ blockAllowed: false, amount: 1 }); ok(one.bounce === false && one.tag === 'bounce-kept', '119c a total of 1 is never bounced (6 of 11 bounces in bal5 were spent on a bleed of 1)');
   ok(D({ blockAllowed: false, amount: 1, edge: true }).bounce === true, '119c ...unless my pool is at the edge');
   ok(D({ blockAllowed: false, amount: 1, bounceN: 2 }).tag === 'bounce-spare' && D({ blockAllowed: false, amount: 1, bounceN: 2 }).bounce === true, '119c v0.6.145 THE SPARE BOUNCE: a total of 1 with TWO bounce cards in hand -> one goes (serie-bal6: bounces fell 53 -> 18 under "never on 1")');
@@ -7772,7 +7772,7 @@ async function connectWithRetry(client, tries = 30){
   const src119 = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
   ok(/adds \+0 bleed \(= ' \+ this\._actingVamp\.n \+ '\)\./.test(src119) && /\(tgtBot \|\| humanWantsTotal\) && !pumped && curAns\.what !== 'block' && !this\._actingVamp\.bounced/.test(src119), '119f ACTOR: a bleed that was not pumped opens ONE reactions-only window on its total, in the frozen L12.add grammar (+0) -- before, it resolved with no window and a held bounce was lost');
   ok('<b>Alice Chen</b> adds +0 bleed (= 3).'.replace(/<[^>]+>/g, '').match(/^(.+?) adds \+(\d+) bleed \(= (\d+)\)\.(?: Target: (.+?)\.)?$/), '119f ...and that line parses with the frozen L12.add regex (no protocol change)');
-  ok(/this\._actingVamp\.bounced = true;/.test(src119) && /the bleed was bounced \\u2014 no pump/.test(src119), '119g Johan: a bot does not pump a bleed after it was bounced');
+  ok(/this\._actingVamp\.bounced = true;/.test(src119) && /the bleed was bounced \\u2014 no pump/.test(src119), '119g the owner: a bot does not pump a bleed after it was bounced');
   ok(/'no block\. Any bleed modifiers\? I may still react to the total/.test(src119) && /this\._lateWordWait\(p, 'first'\)/.test(src119), '119h against a HUMAN actor the bot asks for the modifiers and waits for the actor\'s word (v0.6.237: under the tempo, not a fixed grace -- section 183e drives it)');
     }
 
@@ -7866,41 +7866,41 @@ async function connectWithRetry(client, tries = 30){
   console.log('\n[122] v0.6.152 -- THE BREATH: beat anchor, the first look after the beat, "currently has N stealth", intercept by chat');
   const mk122 = (o) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', deckName: 'malkavian', deck: JSON.parse(require('fs').readFileSync(require('path').join(__dirname, 'deck-malkavian.json'), 'utf8')), paceMs: 0, askSecs: 1, log: () => {} }, o || {}));
     u.seat = 2; u.started = true; u.pool = 20; u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.say = () => {}; u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u._restartAskTimer = () => {}; u._bumpTallyA = function(n){ this.tally.a = (this.tally.a | 0) + n; };
-    u.players = [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Bob', online: true, bot: true }]; u.table = {};
+    u.players = [{ seat: 1, name: 'Jonna', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Bob', online: true, bot: true }]; u.table = {};
     const col = { id: 'm1', kind: 'crypt', name: 'Colette (G6)', zone: 'ready', blood: 4, locked: true, attached: [] }; u.board = [col];
-    u._actingVamp = { v: col, n: 2, played: new Set(), target: 1 }; u._ask = { contested: false, _sayBlockFrom: 'Johan', pausedBy: new Set() }; return u; };
+    u._actingVamp = { v: col, n: 2, played: new Set(), target: 1 }; u._ask = { contested: false, _sayBlockFrom: 'Jonna', pausedBy: new Set() }; return u; };
   const chats = u => u.sent.filter(m => m.t === 'chat').map(m => m.msg), stealthLogs = u => u.sent.filter(m => m.t === 'log' && /stealth\./.test(m.html));
   // a) THE BUG: Govern at superior, counter 1-0, a human shouts Block! -> no card, the line
-  const a = mk122(); a.hand = ['Lost in Crowds', 'Cloak the Gathering']; a.tally = { mode: 'block', a: 1, b: 0 }; a._onBlockAttempt('Johan');
-  ok(a.hand.length === 2 && stealthLogs(a).length === 0 && chats(a).some(c => /Colette currently has 1 stealth/.test(c)) && a._ask.contested === true, '122a JOHAN\'S BUG: stealth 1 vs intercept 0 at the shout -> NO stealth card (it used to spend one at once); the bot says "currently has 1 stealth" and the contest stays open (' + JSON.stringify(chats(a)) + ')');
+  const a = mk122(); a.hand = ['Lost in Crowds', 'Cloak the Gathering']; a.tally = { mode: 'block', a: 1, b: 0 }; a._onBlockAttempt('Jonna');
+  ok(a.hand.length === 2 && stealthLogs(a).length === 0 && chats(a).some(c => /Colette currently has 1 stealth/.test(c)) && a._ask.contested === true, '122a THE OWNER\'S BUG: stealth 1 vs intercept 0 at the shout -> NO stealth card (it used to spend one at once); the bot says "currently has 1 stealth" and the contest stays open (' + JSON.stringify(chats(a)) + ')');
   ok(a.events.some(e => e.t === 'bot:stealth-ahead' && e.d.tally.a === 1 && e.d.tally.b === 0), '122a ...traced as stealth-ahead');
   // b) the human plays intercept and moves the counter -> the second look answers on the real numbers
-  a._dispatch({ t: 'tally', who: 'Johan', mode: 'block', a: 1, b: 1, ph: 0, rd: 1 });
+  a._dispatch({ t: 'tally', who: 'Jonna', mode: 'block', a: 1, b: 1, ph: 0, rd: 1 });
   ok(a.hand.length === 1 && stealthLogs(a).length === 1 && a.tally.a >= 2, '122b ...the counter moves to 1-1 (intercept played) -> the second look plays ONE stealth card on the real need (' + JSON.stringify({ a: a.tally.a, b: a.tally.b, hand: a.hand }) + ')');
   // c) a new blocking vampire zeroes the counter: 3-0 -> the line again, no card
-  const c = mk122(); c.hand = ['Lost in Crowds']; c.tally = { mode: 'block', a: 3, b: 0 }; c._ask.contested = false; c._onBlockAttempt('Johan');
+  const c = mk122(); c.hand = ['Lost in Crowds']; c.tally = { mode: 'block', a: 3, b: 0 }; c._ask.contested = false; c._onBlockAttempt('Jonna');
   ok(c.hand.length === 1 && chats(c).some(x => /currently has 3 stealth/.test(x)), '122c a NEW blocker after a failed attempt zeroes b (3-0): "currently has 3 stealth", no card');
-  c._onBlockAttempt('Johan'); ok(chats(c).filter(x => /currently has 3 stealth/.test(x)).length === 1, '122c ...said once per (blocker, a, b), not on every repeated shout');
+  c._onBlockAttempt('Jonna'); ok(chats(c).filter(x => /currently has 3 stealth/.test(x)).length === 1, '122c ...said once per (blocker, a, b), not on every repeated shout');
   // d) at 0-0 (a hunt, Govern at inferior) the first look still contests as before
-  const d = mk122(); d.hand = ['Lost in Crowds']; d.tally = { mode: 'block', a: 0, b: 0 }; d._onBlockAttempt('Johan');
+  const d = mk122(); d.hand = ['Lost in Crowds']; d.tally = { mode: 'block', a: 0, b: 0 }; d._onBlockAttempt('Jonna');
   ok(d.hand.length === 0 && stealthLogs(d).length === 1 && !chats(d).some(x => /currently has/.test(x)), '122d at 0-0 the first look still contests (a stealth card goes down, no "ahead" line)');
   // e) a BOT blocker never hears the chat line (bot-bot duels stay silent); the log/trace still record the ahead
   const e = mk122(); e.hand = ['Lost in Crowds']; e.tally = { mode: 'block', a: 1, b: 0 }; e._ask._sayBlockFrom = 'Bob'; e._sayAhead('Bob', e._actingVamp);
   ok(!chats(e).length && e.events.some(x => x.t === 'bot:stealth-ahead'), '122e a bot blocker gets no chat line (traced only)');
   // f) INTERCEPT BY CHAT: bare N sets, +N adds, only from the blocker while contested
-  const f = mk122(); f.hand = ['Lost in Crowds']; f.tally = { mode: 'block', a: 3, b: 0 }; f._onBlockAttempt('Johan'); f.sent = [];
-  f._onChat('Johan', '2'); ok((f.tally.b | 0) === 2 && f.sent.some(m => m.t === 'tally' && m.mode === 'block' && m.b === 2) && f.hand.length === 1, '122f "2" from the blocker: intercept booked as 2 on the shared counter (stealth 3 still ahead -> no card)');
-  f._onChat('Johan', '+1'); ok((f.tally.b | 0) === 3 && f.hand.length === 0 && stealthLogs(f).length === 1, '122f "+1": 2 -> 3, now the block succeeds -> the stealth card answers on the real need');
-  const g = mk122(); g.hand = ['Lost in Crowds']; g.tally = { mode: 'block', a: 1, b: 0 }; g._onBlockAttempt('Johan'); g.sent = [];
+  const f = mk122(); f.hand = ['Lost in Crowds']; f.tally = { mode: 'block', a: 3, b: 0 }; f._onBlockAttempt('Jonna'); f.sent = [];
+  f._onChat('Jonna', '2'); ok((f.tally.b | 0) === 2 && f.sent.some(m => m.t === 'tally' && m.mode === 'block' && m.b === 2) && f.hand.length === 1, '122f "2" from the blocker: intercept booked as 2 on the shared counter (stealth 3 still ahead -> no card)');
+  f._onChat('Jonna', '+1'); ok((f.tally.b | 0) === 3 && f.hand.length === 0 && stealthLogs(f).length === 1, '122f "+1": 2 -> 3, now the block succeeds -> the stealth card answers on the real need');
+  const g = mk122(); g.hand = ['Lost in Crowds']; g.tally = { mode: 'block', a: 1, b: 0 }; g._onBlockAttempt('Jonna'); g.sent = [];
   g._onChat('Bob', '2'); ok((g.tally.b | 0) === 0 && !g.sent.some(m => m.t === 'tally'), '122g a number from somebody OTHER than the blocker is table talk');
   g._onChat('Bob', '@U 2'); ok((g.tally.b | 0) === 2, '122g ...unless aimed at me by name (@U 2)');
-  const h = mk122(); h.hand = ['Lost in Crowds']; h.tally = { mode: 'block', a: 1, b: 0 }; h._ask.contested = false; h._onChat('Johan', '2'); h._ask = null; h._onChat('Johan', '+1');
+  const h = mk122(); h.hand = ['Lost in Crowds']; h.tally = { mode: 'block', a: 1, b: 0 }; h._ask.contested = false; h._onChat('Jonna', '2'); h._ask = null; h._onChat('Jonna', '+1');
   ok((h.tally.b | 0) === 0 && !h.sent.some(m => m.t === 'tally'), '122h outside a contest a bare number means nothing to me (no counter write)');
   ok(/"N"\/"\+N" \(your intercept while you block me\)/.test(require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8')), '122h ...and "help" teaches the grammar');
   // i) THE BEAT ANCHOR: a table event re-anchors the beat; my own old act alone does not
   const i = mk122({ paceMs: 60 }); i._lastActAt = Date.now() - 5000; i._lastTableAt = 0;
   { const t0 = Date.now(); await i._pace(); ok(Date.now() - t0 < 40, '122i a beat long spent since my own act and no table event since: no wait (the old behaviour, kept)'); }
-  i._dispatch({ t: 'say', who: 'Johan', i: 1 }); { const t0 = Date.now(); await i._pace(); const dt = Date.now() - t0; ok(dt >= 45, '122i JOHAN\'S REPORT: a human\'s quick phrase re-anchors the beat -> the next act waits paceMs from IT (' + dt + ' ms >= ~60)'); }
+  i._dispatch({ t: 'say', who: 'Jonna', i: 1 }); { const t0 = Date.now(); await i._pace(); const dt = Date.now() - t0; ok(dt >= 45, '122i THE OWNER\'S REPORT: a human\'s quick phrase re-anchors the beat -> the next act waits paceMs from IT (' + dt + ' ms >= ~60)'); }
   i._lastTableAt = 0; i._lastActAt = 0; i._dispatch({ t: 'log', who: undefined, html: 'x' }); i._dispatch({ t: 'say', who: 'U', i: 1 }); ok(!i._lastTableAt, '122i a server ledger line (no who) and my own echoed say do not re-anchor');
   i._dispatch({ t: 'board', seat: 1, pub: {} }); ok(!i._lastTableAt, '122i a board push never re-anchors (a human dragging cards must not hold the bot)');
   ok(mk122().o.paceMs === 0 && new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', log: () => {} }).o.paceMs === 1500, '122i default paceMs 1500 (was 2000); the suite\'s 0 is untouched');
@@ -7917,9 +7917,9 @@ async function connectWithRetry(client, tries = 30){
   console.log('\n[123] v0.6.153 -- the verdict clock waits for a card that is still waiting out its beat; the who-blocks hint rides the ahead line');
   const mk123 = (o) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', deckName: 'malkavian', deck: JSON.parse(require('fs').readFileSync(require('path').join(__dirname, 'deck-malkavian.json'), 'utf8')), paceMs: 0, askSecs: 1, log: () => {} }, o || {}));
     u.seat = 2; u.started = true; u.pool = 20; u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.say = () => {}; u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); u.restarts = 0; u._restartAskTimer = () => { u.restarts++; }; u._armReactTimer = () => {};
-    u.players = [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: 'U', online: true, bot: true }]; u.table = {};
+    u.players = [{ seat: 1, name: 'Jonna', online: true }, { seat: 2, name: 'U', online: true, bot: true }]; u.table = {};
     const col = { id: 'm1', kind: 'crypt', name: 'Colette (G6)', zone: 'ready', blood: 4, locked: true, attached: [] }; u.board = [col];
-    u._actingVamp = { v: col, n: 2, played: new Set(), target: 1 }; u._ask = { contested: true, _sayBlockFrom: 'Johan', pausedBy: new Set(), resolved: null, resolve: r => { u._ask && (u._ask.resolved = r); } }; u.tally = { mode: 'block', a: 1, b: 1 }; return u; };
+    u._actingVamp = { v: col, n: 2, played: new Set(), target: 1 }; u._ask = { contested: true, _sayBlockFrom: 'Jonna', pausedBy: new Set(), resolved: null, resolve: r => { u._ask && (u._ask.resolved = r); } }; u.tally = { mode: 'block', a: 1, b: 1 }; return u; };
   const verdicts = u => u.sent.filter(m => m.t === 'log' && /^Block: Stealth/.test(String(m.html).replace(/<[^>]+>/g, '')));
   // a) a pending look holds the clock; once it has landed the verdict is declared
   const a = mk123(); a._actingVamp._lookQ = 1; a._askTimeout();
@@ -7929,60 +7929,60 @@ async function connectWithRetry(client, tries = 30){
   const b = mk123(); b._actingVamp._spendQ = true; b._askTimeout(); ok(verdicts(b).length === 0, '123a a queued second-look spend holds it too'); clearTimeout(b._ask.timer);
   const c = mk123(); c._actingVamp._lookQ = 1; c._ask._deferWaits = 20; c._askTimeout(); ok(verdicts(c).length === 1, '123a ...but never forever: after 20 waits (~8 s) the clock speaks anyway');
   // b) a foreign counter move during my contest restarts the clock; my own echo does not
-  const d = mk123(); d._dispatch({ t: 'tally', who: 'Johan', mode: 'block', a: 1, b: 2, ph: 0, rd: 1 }); const r1 = d.restarts; d._dispatch({ t: 'tally', who: 'U', mode: 'block', a: 3, b: 2, ph: 0, rd: 1 });
+  const d = mk123(); d._dispatch({ t: 'tally', who: 'Jonna', mode: 'block', a: 1, b: 2, ph: 0, rd: 1 }); const r1 = d.restarts; d._dispatch({ t: 'tally', who: 'U', mode: 'block', a: 3, b: 2, ph: 0, rd: 1 });
   ok(r1 >= 1 && d.restarts === r1, '123b a FOREIGN counter move restarts the verdict clock (table activity); my own echoed write does not (' + r1 + '/' + d.restarts + ')');
   // c) one bubble: shout without a minion line -> the ahead line carries the who-blocks hint and stands the grace down
-  const e = mk123(); e.tally = { mode: 'block', a: 2, b: 0 }; e._ask._whoT = setTimeout(() => {}, 5000); e._sayAhead('Johan', e._actingVamp);
+  const e = mk123(); e.tally = { mode: 'block', a: 2, b: 0 }; e._ask._whoT = setTimeout(() => {}, 5000); e._sayAhead('Jonna', e._actingVamp);
   const eb = e.sent.filter(m => m.t === 'chat').map(m => m.msg); ok(eb.length === 1 && /right-click your blocker and choose Block, then play your intercept/.test(eb[0]) && e._ask._whoT === null, '123c no minion line yet: ONE bubble with the who-blocks hint folded in, the 2.5 s "Who blocks?" grace stood down (' + JSON.stringify(eb) + ')');
-  const f = mk123(); f.tally = { mode: 'block', a: 2, b: 0 }; f._ask._lineBlockFrom = 'Johan'; f._sayAhead('Johan', f._actingVamp);
+  const f = mk123(); f.tally = { mode: 'block', a: 2, b: 0 }; f._ask._lineBlockFrom = 'Jonna'; f._sayAhead('Jonna', f._actingVamp);
   ok(!/right-click/.test(f.sent.filter(m => m.t === 'chat').map(m => m.msg)[0] || ''), '123c ...with the minion line in, the plain line');
     }
 
-    /* 124) v0.6.155 — THE RUSH BY CHAT (Johan's interim rule until the cardfx rush sweep) */
+    /* 124) v0.6.155 — THE RUSH BY CHAT (the owner's interim rule until the cardfx rush sweep) */
     {
   console.log('\n[124] v0.6.155 -- a human rushes my vampire: the aimed play line + `rush` in chat opens the window / locks and fights');
   const mk124 = () => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', deckName: 'tremere', paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u.caps.tally = true; u.send = () => {}; u.push = () => {}; u.say = () => {}; u.chats = []; u.chat = m => u.chats.push(m); u.notes = []; u.note = m => u.notes.push(m);
-    u.players = [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Anna', online: true }];
+    u.players = [{ seat: 1, name: 'Jonna', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Anna', online: true }];
     u.board = [{ id: 'v1', name: 'Lauren', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 4 }, { id: 'v2', name: 'Nassir', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4 }];
     u.combats = []; u._resolveCombat = async (v, opp) => { u.combats.push([v.name, opp]); }; u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); return u; };
   // a) the aim is read from the client's play line, only when it names one of MY ready vampires
-  const a = mk124(); a._onLog('Johan', "<b>Lisa Noble</b> plays <b>Bum's Rush</b>. Target: <b>U</b>'s <b>Nassir</b>.");
-  ok(a._lastAim && a._lastAim.who === 'Johan' && a._lastAim.actor === 'Lisa Noble' && a._lastAim.card === "Bum's Rush" && a._lastAim.vamp === 'Nassir', '124a the play line with a Target on my vampire is remembered as the aim (actor, card, vampire)');
-  const a2 = mk124(); a2._onLog('Johan', "<b>Lisa Noble</b> plays <b>Bum's Rush</b>. Target: <b>Anna</b>'s <b>Zip</b>."); a2._onLog('Johan', "<b>Lisa Noble</b> bleeds for 2. Target: <b>U</b>'s pool.");
+  const a = mk124(); a._onLog('Jonna', "<b>Lisa Noble</b> plays <b>Bum's Rush</b>. Target: <b>U</b>'s <b>Nassir</b>.");
+  ok(a._lastAim && a._lastAim.who === 'Jonna' && a._lastAim.actor === 'Lisa Noble' && a._lastAim.card === "Bum's Rush" && a._lastAim.vamp === 'Nassir', '124a the play line with a Target on my vampire is remembered as the aim (actor, card, vampire)');
+  const a2 = mk124(); a2._onLog('Jonna', "<b>Lisa Noble</b> plays <b>Bum's Rush</b>. Target: <b>Anna</b>'s <b>Zip</b>."); a2._onLog('Jonna', "<b>Lisa Noble</b> bleeds for 2. Target: <b>U</b>'s pool.");
   ok(!a2._lastAim, '124a ...a Target on somebody else, or on my pool, is not an aim at my vampire');
-  const a3 = mk124(); a3._onLog('Johan', "<b>Lisa Noble</b>'s card action is used. Target: <b>U</b>'s <b>Lauren</b>.");
+  const a3 = mk124(); a3._onLog('Jonna', "<b>Lisa Noble</b>'s card action is used. Target: <b>U</b>'s <b>Lauren</b>.");
   ok(a3._lastAim && a3._lastAim.vamp === 'Lauren' && a3._lastAim.card === null, '124a the Card action menu line with a Target aims too (no card name)');
   // b) `rush` with the aim: I have another unlocked body -> the block window opens (rulebook), comply on my Pass
   const b = mk124(); let opened = 0; b._reactWindow = () => { opened++; };
-  b._onLog('Johan', "<b>Lisa Noble</b> plays <b>Bum's Rush</b>. Target: <b>U</b>'s <b>Nassir</b>."); b._onChat('Johan', 'rush');
+  b._onLog('Jonna', "<b>Lisa Noble</b> plays <b>Bum's Rush</b>. Target: <b>U</b>'s <b>Nassir</b>."); b._onChat('Jonna', 'rush');
   ok(opened === 1 && b.pending && b.pending.kind === 'rush' && b.pending.rushTarget === 'Nassir' && b.pending.actingVampName === 'Lisa Noble' && b.board[1].locked === false && !b._lastAim, '124b `rush` after the aimed line: the rush window opens for a block (Lauren is up), Nassir not yet locked, the aim consumed');
   b._complyRush(b.pending);
   ok(b.board[1].locked === true && b.combats.length === 1 && b.combats[0][0] === 'Nassir' && b.combats[0][1] === 'Lisa Noble' && /rushed by Lisa Noble/.test(b.notes.join(' ')), '124b declining the window: Nassir locks and fights Lisa Noble, the note names the rusher');
   // c) no body to block with -> lock and fight at once
-  const c = mk124(); c.board[0].locked = true; c._onLog('Johan', "<b>Lisa Noble</b> plays <b>Bum's Rush</b>. Target: <b>U</b>'s <b>Nassir</b>."); c._onChat('Johan', 'rush');
+  const c = mk124(); c.board[0].locked = true; c._onLog('Jonna', "<b>Lisa Noble</b> plays <b>Bum's Rush</b>. Target: <b>U</b>'s <b>Nassir</b>."); c._onChat('Jonna', 'rush');
   ok(c.board[1].locked === true && c.combats.length === 1 && c.combats[0][1] === 'Lisa Noble' && !c.pending, '124c nobody unlocked to block: Nassir locks and the combat starts at once (the Deep Song comply path)');
   // d) no aim: `rush <name>` names the vampire; the rusher is unknown and named after the sender
-  const d = mk124(); d.board[0].locked = true; d._onChat('Johan', 'rush nass');
-  ok(d.board[1].locked === true && d.combats.length === 1 && d.combats[0][1] === "Johan's vampire", '124d `rush <prefix>` with no aimed line resolves my vampire by name prefix; the rusher is "Johan\u2019s vampire"');
+  const d = mk124(); d.board[0].locked = true; d._onChat('Jonna', 'rush nass');
+  ok(d.board[1].locked === true && d.combats.length === 1 && d.combats[0][1] === "Jonna's vampire", '124d `rush <prefix>` with no aimed line resolves my vampire by name prefix; the rusher is "Jonna\u2019s vampire"');
   // e) no aim, several bodies, bare `rush` from my predator -> I ask which
-  const e = mk124(); e._onChat('Johan', 'rush');
+  const e = mk124(); e._onChat('Jonna', 'rush');
   ok(!e.combats.length && !e.pending && e.chats.length === 1 && /which of my vampires\? .*Lauren, Nassir/.test(e.chats[0]), '124e a bare `rush` with no aim and two bodies: I ask which vampire and list them');
   // f) a bare `rush` from a seat that is not my predator (and no aim) is table talk; @Name reaches me; a bot never rushes by chat
   const f = mk124(); f._onChat('Anna', 'rush'); ok(!f.chats.length && !f.combats.length && !f.pending, '124f my prey typing `rush` with no aim at me: table talk, nothing happens');
   f._onChat('Anna', '@U rush nassir'); ok(f.pending && f.pending.kind === 'rush' && f.pending.who === 'Anna', '124f ...the @Name form reaches me from any seat');
-  const g = mk124(); g.players[0].bot = true; g._onLog('Johan', "<b>Lisa Noble</b> plays <b>Bum's Rush</b>. Target: <b>U</b>'s <b>Nassir</b>."); g._onChat('Johan', 'rush');
+  const g = mk124(); g.players[0].bot = true; g._onLog('Jonna', "<b>Lisa Noble</b> plays <b>Bum's Rush</b>. Target: <b>U</b>'s <b>Nassir</b>."); g._onChat('Jonna', 'rush');
   ok(!g.pending && !g.combats.length, '124f a BOT typing `rush` is ignored (bots rush by their frozen line)');
   // g) help lists the new form
-  const h = mk124(); h._onChat('Johan', 'help'); ok(/"rush" or "rush <vampire>"/.test(h.chats[0] || ''), '124g help lists rush / rush <vampire>');
+  const h = mk124(); h._onChat('Jonna', 'help'); ok(/"rush" or "rush <vampire>"/.test(h.chats[0] || ''), '124g help lists rush / rush <vampire>');
     }
 
-    /* 125) v0.6.156 — THE COMBAT MIND (Johan's combat rulings after serie-cmb1, REPORT-serie-cmb1.md) */
+    /* 125) v0.6.156 — THE COMBAT MIND (the owner's combat rulings after serie-cmb1, REPORT-serie-cmb1.md) */
     {
   console.log('\n[125] v0.6.156 -- the combat mind: Grapple gating, bundled presses, press worth, press-to-end, range posture, long fists, stealth order, parsers on the log tier');
   const mk125 = (deckName, name) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'U', persona: 'expert', deckName, paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u.caps.tally = true; u.send = () => {}; u.push = () => {}; u.say = () => {}; u.chats = []; u.chat = m => u.chats.push(m); u.notes = []; u.note = m => u.notes.push(m); u.emits = []; u._emit = (t, d) => u.emits.push({ t, d });
-    u.players = [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: u.o.name, online: true, bot: true }, { seat: 3, name: 'Anna', online: true }];
+    u.players = [{ seat: 1, name: 'Jonna', online: true }, { seat: 2, name: u.o.name, online: true, bot: true }, { seat: 3, name: 'Anna', online: true }];
     u._awaitOppStrike = () => Promise.resolve({ vamp: 'Ghoul', dodge: false, dealt: 1 }); u._awaitOppTaken = () => Promise.resolve(null); u._awaitOppPress = () => Promise.resolve(null); u._awaitOppManeuver = () => Promise.resolve(null); u._awaitOppGrapple = () => Promise.resolve(null);
     return u; };
   const nos = { id: 'n1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 5 };   // pot superior (Roundhouse [POT] 3, Grapple [POT])
@@ -7995,7 +7995,7 @@ async function connectWithRetry(client, tries = 30){
   ok(!a2.hand.includes('Immortal Grapple') && !a2.hand.includes('Roundhouse') && a2._bundledPress === true && a2.notes.some(n => /plays Immortal Grapple: strikes that are not hand strikes/.test(n)),
      '125a ...with Roundhouse behind it the [POT] Grapple is played, the frozen phrase goes out as a note (silent since v0.6.114) and the bundled optional press is armed for this round');
   const a3 = mk125('nosferatu'); a3.board = [Object.assign({}, nos)]; a3.hand = ['Immortal Grapple']; a3._carrionCrows = { n: 2 };
-  ok(a3._wantGrapple(a3.board[0]).play === true, '125a active Carrion Crows alone justify the Grapple (Johan: strongest together)');
+  ok(a3._wantGrapple(a3.board[0]).play === true, '125a active Carrion Crows alone justify the Grapple (the owner: strongest together)');
   const a0 = mk125('nosferatu', 'U0'); a0.o.combatMind = 0; a0.board = [Object.assign({}, nos)]; a0.hand = ['Immortal Grapple'];
   await a0._resolveCombatRound(a0.board[0]);
   ok(!a0.hand.includes('Immortal Grapple') && !a0._bundledPress, '125a knob combatMind: 0 restores v0.6.155 (Grapple with fists, no bundled press)');
@@ -8059,7 +8059,7 @@ async function connectWithRetry(client, tries = 30){
   await i2._resolveCombatRound(i2.board[0]); ok(!i2.hand.includes('Taste of Vitae') && i2.board[0].blood === 5, '125i ...and gains 3 (capped at 5) after a Roundhouse-class round');
   // j) snipe presses on a steal of 1 (Theft [tha]); nobody presses into an opponent whose own line says torpor
   const j = mk125('tremere'); const trj = { id: 't2', name: 'Chrysanthemum (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 5 }; j.board = [trj]; j.hand = ['Theft of Vitae']; j._range = 'close';
-  ok(j._wantPress(trj, true).press === true && j._wantPress(trj, true).tag === 'card-round', '125j snipe: a Theft of Vitae in hand is a card round even at steal 1 (Johan: Theft + press + Theft)');
+  ok(j._wantPress(trj, true).press === true && j._wantPress(trj, true).tag === 'card-round', '125j snipe: a Theft of Vitae in hand is a card round even at steal 1 (the owner: Theft + press + Theft)');
   j._oppLastTaken = { vamp: 'Ghoul', n: 3, down: true, now: 0, at: Date.now() }; ok(j._wantPress(trj, true).press === false && j._wantPress(trj, true).tag === 'opp-down', '125j ...but never into an opponent whose own taken line said torpor');
   const j2 = mk125('tremere', 'U4'); j2._inCombat = true; j2._combatOppName = 'Lisa';
   j2._onChat('B', 'B combat \u2014 Zip strikes with Roundhouse for 3 dealt; Lisa takes 3 (loses 2 blood, now 0). Lisa goes to torpor (1 unmended). One round \u2014 tell me if your side\u2019s damage differs.');
@@ -8068,12 +8068,12 @@ async function connectWithRetry(client, tries = 30){
   ok(j._wantPress(trj, true).press === true && j._wantPress(trj, true).tag === 'torpor-shot', '125j their line says now 0 blood: a steal of 1 next round is a torpor shot');
     }
 
-    /* 126) v0.6.157 — the silent opponent at long range + THE RUSH KIT (Johan, 22 Sep) */
+    /* 126) v0.6.157 — the silent opponent at long range + THE RUSH KIT (the owner, 22 Sep) */
     {
   console.log('\n[126] v0.6.157 -- a silent opponent at long deals 0 (unless ranged is shown); the rush reads its kit (Crows + Grapple / Roundhouse)');
   const mk126 = (deckName) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', deckName, paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u.caps.tally = true; u.send = () => {}; u.push = () => {}; u.say = () => {}; u.chat = () => {}; u.note = () => {}; u._emit = () => {};
-    u.players = [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Anna', online: true }];
+    u.players = [{ seat: 1, name: 'Jonna', online: true }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Anna', online: true }];
     u._awaitOppStrike = () => Promise.resolve(null); u._awaitOppTaken = () => Promise.resolve(null); u._awaitOppPress = () => Promise.resolve(null); u._awaitOppGrapple = () => Promise.resolve(null);
     return u; };
   // a) snipe to long against a silent human: 0 taken (was the rulebook 1)
@@ -8101,16 +8101,16 @@ async function connectWithRetry(client, tries = 30){
   const dKit = b._decide('action', ctx(['Deep Song', 'Immortal Grapple', 'Roundhouse']));
   ok(dKit.pick && dKit.pick.kind === 'rush' && /reach 8 with Grapple/.test(dKit.why), '126b with Grapple + Roundhouse vs a 5-blood target the rush beats the bleed (reach 8 >= 5, the why says so; v0.6.202: Roundhouse [POT] is strength 1 + 3 = 4 a round -- it read 3)');
   const dNone = b._decide('action', ctx(['Deep Song']));
-  ok(!dNone.pick || dNone.pick.kind !== 'rush', '126b with the combat cards spent Deep Song is not a rush (Johan: bleed with it)');
+  ok(!dNone.pick || dNone.pick.kind !== 'rush', '126b with the combat cards spent Deep Song is not a rush (the owner: bleed with it)');
   b.o.combatMind = 0; const s0 = b._decide('action', ctx(['Deep Song', 'Immortal Grapple', 'Roundhouse'])).scores.rushParts; ok(s0.kitW === 1 && s0.reach === s0.expDmg, '126b combatMind 0: no kit weight, no reach');
     }
 
-    /* 127) v0.6.158 — SEIZE THE MOMENT: a torpor-certain, likely-through rush beats permanents-first (Johan, 22 Sep) */
+    /* 127) v0.6.158 — SEIZE THE MOMENT: a torpor-certain, likely-through rush beats permanents-first (the owner, 22 Sep) */
     {
   console.log('\n[127] v0.6.158 -- a torpor-certain rush that is likely to go through trumps permanents-first');
   const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
   u.seat = 2; u.started = true; u.send = () => {}; u.push = () => {}; u.chat = () => {}; u.o.permFirst = true;
-  u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'U', bot: true }, { seat: 3, name: 'Anna' }];
+  u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'U', bot: true }, { seat: 3, name: 'Anna' }];
   const W = { id: 'w1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', blood: 5, cap: 5 }; u.board = [W];
   const setTable = extra => { u.table = { 3: { pub: { cards: [{ id: 'x1', name: 'Andi Liu (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 1 }].concat(extra || []) } } }; };
   const ctx = (hand, tBlood, myBlood) => { u.hand = hand; return { plain: { n: 1, seat: 3 }, card: null, pd: null, stock: null, peek: null, fetch: null, creep: null, strength: null, enemyRescue: null, readyCrypt: 5, edge: false,
@@ -8125,7 +8125,7 @@ async function connectWithRetry(client, tries = 30){
   ok(d.pick && d.pick.kind === 'equip', '127b not torpor-certain (Roundhouse 3 vs 5 blood, no Grapple): permanents first stands');
   setTable([{ id: 'x2', name: 'Chelsea Blake (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }]);
   d = u._decide('action', ctx(['Deep Song', 'Immortal Grapple', 'Roundhouse', 'Raven Spy'], 1));
-  ok(d.pick && d.pick.kind === 'equip' && !d.scores.rushSeize, '127c another unlocked vampire at the target\u2019s seat could block: permanents first stands (Johan: only when likely to go through)');
+  ok(d.pick && d.pick.kind === 'equip' && !d.scores.rushSeize, '127c another unlocked vampire at the target\u2019s seat could block: permanents first stands (the owner: only when likely to go through)');
   setTable([{ id: 'x2', name: 'Chelsea Blake (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 }]);
   d = u._decide('action', ctx(['Deep Song', 'Immortal Grapple', 'Roundhouse', 'Raven Spy'], 1));
   ok(d.pick && d.pick.kind === 'rush', '127c ...a LOCKED second vampire cannot block: the rush goes');
@@ -8152,7 +8152,7 @@ async function connectWithRetry(client, tries = 30){
   ch.seat = 2; ch.started = true; ch.send = () => {}; ch.push = () => {};
   const Wn = { id: 'w1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', blood: 4, cap: 5 }; ch.board = [Wn]; ch.hand = ['Roundhouse'];
   ch._range = 'long'; ch._rnd = { range: 'long', dealt: 0 };
-  let wp = ch._wantPress(Wn, true); ok(wp.press === true && wp.tag === 'chase-wave', '127h Nosferatu: the opponent waved to long -- press to drag it back to close (Black Chantry\u2019s guide, Johan)');
+  let wp = ch._wantPress(Wn, true); ok(wp.press === true && wp.tag === 'chase-wave', '127h Nosferatu: the opponent waved to long -- press to drag it back to close (Black Chantry\u2019s guide, the owner)');
   ch._rnd = { range: 'close', dealt: 1 }; ch._range = 'close'; ch.hand = [];
   wp = ch._wantPress(Wn, true); ok(wp.tag !== 'chase-wave', '127h ...at close the old rules decide (no chase-wave press)');
   ch._rnd = { range: 'long', dealt: 0 }; Wn.blood = 1; ch._range = 'long';
@@ -8194,7 +8194,7 @@ async function connectWithRetry(client, tries = 30){
   // k) v0.6.164: main's combat fields (srv-2.6.39)
   const fk = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'F', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
   fk.seat = 2; fk.started = true; fk.caps.tally = true; fk.push = () => {}; fk.say = () => {}; fk.chat = () => {}; fk.note = () => {}; fk._emit = () => {};
-  fk.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'F', bot: true }]; fk.sent = []; fk.send = m => fk.sent.push(m);
+  fk.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'F', bot: true }]; fk.sent = []; fk.send = m => fk.sent.push(m);
   fk._awaitOppStrike = () => Promise.resolve({ vamp: 'Lisa', dodge: false, dealt: 1 }); fk._awaitOppTaken = () => Promise.resolve(null); fk._awaitOppPress = () => Promise.resolve(null); fk._awaitOppManeuver = () => Promise.resolve(null); fk._awaitOppGrapple = () => Promise.resolve(null);
   const fv = { id: 'w1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 5 }; fk.board = [fv]; fk.hand = ['Roundhouse'];
   await fk._resolveCombat(fv, 'Lisa');
@@ -8204,20 +8204,20 @@ async function connectWithRetry(client, tries = 30){
   ok(tw.some(m => m.rng === 'close'), '127k the round\u2019s range is written after the range step');
   const fk2 = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'F2', persona: 'expert', deckName: 'tremere', paceMs: 0, askSecs: 1, log: () => {} });
   fk2.seat = 2; fk2.started = true; fk2.caps.tally = true; fk2.push = () => {}; fk2.say = () => {}; fk2.chat = () => {}; fk2.note = () => {}; fk2._emit = () => {}; fk2.send = () => {};
-  fk2.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'F2', bot: true }];
+  fk2.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'F2', bot: true }];
   fk2.table = { 1: { pub: { cards: [{ id: 'l1', kind: 'crypt', name: 'Lisa', zone: 'ready', blood: 3 }] } } }; fk2._combatOppName = 'Lisa';   // v0.6.202 (point 17b): the tally's range fields are read from the human I FIGHT -- the fixture names him
   fk2._awaitOppStrike = () => Promise.resolve(null); fk2._awaitOppTaken = () => Promise.resolve(null); fk2._awaitOppPress = () => Promise.resolve(null); fk2._awaitOppManeuver = () => Promise.resolve(null); fk2._awaitOppGrapple = () => Promise.resolve(null);
   const tv = { id: 't1', name: 'Trevon Parker (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3, cap: 6 }; fk2.board = [tv]; fk2.hand = ['Apportation', 'Theft of Vitae'];
-  fk2.tally = { mode: 'combat', who: 'Johan', rng: 'close', rl: 1 };
+  fk2.tally = { mode: 'combat', who: 'Jonna', rng: 'close', rl: 1 };
   await fk2._resolveCombatRound(tv, false);
   ok(fk2._range === 'close' && fk2.hand.includes('Apportation'), '127k rl=1 on the tally: the range is SET for this round -- the snipe maneuver is skipped, Apportation stays in hand');
-  fk2._setRangeNow = null; fk2._nextRange = null; fk2.tally = { mode: 'combat', who: 'Johan', rng: 'long' }; fk2.hand = [];
+  fk2._setRangeNow = null; fk2._nextRange = null; fk2.tally = { mode: 'combat', who: 'Jonna', rng: 'long' }; fk2.hand = [];
   await fk2._resolveCombatRound(tv, false);
   ok(fk2._range === 'long', '127k a human\u2019s rng switch without a line is preferred (main \u00a75: the field disagreeing with the last line is a correction)');
   // l) v0.6.165: THE COMBAT PHASES against a human
   const mkP = (name, deck, acting, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: deck, paceMs: 0, askSecs: 0.05, phaseSecs: 0.08, log: () => {} }, extra || {}));
     u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.say = () => {}; u.note = () => {}; u.send = () => {}; u.chats = []; u.chat = m => u.chats.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
-    u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name, bot: true }];
+    u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name, bot: true }];
     u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
     const v = { id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4 }; u.board = [v]; u.hand = [];
     if(acting) u._actingVamp = { v, n: 1, played: new Set() };
@@ -8228,28 +8228,28 @@ async function connectWithRetry(client, tries = 30){
     ok(u.rows.filter(r => r.ty === 'combat-phase').length >= 7 && u.rows.some(r => r.ty === 'combat-phase' && r.d.step === 4 && r.d.when === 'damage'), '127l ...one combat-phase trace row per step, the Damage step included (v0.6.166: ph 4 then past it, so the human\u2019s client writes its taken line)'); }
   { const { u, v } = mkP('P2', 'malkavian', false); await u._resolveCombat(v, 'Lisa');
     ok(['Anything before range?', 'Any maneuvers?', 'Anything before strikes?', 'What is your strike?', 'Any presses?', 'Anything before ending combat?'].every(q => u.chats.includes(q)),
-       '127l human ACTING: the bot asks Johan\u2019s seven questions (damage has none): ' + JSON.stringify(u.chats.filter(c => /\?$/.test(c)))); }
+       '127l human ACTING: the bot asks the owner\u2019s seven questions (damage has none): ' + JSON.stringify(u.chats.filter(c => /\?$/.test(c)))); }
   { const { u } = mkP('P3', 'malkavian', false);
     const w = await u._phaseStep(0, 'ask', false).catch(() => null);
     ok(w === null, '127l (outside a combat _phasesOn is false -- no question)');
     u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'b';
-    setTimeout(() => u._onChat('Johan', 'Pass'), 10);
+    setTimeout(() => u._onChat('Jonna', 'Pass'), 10);
     const w2 = await u._phaseStep(0, 'ask', false);
     ok(w2 === 'pass', '127l a human\u2019s "Pass" answers the step at once (not the clock)');
-    setTimeout(() => u._onLog('Johan', 'Lisa maneuvers to long.'), 10);
+    setTimeout(() => u._onLog('Jonna', 'Lisa maneuvers to long.'), 10);
     const w3 = await u._phaseStep(1, 'ask', false);
     ok(w3 === 'line' && u._oppManeuver && u._oppManeuver.range === 'long', '127l ...their combat line answers it too (and is stashed)');
-    setTimeout(() => { u.tally = { mode: 'combat', who: 'Johan', ph: 4 }; u._phaseNudge('Johan', 4, 'tally'); }, 10);
+    setTimeout(() => { u.tally = { mode: 'combat', who: 'Jonna', ph: 4 }; u._phaseNudge('Jonna', 4, 'tally'); }, 10);
     const w4 = await u._phaseStep(3, 'ask', false);
     ok(w4 === 'ph', '127l ...and a human stepping ph past the step answers it'); }
   { const { u, v } = mkP('P4', 'malkavian', true); u.players[0].bot = true; await u._resolveCombat(v, 'Lisa');
     ok(!u.chats.some(c => /^I have|\?$/.test(c)), '127l a BOT opponent: no phase talk (bot-vs-bot keeps the silent handshake)'); }
   { const { u, v } = mkP('P5', 'malkavian', true, { combatPhases: 0 }); await u._resolveCombat(v, 'Lisa');
     ok(!u.chats.some(c => /^I have|\?$/.test(c)), '127l combatPhases 0: no phase talk'); }
-  // m) the lines-only guardrail (Johan, 23 Sep: do not build into a corner) -- a whole round against a human from LINES, no tally at all
+  // m) the lines-only guardrail (the owner, 23 Sep: do not build into a corner) -- a whole round against a human from LINES, no tally at all
   { const { u, v } = mkP('P6', 'nosferatu', false); u.caps.tally = false; u.tally = null; u._writeTally = () => {}; u.hand = [];
     const tells = { 'Any maneuvers?': 'Lisa maneuvers to close.', 'What is your strike?': 'Lisa strikes with hands for 2.', 'Any presses?': 'Lisa presses to end.' };
-    u.chat = m => { u.chats.push(m); if(tells[m]) setTimeout(() => u._onLog('Johan', tells[m]), 5); else if(/\?$/.test(m)) setTimeout(() => u._onChat('Johan', 'No'), 5); };
+    u.chat = m => { u.chats.push(m); if(tells[m]) setTimeout(() => u._onLog('Jonna', tells[m]), 5); else if(/\?$/.test(m)) setTimeout(() => u._onChat('Jonna', 'No'), 5); };
     await u._resolveCombat(v, 'Lisa');
     const cr = u.rows.filter(r => r.ty === 'combat-round');
     ok(cr.length === 1 && cr[0].d.taken === 2 && cr[0].d.range === 'close' && cr[0].d.opp === 'Lisa' && v.blood === 2,
@@ -8263,7 +8263,7 @@ async function connectWithRetry(client, tries = 30){
     ok(!u.chats.some(c => / dealt; /.test(c)) && v.blood === 4 && !phs.includes(4) && u.chats.includes('I have nothing before ending combat.'),
        '127n bug A: I struck first, THEY ended combat -- no "dealt" narration, no damage, no ph 4/5, straight to End of round (ph ' + JSON.stringify(phs) + ')'); }
   { const { u, v } = mkP('N2', 'nosferatu', false); u.sentAll = []; u.send = m => u.sentAll.push(m); u.hand = ['Roundhouse'];
-    u.chat = m => { u.chats.push(m); if(m === 'What is your strike?') setTimeout(() => u._onLog('Johan', 'Lisa strikes: combat ends.'), 5); else if(/\?$/.test(m)) setTimeout(() => u._onChat('Johan', 'No'), 5); };
+    u.chat = m => { u.chats.push(m); if(m === 'What is your strike?') setTimeout(() => u._onLog('Jonna', 'Lisa strikes: combat ends.'), 5); else if(/\?$/.test(m)) setTimeout(() => u._onChat('Jonna', 'No'), 5); };
     await u._resolveCombat(v, 'Lisa');
     ok(!u.sentAll.some(m => m.t === 'log' && /Sully<\/b> strikes/.test(m.html || '')) && u.hand.includes('Roundhouse'), '127n bug B: the human acted and ended combat first -- the bot does not strike at all (Roundhouse stays in hand)'); }
   { const { u, v } = mkP('N3', 'nosferatu', true); u.hand = ['Roundhouse']; u.sentAll = []; u.send = m => u.sentAll.push(m); u.notes = []; u.note = m => u.notes.push(m);
@@ -8285,11 +8285,11 @@ async function connectWithRetry(client, tries = 30){
     await u._resolveCombat(v, 'Lisa');
     ok(u.rows.filter(r => r.ty === 'combat-round').length === 1, '127n a wounded combatant (their taken line: torpor) ends the combat -- their press to continue does not start round 2'); }
   { const u = mkP('N7', 'malkavian', false).u; u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = u.board[0]; u._rnd = {};
-    u._onLog('Johan', 'Lisa strikes for 3.'); ok(u._oppStrike && u._oppStrike.dealt === 3, '127n "strikes for N." parsed (v2.6.134)');
-    u._oppStrike = null; u._onLog('Johan', 'Lisa strikes: steals 2 blood.'); ok(u._oppStrike && u._oppStrike.steal === 2 && u.board[0].blood === 2, '127n "strikes: steals N blood." -- one line, the victim loses the blood');
-    u._onLog('Johan', 'Lisa inflicts 2 damage on the opposing minion each round.'); ok(u._oppCarrionCrows && u._oppCarrionCrows.n === 2, '127n a human\u2019s every-round damage (v2.6.135)'); }
+    u._onLog('Jonna', 'Lisa strikes for 3.'); ok(u._oppStrike && u._oppStrike.dealt === 3, '127n "strikes for N." parsed (v2.6.134)');
+    u._oppStrike = null; u._onLog('Jonna', 'Lisa strikes: steals 2 blood.'); ok(u._oppStrike && u._oppStrike.steal === 2 && u.board[0].blood === 2, '127n "strikes: steals N blood." -- one line, the victim loses the blood');
+    u._onLog('Jonna', 'Lisa inflicts 2 damage on the opposing minion each round.'); ok(u._oppCarrionCrows && u._oppCarrionCrows.n === 2, '127n a human\u2019s every-round damage (v2.6.135)'); }
   { const { u, v } = mkP('N8', 'nosferatu', true); u.hand = ['Roundhouse'];
-    u.tally = { mode: 'combat', who: 'Johan', ce: 1, rl: 1, rng: 'long', pr: 'continue' };   // left over from an EARLIER combat (the server keeps absent fields while the mode stays 'combat')
+    u.tally = { mode: 'combat', who: 'Jonna', ce: 1, rl: 1, rng: 'long', pr: 'continue' };   // left over from an EARLIER combat (the server keeps absent fields while the mode stays 'combat')
     u._awaitOppStrike = () => Promise.resolve({ vamp: 'Lisa', dodge: false, dealt: 1 });
     await u._resolveCombat(v, 'Lisa');
     const cr = u.rows.filter(r => r.ty === 'combat-round');
@@ -8299,30 +8299,30 @@ async function connectWithRetry(client, tries = 30){
       u.seat = 2; u.started = true; u.caps.tally = true; u.say = () => {}; u.push = () => {}; u._pace = async () => {}; u.chat = () => {}; u.fxClone = () => {}; u._toAsh = () => {}; u._maybeRebelBlood = () => {}; u._emit = () => {};
       u.logs = []; u.send = m => { if(m.t === 'log') u.logs.push(m.html); };
       const B = { id: 'b1', name: 'Trevon Parker (G6)', kind: 'crypt', zone: 'ready', blood: 4, cap: 6, locked: false }; u.board = [B]; u.hand = ['Eyes of Argus'];
-      u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'I', bot: true }]; u._pickBlocker = () => B; return { u, B }; };
+      u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'I', bot: true }]; u._pickBlocker = () => B; return { u, B }; };
     const commitI = async (u, p) => { u.pending = p; await u._commitBlock(p, { why: 'test' }); if(u._vWait) u._vwEnd(null); u.pending = null; };   // v0.6.222: the pending registered, as the window has it (_commitBlock's beats ask whether their action is still the pending one)
     let { u } = mkI(); u.tally = { mode: 'block', a: 0, b: 0 };
-    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
-    ok(u.hand.includes('Eyes of Argus') && u.logs.some(h => /attempts to block\.$/.test(h)), '127p a declared bleed with 0 stealth: the bot attempts the block WITHOUT spending intercept (Johan\u2019s report)');
-    ({ u } = mkI()); u.tally = { mode: 'block', a: 1, b: 0 }; u._obs = { who: 'Johan', at: Date.now() - 20 }; u._aAt = Date.now();   // Johan's stealth raised AFTER his announce
-    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
+    await commitI(u, { who: 'Jonna', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
+    ok(u.hand.includes('Eyes of Argus') && u.logs.some(h => /attempts to block\.$/.test(h)), '127p a declared bleed with 0 stealth: the bot attempts the block WITHOUT spending intercept (the owner\u2019s report)');
+    ({ u } = mkI()); u.tally = { mode: 'block', a: 1, b: 0 }; u._obs = { who: 'Jonna', at: Date.now() - 20 }; u._aAt = Date.now();   // Jonna's stealth raised AFTER his announce
+    await commitI(u, { who: 'Jonna', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
     ok(!u.hand.includes('Eyes of Argus') && u.logs.some(h => /\+\d+ intercept\./.test(h)), '127p ...with 1 stealth standing it plays the intercept');
-    ({ u } = mkI()); u.tally = { mode: 'block', a: 2, b: 0 }; u._aAt = Date.now() - 5000; u._obs = { who: 'Johan', at: Date.now() - 20 }; u.sent = []; const s0 = u.send; u.send = m => { u.sent.push(m); s0(m); };
-    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'bleed', actingVampName: 'Lisa' });
-    ok(u.hand.includes('Eyes of Argus') && u.sent.some(m => m.t === 'tally' && m.mode === 'block' && m.a === 0), '127p v0.6.171: a STALE stealth 2 left by an earlier action is not Johan\u2019s -- no intercept card, and the counter is seeded with his true 0');
+    ({ u } = mkI()); u.tally = { mode: 'block', a: 2, b: 0 }; u._aAt = Date.now() - 5000; u._obs = { who: 'Jonna', at: Date.now() - 20 }; u.sent = []; const s0 = u.send; u.send = m => { u.sent.push(m); s0(m); };
+    await commitI(u, { who: 'Jonna', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'bleed', actingVampName: 'Lisa' });
+    ok(u.hand.includes('Eyes of Argus') && u.sent.some(m => m.t === 'tally' && m.mode === 'block' && m.a === 0), '127p v0.6.171: a STALE stealth 2 left by an earlier action is not Jonna\u2019s -- no intercept card, and the counter is seeded with his true 0');
     ({ u } = mkI()); u.tally = null; u.hand = ['Enhanced Senses'];   // v0.6.233: Eyes of Argus is 'Only usable during an action directed at you' (D-123) -- a plain intercept card here, and Eyes kept below
-    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'undirected', actingVampName: 'Lisa' });
+    await commitI(u, { who: 'Jonna', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'undirected', actingVampName: 'Lisa' });
     ok(!u.hand.includes('Enhanced Senses'), '127p ...an undirected action carries +1 stealth: intercept is needed and played');
     ({ u } = mkI()); u.tally = null;
-    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'undirected', actingVampName: 'Lisa' });
+    await commitI(u, { who: 'Jonna', reacted: new Set(), attempted: new Set(), amount: 1, kind: 'undirected', actingVampName: 'Lisa' });
     ok(u.hand.includes('Eyes of Argus'), '127p ...but never Eyes of Argus there: its +2 is for an action directed at me (v0.6.233, D-123)');
     ({ u } = mkI()); u.players[0].bot = true; u.tally = { mode: 'block', a: 0, b: 0 };
-    await commitI(u, { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
-    ok(u.hand.includes('Eyes of Argus'), '127p ...and against a BOT actor too (v0.6.170, Johan: the base rules forbid stealth / intercept that is not needed)'); }
+    await commitI(u, { who: 'Jonna', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' });
+    ok(u.hand.includes('Eyes of Argus'), '127p ...and against a BOT actor too (v0.6.170, the owner: the base rules forbid stealth / intercept that is not needed)'); }
   { const u = mkP('X1', 'malkavian', false).u; u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = u.board[0]; u._rnd = { strikeSeen: true };
-    u._onLog('Johan', 'Lisa gets an additional strike.'); u._onLog('Johan', 'Lisa strikes for 2.');
+    u._onLog('Jonna', 'Lisa gets an additional strike.'); u._onLog('Jonna', 'Lisa strikes for 2.');
     ok(!u._oppStrike, '127p an announced additional strike is not stashed as the next round\u2019s strike');
-    u._rnd = { strikeSeen: false }; u._xtra = 0; u._onLog('Johan', 'Lisa strikes for 3.');
+    u._rnd = { strikeSeen: false }; u._xtra = 0; u._onLog('Jonna', 'Lisa strikes for 3.');
     ok(u._oppStrike && u._oppStrike.dealt === 3, '127p ...the next round\u2019s strike is read normally'); }
   // q) v0.6.172: main's REPLY -- the bot closes its tallies; the steal's one line + label; a dodge undoes the steal
   { const { u, v } = mkP('Q1', 'tremere', true); v.name = 'Trevon Parker (G6)'; v.blood = 2; v.cap = 6; u.hand = ['Theft of Vitae']; u.sentAll = []; u.send = m => u.sentAll.push(m);
@@ -8345,26 +8345,26 @@ async function connectWithRetry(client, tries = 30){
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'R', persona: 'expert', deckName: 'tremere', paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u.caps.tally = true; u.say = () => {}; u.push = () => {}; u._pace = async () => {}; u.chat = () => {}; u.fxClone = () => {}; u._toAsh = () => {}; u._maybeRebelBlood = () => {}; u._emit = () => {}; u.note = () => {};
     u.logs = []; u.sentT = []; u.send = m => { if(m.t === 'log') u.logs.push(m.html); if(m.t === 'tally') u.sentT.push(m); };
-    u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'R', bot: true }];
+    u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'R', bot: true }];
     const B = { id: 'b1', name: 'Trevon Parker (G6)', kind: 'crypt', zone: 'ready', blood: 4, cap: 6, locked: false }; u.board = [B]; u.hand = ['Eyes of Argus']; u._pickBlocker = () => B;
-    u.tally = { mode: 'block', a: 0, b: 0 }; u._obs = { who: 'Johan', at: Date.now() - 10 };
-    const p = { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' };
+    u.tally = { mode: 'block', a: 0, b: 0 }; u._obs = { who: 'Jonna', at: Date.now() - 10 };
+    const p = { who: 'Jonna', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa' };
     u.pending = p; await u._commitBlock(p, { why: 'test' });
     ok(u.hand.includes('Eyes of Argus'), '127r the bot attempts the block with no card (0 stealth)');
     u.pending = p; p.contested = true; p.blockerVamp = p.blockerVamp || B.name;
-    u._onChat('Johan', '+1');
-    ok(u.sentT.some(m => m.mode === 'block' && m.a === 1) && !u.hand.includes('Eyes of Argus'), '127r Johan types "+1" -> stealth 1 booked on the counter and the bot answers with its intercept card (no counter needed)');
+    u._onChat('Jonna', '+1');
+    ok(u.sentT.some(m => m.mode === 'block' && m.a === 1) && !u.hand.includes('Eyes of Argus'), '127r Jonna types "+1" -> stealth 1 booked on the counter and the bot answers with its intercept card (no counter needed)');
     const before = u.sentT.length; u._onChat('Anna', '+2');
     ok(u.sentT.length === before, '127r a number from anyone but the actor is table talk'); }
   // s) v0.6.174: the sweep pilot's fixes -- Bowl of Convergence [AUS] paid intercept; Grapple after a gun's maneuver
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'S', persona: 'expert', deckName: 'tremere', paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u.caps.tally = true; u.say = () => {}; u.push = () => {}; u._pace = async () => {}; u.chat = () => {}; u.fxClone = () => {}; u._toAsh = () => {}; u._emit = () => {}; u.note = () => {};
     u.logs = []; u.sentT = []; u.send = m => { if(m.t === 'log') u.logs.push(m.html); if(m.t === 'tally') u.sentT.push(m); };
-    u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'S', bot: true }];
+    u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'S', bot: true }];
     const B = { id: 'b1', name: 'Trevon Parker (G6)', kind: 'crypt', zone: 'ready', blood: 4, cap: 6, locked: false };
     const bowl = { id: 'e1', name: 'Bowl of Convergence', kind: 'lib', zone: 'ready', attachedTo: 'b1' };
     u.board = [B, bowl]; u._attachedEquips = v => (v.id === 'b1' ? [bowl] : []); u.hand = [];
-    const p = { who: 'Johan', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa', contested: true, blockerVamp: B };
+    const p = { who: 'Jonna', reacted: new Set(), attempted: new Set(), amount: 2, kind: 'bleed', actingVampName: 'Lisa', contested: true, blockerVamp: B };
     u.pending = p; u.tally = { mode: 'block', a: 2, b: 1 };
     u._interceptSecondLook();
     ok(B.blood === 3 && u.sentT.some(m => m.mode === 'block' && m.b === 2) && u.logs.some(h => /burns 1 blood \(Bowl of Convergence\): \+1 intercept\./.test(h)), '127s Bowl [AUS]: stealth 2 vs intercept 1 -> the bearer burns 1 blood for +1 intercept (only because it is needed)');
@@ -8389,46 +8389,46 @@ async function connectWithRetry(client, tries = 30){
     u._attachedEquips = () => [gun]; ok(!!u._equipCombatOption(v, 'strike'), '127t the .44 Magnum (2R) does'); }
   // u) v0.6.176: THE EVENT LOG (phase A, observe only)
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'E', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
-    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'E', bot: true }];
+    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'E', bot: true }];
     const lines = [['Lisa bleeds for 2.', 'announce'], ['Lisa plays Deep Song.', 'card-played'], ['Lisa attempts to block.', 'attempt'], ['Lisa plays Eyes of Argus: +2 intercept.', 'intercept'],
       ['Block: Stealth 1 vs Intercept 2 \u2014 block succeeds.', 'verdict'], ['Lisa maneuvers to long.', 'maneuver'], ['Lisa strikes for 3.', 'strike'], ['Lisa strikes: steals 2 blood.', 'strike'],
       ['Lisa strikes: combat ends.', 'strike'], ['Lisa sets range to close next round.', 'range-set'], ['Lisa presses to continue.', 'press'], ['Lisa gets an additional strike.', 'extra-strike'],
       ['Lisa inflicts 2 damage on the opposing minion each round.', 'env'], ['Lisa takes 2 (loses 2 blood, now 0) and goes to torpor.', 'taken'], ['Lisa takes an undirected action.', 'announce']];
-    lines.forEach(([l]) => u._onLog('Johan', l));
+    lines.forEach(([l]) => u._onLog('Jonna', l));
     const kinds = u.ev.ev.map(e => e.kind);
     ok(lines.every(([, k], i) => kinds[i] === k), '127u every frozen line becomes a typed event: ' + JSON.stringify(kinds));
-    ok(u.ev.ev.every(e => e.seat === 1 && e.who === 'Johan'), '127u ...with the speaker\u2019s seat');
+    ok(u.ev.ev.every(e => e.seat === 1 && e.who === 'Jonna'), '127u ...with the speaker\u2019s seat');
     const tk = u.ev.last('taken'); ok(tk && tk.n === 2 && tk.now === 0 && tk.down === true, '127u the taken event carries n / now / down');
     ok(u.ev.cardsShown(1)['Deep Song'] === 1, '127u cards SHOWN per seat (the knowledge layer\u2019s feed): Deep Song for seat 1');
     u.send({ t: 'log', html: '<b>Wauneka (G6)</b> strikes (hands) for 1.' });
     const mine = u.ev.last('strike', e => e.own); ok(mine && mine.seat === 2 && mine.strike === 'hand', '127u my own lines enter the log at send (both sides of an exchange)');
     u.tally = null;
-    u.ev.cap = 5; for(let i = 0; i < 12; i++) u._onLog('Johan', 'Lisa hunts.'); ok(u.ev.ev.length === 5 && u.ev.cardsShown(1)['Deep Song'] === 1, '127u the ring keeps the last N events; cards shown survive the trim'); }
+    u.ev.cap = 5; for(let i = 0; i < 12; i++) u._onLog('Jonna', 'Lisa hunts.'); ok(u.ev.ev.length === 5 && u.ev.cardsShown(1)['Deep Song'] === 1, '127u the ring keeps the last N events; cards shown survive the trim'); }
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'E4', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
-    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'E4', bot: true }];
-    u._onLog('Johan', 'Lisa plays Deep Song.'); u._onFx({ kind: 'play', seat: 1, card: { name: 'Deep Song', kind: 'lib', faceDown: false } });
+    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'E4', bot: true }];
+    u._onLog('Jonna', 'Lisa plays Deep Song.'); u._onFx({ kind: 'play', seat: 1, card: { name: 'Deep Song', kind: 'lib', faceDown: false } });
     ok(u.ev.cardsShown(1)['Deep Song'] === 1, '127u v0.6.186: the play clone (fx) of a card whose line just came is not counted twice');
     u._onFx({ kind: 'play', seat: 1, card: { name: 'Eyes of Argus', kind: 'lib', faceDown: false } });
     ok(u.ev.cardsShown(1)['Eyes of Argus'] === 1, '127u ...a play with no line (a human\u2019s card) still counts, from the clone');
-    u._onLog('Johan', 'Lisa equips .44 Magnum.'); u._onLog('Johan', 'Lisa employs Murder of Crows.'); u._onLog('Johan', 'Lisa recruits Underbridge Stray [ani].');
+    u._onLog('Jonna', 'Lisa equips .44 Magnum.'); u._onLog('Jonna', 'Lisa employs Murder of Crows.'); u._onLog('Jonna', 'Lisa recruits Underbridge Stray [ani].');
     const sh = u.ev.cardsShown(1); ok(sh['.44 Magnum'] === 1 && sh['Murder of Crows'] === 1 && sh['Underbridge Stray'] === 1, '127u equips / employs / recruits are cards shown too: ' + JSON.stringify(sh));
-    u._onLog('Johan', 'Johan discards Deflection.'); ok(u.ev.cardsDiscarded(1)['Deflection'] === 1 && !u.ev.cardsShown(1)['Deflection'], '127u a discard is kept apart from the plays (it still shows a card of the deck)'); }
+    u._onLog('Jonna', 'Jonna discards Deflection.'); ok(u.ev.cardsDiscarded(1)['Deflection'] === 1 && !u.ev.cardsShown(1)['Deflection'], '127u a discard is kept apart from the plays (it still shows a card of the deck)'); }
   // x) v0.6.187: THE KNOWLEDGE LAYER, brick 1 -- the TWDA expectation
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'K', persona: 'expert', deckName: 'tremere', paceMs: 0, askSecs: 1, log: () => {}, twdKnow: 1 });
-    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'K', bot: true }];
+    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'K', bot: true }];
     ok(!!u.twd && u.twd.cards && u.twd.clans, '127x the TWDA profile loads beside the script (' + (u.twd ? Object.keys(u.twd.cards).length + ' cards, ' + Object.keys(u.twd.clans).length + ' clans' : 'missing') + ')');
     const o = u._opp(1); o.clans = { Brujah: 4 };
     const t0 = u._twdExpect(1); ok(t0 && t0.n === 1 && t0.combat > 0.3, '127x a Brujah crypt alone: a combat-heavy prior (' + (t0 && t0.combat.toFixed(2)) + ')');
-    u._onLog('Johan', 'Lisa plays Bum\u2019s Rush.'.replace('\u2019', "'")); u._onLog('Johan', 'Lisa plays Immortal Grapple.');
+    u._onLog('Jonna', 'Lisa plays Bum\u2019s Rush.'.replace('\u2019', "'")); u._onLog('Jonna', 'Lisa plays Immortal Grapple.');
     const t1 = u._twdExpect(1); ok(t1 && t1.n === 3 && t1.combat > t0.combat, '127x ...Bum\u2019s Rush and Immortal Grapple shown: the expectation rises (' + t1.combat.toFixed(2) + ' over ' + t1.n + ')');
-    const o2 = u._opp(3); o2.clans = { Malkavian: 4 }; u._onLog('Johan', 'Anna plays Lost in Crowds.'); const t2 = u._twdExpect(3);
+    const o2 = u._opp(3); o2.clans = { Malkavian: 4 }; u._onLog('Jonna', 'Anna plays Lost in Crowds.'); const t2 = u._twdExpect(3);
     ok(t2 && t2.combat < 0.2 && t2.stealth > 0.2, '127x a Malkavian crypt with Lost in Crowds shown: little combat, much stealth (' + t2.combat.toFixed(2) + ' / ' + t2.stealth.toFixed(2) + ')');
     const dNo = (() => { const v = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'K0', persona: 'expert', deckName: 'tremere', paceMs: 0, askSecs: 1, log: () => {} }); v.seat = 2; v.started = true; v._opp(1).clans = { Brujah: 4 }; return v.oppCombat(1); })();
     ok(u.oppCombat(1) > dNo, '127x twdKnow 1 raises the combat danger of a Brujah seat above the board-only prior (' + u.oppCombat(1) + ' vs ' + dNo + '); twdKnow 0 is unchanged'); }
   // y) v0.6.189: THE KNOWLEDGE LAYER, brick 2 -- recurring losses raise the critical pool
   { const mk = dyn => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Y', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {}, dynFloor: dyn });
-      u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Y', bot: true }]; u.pool = 12;
-      u.ev.push({ kind: 'turn', seat: 2 }); u._evRecord('Johan', 'Creeping Sabotage (x2): Y burns 2 pool.', 'log'); u.send({ t: 'chat', msg: 'Y: Smiling Jack \u2014 pays 1 pool.' });   // v0.6.191: the tick is the PREDATOR's line naming me
+      u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'Y', bot: true }]; u.pool = 12;
+      u.ev.push({ kind: 'turn', seat: 2 }); u._evRecord('Jonna', 'Creeping Sabotage (x2): Y burns 2 pool.', 'log'); u.send({ t: 'chat', msg: 'Y: Smiling Jack \u2014 pays 1 pool.' });   // v0.6.191: the tick is the PREDATOR's line naming me
       u.ev.push({ kind: 'turn', seat: 1 }); u.ev.push({ kind: 'turn', seat: 2 }); return u; };
     const on = mk(1), off = mk(0);
     ok(on._knownLosses() === 3, '127y the recurring losses of my last cycle are read from the log: 2 (the predator\'s frozen Creeping Sabotage line) + 1 (Smiling Jack) = ' + on._knownLosses());
@@ -8436,38 +8436,38 @@ async function connectWithRetry(client, tries = 30){
     ok(cOn.burst === cOff.burst + 3, '127y dynFloor 1 adds them to the predator burst (' + cOn.burst + ' vs ' + cOff.burst + '); dynFloor 0 is unchanged'); }
   // z) v0.6.192: archetype labels -- explanation only, never a jump to conclusions
   { const mkA = () => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Z', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
-      u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Z', bot: true }]; u.chats = []; u.chat = m => u.chats.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d }); return u; };
+      u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'Z', bot: true }]; u.chats = []; u.chat = m => u.chats.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d }); return u; };
     let u = mkA(); ok(!!u.ark && Object.keys(u.ark.archetypes).length >= 40, '127z the archetype signatures load beside the script (' + (u.ark ? Object.keys(u.ark.archetypes).length : 0) + ' archetypes)');
     u._opp(1).clans = { Ventrue: 5 };
-    ['Kine Resources Contested', 'Parity Shift', 'Voter Captivation', 'Govern the Unaligned', 'Deflection', 'Second Tradition: Domain', 'Freak Drive', 'Villein'].forEach(c => u._onLog('Johan', 'Lisa plays ' + c + '.'));
+    ['Kine Resources Contested', 'Parity Shift', 'Voter Captivation', 'Govern the Unaligned', 'Deflection', 'Second Tradition: Domain', 'Freak Drive', 'Villein'].forEach(c => u._onLog('Jonna', 'Lisa plays ' + c + '.'));
     const a = u._archetype(1); ok(a && a.best === 'Lawfirm' && a.tier === 'confident' && a.coverage >= 0.85, '127z a Ventrue seat showing the Lawfirm kit reads as Lawfirm, CONFIDENT: ' + JSON.stringify(a));
     u.notes = []; u.note = m => u.notes.push(m); u._archetypeSay(1); u._archetypeSay(1);
-    ok(u.notes.length === 1 && /^Trainbot reads Johan's deck as Lawfirm/.test(u.notes[0]) && !u.chats.length && u.rows.filter(r => r.ty === 'archetype').length === 1, '127z ...said ONCE at the table (v0.6.204: by the spokesbot, on the log tier) and traced once: ' + JSON.stringify(u.notes));
+    ok(u.notes.length === 1 && /^Trainbot reads Jonna's deck as Lawfirm/.test(u.notes[0]) && !u.chats.length && u.rows.filter(r => r.ty === 'archetype').length === 1, '127z ...said ONCE at the table (v0.6.204: by the spokesbot, on the log tier) and traced once: ' + JSON.stringify(u.notes));
     u = mkA(); u._opp(1).clans = { Gangrel: 4 };
-    ['Blood Doll', 'Deep Song', 'Carrion Crows', "Bum's Rush", "Wake with Evening's Freshness", 'On the Qui Vive', 'Dodge', 'Immortal Grapple'].forEach(c => u._onLog('Johan', 'Lisa plays ' + c + '.'));
+    ['Blood Doll', 'Deep Song', 'Carrion Crows', "Bum's Rush", "Wake with Evening's Freshness", 'On the Qui Vive', 'Dodge', 'Immortal Grapple'].forEach(c => u._onLog('Jonna', 'Lisa plays ' + c + '.'));
     const b = u._archetype(1); u._archetypeSay(1);
     ok(b && b.tier === 'closest' && u.chats.length === 0 && u.rows.some(r => r.ty === 'archetype' && r.d.tier === 'closest'), '127z a mixed Gangrel kit gets a CLOSEST read only -- traced, never said (coverage ' + (b && b.coverage) + ')');
-    u = mkA(); u._opp(1).clans = { Ventrue: 5 }; u._onLog('Johan', 'Lisa plays Kine Resources Contested.'); u._onLog('Johan', 'Lisa plays Deflection.');
+    u = mkA(); u._opp(1).clans = { Ventrue: 5 }; u._onLog('Jonna', 'Lisa plays Kine Resources Contested.'); u._onLog('Jonna', 'Lisa plays Deflection.');
     const c = u._archetype(1); ok(c && c.tier === 'closest', '127z two cards are never enough for a confident label (minShown 5)'); }
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'E2', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
-    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'E2', bot: true }];
-    const book = [['Phase: Unlock.', 'phase'], ['The bleed goes through: Expert, -2 pool (adjust yours).', 'pool'], ['Johan pays 2 pool for Asylum Hunting Ground (pool 28).', 'pool'],
+    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'E2', bot: true }];
+    const book = [['Phase: Unlock.', 'phase'], ['The bleed goes through: Expert, -2 pool (adjust yours).', 'pool'], ['Jonna pays 2 pool for Asylum Hunting Ground (pool 28).', 'pool'],
       ['Blood Doll: 1 blood \u2192 pool (pool 26).', 'pool'], ['Slum Hunting Ground: The Dowager (G6) gains 1 blood.', 'blood'], ['Naomi Stewart (G6) hunts successfully \u2014 +1 blood (2).', 'blood'],
       ['Creeping Sabotage ticks \u2014 Expert burns 1.', 'pool'], ['Expert-2 casts 2 votes against.', 'vote'], ['The referendum passes, 5 to 4.', 'ref-result'], ['Expert-3 (bot) is ousted. The shadows reclaim their own.', 'oust'],
-      ['Expert-2 (bot) collects the bounty from Expert-3: +6 pool (11) and 1 VP. The Jyhad provides.', 'pool'], ['Johan discards Deflection.', 'discard'], ['Combat ends \u2014 Majesty.', 'strike']];
-    book.forEach(([l]) => u._onLog('Johan', l));
+      ['Expert-2 (bot) collects the bounty from Expert-3: +6 pool (11) and 1 VP. The Jyhad provides.', 'pool'], ['Jonna discards Deflection.', 'discard'], ['Combat ends \u2014 Majesty.', 'strike']];
+    book.forEach(([l]) => u._onLog('Jonna', l));
     const k2 = u.ev.ev.map(e => e.kind);
     ok(book.every(([, k], i) => k2[i] === k), '127u v0.6.177: the bookkeeping lines are typed too (pool / blood / vote / oust / discard): ' + JSON.stringify(k2));
     const pay = u.ev.ev[2]; ok(pay.delta === -2 && pay.pool === 28 && pay.card === 'Asylum Hunting Ground', '127u ...a pool event carries the delta, the new pool and its cause'); }
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'E3', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
-    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'E3', bot: true }];
-    u._onLog('Johan', 'Lisa plays <b>Smoke &amp; Mirrors</b>.');
+    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'E3', bot: true }];
+    u._onLog('Jonna', 'Lisa plays <b>Smoke &amp; Mirrors</b>.');
     const cp = u.ev.last('card-played'); const known = !!u.fxLookup('Smoke & Mirrors');
     ok(!known || (cp && cp.card === 'Smoke & Mirrors'), '127u v0.6.178: an &amp; in the client\u2019s HTML is decoded (Smoke & Mirrors ' + (known ? 'typed' : 'not in cardfx -- decode checked on the text') + ')');
-    u._onLog('Johan', 'Lisa takes 1 (loses 1 blood, now 2) &amp; stays &lt;up&gt;.'); const tk2 = u.ev.last('taken'); ok(tk2 && tk2.now === 2, '127u stripTags decodes the client\u2019s entities before any parser reads the line'); }
+    u._onLog('Jonna', 'Lisa takes 1 (loses 1 blood, now 2) &amp; stays &lt;up&gt;.'); const tk2 = u.ev.last('taken'); ok(tk2 && tk2.now === 2, '127u stripTags decodes the client\u2019s entities before any parser reads the line'); }
   // v) v0.6.179: real-time invariants (observe only)
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'I', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
-    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'I', bot: true }]; u.flags = []; u._emit = (ty, d) => { if(ty === 'inv-flag') u.flags.push(d); };
+    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'I', bot: true }]; u.flags = []; u._emit = (ty, d) => { if(ty === 'inv-flag') u.flags.push(d); };
     u.pool = 20; u._invPool = 20;
     u.pool = 18; u.send({ t: 'chat', msg: 'I take 2. Pool: 18.' });
     u.pool = 15; u.send({ t: 'chat', msg: 'I influence 2 blood to Alice, who enters play, and 1 blood to another uncontrolled vampire.' });
@@ -8476,7 +8476,7 @@ async function connectWithRetry(client, tries = 30){
     ok(u.flags.length === 0, '127v the pool ledger balances: bleed taken, a multi-part influence, a Govern stock (bank blood, not pool) -- no flag: ' + JSON.stringify(u.flags));
     u.pool = 12; u._invOnEvent(u.ev.push({ kind: 'turn', seat: 2 }));
     ok(u.flags.length === 1 && u.flags[0].inv === 'pool-drift' && u.flags[0].diff === -3, '127v an unexplained pool change is flagged (observe only)');
-    u.send({ t: 'log', html: 'The bleed goes through: Johan, -2 pool (adjust yours).' }); u._invOnEvent(u.ev.push({ kind: 'turn', seat: 1 }));
+    u.send({ t: 'log', html: 'The bleed goes through: Jonna, -2 pool (adjust yours).' }); u._invOnEvent(u.ev.push({ kind: 'turn', seat: 1 }));
     ok(u.flags.length === 1, '127v my own line about ANOTHER seat\u2019s pool is not my pool'); }
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'I2', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 2, name: 'I2', bot: true }]; u.flags = []; u._emit = (ty, d) => { if(ty === 'inv-flag') u.flags.push(d); };
@@ -8486,7 +8486,7 @@ async function connectWithRetry(client, tries = 30){
     ok(u.flags.length === 0, '127v v0.6.180: a crypt draw costs 4 TRANSFERS + 1 pool -- the ledger no longer reads the 4 as pool (the +3 drifts): ' + JSON.stringify(u.flags)); }
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'I3', persona: 'expert', deckName: 'ventrue', paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 2, name: 'I3', bot: true }]; u.flags = []; u._emit = (ty, d) => { if(ty === 'inv-flag') u.flags.push(d); };
-    // v0.6.219 (Johan, 12 Nov): Wider View burned after 2 blood moved -- the influence loop's own order: the burn's note prints the pool
+    // v0.6.219 (the owner, 12 Nov): Wider View burned after 2 blood moved -- the influence loop's own order: the burn's note prints the pool
     // after the move, the phase's one sentence books the move at its end. Every Wider View flag of the V5 smoke was this double count.
     const burn = p => u.note('Wider View: Trainbot uses 4 transfers to burn it for +2 pool (pool ' + p + ') -- nothing better to spend the transfers on this turn.');
     u.pool = 8; u._invPool = 8;
@@ -8499,19 +8499,19 @@ async function connectWithRetry(client, tries = 30){
        '127v v0.6.219: a Wider View burn after the phase moved blood raises no flag (no pool-print, no pool-drift +2: the influence sentence books only the rest); a printed pool above the ledger still flags at once, a gap no sentence explains flags at the turn: ' + JSON.stringify(u.flags)); }
   // w) v0.6.185: phase B review -- a pending mark never borrows another speaker's event
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'W', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
-    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'W', bot: true }, { seat: 3, name: 'Anna' }];
+    u.seat = 2; u.started = true; u._drain = () => {}; u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'W', bot: true }, { seat: 3, name: 'Anna' }];
     const me = { id: 'm1', name: 'Sully', kind: 'crypt', zone: 'ready', blood: 4, cap: 4 }; u.board = [me];
     u._inCombat = true; u._combatMyVamp = me; u._combatOppName = 'Lisa'; u._rnd = {};
     u._onLog('Anna', 'Mark strikes for 3.');
     ok(!u._oppStrike, '127w a bystander\u2019s strike (not my opponent) is recorded but never pending');
-    u._markStrikePending('Johan', { vamp: 'Lisa', strike: 'damage', n: 1 });
+    u._markStrikePending('Jonna', { vamp: 'Lisa', strike: 'damage', n: 1 });
     ok(u._oppStrike && u._oppStrike.vamp === 'Lisa' && u._oppStrike.dealt === 1, '127w ...a missing speaker event falls back to the parser’s own values -- never to the bystander’s line: ' + JSON.stringify(u._oppStrike)); }
 
   /* ================= 128) v0.6.194: THE TEMPO (spec-bot-tempo-2026-09-27.md) -- botcfg, the three modes, the skips, the safety net, the Bot button, the wait rows ================= */
   console.log('\n[128] the tempo (botcfg; Standard / Adaptive / Turn-based; bot-vs-bot untouched)');
   { const mkT = (extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'T', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 0.3, phaseSecs: 0.4, log: () => {} }, extra || {}));
       u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m); u.says = []; u.say = m => u.says.push(m); u.notes = []; u.note = m => u.notes.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
-      u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'T', bot: true }, { seat: 3, name: 'B3', bot: true }];
+      u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'T', bot: true }, { seat: 3, name: 'B3', bot: true }];
       u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } }, 3: { pub: { cards: [{ id: 'k1', name: 'Kim', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
       u.opp = u.opp || {}; u.opp[1] = Object.assign(u.opp[1] || {}, { handN: 5 }); u.opp[3] = Object.assign(u.opp[3] || {}, { handN: 5 });
       const v = { id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4 }; u.board = [v]; u.hand = [];
@@ -8521,97 +8521,97 @@ async function connectWithRetry(client, tries = 30){
     { const { u } = mkT(); const t0 = Date.now(); const p = u._askBlock('Q?'); await sleep(5);
       ok(u._ask && u._ask.plan.mode === 'legacy' && /\(\ds → no\)$/.test(u.chats[0]), '128a no botcfg: the legacy plan, the tail prints the askSecs clock: ' + u.chats[0]);
       const r = await p; ok(r.what === 'no' && Date.now() - t0 >= 250, '128a ...the clock is askSecs (' + (Date.now() - t0) + ' ms)');
-      const w = u.rows.find(r => r.ty === 'wait'); ok(w && w.d.kind === 'block' && w.d.mode === 'legacy' && w.d.end === 'clock' && w.d.who === 'Johan', '128a ...one wait row per human wait (kind, mode, who, ms, end): ' + JSON.stringify(w && w.d)); }
+      const w = u.rows.find(r => r.ty === 'wait'); ok(w && w.d.kind === 'block' && w.d.mode === 'legacy' && w.d.end === 'clock' && w.d.who === 'Jonna', '128a ...one wait row per human wait (kind, mode, who, ms, end): ' + JSON.stringify(w && w.d)); }
     // b) botcfg: partial writes, clamps, the trace row; Standard = the slider, a combat step twice it; a BOT is never waited on by the tempo
-    { const { u } = mkT({ askSecs: 5 }); u._dispatch({ t: 'botcfg', who: 'Johan', tempo: 'standard', waitSecs: 1 });
-      ok(u.tempo.mode === 'standard' && u.tempo.waitSecs === 1 && u.tempo.who === 'Johan' && u.rows.some(r => r.ty === 'tempo' && r.d.mode === 'standard'), '128b botcfg sets the tempo and traces it: ' + JSON.stringify(u.tempo));
+    { const { u } = mkT({ askSecs: 5 }); u._dispatch({ t: 'botcfg', who: 'Jonna', tempo: 'standard', waitSecs: 1 });
+      ok(u.tempo.mode === 'standard' && u.tempo.waitSecs === 1 && u.tempo.who === 'Jonna' && u.rows.some(r => r.ty === 'tempo' && r.d.mode === 'standard'), '128b botcfg sets the tempo and traces it: ' + JSON.stringify(u.tempo));
       u._dispatch({ t: 'botcfg', who: 'Anna', waitSecs: 2 }); ok(u.tempo.mode === 'standard' && u.tempo.waitSecs === 2, '128b a partial write keeps the other field (the v2.6.17 rule)');
       u._dispatch({ t: 'botcfg', who: 'Anna', tempo: 'bogus', waitSecs: 99 }); ok(u.tempo.mode === 'standard' && u.tempo.waitSecs === 8, '128b an unknown mode is ignored, waitSecs clamps to 1..8');
       u._dispatch({ t: 'botcfg', tempo: 'standard', waitSecs: 1 });
       const t0 = Date.now(); const p = u._askBlock('Q?'); await sleep(5);
       ok(/\(1s → no\)$/.test(u.chats[u.chats.length - 1]) && u._ask.plan.mode === 'standard', '128b Standard: the tail prints the slider: ' + u.chats[u.chats.length - 1]);
       await p; const dt = Date.now() - t0; ok(dt >= 900 && dt < 2500, '128b ...and the block window closes on it, not on askSecs 5 (' + dt + ' ms)');
-      ok(u._waitPlan('phase', 'Johan').ms === 2000 && u._waitPlan('damage', 'Johan').ms === 1000, '128b a combat step = 2 x the slider, the damage step 1 x since v0.6.196 (' + u._waitPlan('phase', 'Johan').ms + ' ms; today 60 s at a human table)');
+      ok(u._waitPlan('phase', 'Jonna').ms === 2000 && u._waitPlan('damage', 'Jonna').ms === 1000, '128b a combat step = 2 x the slider, the damage step 1 x since v0.6.196 (' + u._waitPlan('phase', 'Jonna').ms + ' ms; today 60 s at a human table)');
       const plb = u._waitPlan('block', 'B3'); ok(plb.mode === 'bots' && plb.ms >= 5000, '128b a wait on a BOT keeps askSecs whatever the tempo (bot-vs-bot untouched): ' + JSON.stringify(plb)); }
     { const { u } = mkT({ askSecs: 0.3, tempo: { tempo: 'standard', waitSecs: 8 } }); u._actingVamp.target = 3; const t0 = Date.now(); await u._askBlock('Q?');
       ok(Date.now() - t0 < 2000, '128b a bot target with the slider at 8 s: the window still closes on askSecs (' + (Date.now() - t0) + ' ms)'); }
     // c) Adaptive: the measurement, the floor, the ceiling, the skips
     { const { u } = mkT({ tempo: { tempo: 'adaptive', waitSecs: 2 } });
-      ok(u._waitPlan('block', 'Johan').ms >= 2000, '128c Adaptive with no history = the ceiling');
-      const p = u._askBlock('Q?'); await sleep(120); u._onChat('Johan', 'no'); const r = await p;
-      ok(r.what === 'no' && u._rt['Johan'] && u._rt['Johan'].length === 1 && u._rt['Johan'][0] >= 100 && u._rt['Johan'][0] < 1000, '128c a human’s answer time is measured: ' + JSON.stringify(u._rt));
-      u._rt['Johan'] = [600, 1000, 1200]; ok(Math.abs(u._waitPlan('block', 'Johan').ms - (1500 + u._chatSettleMs())) < 2, '128c ...the wait = 1.5 x the median (1000 -> 1500 ms + the bubble settle)');
-      u._rt['Johan'] = [100, 100, 100]; ok(u._waitPlan('block', 'Johan').ms >= 800, '128c ...never below 0.8 s');
-      u._rt['Johan'] = [5000, 6000, 7000]; ok(u._waitPlan('block', 'Johan').ms <= 2000 + u._chatSettleMs(), '128c ...never above the slider');
+      ok(u._waitPlan('block', 'Jonna').ms >= 2000, '128c Adaptive with no history = the ceiling');
+      const p = u._askBlock('Q?'); await sleep(120); u._onChat('Jonna', 'no'); const r = await p;
+      ok(r.what === 'no' && u._rt['Jonna'] && u._rt['Jonna'].length === 1 && u._rt['Jonna'][0] >= 100 && u._rt['Jonna'][0] < 1000, '128c a human’s answer time is measured: ' + JSON.stringify(u._rt));
+      u._rt['Jonna'] = [600, 1000, 1200]; ok(Math.abs(u._waitPlan('block', 'Jonna').ms - (1500 + u._chatSettleMs())) < 2, '128c ...the wait = 1.5 x the median (1000 -> 1500 ms + the bubble settle)');
+      u._rt['Jonna'] = [100, 100, 100]; ok(u._waitPlan('block', 'Jonna').ms >= 800, '128c ...never below 0.8 s');
+      u._rt['Jonna'] = [5000, 6000, 7000]; ok(u._waitPlan('block', 'Jonna').ms <= 2000 + u._chatSettleMs(), '128c ...never above the slider');
       u.table[1].pub.cards[0].locked = true; u.opp[1].handN = 0; u.chats = []; u.rows = [];
       const r2 = await u._askBlock('Q?'); ok(r2.what === 'no' && !u.chats.length && u.rows.some(x => x.ty === 'wait' && x.d.end === 'skip'), '128c skip: every minion locked + an empty hand -> no block question, a skip row');
-      u.opp[1].handN = 3; u.chats = []; const p3 = u._askBlock('Q?'); await sleep(5); ok(u.chats.length === 1, '128c ...locked minions but cards in hand (a wake could block): asked'); u._onChat('Johan', 'no'); await p3;
+      u.opp[1].handN = 3; u.chats = []; const p3 = u._askBlock('Q?'); await sleep(5); ok(u.chats.length === 1, '128c ...locked minions but cards in hand (a wake could block): asked'); u._onChat('Jonna', 'no'); await p3;
       u.table[1].pub.cards = []; u.opp[1].handN = 7; u.chats = []; const r4 = await u._askBlock('Q?'); ok(r4.what === 'no' && !u.chats.length, '128c ...no ready minion at all: skipped whatever the hand (nothing can block or react)');
       u.table[1].pub.cards = [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready' }]; u.opp[1].handN = 0; u.chats = []; const p5 = u._askBlock('Q?', { reactionsOnly: true }); await sleep(5);
       ok(!u.chats.length, '128c ...a reactions-only question with an empty hand: skipped'); await p5;
-      delete u.table[1]; u.chats = []; const p6 = u._askBlock('Q?'); await sleep(5); ok(u.chats.length === 1, '128c ...an unknown board is never a skip (no guessing)'); u._onChat('Johan', 'no'); await p6; }
+      delete u.table[1]; u.chats = []; const p6 = u._askBlock('Q?'); await sleep(5); ok(u.chats.length === 1, '128c ...an unknown board is never a skip (no guessing)'); u._onChat('Jonna', 'no'); await p6; }
     // d) Turn-based: no deadline, the tail, the reminder, the give-up, the Bot button
     { const { u } = mkT({ tempo: { tempo: 'turn' }, tempoRemindMs: 150, tempoGiveUpMs: 400 });
       ok(u.tempo.waitSecs === 3, '128d a botcfg with only the mode fills waitSecs with the spec’s default 3.0');
       const t0 = Date.now(); const p = u._askBlock('Q?'); await sleep(10);
       ok(/no clock — I wait for you\)$/.test(u.chats[0]), '128d the tail says there is no clock: ' + u.chats[0]);
       const st = u.status(); ok(st.state === 'asking' && st.until === null && st.step === 'resolve-ask', '128d status(): no deadline (the widget shows its button), steppable');
-      await sleep(200); ok(u.chats.some(c => /^Still waiting for Johan: Block, or Pass/.test(c)), '128d the reminder after tempoRemindMs: ' + JSON.stringify(u.chats[1]));
+      await sleep(200); ok(u.chats.some(c => /^Still waiting for Jonna: Block, or Pass/.test(c)), '128d the reminder after tempoRemindMs: ' + JSON.stringify(u.chats[1]));
       const r = await p; const dt = Date.now() - t0; ok(r.what === 'no' && dt >= 390 && dt < 1500 && u.notes.some(n => /no answer in \d+ min/.test(n)), '128d the give-up after tempoGiveUpMs resolves as a pass and says so (' + dt + ' ms)');
       ok(u.rows.some(r => r.ty === 'wait' && r.d.mode === 'turn' && r.d.end === 'clock'), '128d ...wait row mode turn, end clock');
       u.chats = []; u.rows = []; const p2 = u._askBlock('Q?'); await sleep(10); const s2 = u.step(); const r2 = await p2;
       ok(s2.did === 'resolve-ask' && r2.what === 'no' && u.rows.some(r => r.ty === 'wait' && r.d.end === 'button'), '128d the Bot button (step) gives the bot the word; the row says button');
-      u.chats = []; const p3 = u._askBlock('Q?'); await sleep(20); u._onChat('Johan', 'No'); const r3 = await p3; await sleep(200);
+      u.chats = []; const p3 = u._askBlock('Q?'); await sleep(20); u._onChat('Jonna', 'No'); const r3 = await p3; await sleep(200);
       ok(r3.what === 'no' && !u.chats.some(c => /^Still waiting/.test(c)), '128d an answered wait never reminds');
       ok(!u.sent.some(m => m.t === 'decide'), '128d Turn-based never rings the room’s reaction stopwatch (its ring would re-stamp a deadline)'); }
     // e) Turn-based in combat: the question says so, status / step, the reminder, the give-up, the damage step; a tempo change mid-wait re-arms
     { const { u } = mkT({ tempo: { tempo: 'turn' }, tempoRemindMs: 100, tempoGiveUpMs: 250 }); u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'b';
       const p = u._phaseStep(1, 'ask', false); await sleep(10);
       ok(u.chats[0] === 'Any maneuvers? (I wait for you)', '128e the combat question carries the no-clock note: ' + u.chats[0]);
-      const st = u.status(); ok(st.step === 'resolve-phase' && st.until === null && /combat step maneuvers \(Johan\)/.test(st.waitingFor), '128e status() names the step and is steppable: ' + st.waitingFor);
-      await sleep(150); ok(u.chats.some(c => /^Still waiting for Johan: Any maneuvers\?/.test(c)), '128e the reminder names the question');
+      const st = u.status(); ok(st.step === 'resolve-phase' && st.until === null && /combat step maneuvers \(Jonna\)/.test(st.waitingFor), '128e status() names the step and is steppable: ' + st.waitingFor);
+      await sleep(150); ok(u.chats.some(c => /^Still waiting for Jonna: Any maneuvers\?/.test(c)), '128e the reminder names the question');
       const s = u.step(); const r = await p; ok(s.did === 'resolve-phase' && r === 'button', '128e the Bot button resolves the step (' + r + ')');
-      const r2 = await u._phaseStep(3, 'ask', false); ok(r2 === 'clock' && u.notes.some(n => /going on as if Johan passed/.test(n)), '128e the give-up on a step says so');
+      const r2 = await u._phaseStep(3, 'ask', false); ok(r2 === 'clock' && u.notes.some(n => /going on as if Jonna passed/.test(n)), '128e the give-up on a step says so');
       u.chats = []; u._rnd = { dealt: 1 }; const pd = u._phaseDamage(); await sleep(10); ok(u.chats.some(c => /^Damage: prevent what you can/.test(c)), '128e the damage step says what it waits for'); u.step(); await pd;
       ok(u.sent.some(m => m.t === 'tally' && m.ph === 5), '128e ...and ph 5 is written after the button (the human’s client writes its taken line)');
-      u.players[0].bot = true; ok(u._waitPlan('phase', 'Johan').mode === 'bots', '128e a bot opponent: no tempo'); u.players[0].bot = false; }
+      u.players[0].bot = true; ok(u._waitPlan('phase', 'Jonna').mode === 'bots', '128e a bot opponent: no tempo'); u.players[0].bot = false; }
     { const { u } = mkT({ tempo: { tempo: 'turn' }, tempoGiveUpMs: 8000 }); u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'b';
-      const t0 = Date.now(); const p = u._phaseStep(1, 'ask', false); await sleep(50); u._dispatch({ t: 'botcfg', who: 'Johan', tempo: 'standard', waitSecs: 1 });   // v0.6.204: the maneuver step (2 x); 'Anything before range?' is 1 x now (lever d, 145b)
+      const t0 = Date.now(); const p = u._phaseStep(1, 'ask', false); await sleep(50); u._dispatch({ t: 'botcfg', who: 'Jonna', tempo: 'standard', waitSecs: 1 });   // v0.6.204: the maneuver step (2 x); 'Anything before range?' is 1 x now (lever d, 145b)
       const r = await p; const dt = Date.now() - t0; ok(r === 'clock' && dt >= 1900 && dt < 3500, '128e botcfg MID-COMBAT: the open step follows the new tempo at once (turn -> standard 1 s: ' + dt + ' ms)'); }
     { const { u } = mkT({ tempo: { tempo: 'standard', waitSecs: 8 } }); const t0 = Date.now(); const p = u._askBlock('Q?'); await sleep(50);
-      u._dispatch({ t: 'botcfg', who: 'Johan', waitSecs: 1 }); const r = await p; ok(r.what === 'no' && Date.now() - t0 < 2500, '128e botcfg mid-window: the 8 s block window closes on the new 1 s (' + (Date.now() - t0) + ' ms)'); }
+      u._dispatch({ t: 'botcfg', who: 'Jonna', waitSecs: 1 }); const r = await p; ok(r.what === 'no' && Date.now() - t0 < 2500, '128e botcfg mid-window: the 8 s block window closes on the new 1 s (' + (Date.now() - t0) + ' ms)'); }
     // f) Adaptive in combat: the empty-hand skips; the strike and the press are always asked
     { const { u } = mkT({ tempo: { tempo: 'adaptive', waitSecs: 1 } }); u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'b'; u.opp[1].handN = 0;
-      const r0 = await u._phaseStep(0, 'ask', false); const p5 = u._phaseStep(5, 'ask', false); await sleep(5); u._onChat('Johan', 'No'); const r5 = await p5;
+      const r0 = await u._phaseStep(0, 'ask', false); const p5 = u._phaseStep(5, 'ask', false); await sleep(5); u._onChat('Jonna', 'No'); const r5 = await p5;
       ok(r0 === 'skip' && !u.chats.includes('Anything before range?') && u.chats.includes('Any presses?') && r5 === 'pass', '128f an empty hand skips "anything before ..." but the press is still asked (a decision, not a capability)');
-      const p3 = u._phaseStep(3, 'ask', false); await sleep(5); u._onLog('Johan', 'Lisa strikes with hands for 1.'); ok((await p3) === 'line' && u.chats.includes('What is your strike?'), '128f ...the strike is always asked');
+      const p3 = u._phaseStep(3, 'ask', false); await sleep(5); u._onLog('Jonna', 'Lisa strikes with hands for 1.'); ok((await p3) === 'line' && u.chats.includes('What is your strike?'), '128f ...the strike is always asked');
       ok((await u._phaseStep(1, 'ask', false)) === 'skip', '128f ...maneuvers skipped with an empty hand and no gun on the minion');
-      u._combatOpp = () => ({ seat: 1, rec: { equip: ['.44 Magnum'] }, o: {} }); const p1 = u._phaseStep(1, 'ask', false); await sleep(5); u._onChat('Johan', 'No'); ok((await p1) === 'pass', '128f ...asked when a gun on the minion could give the maneuver');
+      u._combatOpp = () => ({ seat: 1, rec: { equip: ['.44 Magnum'] }, o: {} }); const p1 = u._phaseStep(1, 'ask', false); await sleep(5); u._onChat('Jonna', 'No'); ok((await p1) === 'pass', '128f ...asked when a gun on the minion could give the maneuver');
       ok(u.rows.filter(r => r.ty === 'wait' && r.d.end === 'skip').length === 2, '128f every skip leaves a wait row');
       u._combatOpp = () => ({ seat: 1, rec: { equip: [] }, o: {} }); u._cSide = 'a'; u.chats = []; const ra = await u._phaseStep(2, 'after', false);
       ok(ra === 'skip' && u.chats.includes('I have nothing before strikes.'), '128f bot acting: with the human\u2019s hand empty the bot still says its line and does not wait for an answer'); }
     // g) the pool question and the vote clock read the tempo too
-    { const { u } = mkT({ tempo: { tempo: 'turn' }, tempoRemindMs: 100, tempoGiveUpMs: 250 }); u._obs = { seat: 1, who: 'Johan', verb: 'calls a political action', at: Date.now(), vamp: 'Lisa' };
-      u._onAnyBlocks('Johan', 'Any blocks?'); ok(u._pq && u._pq.deadline === null && /I wait for you/.test(u.chats[0]), '128g the pool question in Turn-based: no deadline, says so');
-      await sleep(150); ok(u.chats.some(c => /^Still waiting for Johan: does this action cost me pool/.test(c)), '128g ...its reminder');
+    { const { u } = mkT({ tempo: { tempo: 'turn' }, tempoRemindMs: 100, tempoGiveUpMs: 250 }); u._obs = { seat: 1, who: 'Jonna', verb: 'calls a political action', at: Date.now(), vamp: 'Lisa' };
+      u._onAnyBlocks('Jonna', 'Any blocks?'); ok(u._pq && u._pq.deadline === null && /I wait for you/.test(u.chats[0]), '128g the pool question in Turn-based: no deadline, says so');
+      await sleep(150); ok(u.chats.some(c => /^Still waiting for Jonna: does this action cost me pool/.test(c)), '128g ...its reminder');
       const s = u.step(); ok(s.did === 'resolve-pq' && !u._pq && u.rows.some(r => r.ty === 'wait' && r.d.kind === 'pq' && r.d.end === 'button'), '128g ...the Bot button closes it (row: pq, button)'); }
     { const { u } = mkT({ tempo: { tempo: 'standard', waitSecs: 1 }, askSecs: 9 }); const rc = { heard: new Set(), paused: new Set() }; const t0 = Date.now(); u._refCall = rc; const p = u._refPoll(rc);
       ok(rc.plan.mode === 'standard' && rc.plan.ms < 2000, '128g the vote clock reads the tempo: ' + JSON.stringify(rc.plan));
-      const st = u.status(); ok(st.step === 'resolve-vote' && /votes \(Johan, B3\)/.test(st.waitingFor), '128g status() names the polls and who is still to speak');
+      const st = u.status(); ok(st.step === 'resolve-vote' && /votes \(Jonna, B3\)/.test(st.waitingFor), '128g status() names the polls and who is still to speak');
       rc.heard.add('B3'); rc.arm(); const why = await p; ok(/clock/.test(why) && Date.now() - t0 < 2500 && u.rows.some(r => r.ty === 'wait' && r.d.kind === 'vote' && r.d.end === 'clock'), '128g ...closed on the 1 s clock, a vote wait row'); }
     { const { u } = mkT({ tempo: { tempo: 'turn' }, tempoGiveUpMs: 5000 }); const rc = { heard: new Set(), paused: new Set() }; u._refCall = rc; const p = u._refPoll(rc); await sleep(10);
       const s = u.step(); const why = await p; ok(s.did === 'resolve-vote' && /table controls/.test(why) && u.rows.some(r => r.ty === 'wait' && r.d.kind === 'vote' && r.d.end === 'button'), '128g Turn-based polls close on the Bot button'); }
     // h) Turn-based: a human’s Pass during a contested block declares the verdict at once (not after the safety net)
     { const { u } = mkT({ tempo: { tempo: 'turn' }, tempoGiveUpMs: 5000 }); u.tally = { mode: 'block', a: 1, b: 2 }; const t0 = Date.now(); const p = u._askBlock('Q?'); await sleep(10);
-      u._ask.contested = true; u._onSay({ who: 'Johan', i: 7 }); const r = await p;
+      u._ask.contested = true; u._onSay({ who: 'Jonna', i: 7 }); const r = await p;
       ok(r.what === 'block' && Date.now() - t0 < 1500 && u.sent.some(m => m.t === 'log' && /Block: Stealth 1 vs Intercept 2 — block succeeds/.test(m.html)), '128h Pass during a contest in Turn-based: the verdict is declared from the counter at once (' + (Date.now() - t0) + ' ms)'); }
     // i) v0.6.195 (main's reply review): the handshake waits AFTER a combat step that already waited on the human -- a short grace under the tempo, never another askSecs
     const mkC = (tempo, answers, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'C', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 3, log: () => {}, tempo, tempoGiveUpMs: 1500, tempoRemindMs: 800 }, extra || {}));
       u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.say = () => {}; u.notes = []; u.note = m => u.notes.push(m); u.sent = []; u.send = m => u.sent.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
-      u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'C', bot: true }];
+      u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'C', bot: true }];
       u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } }; u._opp(1).handN = 5;
       const v = { id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4 }; u.board = [v]; u.hand = [];
-      u.chats = []; u.chat = m => { u.chats.push(m); const a = answers(m, u.chats.filter(c => c === m).length); if(a) setTimeout(() => a.line ? u._onLog('Johan', a.line) : u._onChat('Johan', a.say), a.ms || 30); };
+      u.chats = []; u.chat = m => { u.chats.push(m); const a = answers(m, u.chats.filter(c => c === m).length); if(a) setTimeout(() => a.line ? u._onLog('Jonna', a.line) : u._onChat('Jonna', a.say), a.ms || 30); };
       return { u, v }; };
     const strikeLine = { line: 'Lisa strikes with hands for 1.' };
     { const { u, v } = mkC({ tempo: 'standard', waitSecs: 1 }, (m) => m === 'What is your strike?' ? strikeLine : (/\?$/.test(m) ? { say: 'No' } : null)); u.o.phaseSecs = 1;
@@ -8642,7 +8642,7 @@ async function connectWithRetry(client, tries = 30){
       ok(u.chats.filter(c => c === 'Any presses?').length === 2 && !u.rows.some(r => r.ty === 'combat-phase' && r.d.when === 'reply'), '128j no botcfg: unchanged -- no second question, the old silent wait (one "Any presses?" per round)'); }
   }
 
-  /* ================= 129) v0.6.196: COMBAT ENDS BY EXPECTED / STATISTICAL DAMAGE (Johan, 10 Oct: 'build combat ends on expected / statistical damage -- easier when the opponent acts') ================= */
+  /* ================= 129) v0.6.196: COMBAT ENDS BY EXPECTED / STATISTICAL DAMAGE (the owner, 10 Oct: build combat ends on expected or statistical damage, easier when the opponent acts first) ================= */
   console.log('\n[129] combat ends by the opposing strike: known when they declared first, expected otherwise (knob combatEndStats)');
   { const mkE = (extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', deckName: 'ventrue', paceMs: 0, askSecs: 0.2, phaseSecs: 0.3, log: () => {}, combatEndStats: 1 }, extra || {}));
       u.seat = 2; u.started = true; u.pool = 20; u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.say = () => {}; u.chats = []; u.chat = t => u.chats.push(t); u.note = () => {}; u.fxClone = () => {};
@@ -8722,7 +8722,7 @@ async function connectWithRetry(client, tries = 30){
     { const { u, an } = mkT(5); await u._resolveCombat(an, 'Theo Bell'); const r = row1(u);
       ok(r.stole === 2 && an.blood === 3, '132d their vampire holds 5: the full 2 (stole ' + r.stole + ', my blood ' + an.blood + ')'); }
   }
-  /* ================= 133) v0.6.197: MY OWN REFERENDUM'S SWING is spoken (Johan, 11 Oct: the fourth silent pool change) ================= */
+  /* ================= 133) v0.6.197: MY OWN REFERENDUM'S SWING is spoken (the owner, 11 Oct: the fourth silent pool change) ================= */
   console.log('\n[133] my own passed referendum moves my pool -- I say so, as a voter does, and the line is the ledger record');
   { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'shark', paceMs: 0, askSecs: 1, log: () => {} });
     u.seat = 2; u.started = true; u.pool = 15; u.ownTurns = 4; u.sent = [];
@@ -8795,11 +8795,11 @@ async function connectWithRetry(client, tries = 30){
     const hunt = mkH('T5', 0), dmg = mkH('T2', 1);
     ok(hunt.score >= 1 && hunt.block === false && hunt.tag === 'combat-cost' && hunt.parts.risk.desperate === false && dmg.block === true && dmg.tag === 'combat-desperate',
        '136i at pool 2 a HUNT is no reason to be desperate (blocking it saves no pool): a 0-blood body lets it through; pool damage at pool 2 is blocked whatever it costs'); }
-  /* ================= 130) v0.6.196: THE DAMAGE STEP (Johan asked what is best) -- no damage to their minion = nothing to wait for; otherwise 1 x the slider ================= */
+  /* ================= 130) v0.6.196: THE DAMAGE STEP (the owner asked what is best) -- no damage to their minion = nothing to wait for; otherwise 1 x the slider ================= */
   console.log('\n[130] the damage step: skipped when nothing reaches the human’s minion, 1 x the slider otherwise');
   { const mkD = (tempo, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'D', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 3, phaseSecs: 4, log: () => {}, tempo, tempoGiveUpMs: 2000, tempoRemindMs: 1500 }, extra || {}));
       u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.say = () => {}; u.note = () => {}; u.sent = []; u.send = m => u.sent.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
-      u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'D', bot: true }];
+      u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'D', bot: true }];
       u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } }; u._opp(1).handN = 5;
       u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'a'; return u; };
     for(const [label, tempo] of [['Standard 1 s', { tempo: 'standard', waitSecs: 1 }], ['Turn-based', { tempo: 'turn' }]]){
@@ -8814,88 +8814,88 @@ async function connectWithRetry(client, tries = 30){
     { const u = mkD(null); u._rnd = { dealt: 0 }; const t0 = Date.now(); const r = await u._phaseDamage(); const dt = Date.now() - t0;
       ok(r === 'clock' && dt >= 3900, '130c no botcfg: unchanged -- the old phaseSecs wait even with no damage (' + dt + ' ms)'); }
   }
-  /* ================= 137) v0.6.198: A HOLD STOPS EVERY CLOCK THAT WAITS ON A HUMAN (Johan's principle, agreed with main 12 Oct) + the steal reads the human's taken line ================= */
+  /* ================= 137) v0.6.198: A HOLD STOPS EVERY CLOCK THAT WAITS ON A HUMAN (the owner's principle, agreed with main 12 Oct) + the steal reads the human's taken line ================= */
   console.log('\n[137] a Hold on stops every clock that waits on a human and restarts it fresh on the release; the steal cap reads the human’s own taken line');
   { const mk = (extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'T', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 0.3, phaseSecs: 0.4, log: () => {} }, extra || {}));
       u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m); u.says = []; u.say = m => u.says.push(m); u.notes = []; u.note = m => u.notes.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
-      u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'T', bot: true }, { seat: 3, name: 'Anna' }];
+      u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'T', bot: true }, { seat: 3, name: 'Anna' }];
       u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } }, 3: { pub: { cards: [{ id: 'a1', name: 'Ada', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
       u._opp(1).handN = 5; u._opp(3).handN = 5;   // full seat records (the pool question's amount path reaches the table model)
       const v = { id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4 }; u.board = [v]; u.hand = [];
       u._actingVamp = { v, n: 1, played: new Set(), target: 1, kind: 'bleed' };
       return { u, v }; };
     const std1 ={ tempo: { tempo: 'standard', waitSecs: 1 } };
-    const polObs = () => ({ seat: 1, who: 'Johan', verb: 'calls a political action', at: Date.now(), vamp: 'Lisa' });
+    const polObs = () => ({ seat: 1, who: 'Jonna', verb: 'calls a political action', at: Date.now(), vamp: 'Lisa' });
     // a) the pool question (main's table: "No" -- the stage-one clock answered No and the bot said No block while the human held)
-    { const { u } = mk(std1); u._obs = polObs(); u._onAnyBlocks('Johan', 'Any blocks?');
+    { const { u } = mk(std1); u._obs = polObs(); u._onAnyBlocks('Jonna', 'Any blocks?');
       ok(u._pq && u._pq.timer && u._pq.deadline > Date.now(), '137a fixture: the pool question runs on the 1 s clock');
-      u._onSay({ who: 'Johan', i: 0 });
+      u._onSay({ who: 'Jonna', i: 0 });
       ok(u._pq && u._pq.timer === null && u._pq.deadline === null, '137a a Hold on stops the pool question’s clock (timer and deadline null)');
       const st = u.status(); ok(st.state === 'held' && st.step === 'release-hold', '137a ...status() reports the hold (the ▶ filter never steps it)');
       await sleep(1400);
       ok(u._pq && !u.says.includes('No block'), '137a ...past its 1 s nothing has answered for the holder (v0.6.197: the clock said No and the bot said No block)');
       ok(!u.chats.some(c => /Holding for/.test(c)), '137a ...silently: every bot may hold its own pool question (debt 23c) -- the question is already on the table');
-      u._onChat('Johan', 'yes');
+      u._onChat('Jonna', 'yes');
       ok(u._pq && u._pq.stage === 'amt' && u._pq.timer === null, '137a an ANSWER still lands under the hold (Yes -> How much?), and the next stage is frozen too');
-      ok(!(u._rt['Johan'] && u._rt['Johan'].length) && u.rows.some(r => r.ty === 'wait' && r.d.kind === 'pq' && r.d.stage === 'yn' && r.d.held === 1), '137a ...an answer across a hold is not an answer time (no Adaptive measurement); its wait row says held');
+      ok(!(u._rt['Jonna'] && u._rt['Jonna'].length) && u.rows.some(r => r.ty === 'wait' && r.d.kind === 'pq' && r.d.stage === 'yn' && r.d.held === 1), '137a ...an answer across a hold is not an answer time (no Adaptive measurement); its wait row says held');
       const t1 = Date.now(); u._onSay({ who: 'Anna', i: 7 });
       ok(u._pq && u._pq.timer && u._pq.deadline >= t1 + 900, '137a the release (Anna’s Pass -- any human’s release frees the table) re-arms it FRESH: a full clock from now (' + (u._pq.deadline - t1) + ' ms)');
       await sleep(1500);
       ok(!u._pq && u.rows.some(r => r.ty === 'wait' && r.d.kind === 'pq' && r.d.stage === 'amt' && r.d.end === 'clock'), '137a ...which then runs out as usual (the clock’s 1 pool)'); }
     // b) the TYPED forms
-    { const { u } = mk(std1); u._obs = polObs(); u._onAnyBlocks('Johan', 'Any blocks?');
-      u._onChat('Johan', 'hold on');
+    { const { u } = mk(std1); u._obs = polObs(); u._onAnyBlocks('Jonna', 'Any blocks?');
+      u._onChat('Jonna', 'hold on');
       ok(u._pq.timer === null && u._held(), '137b a typed "hold on" freezes it the same way');
-      u._onChat('Johan', 'carry on');
+      u._onChat('Jonna', 'carry on');
       ok(u._pq.timer && !u._held() && u._pq.deadline > Date.now() + 500, '137b ...a typed "carry on" releases it with a fresh clock');
-      u._onChat('Johan', 'no'); ok(!u._pq, '137b ...and the answer closes it'); }
+      u._onChat('Jonna', 'no'); ok(!u._pq, '137b ...and the answer closes it'); }
     // c) the combat steps (main's table: "No" -- the step timed out, wrote the next ph and moved on; the quick phrase never reached _phaseNudge)
     { const { u } = mk(std1); u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'b';
       const p = u._phaseStep(1, 'ask', false); await sleep(10);
-      ok(u._phaseWait && u._phaseWait.timer, '137c fixture: "Any maneuvers?" waits on Johan on the 2 s step clock');
-      u._onSay({ who: 'Johan', i: 0 });
+      ok(u._phaseWait && u._phaseWait.timer, '137c fixture: "Any maneuvers?" waits on Jonna on the 2 s step clock');
+      u._onSay({ who: 'Jonna', i: 0 });
       ok(u._phaseWait.timer === null && u._phaseWait.deadline === null, '137c a Hold on stops the combat step');
-      ok(u.chats.filter(c => /^⏸ Holding for Johan/.test(c)).length === 1, '137c ...and the bot frozen inside the step says the hold itself (it never reaches _holdGate, so the hold was silent)');
-      u._onChat('Johan', 'thinking...'); ok(u._phaseWait.timer === null, '137c ...table talk during the hold restarts nothing (it used to restart the clock once)');
+      ok(u.chats.filter(c => /^⏸ Holding for Jonna/.test(c)).length === 1, '137c ...and the bot frozen inside the step says the hold itself (it never reaches _holdGate, so the hold was silent)');
+      u._onChat('Jonna', 'thinking...'); ok(u._phaseWait.timer === null, '137c ...table talk during the hold restarts nothing (it used to restart the clock once)');
       await sleep(2300); ok(u._phaseWait && !u._phaseWait.done && !u.sent.some(m => m.t === 'tally' && m.ph === 2), '137c ...past the 2 s step clock the step is still open and no next ph was written');
       const t1 = Date.now(); u._onSay({ who: 'Anna', i: 4 });
       ok(u._phaseWait && u._phaseWait.timer && u._phaseWait.deadline >= t1 + 1900 && u.chats.some(c => /^▶ Resuming/.test(c)), '137c another human’s release restarts the step FRESH (a full 2 s from now) and the bot that said the hold says Resuming');
-      u._onChat('Johan', 'No'); const r = await p;
-      ok(r === 'pass' && u.rows.some(x => x.ty === 'wait' && x.d.kind === 'phase' && x.d.held === 1) && !(u._rt['Johan'] && u._rt['Johan'].length), '137c the human’s answer ends it; the wait row says held, no answer time measured across the hold'); }
+      u._onChat('Jonna', 'No'); const r = await p;
+      ok(r === 'pass' && u.rows.some(x => x.ty === 'wait' && x.d.kind === 'phase' && x.d.held === 1) && !(u._rt['Jonna'] && u._rt['Jonna'].length), '137c the human’s answer ends it; the wait row says held, no answer time measured across the hold'); }
     // d) the damage step: Hold on is how a human finds a prevention card; a TYPED "it resolves" answers the step as the quick phrase does
     { const { u } = mk(std1); u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'a'; u._rnd = { dealt: 2 };
       const p = u._phaseDamage(); await sleep(10);
-      u._onChat('Johan', 'hold on'); ok(u._phaseWait && u._phaseWait.step === 4 && u._phaseWait.timer === null, '137d the damage step stands under a typed hold on');
+      u._onChat('Jonna', 'hold on'); ok(u._phaseWait && u._phaseWait.step === 4 && u._phaseWait.timer === null, '137d the damage step stands under a typed hold on');
       await sleep(1300); ok(u._phaseWait && !u._phaseWait.done, '137d ...past its 1 s slider');
-      u._onChat('Johan', 'it resolves'); const r = await p;
+      u._onChat('Jonna', 'it resolves'); const r = await p;
       ok(r === 'pass' && !u._held(), '137d a typed "it resolves" from the human it waits on answers the step (main: the release answers the step) and releases the hold'); }
     // e) Turn-based: the reminder and the four-minute give-up stand under a hold (main: the held human heard both "Still waiting" and "Still holding")
     { const { u } = mk({ tempo: { tempo: 'turn' }, tempoRemindMs: 150, tempoGiveUpMs: 400 });
       const p = u._askBlock('Q?'); await sleep(10);
-      u._onSay({ who: 'Johan', i: 0 }); await sleep(600);
+      u._onSay({ who: 'Jonna', i: 0 }); await sleep(600);
       ok(u._ask && !u.chats.some(c => /^Still waiting/.test(c)), '137e Turn-based block question under a hold: neither the reminder nor the give-up runs');
-      u._onSay({ who: 'Johan', i: 1 }); const r = await p; ok(r.what === 'no', '137e ...the holder’s answer (No block) ends it'); }
+      u._onSay({ who: 'Jonna', i: 1 }); const r = await p; ok(r.what === 'no', '137e ...the holder’s answer (No block) ends it'); }
     { const { u } = mk({ tempo: { tempo: 'turn' }, tempoRemindMs: 150, tempoGiveUpMs: 400 }); const rc = { heard: new Set(), paused: new Set() }; u._refCall = rc; const p = u._refPoll(rc); await sleep(10);
-      u._onSay({ who: 'Johan', i: 0 });
-      ok(rc.paused.has('Johan') && rc.timer === null && rc.deadline === null && u.chats.some(c => /^⏸ Holding for Johan/.test(c)), '137e my vote poll under a hold: clock, deadline and reminder stand, and I say the hold');
+      u._onSay({ who: 'Jonna', i: 0 });
+      ok(rc.paused.has('Jonna') && rc.timer === null && rc.deadline === null && u.chats.some(c => /^⏸ Holding for Jonna/.test(c)), '137e my vote poll under a hold: clock, deadline and reminder stand, and I say the hold');
       await sleep(600); ok(!rc.closed && !u.chats.some(c => /^Still waiting for votes/.test(c)), '137e ...past the give-up it is still open, with no reminder');
-      u._onSay({ who: 'Johan', i: 7 }); const why = await p;
-      ok(/clock/.test(why) && rc.heard.has('Johan'), '137e ...after the holder’s Pass the Turn-based clock runs again from the beginning (and closes on its give-up: ' + why + ')'); }
+      u._onSay({ who: 'Jonna', i: 7 }); const why = await p;
+      ok(/clock/.test(why) && rc.heard.has('Jonna'), '137e ...after the holder’s Pass the Turn-based clock runs again from the beginning (and closes on its give-up: ' + why + ')'); }
     // f) a hold that is already live when a wait opens: the clock never starts; completion is not a clock
     { const { u } = mk(std1); u._holdBy = new Set(['Anna']); const rc = { heard: new Set(), paused: new Set() }; u._refCall = rc; const p = u._refPoll(rc); await sleep(10);
       ok(rc.timer === null && rc.deadline === null && !rc.closed, '137f a hold live when my poll opens: its clock never starts');
       await sleep(1300); ok(!rc.closed, '137f ...past the 1 s slider still open');
-      rc.heard.add('Johan'); rc.heard.add('Anna'); rc.arm(); const why = await p;
+      rc.heard.add('Jonna'); rc.heard.add('Anna'); rc.arm(); const why = await p;
       ok(/everyone has spoken/.test(why), '137f ...but completion is not a clock: when everybody has spoken the poll closes, hold or not'); }
     { const { u } = mk(std1); u._holdBy = new Set(['Anna']); u._inCombat = true; u._combatOppName = 'Lisa'; u._cSide = 'b';
       const p = u._phaseStep(1, 'ask', false); await sleep(10);
-      ok(!u._phaseWait && !u.chats.some(c => /Any maneuvers/.test(c)) && u.chats.filter(c => /^\u23f8 Holding for Anna/.test(c)).length === 1, '137f a combat step that would open under a live hold waits in FRONT of it and says the hold (v0.6.202, play-test point 5 + Johan 16 Oct: a hold stops my own combat moves, the next question too -- v0.6.198 opened the step and froze only its clock)');
+      ok(!u._phaseWait && !u.chats.some(c => /Any maneuvers/.test(c)) && u.chats.filter(c => /^\u23f8 Holding for Anna/.test(c)).length === 1, '137f a combat step that would open under a live hold waits in FRONT of it and says the hold (v0.6.202, play-test point 5 + the owner 16 Oct: a hold stops my own combat moves, the next question too -- v0.6.198 opened the step and froze only its clock)');
       u._onSay({ who: 'Anna', i: 4 }); await sleep(200);
       ok(!!u._phaseWait && u.chats.some(c => /Any maneuvers/.test(c)), '137f ...the release opens it');
-      u._onChat('Johan', 'No'); await p;
+      u._onChat('Jonna', 'No'); await p;
       u._holdBy = new Set(['Anna']); u._holdAnnounced = false;
       const pa = u._askBlock('Q?'); await sleep(10); ok(u.chats.some(c => /^Q\? .*\(the table is on hold \u2014 I wait for you\)$/.test(c)), '137f ...and a question asked under a hold does not promise a clock in its tail: ' + u.chats[u.chats.length - 1]);
-      u._onSay({ who: 'Anna', i: 4 }); u._onChat('Johan', 'no'); await pa; }
+      u._onSay({ who: 'Anna', i: 4 }); u._onChat('Jonna', 'no'); await pa; }
     { const { u } = mk(std1); u._holdBy = new Set(['Anna']); const p = u._askBlock('Q?'); await sleep(10);
       ok(u._ask && u._ask.timer === null && u._ask.deadline === null, '137f a hold live when my block question opens: its clock never starts');
       await sleep(1300); ok(!!u._ask, '137f ...past the slider still open');
@@ -8908,65 +8908,65 @@ async function connectWithRetry(client, tries = 30){
       ok(rc.paused.has('Anna') && u._held() && u._holdAnnounced, '137g fixture: Anna holds my poll; I said the hold');
       u._releaseDeparted([{ name: 'Anna', seat: 3, online: false }]);
       ok(!u._held() && !rc.paused.size && rc.timer && !u._holdAnnounced && u.chats.some(c => /holder left the table/.test(c)), '137g a holder who left releases the hold AND my poll’s pause (it waited for her word for ever), the clock restarts, the announcement flag resets');
-      u._onSay({ who: 'Johan', i: 0 }); ok(u.chats.filter(c => /^⏸ Holding for/.test(c)).length === 2, '137g ...so the NEXT hold is announced again (the flag stayed set before)');
-      u._onSay({ who: 'Johan', i: 4 }); await p; }
+      u._onSay({ who: 'Jonna', i: 0 }); ok(u.chats.filter(c => /^⏸ Holding for/.test(c)).length === 2, '137g ...so the NEXT hold is announced again (the flag stayed set before)');
+      u._onSay({ who: 'Jonna', i: 4 }); await p; }
     // h) the panel's Release hold (step) thaws exactly as It resolves does
-    { const { u } = mk(std1); u._obs = polObs(); u._onAnyBlocks('Johan', 'Any blocks?'); u._onSay({ who: 'Johan', i: 0 });
+    { const { u } = mk(std1); u._obs = polObs(); u._onAnyBlocks('Jonna', 'Any blocks?'); u._onSay({ who: 'Jonna', i: 0 });
       ok(u.status().step === 'release-hold', '137h fixture: held');
       const s = u.step(); ok(s.did === 'release-hold' && u._pq && u._pq.timer && u._pq.deadline > Date.now() + 500, '137h step()’s Release hold restarts the frozen clocks fresh, as It resolves does');
-      u._onChat('Johan', 'no'); }
+      u._onChat('Jonna', 'no'); }
     // i) the typed hold pauses my block window like the quick phrase, and the room's stopwatch does not ring on a held table
     { const { u } = mk({ askSecs: 30, reactClockMs: 80, reactGraceMs: 100 }); u._reactSecs = 1;
       const p = u._askBlock('Q?'); await sleep(10);
-      u._onChat('Johan', 'hold on');
-      ok(u._ask.pausedBy.has('Johan') && u._ask.timer === null && u._ask.deadline === null, '137i a TYPED hold on pauses my block window exactly as the quick phrase does (it kept its clock)');
+      u._onChat('Jonna', 'hold on');
+      ok(u._ask.pausedBy.has('Jonna') && u._ask.timer === null && u._ask.deadline === null, '137i a TYPED hold on pauses my block window exactly as the quick phrase does (it kept its clock)');
       await sleep(300); ok(!u.sent.some(m => m.t === 'decide'), '137i ...and the room’s stopwatch does not ring on a held table (its countdown would run on every screen)');
-      ok(u.chats.filter(c => /^\u23f8 Holding for Johan/.test(c)).length === 1, '137i ...and the bot waiting in its block window says the hold (it never reaches _holdGate)');
-      u._onChat('Johan', 'no'); const r = await p; ok(r.what === 'no', '137i ...the holder’s answer ends the window'); }
+      ok(u.chats.filter(c => /^\u23f8 Holding for Jonna/.test(c)).length === 1, '137i ...and the bot waiting in its block window says the hold (it never reaches _holdGate)');
+      u._onChat('Jonna', 'no'); const r = await p; ok(r.what === 'no', '137i ...the holder’s answer ends the window'); }
     // j) the holder's OWN release ends their own pause: "It resolves" from the target = let it through (it used to leave the window paused with no clock); a typed "carry on" restarts the clock fresh; somebody else's release leaves the holder's pause alone
     { const { u } = mk(std1); const p = u._askBlock('Q?'); await sleep(10);
-      u._onSay({ who: 'Johan', i: 0 }); ok(u._ask.pausedBy.has('Johan') && u._ask.timer === null, '137j fixture: Johan (the target) holds my block question');
-      u._onSay({ who: 'Johan', i: 4 }); const r = await Promise.race([p, sleep(2500).then(() => ({ what: 'still paused after 2.5 s' }))]);
+      u._onSay({ who: 'Jonna', i: 0 }); ok(u._ask.pausedBy.has('Jonna') && u._ask.timer === null, '137j fixture: Jonna (the target) holds my block question');
+      u._onSay({ who: 'Jonna', i: 4 }); const r = await Promise.race([p, sleep(2500).then(() => ({ what: 'still paused after 2.5 s' }))]);
       ok(r.what === 'no' && !u._held(), '137j his own "It resolves" ends his pause and lets the action through (v0.6.197: the window stayed paused, no clock, until he answered again; got: ' + r.what + ')');
       if(u._ask) u._answer('no', null); }
     { const { u } = mk(std1); const p = u._askBlock('Q?'); await sleep(10);
-      u._onChat('Johan', 'hold on'); const t1 = Date.now(); u._onChat('Johan', 'carry on');
+      u._onChat('Jonna', 'hold on'); const t1 = Date.now(); u._onChat('Jonna', 'carry on');
       ok(u._ask && !u._ask.pausedBy.size && u._ask.timer && u._ask.deadline >= t1 + 900, '137j ...his typed "carry on" restarts my window’s clock from the beginning');
-      u._onChat('Johan', 'no'); await p; }
+      u._onChat('Jonna', 'no'); await p; }
     { const { u } = mk(std1); const p = u._askBlock('Q?'); await sleep(10);
-      u._onSay({ who: 'Johan', i: 0 }); const t1 = Date.now(); u._onSay({ who: 'Anna', i: 4 });
+      u._onSay({ who: 'Jonna', i: 0 }); const t1 = Date.now(); u._onSay({ who: 'Anna', i: 4 });
       ok(u._ask && !u._ask.pausedBy.size && u._ask.timer && u._ask.deadline >= t1 + 900 && !u._held(), '137j ...and ANYONE\u2019s release ends every holder\u2019s pause with the table hold (the same rule as _holdBy): my window\u2019s clock starts again from the beginning');
-      u._onSay({ who: 'Johan', i: 1 }); const r = await p; ok(r.what === 'no', '137j ...and his No block ends it'); }
+      u._onSay({ who: 'Jonna', i: 1 }); const r = await p; ok(r.what === 'no', '137j ...and his No block ends it'); }
     { const { u } = mk(std1); const p = u._askBlock('Q?'); await sleep(10);
-      u._onChat('Anna', 'hold on'); u._onSay({ who: 'Johan', i: 7 });
+      u._onChat('Anna', 'hold on'); u._onSay({ who: 'Jonna', i: 7 });
       const r = await Promise.race([p, sleep(1500).then(() => ({ what: 'not answered after 1.5 s' }))]);
       ok(r.what === 'no', '137j a cross-table human types hold on and the TARGET passes: the Pass still answers my window at once (review: her pause outlived the release and swallowed the answer; got: ' + r.what + ')');
       if(u._ask) u._answer('no', null); }
     { const { u } = mk(std1); const rc = { heard: new Set(), paused: new Set() }; u._refCall = rc; const p = u._refPoll(rc); await sleep(10);
       u._onChat('Anna', 'hold on'); ok(rc.paused.has('Anna') && rc.timer === null, '137j fixture: Anna\u2019s typed hold pauses my poll');
-      const t1 = Date.now(); u._onChat('Johan', 'carry on');
-      ok(!rc.paused.size && rc.timer && rc.deadline >= t1 + 900, '137j ...Johan\u2019s typed carry on releases the table and her pause: the poll\u2019s clock starts again (review: it stayed with no clock and no button)');
+      const t1 = Date.now(); u._onChat('Jonna', 'carry on');
+      ok(!rc.paused.size && rc.timer && rc.deadline >= t1 + 900, '137j ...Jonna\u2019s typed carry on releases the table and her pause: the poll\u2019s clock starts again (review: it stayed with no clock and no button)');
       const why = await Promise.race([p, sleep(2500).then(() => 'not closed after 2.5 s')]); ok(/clock/.test(why), '137j ...and the poll closes on it (' + why + ')'); if(!rc.closed) rc.done('cleanup'); }
     { const { u } = mk(std1); const rc = { heard: new Set(), paused: new Set(['Anna']) }; rc.closed = false; u._refCall = rc;
       const st = u.status(); ok(st.step === 'resolve-vote' && /Anna thinking/.test(st.waitingFor), '137j a paused poll stays steppable (status names who is thinking): ' + st.waitingFor); }
     // k) the late-bounce grace (Any bleed modifiers?) waits on the human, so it stands under a hold too
-    { const { u } = mk(); let fired = 0; u._onSay({ who: 'Johan', i: 0 }); u._heldTimeout(() => { fired = Date.now(); }, 100);
+    { const { u } = mk(); let fired = 0; u._onSay({ who: 'Jonna', i: 0 }); u._heldTimeout(() => { fired = Date.now(); }, 100);
       await sleep(400); ok(!fired, '137k _heldTimeout: opened under a hold, it stands');
-      let tr = Date.now(); u._onSay({ who: 'Johan', i: 4 }); await sleep(500); ok(fired && fired - tr >= 95, '137k ...and from the release runs its FULL grace (' + (fired - tr) + ' ms)');
-      let f4 = 0; u._heldTimeout(() => { f4 = Date.now(); }, 300); await sleep(50); u._onSay({ who: 'Johan', i: 0 }); await sleep(100); tr = Date.now(); u._onSay({ who: 'Johan', i: 4 }); await sleep(450);
+      let tr = Date.now(); u._onSay({ who: 'Jonna', i: 4 }); await sleep(500); ok(fired && fired - tr >= 95, '137k ...and from the release runs its FULL grace (' + (fired - tr) + ' ms)');
+      let f4 = 0; u._heldTimeout(() => { f4 = Date.now(); }, 300); await sleep(50); u._onSay({ who: 'Jonna', i: 0 }); await sleep(100); tr = Date.now(); u._onSay({ who: 'Jonna', i: 4 }); await sleep(450);
       ok(f4 && f4 - tr >= 290, '137k ...a hold that starts and ends INSIDE the grace restarts it from the beginning too (review: it fired 149 ms after the release; now ' + (f4 - tr) + ' ms)');
-      let f5 = 0; u._heldTimeout(() => { f5 = Date.now(); }, 200); await sleep(50); u._onSay({ who: 'Johan', i: 0 }); await sleep(400);
+      let f5 = 0; u._heldTimeout(() => { f5 = Date.now(); }, 200); await sleep(50); u._onSay({ who: 'Jonna', i: 0 }); await sleep(400);
       ok(!f5, '137k ...a grace already running when a hold lands stands past its due time');
-      tr = Date.now(); u._onSay({ who: 'Johan', i: 4 }); await sleep(350); ok(f5 && f5 - tr >= 190, '137k ...and runs its full grace from the release (' + (f5 - tr) + ' ms)');
+      tr = Date.now(); u._onSay({ who: 'Jonna', i: 4 }); await sleep(350); ok(f5 && f5 - tr >= 190, '137k ...and runs its full grace from the release (' + (f5 - tr) + ' ms)');
       let f2 = 0; const h = u._heldTimeout(() => { f2 = 1; }, 50); h.cancel(); await sleep(120); ok(!f2 && !u._heldTimers.has(h), '137k ...cancel() stops it and drops it');
       let f3 = 0; u._heldTimeout(() => { f3 = 1; }, 50); await sleep(150); ok(f3 === 1 && u._heldTimers.size === 0, '137k ...no hold: an ordinary timer, gone once it fired');
       const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
       ok(/const lw = this\.pending && this\.pending\.lateWait;[^\n]*\n    if\(lw && !lw\.done\)\{ this\._freezeWait\(lw\); speak = true; \}/.test(src) && /if\(lw && !lw\.done && lw\.arm\) lw\.arm\(\);/.test(src), '137k the late-bounce wait stands under a hold too (the bounce used to land while the human held; v0.6.237: the wait for the actor\'s word, frozen and re-armed by the hold gate like the verdict wait -- 183e drives it)'); }
     // m) a new game thaws what the old game's hold froze (review: the frozen wait never re-armed); a second poll starts with no held mark
-    { const { u } = mk(std1); u._obs = polObs(); u._onAnyBlocks('Johan', 'Any blocks?'); u._onSay({ who: 'Johan', i: 0 });
+    { const { u } = mk(std1); u._obs = polObs(); u._onAnyBlocks('Jonna', 'Any blocks?'); u._onSay({ who: 'Jonna', i: 0 });
       ok(u._pq && u._pq.timer === null, '137m fixture: a pool question frozen by a hold');
       u._dispatch({ t: 'started', players: u.players }); ok(!u._held() && u._pq && u._pq.timer, '137m a fresh started clears the hold AND re-arms the frozen wait, as it would have run unheld');
-      u._onChat('Johan', 'no'); }
+      u._onChat('Jonna', 'no'); }
     { const { u } = mk(std1); const rc = { heard: new Set(), paused: new Set() }; u._refCall = rc; rc._held = true; const p = u._refPoll(rc);
       ok(rc._held === false, '137m a poll run again (after a vote boost) is a fresh wait: no held mark carried over'); rc.done('test'); await p; }
     // l) main 12 Oct §3.2: the steal cap reads the human's own taken line within the combat until their board changes
@@ -9125,7 +9125,7 @@ async function connectWithRetry(client, tries = 30){
         ok(cl.length === 1 && cl[0].html === 'Creeping Sabotage (x2): <b>Prey</b> burns 2 pool.', '139f ...and the predator writes the frozen line ONLY -- its "ticks" note said the same tick a second time (got ' + cl.length + ' lines)'); }
 
       // g) point 19: stolen blood over capacity drains (rules-correct) -- the round line now says so
-      { const u = mk139('Q9', 2, [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Q9', bot: true }], { deckName: 'tremere', askSecs: 0.05, phaseSecs: 0.08 });
+      { const u = mk139('Q9', 2, [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'Q9', bot: true }], { deckName: 'tremere', askSecs: 0.05, phaseSecs: 0.08 });
         u.caps.tally = true; u.notes = []; u.note = m => u.notes.push(m); u._emit = () => {};
         u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
         const v = { id: 'v1', name: 'Trevon Parker (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 6 }; u.board = [v]; u.hand = ['Theft of Vitae'];
@@ -9135,7 +9135,7 @@ async function connectWithRetry(client, tries = 30){
         const line = u.chats.concat(u.notes).find(c => /strikes with Theft of Vitae for 0/.test(c)) || '';   // v0.6.204 (lever c): the note tier in a phased combat
         ok(/steals 2 blood; 1 drains off at capacity 6\)/.test(line) && v.blood === 6, '139g point 19: the steal is rules-correct (before mending; over capacity drains) and now SAYS what drained: ' + JSON.stringify(line.slice(0, 160))); u._actingVamp = null; }
 
-      // h) point 22 and Johan's report: a card is dead only when NO vampire of mine can use it -- ready, in torpor or not yet out
+      // h) point 22 and the owner's report: a card is dead only when NO vampire of mine can use it -- ready, in torpor or not yet out
       { const u = mk139('T', 2, [{ seat: 1, name: 'A' }, { seat: 2, name: 'T', bot: true }], { deckName: 'tremere', deck: B139.ARCHETYPES.tremere });
         u.board = [{ id: 'u1', name: 'Ayelech', kind: 'crypt', zone: 'uncontrolled', faceDown: true }, { id: 'u2', name: 'Nassir', kind: 'crypt', zone: 'uncontrolled', faceDown: true }];
         u.hand = ['Theft of Vitae', 'Deep Song', 'Govern the Unaligned', 'Deflection', 'Conditioning', 'Telepathic Misdirection', 'Magic of the Smith', 'Theft of Vitae'];
@@ -9146,12 +9146,12 @@ async function connectWithRetry(client, tries = 30){
         u.board = [{ id: 't1', name: 'Ayelech', kind: 'crypt', zone: 'torpor' }];
         ok(typeof u._deadJudgeVamps === 'function' && u._deadHandIndex(u._deadJudgeVamps()) === 1, '139h ...and a vampire in torpor still counts: it comes back'); }
 
-      // i) debug is for humans only (Johan, 16 Oct); --debug on the command line; never at a Tournament table
+      // i) debug is for humans only (the owner, 16 Oct); --debug on the command line; never at a Tournament table
       { const P4h = on1 => [{ seat: 1, name: 'Hanna', online: on1 !== false }, { seat: 2, name: 'U', online: true, bot: true }, { seat: 3, name: 'Viktor', online: true, bot: true }, { seat: 4, name: 'Anna', online: true }];
         const dbg = players => { const u = mk139('U', 2, players, { debug: true }); u._debugHand = true; u.hand = ['Govern the Unaligned', 'Conditioning']; return u; };
         const oh = u => u.sent.filter(m => m.t === 'openHand');
         const u = dbg(P4h()); u._syncOpenHand();
-        ok(oh(u).length === 1 && oh(u)[0].to === 'all' && oh(u)[0].cards.length === 2 && !oh(u)[0].revoke, '139i (v0.6.201, Johan 16 Oct) debug with another bot at the table: ONE grant to the whole table, as the base system has it -- every human sees it, spectators too; the bot at 3 looks away (section 140) (got ' + JSON.stringify(oh(u).map(m => m.to)) + ')');
+        ok(oh(u).length === 1 && oh(u)[0].to === 'all' && oh(u)[0].cards.length === 2 && !oh(u)[0].revoke, '139i (v0.6.201, the owner 16 Oct) debug with another bot at the table: ONE grant to the whole table, as the base system has it -- every human sees it, spectators too; the bot at 3 looks away (section 140) (got ' + JSON.stringify(oh(u).map(m => m.to)) + ')');
         u.sent.length = 0; u._syncOpenHand();
         ok(oh(u).length === 0, '139i ...an unchanged hand and audience sends nothing');
         u._dispatch({ t: 'roster', players: P4h(false) }); u.sent.length = 0;
@@ -9209,7 +9209,7 @@ async function connectWithRetry(client, tries = 30){
     }
 
     console.log('\n[140] v0.6.201 -- the debug hand is for the humans (the bots look away), a human\'s Reduce line');
-    /* 140) v0.6.201 -- Johan's answers of 16 Oct to the R1 uncertainties: the debug bot's open hand goes to the
+    /* 140) v0.6.201 -- the owner's answers of 16 Oct to the R1 uncertainties: the debug bot's open hand goes to the
        whole table again (the base system), and the other bots look away from a seat that announced DEBUG mode;
        a human target's 'NAME reduces the bleed by N.' (the client's Bleed menu, asked of main) lowers my bleed. */
     {
@@ -9252,7 +9252,7 @@ async function connectWithRetry(client, tries = 30){
       // d) a human target's Reduce line
       { const u = mk140('U', 2, P3x()); u._actingVamp = { v: { name: 'Sully' }, target: 1, n: 2, played: new Set() };
         u._onLog('Hanna', '<b>Lisa</b> reduces the bleed by 1.');
-        ok(u._actingVamp.n === 1, '140d a human target’s Reduce line lowers my bleed: 2 -> 1 (the interim for every reduction card the bot does not know yet, Johan 16 Oct)');
+        ok(u._actingVamp.n === 1, '140d a human target’s Reduce line lowers my bleed: 2 -> 1 (the interim for every reduction card the bot does not know yet, the owner 16 Oct)');
         u._onLog('Hanna', '<b>Lisa</b> reduces the bleed by 2 (Telepathic Misdirection).');
         ok(u._actingVamp.n === 0, '140d ...the card in brackets is optional, and the bleed never goes below 0');
         u._actingVamp = { v: { name: 'Sully' }, target: 1, n: 2, played: new Set() }; u._onLog('Viktor', '<b>Bob</b> reduces the bleed by 1.');
@@ -9637,7 +9637,7 @@ async function connectWithRetry(client, tries = 30){
       const strip142 = h => String(h || '').replace(/<[^>]*>/g, '');
       const mk142 = (name, seat, o) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: 1, twdKnow: 0, log: () => {} }, o || {}));
         u.seat = seat; u.started = true; u.pool = 20; u.push = () => {}; u.fxClone = () => {}; u.sent = []; u.send = m => { u.sent.push(m); };
-        u.players = [{ seat: 1, name: 'Ann', online: true, bot: true }, { seat: 2, name: 'Tor', online: true, bot: true }, { seat: 3, name: 'Ulla', online: true, bot: true }, { seat: 4, name: 'Johan', online: true }];
+        u.players = [{ seat: 1, name: 'Ann', online: true, bot: true }, { seat: 2, name: 'Tor', online: true, bot: true }, { seat: 3, name: 'Ulla', online: true, bot: true }, { seat: 4, name: 'Jonna', online: true }];
         u.table = {}; u.events = []; u.onEvent = (t, d) => u.events.push({ t, d }); return u; };
       const chats142 = u => u.sent.filter(m => m && m.t === 'chat').map(m => String(m.msg || ''));
       const GD = () => ({ id: 'a1', name: 'Gilbert Duane (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 });
@@ -9671,9 +9671,9 @@ async function connectWithRetry(client, tries = 30){
         ok(A.res && A.res.what === 'no', '142a the new target’s Pass closes the window: the bleed resolves on Ulla (got ' + JSON.stringify(A.res) + ')');
         done142(A); }
       { const A = actor142();
-        A._onLog('Tor', '<b>Gilbert Duane (G6)</b> bleeds for 2. Target: Johan\'s pool.');
-        const c = chats142(A).find(x => /now bleeds Johan for 2/.test(x)) || '';
-        ok(A._ask.target === 4 && /Johan may block it/.test(c) && /\(\d+s/.test(c), '142a a HUMAN new target is told, with the clock: "' + c + '"');
+        A._onLog('Tor', '<b>Gilbert Duane (G6)</b> bleeds for 2. Target: Jonna\'s pool.');
+        const c = chats142(A).find(x => /now bleeds Jonna for 2/.test(x)) || '';
+        ok(A._ask.target === 4 && /Jonna may block it/.test(c) && /\(\d+s/.test(c), '142a a HUMAN new target is told, with the clock: "' + c + '"');
         done142(A); }
 
       // b) the target: a BOT actor resolves over my live attempt -> the attempt was never taken up, and the bleed lands
@@ -9683,8 +9683,8 @@ async function connectWithRetry(client, tries = 30){
         ok(T.pool === 18 && !T.pending && !chats142(T).some(c => /never resolved/.test(c)), '142b a bot actor’s It resolves over my live attempt: the attempt was not taken up and the bleed of 2 lands (pool ' + T.pool + '; v0.6.202 dropped it as "contested, unresolved")');
         done142(T);
         const H = mk142('Ulla', 3); H.board = T.board.slice(); H.hand = [];
-        H.pending = { who: 'Johan', amount: 2, kind: 'bleed', actingVampName: 'Lisa Noble', contested: true, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
-        H._onSay({ who: 'Johan', i: SI('It resolves') });
+        H.pending = { who: 'Jonna', amount: 2, kind: 'bleed', actingVampName: 'Lisa Noble', contested: true, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        H._onSay({ who: 'Jonna', i: SI('It resolves') });
         ok(H.pool === 20 && !H.pending && chats142(H).some(c => /A block was announced but never resolved/.test(c)), '142b ...a HUMAN actor may have forgotten the verdict: the bot still asks, and its pool waits for the human’s word');
         done142(H); }
 
@@ -9695,8 +9695,8 @@ async function connectWithRetry(client, tries = 30){
         ok(T.pending && T.pending.declined === true && T.pending.amount === 3, '142c a BOT actor plays its modifier only after its block question closed: my block step is over, the reopened window takes reactions only');
         done142(T);
         const H = mk142('Tor', 2); H.board = T.board.slice(); H.hand = [];
-        H.pending = { who: 'Johan', amount: 2, kind: 'bleed', actingVampName: 'Lisa Noble', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
-        H._onLog('Johan', '<b>Lisa Noble</b> adds +1 bleed (= 3).');
+        H.pending = { who: 'Jonna', amount: 2, kind: 'bleed', actingVampName: 'Lisa Noble', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+        H._onLog('Jonna', '<b>Lisa Noble</b> adds +1 bleed (= 3).');
         ok(H.pending && H.pending.declined === false, '142c ...a HUMAN actor may be out of turn: the block stays mine to offer');
         if(H.pending && H.pending.passTimer) clearTimeout(H.pending.passTimer); done142(H); }
 
@@ -9708,9 +9708,9 @@ async function connectWithRetry(client, tries = 30){
       }
 
       // e) a live table: Ann bleeds Tor with Dominate Kine (2, +1 stealth); Tor holds Deflection for the total and bounces it to Ulla; Ulla blocks
-      { const h = mkClient('Johan'); await connectWithRetry(h);
+      { const h = mkClient('Jonna'); await connectWithRetry(h);
         const R = 'vb' + Date.now().toString(36).slice(-6);
-        h.send({ t: 'create', room: R, pass: 'x', name: 'Johan', lobby: true, v: '2.6.0' });
+        h.send({ t: 'create', room: R, pass: 'x', name: 'Jonna', lobby: true, v: '2.6.0' });
         await h.waitFor(m => m.t === 'joined', 'h142 joined');
         h.send({ t: 'seat', seat: 1 });
         h.send({ t: 'deck', name: 'D142', library: [{ name: 'Govern the Unaligned', qty: 60 }], crypt: [{ name: 'Lucinde, Alastor', qty: 12 }] });
@@ -9729,7 +9729,7 @@ async function connectWithRetry(client, tries = 30){
         T2.board = [{ id: 'u1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, x: 100, y: 100 }]; T2.hand = ['Enhanced Senses']; T2.pool = 2;
         A.push(); T1.push(); T2.push();
         await sleep(300);
-        h.send({ t: 'pass' });   // Johan (seat 1) passes -- Ann's turn
+        h.send({ t: 'pass' });   // Jonna (seat 1) passes -- Ann's turn
         await h.waitFor(m => m.t === 'turn' && m.seat === 2, 'h142 turn to Ann', 9000);
         const lineAt = (re, who) => h.waitAny(m => m.t === 'log' && (!who || m.who === who) && re.test(strip142(m.html)), String(re), 20000);
         const tot = await lineAt(/^Gilbert Duane \(G6\) adds \+0 bleed \(= 2\)\.$/, 'Ann');
@@ -9746,7 +9746,7 @@ async function connectWithRetry(client, tries = 30){
       }
     }
 
-    /* 143) v0.6.203 -- Johan (16 Oct): "the bot should answer known strikes". The strike step in the rulebook's order between bots too
+    /* 143) v0.6.203 -- the owner (16 Oct): the bot should answer known strikes. The strike step in the rulebook's order between bots too
        -- "the minions first choose their respective strikes (the acting minion first, then their opponent)" [6.4.3]: the acting bot
        strikes first, the answering bot looks at that strike (a peek: the line stays pending for its consuming wait) and chooses
        knowing it -- no card spent into a dodge, a dodge for the strike that would empty or torpor it, none against a strike for 0.
@@ -9824,17 +9824,17 @@ async function connectWithRetry(client, tries = 30){
       // e) Deep Song: the rushed vampire is the acting minion -- in the human phase walk too
       { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} });
         u.seat = 1; u.started = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m);
-        u.players = [{ seat: 1, name: 'U', online: true, bot: true }, { seat: 2, name: 'Johan', online: true }];
+        u.players = [{ seat: 1, name: 'U', online: true, bot: true }, { seat: 2, name: 'Jonna', online: true }];
         const mine = { id: 'm1', name: 'Wauneka (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 };
         u.board = [mine]; u._combatMyVamp = mine; u._inCombat = true; u._cSide = 'a';
         u._combatOpp = () => ({ seat: 2, name: 'Lisa Noble' });
         u._actingVamp = { v: mine, n: 0, played: new Set(), kind: 'rush', target: 2, targetActs: true };
         const IA = () => typeof u._combatIActing === 'function' ? u._combatIActing() : null;   // a pre-v0.6.203 bot has no such rule: the asserts fail clean, never abort the suite
-        ok(IA() === false, '143e my Deep Song rushed Johan’s vampire: IT is the acting minion, not mine (the turn seat’s side said mine)');
+        ok(IA() === false, '143e my Deep Song rushed Jonna’s vampire: IT is the acting minion, not mine (the turn seat’s side said mine)');
         const pr = u._phaseStep(0, 'ask', false); await sleep(30);
         const asked = u.sent.some(m => m.t === 'chat' && /Anything before range\?/.test(String(m.msg)));
         if(u._phaseWait) u._phaseWait.resolve('pass'); await pr;
-        ok(asked, '143e ...so the phase walk ASKS Johan first ("Anything before range?") -- v0.6.202 spoke first in every step');
+        ok(asked, '143e ...so the phase walk ASKS Jonna first ("Anything before range?") -- v0.6.202 spoke first in every step');
         u._actingVamp.targetActs = false;
         ok(IA() === true, '143e ...a plain rush: the turn seat’s combatant acts, as before');
         u._actingVamp = null; u._combatActing = 'Wauneka (G6)'; u._cSide = 'b';
@@ -9891,13 +9891,13 @@ async function connectWithRetry(client, tries = 30){
       console.log('\n[145] v0.6.204 -- R3: clocks from the wire, the hold lines, the verdict wait, one spokesbot, the tempo levers');
       const IF = (o, fn) => !!(o && typeof o[fn] === 'function');   // the pre-change bytes lack the new methods: they must fail clean, never abort
       const until145 = async (pred, ms) => { const t0 = Date.now(); while(!pred() && Date.now() - t0 < (ms || 4000)) await sleep(15); return pred(); };
-      // a recorded wire: a human Johan at seat 1, the bot W at seat 2; paceMs 300 = a chat holds the next line 480 ms
+      // a recorded wire: a human Jonna at seat 1, the bot W at seat 2; paceMs 300 = a chat holds the next line 480 ms
       const mkW = async (extra) => {
         const rec = []; const dial = (u2, cb) => { setTimeout(() => cb.open(), 0); return { send: o => rec.push({ t: Date.now(), m: o }), close(){} }; };
         const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'w145', pass: 'p', name: 'W', persona: 'expert', deckName: 'malkavian', paceMs: 300, askSecs: 1, transport: dial, log: () => {} }, extra || {}));
         await u.connect(); await sleep(150);
         u.seat = 2; u.started = true; u.caps.tally = true;
-        u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'W', bot: true }];
+        u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'W', bot: true }];
         u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
         const v = { id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4 }; u.board = [v]; u.hand = [];
         await sleep(600); rec.length = 0;
@@ -9908,16 +9908,16 @@ async function connectWithRetry(client, tries = 30){
       { const { u, rec } = await mkW({ tempo: { tempo: 'standard', waitSecs: 1 } });
         u._actingVamp = { v: u.board[0], n: 1, played: new Set(), target: 1, kind: 'bleed' };
         u.chat('First, a word.'); u.chat('And another.');
-        const p = u._askBlock('Trainbot: Sully bleeds Johan for 1.');
+        const p = u._askBlock('Trainbot: Sully bleeds Jonna for 1.');
         const d0 = u._ask ? u._ask.deadline : 'no ask', s0 = u.status();
-        await until145(() => sentAt(rec, /bleeds Johan for 1/) != null, 3000); await sleep(30);
-        const at = sentAt(rec, /bleeds Johan for 1/), a = u._ask, dl = a && a.deadline, pl = (a && a.plan) || {};
-        const q = chatsOf(rec).find(m => /bleeds Johan for 1/.test(m)) || '';
+        await until145(() => sentAt(rec, /bleeds Jonna for 1/) != null, 3000); await sleep(30);
+        const at = sentAt(rec, /bleeds Jonna for 1/), a = u._ask, dl = a && a.deadline, pl = (a && a.plan) || {};
+        const q = chatsOf(rec).find(m => /bleeds Jonna for 1/.test(m)) || '';
         const tail = +((q.match(/\((\d+)s → no\)$/) || [])[1] || NaN);
         ok(IF(u, '_wireWait') && d0 == null && s0.until === null && s0.step === 'resolve-ask', '145a F3: while my question waits in the queue the window has no deadline -- status() says until: null (an answer still counts): ' + JSON.stringify({ d0, until: s0.until }));
         ok(at && dl && Math.abs((dl - at) - pl.ms) <= 50 && pl.ms === 1000, '145a ...and its clock starts when the question is on the wire: deadline - sentAt = ' + (dl && at ? dl - at : '?') + ' ms, the plan ' + pl.ms + ' ms (v0.6.203 armed it at the queue and added a settle)');
         ok(tail === pl.ms / 1000, '145a F11: the number the question announces IS the clock ("' + q + '")');
-        u._onChat('Johan', 'no'); const r = await p; ok(r.what === 'no', '145a ...and the answer closes it as before');
+        u._onChat('Jonna', 'no'); const r = await p; ok(r.what === 'no', '145a ...and the answer closes it as before');
         u.close(); }
       // b) F3: a combat step behind a bubble; lever (d)
       { const { u, rec } = await mkW({ tempo: { tempo: 'standard', waitSecs: 1 } });
@@ -9927,23 +9927,23 @@ async function connectWithRetry(client, tries = 30){
         await until145(() => sentAt(rec, /^Any maneuvers\?/) != null, 3000); await sleep(30);
         const s1 = sentAt(rec, /^Any maneuvers\?/), dl1 = u._phaseWait && u._phaseWait.deadline;
         ok(d0 == null && s1 && dl1 && Math.abs((dl1 - s1) - 2000) <= 50, '145b F3: a combat step behind a bubble -- no deadline while queued, then 2 x the slider from the wire (deadline - sentAt = ' + (dl1 && s1 ? dl1 - s1 : '?') + ' ms; the play-test: a 6 s step reached the wire with 1.5 s left)');
-        u._onChat('Johan', 'No'); await p1;
+        u._onChat('Jonna', 'No'); await p1;
         const p2 = u._phaseStep(2, 'ask', false);
         await until145(() => sentAt(rec, /^Anything before strikes\?/) != null, 3000); await sleep(30);
         const s2 = sentAt(rec, /^Anything before strikes\?/), dl2 = u._phaseWait && u._phaseWait.deadline;
-        ok(s2 && dl2 && Math.abs((dl2 - s2) - 1000) <= 50 && u._waitPlan('phase', 'Johan', 1).ms === 2000 && u._waitPlan('phase', 'Johan', 3).ms === 2000 && u._waitPlan('phase', 'Johan', 5).ms === 2000 && u._waitPlan('phase', 'Johan', 0).ms === 1000 && u._waitPlan('phase', 'Johan', 6).ms === 1000,
+        ok(s2 && dl2 && Math.abs((dl2 - s2) - 1000) <= 50 && u._waitPlan('phase', 'Jonna', 1).ms === 2000 && u._waitPlan('phase', 'Jonna', 3).ms === 2000 && u._waitPlan('phase', 'Jonna', 5).ms === 2000 && u._waitPlan('phase', 'Jonna', 0).ms === 1000 && u._waitPlan('phase', 'Jonna', 6).ms === 1000,
            '145b lever (d): an "Anything before ..." step waits 1 x the slider (' + (dl2 && s2 ? dl2 - s2 : '?') + ' ms from the wire); the maneuver, the strike and the presses keep 2 x');
-        u._onChat('Johan', 'No'); await p2;
+        u._onChat('Jonna', 'No'); await p2;
         u.close(); }
       // c) F3: the pool question and the vote poll
       { const { u, rec } = await mkW({ tempo: { tempo: 'standard', waitSecs: 1 } });
         u.chat('A bubble ahead.');
-        u._obs = { who: 'Johan', seat: 1, vamp: 'Lisa', verb: 'takes a card action', card: null, line: 'Lisa takes a card action.', at: Date.now(), poolLoss: null, targetSeat: 2, directed: true };
-        u._onAnyBlocks('Johan', 'Any blocks?'); const q0 = u._pq ? u._pq.deadline : 'no question';
+        u._obs = { who: 'Jonna', seat: 1, vamp: 'Lisa', verb: 'takes a card action', card: null, line: 'Lisa takes a card action.', at: Date.now(), poolLoss: null, targetSeat: 2, directed: true };
+        u._onAnyBlocks('Jonna', 'Any blocks?'); const q0 = u._pq ? u._pq.deadline : 'no question';
         await until145(() => sentAt(rec, /lose pool\?/) != null, 3000); await sleep(30);
         const sq = sentAt(rec, /lose pool\?/), dq = u._pq && u._pq.deadline;
         ok(!q0 && sq && dq && Math.abs((dq - sq) - 1000) <= 50, '145c F3: the pool question’s clock starts on the wire too (' + (dq && sq ? dq - sq : '?') + ' ms)');
-        u._onChat('Johan', 'no');
+        u._onChat('Jonna', 'no');
         u.chat('Another bubble.'); u.chat('I vote 1 for.');
         const rc = u._refCall = { for: 0, against: 0, by: {}, heard: new Set(), paused: new Set(), lastA: 0, lastB: 0, closed: null, timer: null, line: null };
         const pr = u._refPoll(rc); const r0 = rc.deadline;
@@ -9956,34 +9956,34 @@ async function connectWithRetry(client, tries = 30){
       { const { u, rec } = await mkW({ tempo: { tempo: 'standard', waitSecs: 1 } });
         u._actingVamp = { v: u.board[0], n: 1, played: new Set(), target: 1, kind: 'bleed' };
         u.chat('One.'); u.chat('Two.'); u.chat('Three.');
-        const p = u._askBlock('Trainbot: Sully bleeds Johan for 1.');
-        u._onChat('Johan', 'no');
+        const p = u._askBlock('Trainbot: Sully bleeds Jonna for 1.');
+        u._onChat('Jonna', 'no');
         const r = await p;
-        await until145(() => sentAt(rec, /bleeds Johan for 1/) != null, 4000); await sleep(150);
+        await until145(() => sentAt(rec, /bleeds Jonna for 1/) != null, 4000); await sleep(150);
         ok(r.what === 'no' && !u._ask && !rec.some(x => x.m && x.m.t === 'decide'), '145d an answer that came before my question reached the wire still closes the window, and no clock or stopwatch arms after it');
-        ok(!(u._rt && u._rt['Johan'] && u._rt['Johan'].length), '145d ...and Adaptive records no answer time for it (the question was not on the table yet): ' + JSON.stringify(u._rt || {}));
+        ok(!(u._rt && u._rt['Jonna'] && u._rt['Jonna'].length), '145d ...and Adaptive records no answer time for it (the question was not on the table yet): ' + JSON.stringify(u._rt || {}));
         u.close(); }
       // e) F4: the hold lines
       { const { u, rec } = await mkW();
         const tag = m => /Resuming/.test(m) ? 'RESUME' : /Holding/.test(m) ? 'HOLD' : m;
         u.chat('c1'); u.chat('c2'); u.chat('c3');
-        u._holdBy = new Set(['Johan']); u._holdAnnounce();
+        u._holdBy = new Set(['Jonna']); u._holdAnnounce();
         await until145(() => chatsOf(rec).length >= 4, 4000);
         const o1 = chatsOf(rec).map(tag);
         ok(o1[0] === 'c1' && o1[1] === 'HOLD', '145e F4: the hold line goes to the head of the queue -- said before the lines that were waiting (' + o1.join(', ') + '; the play-test: 14 s late, behind a question)');
-        u._holdHook('Johan', 4, null);                                   // released the table's way: the resume line follows, and the table has seen both
+        u._holdHook('Jonna', 4, null);                                   // released the table's way: the resume line follows, and the table has seen both
         await until145(() => chatsOf(rec).some(m => /Resuming/.test(m)), 3000); await sleep(700); rec.length = 0;
         u.chat('d1'); u.chat('d2');
-        u._holdBy = new Set(['Johan']); u._holdAnnounce();
-        u._holdHook('Johan', 4, null);                                   // It resolves: released before the hold line went out
+        u._holdBy = new Set(['Jonna']); u._holdAnnounce();
+        u._holdHook('Jonna', 4, null);                                   // It resolves: released before the hold line went out
         await until145(() => chatsOf(rec).length >= 2, 3000); await sleep(1200);
         const o2 = chatsOf(rec).map(tag);
         ok(o2.length === 2 && o2[0] === 'd1' && o2[1] === 'd2', '145e ...a hold released before its line went out: neither the hold nor the resume is said (' + o2.join(', ') + ')');
         await sleep(300); rec.length = 0;
-        u._holdBy = new Set(['Johan']); u._holdAnnounced = false; u._holdAnnounce();
+        u._holdBy = new Set(['Jonna']); u._holdAnnounced = false; u._holdAnnounce();
         await until145(() => chatsOf(rec).some(m => /Holding/.test(m)), 2000);
-        u._holdHook('Johan', 4, null);                                   // released: the resume waits out the hold line's bubble
-        u._holdHook('Johan', 0, null); u._holdAnnounce();                // held again before it went out (a bot that waits says the new hold)
+        u._holdHook('Jonna', 4, null);                                   // released: the resume waits out the hold line's bubble
+        u._holdHook('Jonna', 0, null); u._holdAnnounce();                // held again before it went out (a bot that waits says the new hold)
         await sleep(1500);
         const o3 = chatsOf(rec).map(tag);
         ok(o3.length === 2 && o3[0] === 'HOLD' && o3[1] === 'HOLD', '145e ...a resume overtaken by a new hold is dropped -- never a "Resuming" during a hold (' + o3.join(', ') + '; the play-test: the release’s Resuming came after the next hold)');
@@ -9992,28 +9992,28 @@ async function connectWithRetry(client, tries = 30){
       // f) F10: the verdict wait when I block a human's action
       { const mkV = (extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Tor', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {}, tempo: { tempo: 'standard', waitSecs: 1 } }, extra || {}));
           u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m); u.says = []; u.say = m => u.says.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.notes = []; u.note = m => u.notes.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
-          u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Tor', bot: true }];
+          u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'Tor', bot: true }];
           const v = { id: 'v1', name: 'Trevon Parker', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 6 }; u.board = [v]; u.hand = [];
           u.tally = { mode: 'block', a: 0, b: 0 };
           u.fought = null; u._resolveCombat = (bv, opp) => { u.fought = [bv.name, opp]; return Promise.resolve(); }; u._maybePostBlockUnlock = () => {};
           u.reopened = 0; u._reactWindow = () => { u.reopened++; };
-          const p = u.pending = { who: 'Johan', amount: 2, kind: 'bleed', actingVampName: 'Lisa', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+          const p = u.pending = { who: 'Jonna', amount: 2, kind: 'bleed', actingVampName: 'Lisa', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
           return { u, v, p }; };
         const verdicts = u => u.sent.filter(m => m.t === 'log' && /^Block: Stealth/.test(m.html || '')).map(m => m.html);
         { const { u, v, p } = mkV(); await u._commitBlock(p, { why: 'test', parts: {} });
           const c = u.chats.find(m => /blocks \(stealth/.test(m)) || '', st = u.status();
-          ok(/^Trainbot: Trevon Parker blocks \(stealth 0 vs intercept 0\) — Johan, add stealth, or say Pass to resolve it \(1s → the block succeeds\)$/.test(c) && st.step === 'resolve-verdict' && st.until > Date.now(),
+          ok(/^Trainbot: Trevon Parker blocks \(stealth 0 vs intercept 0\) — Jonna, add stealth, or say Pass to resolve it \(1s → the block succeeds\)$/.test(c) && st.step === 'resolve-verdict' && st.until > Date.now(),
              '145f F10: I block a human’s bleed with no card -- one line says it is their move, on the tempo’s clock, steppable ("' + c + '"; v0.6.203: "attempts to block." and silence)');
           await sleep(1150);
           ok(verdicts(u).length === 1 && /block succeeds/.test(verdicts(u)[0]) && !u.pending && u.fought && u.fought[0] === 'Trevon Parker' && u.fought[1] === 'Lisa' && v.locked === true,
              '145f ...on the clock I declare the verdict from the counter (the §12 line) and fight, as when the table resolves it: ' + JSON.stringify(verdicts(u)));
-          const w = u.rows.find(r => r.ty === 'wait' && r.d.kind === 'verdict'); ok(!!w && w.d.end === 'clock' && w.d.who === 'Johan', '145f ...one wait row, kind verdict: ' + JSON.stringify(w && w.d)); }
+          const w = u.rows.find(r => r.ty === 'wait' && r.d.kind === 'verdict'); ok(!!w && w.d.end === 'clock' && w.d.who === 'Jonna', '145f ...one wait row, kind verdict: ' + JSON.stringify(w && w.d)); }
         { const { u, p } = mkV(); await u._commitBlock(p, { why: 'test', parts: {} });
-          u._onSay({ who: 'Johan', i: 7 });
+          u._onSay({ who: 'Jonna', i: 7 });
           ok(verdicts(u).length === 1 && !!u.fought && u.rows.some(r => r.ty === 'wait' && r.d.kind === 'verdict' && r.d.end === 'pass'), '145f ...the actor’s Pass is an answer: the verdict at once (v0.6.203 did not read it)'); }
         { const { u, p } = mkV(); await u._commitBlock(p, { why: 'test', parts: {} });
           await sleep(600); const d1 = u._vWait ? u._vWait.deadline : 0;
-          u._dispatch({ t: 'tally', who: 'Johan', mode: 'block', a: 1, b: 0 });
+          u._dispatch({ t: 'tally', who: 'Jonna', mode: 'block', a: 1, b: 0 });
           const d2 = u._vWait ? u._vWait.deadline : 0;
           await sleep(1200);
           ok(d2 > d1 + 400 && verdicts(u).length === 1 && /Stealth 1 vs Intercept 0 — block fails/.test(verdicts(u)[0]) && u.reopened === 1 && p.contested === false && !u.fought,
@@ -10021,14 +10021,14 @@ async function connectWithRetry(client, tries = 30){
         { const { u } = mkV({ tempo: { tempo: 'turn' }, tempoRemindMs: 150, tempoGiveUpMs: 5000 }); await u._commitBlock(u.pending, { why: 'test', parts: {} });
           const st = u.status(), c = u.chats.find(m => /blocks \(stealth/.test(m)) || '';
           ok(st.step === 'resolve-verdict' && st.until === null && /no clock — I wait for you\)$/.test(c), '145f Turn-based: no deadline (the widget shows its button), and the line says so: "' + c + '"');
-          await sleep(260); ok(u.chats.some(m => /^Still waiting for Johan: add stealth, or say Pass/.test(m)), '145f ...the reminder names the move');
+          await sleep(260); ok(u.chats.some(m => /^Still waiting for Jonna: add stealth, or say Pass/.test(m)), '145f ...the reminder names the move');
           const s = u.step(); ok(s.did === 'resolve-verdict' && verdicts(u).length === 1 && !!u.fought, '145f ...and the Bot button declares the verdict the clock would have'); }
         { const { u } = mkV(); await u._commitBlock(u.pending, { why: 'test', parts: {} });
-          u._holdHook('Johan', 0, null);
+          u._holdHook('Jonna', 0, null);
           const fz = u._vWait ? u._vWait.deadline : 'gone';
           await sleep(1200);
           const still = !!u._vWait && !verdicts(u).length;
-          u._holdHook('Johan', 4, null);
+          u._holdHook('Jonna', 4, null);
           const re = u._vWait ? u._vWait.deadline : 0;
           ok(fz === null && still && re > Date.now() + 800, '145f a hold freezes the verdict wait and the release starts it from the beginning (the hold gate)');
           if(IF(u, '_vwEnd')) u._vwEnd(null); if(u._holdRemT){ clearTimeout(u._holdRemT); u._holdRemT = null; } }
@@ -10036,33 +10036,33 @@ async function connectWithRetry(client, tries = 30){
           ok(!u._vWait && !u.chats.some(m => /blocks \(stealth/.test(m)), '145f a BOT actor declares every verdict itself: no wait, no line'); }
         { const { u, p } = mkV(); await u._commitBlock(p, { why: 'test', parts: {} });
           await sleep(600); const d1 = u._vWait ? u._vWait.deadline : 0;
-          u._onChat('Johan', '+1');
+          u._onChat('Jonna', '+1');
           const d2 = u._vWait ? u._vWait.deadline : 0;
           await sleep(1200);
-          ok(d2 > d1 + 400 && verdicts(u).length === 1 && /Stealth 1 vs Intercept 0 — block fails/.test(verdicts(u)[0]) && u.notes.some(m => /Johan has 1 stealth/.test(m)),
+          ok(d2 > d1 + 400 && verdicts(u).length === 1 && /Stealth 1 vs Intercept 0 — block fails/.test(verdicts(u)[0]) && u.notes.some(m => /Jonna has 1 stealth/.test(m)),
              '145f ...a stealth typed in chat is booked and restarts the clock as the counter does (' + (d2 && d1 ? d2 - d1 : '?') + ' ms later; ' + JSON.stringify(verdicts(u)) + ')'); }
         { const { u, p } = mkV(); const pool0 = u.pool; await u._commitBlock(p, { why: 'test', parts: {} });
-          u._dispatch({ t: 'tally', who: 'Johan', mode: 'block', a: 1, b: 0 });
-          u._onSay({ who: 'Johan', i: 4 });
+          u._dispatch({ t: 'tally', who: 'Jonna', mode: 'block', a: 1, b: 0 });
+          u._onSay({ who: 'Jonna', i: 4 });
           ok(verdicts(u).length === 1 && /Stealth 1 vs Intercept 0 — block fails/.test(verdicts(u)[0]) && !u.pending && u.reopened === 0 && !u.fought && u.pool === pool0 - 2,
              '145f ...the actor’s It resolves over a counter that says my block fails: the verdict, and the bleed lands (pool ' + pool0 + ' -> ' + u.pool + ', windows reopened ' + u.reopened + '; no second window after their word)'); }
         { const { u, p } = mkV(); await u._commitBlock(p, { why: 'test', parts: {} });
-          u._onChat('Johan', 'it resolves');
+          u._onChat('Jonna', 'it resolves');
           ok(verdicts(u).length === 1 && /block succeeds/.test(verdicts(u)[0]) && !!u.fought && !u.pending, '145f ...over a counter that says it succeeds the counter wins (typed): the verdict, and we fight ' + JSON.stringify(verdicts(u))); } }
       // g) F2: one spokesbot; the archetype remark on the log tier, after the contest; the actor's repeated notes are gone
       { const mkA = (name, seat, players) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
           u.seat = seat; u.started = true; u.push = () => {}; u.send = () => {}; u.chats = []; u.chat = m => u.chats.push(m); u.notes = []; u.note = m => u.notes.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d }); u.players = players; return u; };
-        const PO = () => [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Hanna', bot: true, out: true }, { seat: 3, name: 'Viktor', bot: true }];
+        const PO = () => [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'Hanna', bot: true, out: true }, { seat: 3, name: 'Viktor', bot: true }];
         const h = mkA('Hanna', 2, PO()), vk = mkA('Viktor', 3, PO()); h.out = true;
         ok(vk._isSpokesBot() && !h._isSpokesBot(), '145g F2: an ousted bot is no longer the spokesbot -- the next bot in seat order is (the play-test probe: an ousted Hanna still spoke)');
         const kit = ['Kine Resources Contested', 'Parity Shift', 'Voter Captivation', 'Govern the Unaligned', 'Deflection', 'Second Tradition: Domain', 'Freak Drive', 'Villein'];
-        const PL = () => [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Hanna', bot: true }, { seat: 3, name: 'Viktor', bot: true }];
+        const PL = () => [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'Hanna', bot: true }, { seat: 3, name: 'Viktor', bot: true }];
         const s1 = mkA('Hanna', 2, PL()), s2 = mkA('Viktor', 3, PL());
-        [s1, s2].forEach(u => { u._opp(1).clans = { Ventrue: 5 }; kit.forEach(c => u._onLog('Johan', 'Lisa plays ' + c + '.')); u.tally = { mode: 'block', a: 0, b: 0 }; u._archetypeSay(1); });
+        [s1, s2].forEach(u => { u._opp(1).clans = { Ventrue: 5 }; kit.forEach(c => u._onLog('Jonna', 'Lisa plays ' + c + '.')); u.tally = { mode: 'block', a: 0, b: 0 }; u._archetypeSay(1); });
         ok(!s1.chats.length && !s1.notes.length && !s2.chats.length && !s2.notes.length && s1.rows.some(r => r.ty === 'archetype') && s2.rows.some(r => r.ty === 'archetype'),
            '145g ...a confident read while a counter is live: nothing is said yet by either bot (both trace it)');
         s1.tally = { mode: null }; s2.tally = { mode: null }; await sleep(1700);
-        ok(s1.notes.length === 1 && /^Trainbot reads Johan's deck as Lawfirm \(\d+ of \d+ cards typical\)\.$/.test(s1.notes[0]) && !s1.chats.length && !s2.notes.length && !s2.chats.length,
+        ok(s1.notes.length === 1 && /^Trainbot reads Jonna's deck as Lawfirm \(\d+ of \d+ cards typical\)\.$/.test(s1.notes[0]) && !s1.chats.length && !s2.notes.length && !s2.chats.length,
            '145g ...once the table is quiet the SPOKESBOT says it, once, on the log tier; the other bot stays silent (' + JSON.stringify(s1.notes) + '; the play-test: two bubbles mid-contest)');
         [s1, s2, h, vk].forEach(u => u.close());
         { const q = mkA('Viktor', 3, PL()); q.tally = { mode: 'free', a: 0, b: 0 }; const qf = IF(q, '_arkQuiet') ? q._arkQuiet() : null; q.tally = { mode: 'vote', a: 0, b: 0 }; const qv = IF(q, '_arkQuiet') ? q._arkQuiet() : null; q.close();
@@ -10073,7 +10073,7 @@ async function connectWithRetry(client, tries = 30){
       // h) F6: a bot target's thinking line after a bot actor's question
       { const mk6 = (actorBot, paceMs) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Viktor', persona: 'expert', deckName: 'malkavian', paceMs, askSecs: 1, log: () => {} });
           u.seat = 2; u.started = true; u.push = () => {}; u.send = () => {}; u.says = []; u.say = m => u.says.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.note = () => {}; u._emit = () => {};
-          u.players = [{ seat: 1, name: 'Hanna', bot: actorBot }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Johan' }];
+          u.players = [{ seat: 1, name: 'Hanna', bot: actorBot }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Jonna' }];
           u.board = [{ id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4 }]; u.hand = [];
           u._armPending('Hanna', 2, 'Lisa'); return u; };
         const HO = 'Hold on…';
@@ -10087,7 +10087,7 @@ async function connectWithRetry(client, tries = 30){
       // i) levers (a) + (b) + (c)
       { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'L', persona: 'expert', deckName: 'malkavian', paceMs: 300, askSecs: 1, log: () => {} });
         u.seat = 2; u.started = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m); u._emit = () => {};
-        u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'L', bot: true }];
+        u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'L', bot: true }];
         u._lastActAt = Date.now(); u._lastTableAt = 0; u._lastChatAt = 0;
         let t0 = Date.now(); await u._announcePhase('Master'); const dm = Date.now() - t0;
         u._lastActAt = Date.now(); t0 = Date.now(); await u._announcePhase('Unlock', 'none'); const du = Date.now() - t0;
@@ -10095,7 +10095,7 @@ async function connectWithRetry(client, tries = 30){
            '145i levers (a) + (b): a phase line rides the short fx beat (' + dm + ' ms at paceMs 300; v0.6.203: the full 300), and Unlock follows the turn’s own beat with no second one (' + du + ' ms)'); }
       { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'C', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 0.05, phaseSecs: 0.08, log: () => {} });
         u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.say = () => {}; u.send = () => {}; u.chats = []; u.chat = m => u.chats.push(m); u.notes = []; u.note = m => u.notes.push(m); u._emit = () => {};
-        u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'C', bot: true }];
+        u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'C', bot: true }];
         u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
         const v = { id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4 }; u.board = [v]; u.hand = [];
         u._actingVamp = { v, n: 1, played: new Set() };
@@ -10105,14 +10105,14 @@ async function connectWithRetry(client, tries = 30){
         ok(sumN.length >= 1 && !sumC.length && !u.chats.some(m => /One round|side differs/.test(m)), '145i lever (c): a phased combat’s round summary is a report on the log tier (' + JSON.stringify((sumN[0] || '').slice(0, 90)) + '); as a chat it held the next question ~5 s (F3)'); }
     }
 
-    /* 146) v0.6.205 -- R4 (docs/specs/spec-r4-2026-10-16.md section 1): THE DODGE, decided with Johan 16 Oct (17:47 + 18:06):
-       'for now, play it against everything with 2 or more damage -- when my own strike no longer gives equal or better
-       output -- and play it when holding several'. A known strike is weighed against _strikePick's out (the strike the
-       round would really play), with two in hand even a 1 that does at least as much as mine (Johan 21:20), unless my strike
+    /* 146) v0.6.205 -- R4 (docs/specs/spec-r4-2026-10-16.md section 1): THE DODGE, decided with the owner 16 Oct (17:47 + 18:06):
+       for now played against everything with 2 or more damage, when my own strike no longer gives equal or better
+       output, and played when holding several. A known strike is weighed against _strikePick's out (the strike the
+       round would really play), with two in hand even a 1 that does at least as much as mine (the owner 21:20), unless my strike
        finishes their vampire (0 or torpor with two dodges, torpor with one; 21:27), an unknown strike is read on the expected
        strike Majesty uses (_expOppStrike); the survival rule and aggravated stay; knob dodgeOut (0 = v0.6.204's rule). */
     {
-      console.log('\n[146] v0.6.205 -- R4: the dodge weighs the strike against my own output (Johan, 16 Oct)');
+      console.log('\n[146] v0.6.205 -- R4: the dodge weighs the strike against my own output (the owner, 16 Oct)');
       const IF6 = (o, fn) => !!(o && typeof o[fn] === 'function');   // the pre-change bytes lack the new methods: they must fail clean, never abort
       const strip146 = h => String(h || '').replace(/<[^>]*>/g, '');
       const duel146 = o => {   // the section 141 / 143 relay: two bots, every log / chat / say line reaches the other `delay` ms later; A = the acting bot (Hanna), D = the bot that blocked it (Viktor)
@@ -10154,11 +10154,11 @@ async function connectWithRetry(client, tries = 30){
         ok(dg(5, K({ dealt: 2 }), 1, 1) === true && dg(5, K({ dealt: 3 }), 2, 1) === true && dg(5, K({ dealt: 2 }), 3, 1) === false,
            '146a a known strike of 2 or more that does more than my own strike is dodged (2 against hands for 1, 3 against a card for 2); one my strike beats is taken (2 against Roundhouse for 3)');
         ok(dg(5, K({ dealt: 2 }), 2, 1) === false && dg(5, K({ dealt: 2 }), 2, 2) === true,
-           '146a ...an equal one is struck with one dodge in hand and dodged with two (Johan: the tie goes to the dodge when holding several)');
+           '146a ...an equal one is struck with one dodge in hand and dodged with two (the owner: the tie goes to the dodge when holding several)');
         ok(dg(5, K({ dealt: 1 }), 1, 1) === false && dg(5, K({ dealt: 1 }), 0, 1) === false && dg(5, K({ dealt: 2 }), 0, 1) === true,
            '146a ...with ONE dodge never under 2: 1 against 1, a ranged 1 against my fist at long range (which deals 0); a ranged 2 against that fist is dodged');
         ok(dg(5, K({ dealt: 1 }), 1, 2) === true && dg(5, K({ dealt: 1 }), 0, 2) === true && dg(5, K({ dealt: 1 }), 3, 2) === false && dg(5, K({ dealt: 2 }), 3, 2) === false,
-           '146a ...with TWO the bot spares one even against a 1 that does at least as much as mine (Johan, 21:20: 1 against 1, 1 against my fist for 0); when mine does more it strikes (21:27: "Roundhouse first" -- 1 or 2 against Roundhouse for 3)');
+           '146a ...with TWO the bot spares one even against a 1 that does at least as much as mine (the owner, 21:20: 1 against 1, 1 against my fist for 0); when mine does more it strikes (21:27: "Roundhouse first" -- 1 or 2 against Roundhouse for 3)');
         ok(dg(5, K({ steal: 2 }), 1, 1) === true && dg(5, K({ aggr: 1 }), 3, 1) === true && dg(1, K({ dealt: 1 }), 1, 1) === true && dg(1, K({ dealt: 1, crows: 2 }), 1, 2) === false && dg(1, K({ dealt: 2, crows: 2 }), 1, 1) === false,
            '146a ...a steal counts what it does to me, aggravated is always dodged, the survival rule stays (1 at blood 1); when their crows take me down anyway the dodge is wasted, two in hand or not');
         ok(dg(5, K({ dodge: true }), 0, 2) === false && dg(5, K({ ends: true }), 0, 2) === false && dg(5, K({ dealt: 0 }), 0, 2) === false,
@@ -10167,7 +10167,7 @@ async function connectWithRetry(client, tries = 30){
            '146a an unknown strike (I strike first): with one dodge at an expected 2 or more that is more than mine (2.2 against hands for 1), not at 1.8 or at an equal 2; with two at any expected 1 or more that is at least mine (1.5 against hands for 1), not under mine (1.5 against 2); without an expectation (combatEndStats 0) the old blood <= 1');
         const tags = [D(u, 5, K({ dealt: 2 }), 1, 1).tag, D(u, 5, K({ dealt: 2 }), 2, 2).tag, D(u, 5, K({ dealt: 1 }), 1, 1).tag, D(u, 5, null, 1, 1, 2.2).tag, D(u, 1, K({ dealt: 1 }), 1, 1).tag, D(u, 5, null, 1, 2, 1.5).tag];
         ok(tags.join() === 'known-out,known-two,known-keep,unknown-out,known-survival,unknown-two', '146a the decide row carries the rule that fired (' + tags.join() + ') -- the smoke counts them');
-        /* Johan (16 Oct, 21:20 + 21:27): EXCEPT when my strike takes their vampire to 0 blood or into torpor, as long as theirs does
+        /* The owner (16 Oct, 21:20 + 21:27): EXCEPT when my strike takes their vampire to 0 blood or into torpor, as long as theirs does
            not do the same to me -- with two dodges 0 or torpor, with one torpor only (my recommendation he took, a meta-layer note) */
         const fx = (b, inc, mine, copies, ob, env, exp) => D(u, b, inc, mine, copies, exp, { oppBlood: ob, env: env || 0 });
         const f1 = fx(5, K({ dealt: 1 }), 1, 2, 1), f2 = fx(5, K({ dealt: 1 }), 1, 2, 0), f3 = fx(5, K({ dealt: 1 }), 1, 2, 3), f4 = fx(5, K({ dealt: 1 }), 1, 2, null);
@@ -10360,7 +10360,7 @@ async function connectWithRetry(client, tries = 30){
         // the prevent, once each combat (145i's fast human table)
         { const c = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'C', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 0.05, phaseSecs: 0.08, log: () => {} });
           c.seat = 2; c.started = true; c.caps.tally = true; c.push = () => {}; c.say = () => {}; c.send = () => {}; c.chats = []; c.chat = m => c.chats.push(m); c.notes = []; c.note = m => c.notes.push(m); c.fxClone = () => {};
-          c.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'C', bot: true }];
+          c.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'C', bot: true }];
           c.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
           const bv = { id: 'b1', name: 'Belinde (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 6, attached: ['ga'] };
           c.board = [bv, { id: 'ga', name: 'Guardian Angel', kind: 'lib', zone: 'ready', locked: false, host: 'b1' }]; c.hand = [];
@@ -10422,7 +10422,7 @@ async function connectWithRetry(client, tries = 30){
         ok(u2._influenceSentence(u2._infSaid) === 'Lauren enters play at capacity.', '148d ...said once, without a "0 blood" ("' + u2._influenceSentence(u2._infSaid) + '")'); }
     }
 
-    /* 149) v0.6.205 -- R4, the play-test's F23 and Johan's decision 5 (16 Oct): Haven Uncovered is not played until the bot can
+    /* 149) v0.6.205 -- R4, the play-test's F23 and the owner's decision 5 (16 Oct): Haven Uncovered is not played until the bot can
        rush through it, then on an opponent's vampire. The rush through it: any minion enters combat with the host as a +1
        stealth (D) action, no card from hand, the Haven stays, nobody locks, the rusher is the acting minion; the frozen
        placement and rush lines (L12.havenM / L12.havenRush), heard by every observer and answered by the host's owner. */
@@ -10448,7 +10448,7 @@ async function connectWithRetry(client, tries = 30){
           u.seat = 1; u.started = true; u.players = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }];
           u.table = { 2: { pub: { cards: [{ id: 'x1', kind: 'crypt', name: 'Anxo Vilela (G6)', zone: 'ready', blood: 1 }] } } }; u._emit = () => {}; return u; };
         const u = mk(); u.board = [{ id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 0, cap: 4, attached: [] }];
-        ok(IF9(u, '_havenHostPick') && u._havenHostPick() === null, '149b no ready rusher with blood: the Haven is held (Johan: not played until the bot can rush through it)');
+        ok(IF9(u, '_havenHostPick') && u._havenHostPick() === null, '149b no ready rusher with blood: the Haven is held (the owner: not played until the bot can rush through it)');
         const u2 = mk(); u2.board = [{ id: 'r1', name: 'Ryan (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4, cap: 4, attached: [] }];
         const pk = IF9(u2, '_havenHostPick') ? u2._havenHostPick() : null;
         ok(!!(pk && pk.name === 'Anxo Vilela (G6)' && pk.seat === 2 && pk.rusher === 'Ryan (G6)'), '149b ...a rusher with a target: the Haven goes on the vampire the rush doctrine picks -- an opponent’s, never mine (got ' + JSON.stringify(pk && { name: pk.name, seat: pk.seat, rusher: pk.rusher }) + ')');
@@ -10579,7 +10579,7 @@ async function connectWithRetry(client, tries = 30){
 
       // c) a bot's answer that reaches me while my action is still in my send queue answers an earlier window
       { const mkA = (tgtSeat) => { const a = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Hanna', persona: 'expert', paceMs: 0, askSecs: 2, log: () => {} });
-          a.seat = 1; a.started = true; a.players = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Johan', bot: false }];
+          a.seat = 1; a.started = true; a.players = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Jonna', bot: false }];
           a.wire = []; a.ws = { send: o => a.wire.push(o) }; a.stale = []; a.onEvent = (t, m) => { if(t === 'bot:stale-answer') a.stale.push(m); };
           a.board = [{ id: 'a2', name: 'Lloyd Brooks', kind: 'crypt', zone: 'ready', locked: false, blood: 5 }];
           a._actingVamp = { v: a.board[0], n: 1, target: tgtSeat, played: new Set() };
@@ -10594,8 +10594,8 @@ async function connectWithRetry(client, tries = 30){
         ok(early.ans === null && early.stale === 1 && early.onWire === 0 && !!ans && ans.what === 'no',
            '150c a bot\'s Pass that reaches me while my announce is still in my queue is not an answer to it (stale-answer row; got ' + JSON.stringify(early) + '); its Pass after the announce is on the wire answers (' + (ans && ans.what) + ')');
         const H = mkA(3); H.send({ t: 'log', html: '<b>Lloyd Brooks</b> bleeds for 1.' });
-        let ansH = null; H._askBlock('Trainbot: Lloyd Brooks bleeds Johan for 1. Block?').then(r => { ansH = r; });
-        H._dispatch({ t: 'say', i: SI('Pass'), who: 'Johan' }); await sleep(20);
+        let ansH = null; H._askBlock('Trainbot: Lloyd Brooks bleeds Jonna for 1. Block?').then(r => { ansH = r; });
+        H._dispatch({ t: 'say', i: SI('Pass'), who: 'Jonna' }); await sleep(20);
         ok(!!ansH && ansH.what === 'no' && H.stale.length === 0, '150c ...a HUMAN\'s answer is never second-guessed (the fx clone may have shown the action before my line): it answers at once');
         [A, H].forEach(u => { if(u._ask && u._ask.timer) clearTimeout(u._ask.timer); u._ask = null; if(u._sqT){ clearTimeout(u._sqT); u._sqT = null; } u._sq = []; }); }
 
@@ -10657,11 +10657,11 @@ async function connectWithRetry(client, tries = 30){
         all.forEach(u => { u.out = true; if(u._sqT){ clearTimeout(u._sqT); u._sqT = null; } u._sq = []; }); }
     }
 
-    /* 151) v0.6.206 -- THE PROBE RESERVATION (READ-ME-FIRST-2026-10-16f §6; Johan 16 Oct: measure it before and after). Since v0.6.143
+    /* 151) v0.6.206 -- THE PROBE RESERVATION (READ-ME-FIRST-2026-10-16f §6; the owner 16 Oct: measure it before and after). Since v0.6.143
        the minion phase set this._probe and reset it two lines later: the probe ORDER worked (the small bleeders first, the puncher last)
        and the RESERVATION never did, so the first actor simply played the Govern -- 117g set _probe by hand and never saw it. _probeOrder
        owns it now; knob probeHold: 0 = as it played (no reservation, the rollback), 1 = as designed, 2 = only when my actors out-number my
-       prey's unlocked bodies (Johan's bait read; the default since v0.6.207, 17 Oct). Through the whole minion phase, as the look-ahead doctrine says
+       prey's unlocked bodies (the owner's bait read; the default since v0.6.207, 17 Oct). Through the whole minion phase, as the look-ahead doctrine says
        to test a phase effect. */
     {
       console.log('\n[151] v0.6.206 -- the probe reservation through the minion phase: probeHold 0 / 1 / 2');
@@ -10700,13 +10700,13 @@ async function connectWithRetry(client, tries = 30){
       ok(!r1.terr && !!r1.po && r1.po.reserved === true && r1.bleeds.join() === 'Gelasia Fotiou bleeds for 1.,Colette bleeds for 3.' && r1.ph.length === 1 && r1.ph[0].vamp === 'Gelasia Fotiou' && r1.ph[0].card === 'Govern the Unaligned',
          '151b probeHold 1 (as designed): Gelasia probes for 1 with the Govern reserved (a probe-hold row), Colette punches for 3 with it (' + JSON.stringify(r1.bleeds) + ')');
       ok(!r2.terr && !!r2.po && r2.po.outnumber === true && r2.po.reserved === true && r2.bleeds.join() === 'Gelasia Fotiou bleeds for 1.,Colette bleeds for 3.',
-         '151c probeHold 2 (Johan\'s read): two actors against one unlocked body of my prey -- I out-number its blockers, the reservation holds (' + JSON.stringify(r2.bleeds) + ')');
+         '151c probeHold 2 (the owner\'s read): two actors against one unlocked body of my prey -- I out-number its blockers, the reservation holds (' + JSON.stringify(r2.bleeds) + ')');
       ok(!r2b.terr && !!r2b.po && r2b.po.outnumber === false && r2b.po.reserved === false && r2b.bleeds.join() === 'Gelasia Fotiou bleeds for 3.,Colette bleeds for 1.',
          '151c ...two against two: no bait to spare, the order only, as at 0 (' + JSON.stringify(r2b.bleeds) + ')');
       let man = null; const um = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', paceMs: 0, askSecs: 1, log: () => {} }); um._emit = (k, m) => { if(k === 'manifest') man = m; }; um._emitManifest();
       ok(!!(man && man.knobs && man.knobs.probeHold === 2), '151d the knob is in the manifest, and unset it is 2 (probeHold ' + (man && man.knobs ? man.knobs.probeHold : '?') + ')');
       ok(!rd.terr && !!rd.po && rd.po.hold === 2 && rd.po.reserved === true && rd.bleeds.join() === 'Gelasia Fotiou bleeds for 1.,Colette bleeds for 3.',
-         '151e the default (Johan 17 Oct: his bait read, after the probe lab) plays as 2: out-numbering the one unlocked body, Gelasia probes and Colette punches with the Govern (' + JSON.stringify(rd.bleeds) + ')');
+         '151e the default (the owner 17 Oct: his bait read, after the probe lab) plays as 2: out-numbering the one unlocked body, Gelasia probes and Colette punches with the Govern (' + JSON.stringify(rd.bleeds) + ')');
     }
 
     /* 152) v0.6.206 -- THE REACTIONS-ONLY WINDOWS OPEN WITH THEIR LINE (found by the release's own smoke). After a modifier's add line and
@@ -10753,7 +10753,7 @@ async function connectWithRetry(client, tries = 30){
          '152b Viktor passes on the bleed total: its Pass answers the window -- the bleed resolves ' + gap + ' ms after the total (the clock is 2 s)');
     }
 
-    /* 153) v0.6.207 -- THE CHAT BEAT SEPARATES TWO CHAT BUBBLES AND NOTHING ELSE (main's finding 1, REPLY v0.6.204 §4.1; Johan's 'kör' 17 Oct:
+    /* 153) v0.6.207 -- THE CHAT BEAT SEPARATES TWO CHAT BUBBLES AND NOTHING ELSE (main's finding 1, REPLY v0.6.204 §4.1; the owner's go-ahead 17 Oct:
        proposal A, spec-next-2026-10-17 §3). After a chat line EVERY message -- the verdict line, a counter write, the table button's line, a quick
        phrase, the hold line -- waited the chat beat (4.96 s at the client's 3.1 s pace). Now only the next CHAT waits it; everything else rides
        the 200 ms cascade, and a hold or resume line skips the beat. The analysis' scenarios on the bot's own drain with a recording socket,
@@ -10906,7 +10906,7 @@ async function connectWithRetry(client, tries = 30){
         ok(!terr && u.out === true && u.sent.some(m => m.t === 'bounty') && u.sent.some(m => m.t === 'pass') && io >= 0 && !L.slice(io + 1).some(l => /^Phase:|Turn passed/.test(l)), '156g my master phase ends at 0 pool: ousted at once (the bounty goes to my predator), no minion phase, no "Turn passed." -- the pass hands the turn on (got ' + (terr ? 'error ' + terr : JSON.stringify(L.slice(io >= 0 ? io : -3))) + ')'); }
     }
 
-    /* 157) v0.6.211 -- THE STABLE'S REMAINING CARDS (Johan's choices, 19 Oct 2026 22:36; docs/specs/spec-cards-2026-10-19.md).
+    /* 157) v0.6.211 -- THE STABLE'S REMAINING CARDS (the owner's choices, 19 Oct 2026 22:36; docs/specs/spec-cards-2026-10-19.md).
        a) Pentex™ Subversion: the printed name now carries the curated entry (cardfx-compile v1.9.3) and is played as one.
        b-f) equipment: a weapon or an armour beats a BARE plain bleed of 1 ('they should weigh more than 1-bleeds without modifiers'), never a
             bleed card ('Govern is very often better'), not a pool-cost item at 6 pool or less ('the Magnum ... except late when low on pool'),
@@ -11041,7 +11041,7 @@ async function connectWithRetry(client, tries = 30){
         u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.notes = []; u.note = t => u.notes.push(t); u.table = {}; return u; };
       const V = (name, blood, extra) => Object.assign({ id: 'v-' + name.replace(/\W/g, ''), name, kind: 'crypt', zone: 'ready', locked: false, blood, cap: 6, attached: [] }, extra || {});
       const duel159 = o => {   // the section 141 / 146 relay: two bots, every log / chat / say line reaches the other `delay` ms later; A = the acting bot (Hanna), D = the bot that blocked it (Viktor)
-        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }].concat(o.human ? [{ seat: 3, name: 'Johan', online: true }] : []);   // o.human: a watched duel (a seated human who is not fighting)
+        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }].concat(o.human ? [{ seat: 3, name: 'Jonna', online: true }] : []);   // o.human: a watched duel (a seated human who is not fighting)
         const mk = (name, seat, extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 0, askSecs: o.askSecs || 3, twdKnow: 0, log: () => {} }, extra || {}));
           u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.push = () => {}; u.fxClone = () => {}; u.lines = []; u.rows = []; u.decs = [];
           u.onEvent = (t, m) => { if(t === 'bot:combat-round') u.rows.push(m); if(t === 'bot:decide' && m) u.decs.push(m); };
@@ -11127,10 +11127,10 @@ async function connectWithRetry(client, tries = 30){
       // c) the parser: a strike line after their declaration is an ADDITIONAL strike -- the next round's strike is the next round's
       { const u = mkU159('C9'); const me = V('Ryan (G6)', 4); u.board = [me]; u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = me;
         u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : null; if(u._xr){ u._xr.p1seen = true; u._xr.p1 = true; }
-        u._onLog('Johan', 'Lisa gets an additional strike.'); u._onLog('Johan', 'Lisa strikes for 2 aggravated damage.');
+        u._onLog('Jonna', 'Lisa gets an additional strike.'); u._onLog('Jonna', 'Lisa strikes for 2 aggravated damage.');
         const xs = IF9(u, '_awaitOppXStrike') ? await u._awaitOppXStrike(50) : null;
         ok(!u._oppStrike && !!(u._xr && u._xr.oppX === 1) && !!(xs && xs.aggr === 2), '159c their declaration counts (oppX 1) and their next strike is the additional one: not this round\u2019s first, not the next round\u2019s; resolved as 2 aggravated (' + JSON.stringify(xs) + ')');
-        u._onLog('Johan', 'Lisa strikes (hands) for 1.');
+        u._onLog('Jonna', 'Lisa strikes (hands) for 1.');
         ok(!!(u._oppStrike && u._oppStrike.dealt === 1), '159c ...a strike line past the declared count is a first strike again');
         const k1 = u._evClassify('Hanna', 'Hanna combat \u2014 Lisa does not take an additional strike.'), k2 = u._evClassify('Hanna', 'Lisa burns Wall of Filth: prevents 2 damage.');
         ok(k1 && k1.kind === 'extra-strike' && k1.none === true && k1.n === 0 && k2 && k2.kind === 'prevent' && k2.card === 'Wall of Filth' && k2.n === 2 && k2.vamp === 'Lisa',
@@ -11172,7 +11172,7 @@ async function connectWithRetry(client, tries = 30){
         ok(g2.dV.zone === 'ready' && g2.dV.blood === 5 && said(g2.A, /^Nathan Turner \(G6\) strikes for 1 aggravated damage\.$/) >= 0 && (g2.D.lines || []).some(l => /equipment prevents 1/.test(l.txt)),
            '159g ...Anxo Vilela with a Kevlar Vest: the vest prevents the aggravated point -- ready, 5 blood (got ' + JSON.stringify({ zone: g2.dV.zone, blood: g2.dV.blood }) + ')');
         /* the Kevlar fix alone, on the damage step: an aggravated-only strike from a human's client line (v0.6.212's `if(taken > 0)` skipped the vest) */
-        const u = mkU159('G9'); u.players = [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: 'G9', online: true, bot: true }];
+        const u = mkU159('G9'); u.players = [{ seat: 1, name: 'Jonna', online: true }, { seat: 2, name: 'G9', online: true, bot: true }];
         const me = V('Anxo Vilela (G6)', 4, { attached: ['kv2'] }), kv2 = { id: 'kv2', name: 'Kevlar Vest', kind: 'lib', zone: 'ready', locked: false };
         u.board = [me, kv2]; u.hand = []; u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = me; u._oppStrike = { vamp: 'Lisa', aggr: 1 };
         let terr = null; try { await Promise.race([u._resolveCombatRound(me), sleep(6000)]); } catch(e){ terr = e.message; }
@@ -11229,10 +11229,10 @@ async function connectWithRetry(client, tries = 30){
         ok(!!(t && t.n === 3), '159l _xLossSum: 1 lost in the first pair + 2 in the additional one = 3 for Taste of Vitae (got ' + JSON.stringify(t) + ')'); }
 
       // m) the human's Damage step: a declaration there reopens the strikes -- no step past Damage yet (their client counts the round's damage there)
-      { const u = mkU159('M9'); u._inCombat = true; u.o.phaseSecs = 1; u._phasesOn = () => true; u._phaseOppPlayer = () => 'Johan'; u._combatIActing = () => true;
+      { const u = mkU159('M9'); u._inCombat = true; u.o.phaseSecs = 1; u._phasesOn = () => true; u._phaseOppPlayer = () => 'Jonna'; u._combatIActing = () => true;
         u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : { p1: true }; u._xr.p1 = true; u._rnd = { dealt: 1 }; u._combatOppName = 'Lisa';
         const tw = []; u._cWrite = f => tw.push(f);
-        setTimeout(() => { u._onLog('Johan', 'Lisa gets an additional strike.'); }, 50);
+        setTimeout(() => { u._onLog('Jonna', 'Lisa gets an additional strike.'); }, 50);
         const pd = await u._phaseDamage();
         ok(pd === 'extra' && tw.some(f => f.ph === 4) && !tw.some(f => f.ph === 5), '159m the human declares in the Damage step: \u2019extra\u2019 -- the additional strike first, no ph 5 yet (got ' + JSON.stringify({ pd, writes: tw }) + ')'); }
 
@@ -11248,16 +11248,16 @@ async function connectWithRetry(client, tries = 30){
 
       // p) a HUMAN acting minion decides first (R-39): the bot that would take an additional strike asks before its declaration, and once more after it (the impulse returns)
       { const u = mkU159('P9'); const me = V('Siarhei Levchenko (G6)', 4, { cap: 5 }); u.board = [me]; u.hand = ['Quickness'];
-        u.players = [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: 'P9', online: true, bot: true }];
+        u.players = [{ seat: 1, name: 'Jonna', online: true }, { seat: 2, name: 'P9', online: true, bot: true }];
         u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = me; u._range = 'close'; u.o.phaseSecs = 1;
-        u._phasesOn = () => true; u._phaseOppPlayer = () => 'Johan'; u._combatIActing = () => false; u._hsOn = () => false; u._cWrite = () => {};
+        u._phasesOn = () => true; u._phaseOppPlayer = () => 'Jonna'; u._combatIActing = () => false; u._hsOn = () => false; u._cWrite = () => {};
         const asked = []; u.chat = t => asked.push({ t: String(t), at: u.sent.length });
         u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : null; if(u._xr){ u._xr.p1seen = true; }
         let terr = null; try { if(IF9(u, '_xBeforeLine')) await Promise.race([u._xBeforeLine(me), sleep(6000)]); } catch(e){ terr = e.message; }
         const iDecl = u.sent.findIndex(m => m && m.t === 'log' && /gets an additional strike\.$/.test(strip159(m.html)));
         const q1 = asked.find(a => /^Any additional strikes\?/.test(a.t));
         ok(!terr && iDecl >= 0 && !!q1 && q1.at <= iDecl,
-           '159p against Johan, the acting minion: \u201cAny additional strikes?\u201d comes before Siarhei\u2019s declaration (v0.6.213 before the grading: the bot declared first; got ' + JSON.stringify({ terr, iDecl, asked: asked.map(a => a.t + '@' + a.at) }) + ')'); }
+           '159p against Jonna, the acting minion: \u201cAny additional strikes?\u201d comes before Siarhei\u2019s declaration (v0.6.213 before the grading: the bot declared first; got ' + JSON.stringify({ terr, iDecl, asked: asked.map(a => a.t + '@' + a.at) }) + ')'); }
 
       // q) the egress review's race: a SYNCHRONOUS relay (the sim / hotseat delivery) and a watched duel (a seated human, the beat) -- the answering bot declares while the acting bot is between its round line and its press wait; the acting bot still takes the strike, no lost line
       { const g = duel159({ sync: true, dV: { id: 'd1', name: 'Siarhei Levchenko (G6)', blood: 5, cap: 5 }, dHand: ['Quickness'] });
@@ -11269,7 +11269,7 @@ async function connectWithRetry(client, tries = 30){
         await w.run();
         const war = row1(w.A), wdr = row1(w.D);
         ok(wdr.xMine === 1 && war.takenX === 1 && w.aV.blood === 2 && !war.hsMiss && !wdr.hsMiss,
-           '159q ...a watched duel (Johan seated, a 400 ms beat): the same (got ' + JSON.stringify({ x: wdr.xMine, t: war.takenX, a: w.aV.blood, miss: [war.hsMiss, wdr.hsMiss] }) + ')'); }
+           '159q ...a watched duel (Jonna seated, a 400 ms beat): the same (got ' + JSON.stringify({ x: wdr.xMine, t: war.takenX, a: w.aV.blood, miss: [war.hsMiss, wdr.hsMiss] }) + ')'); }
 
       // r) Hidden Strength's X against aggravated damage (D-22: pay to prevent the whole hit, aggravated first) -- X was sized on plain damage only
       { const u = mkU159('R9'); const me = V('Madison (G6)', 3); u.board = [me]; u.hand = ['Hidden Strength'];
@@ -11278,7 +11278,7 @@ async function connectWithRetry(client, tries = 30){
         ok(!!t && t.taken === 0 && t.aggr === 0 && me.blood === 2 && pv.n === 2, '159r Hidden Strength against 2 aggravated damage: X = 1, it prevents both -- Madison 3 -> 2 (got ' + JSON.stringify({ t, blood: me.blood, n: pv.n }) + ')'); }
 
       // s) my aggravated strike is a finisher in the dodge rule against a VAMPIRE only: against an ally the known 2 is dodged (D-30)
-      { const u = mkU159('S9'); u.players = [{ seat: 1, name: 'Johan', online: true }, { seat: 2, name: 'S9', online: true, bot: true }];
+      { const u = mkU159('S9'); u.players = [{ seat: 1, name: 'Jonna', online: true }, { seat: 2, name: 'S9', online: true, bot: true }];
         const me = V('Prentis Derby', 4); u.board = [me]; u.hand = ['Sculpt the Flesh', 'Form of Mist'];
         u._inCombat = true; u._combatOppName = 'Gargoyle Slave'; u._combatMyVamp = me; u._oppStrike = { vamp: 'Gargoyle Slave', dealt: 2 };
         const decs = []; u.onEvent = (t, m) => { if(t === 'bot:decide' && m && m.q === 'combat-strike') decs.push(m); };
@@ -11287,17 +11287,17 @@ async function connectWithRetry(client, tries = 30){
         ok(!terr && !!d.ctx && !d.ctx.mineAggr && !!d.out && d.out.dodge === true, '159s against an ally (Gargoyle Slave) Sculpt the Flesh is no finisher: the known 2 is dodged with Form of Mist (got ' + JSON.stringify({ terr, mineAggr: d.ctx && d.ctx.mineAggr, out: d.out }) + ')'); }
 
       // t) a declaration in the Damage step does not reopen the strikes when my vampire is out of the combat (four more Damage waits, no ph 5)
-      { const u = mkU159('T9'); u._inCombat = true; u.o.phaseSecs = 1; u._phasesOn = () => true; u._phaseOppPlayer = () => 'Johan'; u._combatIActing = () => true;
+      { const u = mkU159('T9'); u._inCombat = true; u.o.phaseSecs = 1; u._phasesOn = () => true; u._phaseOppPlayer = () => 'Jonna'; u._combatIActing = () => true;
         u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : { p1: true }; u._xr.p1 = true; u._rnd = { dealt: 1 }; u._combatOppName = 'Lisa'; u._combatMyVamp = V('Ryan (G6)', 0, { zone: 'torpor' });
         const tw = []; u._cWrite = f => tw.push(f);
-        setTimeout(() => { u._onLog('Johan', 'Lisa gets an additional strike.'); }, 50);
+        setTimeout(() => { u._onLog('Jonna', 'Lisa gets an additional strike.'); }, 50);
         const pd = IF9(u, '_phaseDamage') ? await u._phaseDamage() : 'x';
         ok(pd !== 'extra' && tw.some(f => f.ph === 5), '159t ...Ryan in torpor: the declaration does not reopen the strikes -- ph 5 (got ' + JSON.stringify({ pd, writes: tw }) + ')'); }
 
       // u) a human whose first strike was the silent default declares: after the first pair (p1) the declared strike is the additional one -- not this round's first, not the next round's
       { const u = mkU159('U9'); const me = V('Ryan (G6)', 4); u.board = [me]; u._inCombat = true; u._combatOppName = 'Lisa'; u._combatMyVamp = me;
         u._xr = IF9(u, '_xrFresh') ? u._xrFresh() : null; if(u._xr) u._xr.p1 = true;
-        u._onLog('Johan', 'Lisa gets an additional strike.'); u._onLog('Johan', 'Lisa strikes for 2 aggravated damage.');
+        u._onLog('Jonna', 'Lisa gets an additional strike.'); u._onLog('Jonna', 'Lisa strikes for 2 aggravated damage.');
         const xs = IF9(u, '_awaitOppXStrike') ? await u._awaitOppXStrike(50) : null;
         ok(!u._oppStrike && !!(xs && xs.aggr === 2), '159u ...after a silent first pair: the declared strike is the additional one (got ' + JSON.stringify({ first: u._oppStrike || null, xs }) + ')'); }
 
@@ -12234,7 +12234,7 @@ async function connectWithRetry(client, tries = 30){
         const cot = IF3(u, '_cotWorth') ? u._cotWorth(ms, 1).why : '';
         u._inCombat = true; u._range = 'close'; const sp = u._strikePick(ms, false); u._inCombat = false;
         ok(ex[0].expDmg === 2 && ex[1].expDmg === 1 && ex[0].dmgSource === true && ex[1].dmgSource === false && fist.join() === '2,1' && gr[0].play === true && /strength \+1/.test(gr[0].why) && gr[1].play === false && /fist 2\)/.test(cot) && sp.fistDmg === 2,
-           '163d Massimiliano’s +1 strength: the rush expects 2 and counts it a damage source, his next round’s fist is 2, the Grapple is worth it (Johan’s permanent strength), Change of Target reads fist 2, the strike deals 2; a vanilla vampire stays at 1 (got ' + JSON.stringify({ ex: ex.map(e => [e.expDmg, e.dmgSource]), fist, gr: gr.map(g => g.play), cot, sp: sp.fistDmg }) + ')'); }
+           '163d Massimiliano’s +1 strength: the rush expects 2 and counts it a damage source, his next round’s fist is 2, the Grapple is worth it (the owner’s permanent strength), Change of Target reads fist 2, the strike deals 2; a vanilla vampire stays at 1 (got ' + JSON.stringify({ ex: ex.map(e => [e.expDmg, e.dmgSource]), fist, gr: gr.map(g => g.play), cot, sp: sp.fistDmg }) + ')'); }
 
       // e) Yewon Ong: Alexa Draper's vote discard with Oblivion -- a card every mode of which requires [obl]
       { const u = mkU163(); const yw = V3('yw', 'Yewon Ong', { cap: 8 }); u.board = [yw]; u.hand = ['Shadow Cloak', 'Enchant Kindred'];
@@ -12328,7 +12328,7 @@ async function connectWithRetry(client, tries = 30){
         ok(a1.every(x => typeof x === 'number' && x >= 0 && x < 1) && same && diffSeed && diffFree && !oob && cnt.every(c => c > 300 && c < 500) && !usedMR && mk164('G')._randomHandIndex() === -1,
            '164b _rand: rngSeed 7 repeats its draws, 8 does not, two unseeded bots differ (entropy); _randomHandIndex spreads 2000 picks over a 5-card hand (each 300-500), never out of it, -1 on an empty hand, and never draws Math.random (got ' + JSON.stringify({ same, diffSeed, diffFree, cnt, oob, usedMR }) + ')'); }
 
-      // c) age from the capacity in play (D-111, Johan: a card that raises capacity makes the vampire older): an Oblivion (+1 capacity) on
+      // c) age from the capacity in play (D-111, the owner: a card that raises capacity makes the vampire older): an Oblivion (+1 capacity) on
       //    the Lasombra actor or on Azucena moves her intercept; one on the actor makes Navar McClaren's block an older actor's
       { const ob = (id, host) => ({ id, name: 'Oblivion', kind: 'lib', zone: 'ready', host });
         const board = withObl => [V4('h4', 'Braden White (G6)', withObl ? { attached: ['o4'] } : {}), V4('h6', 'Julia Sowinski (G6)', withObl ? { attached: ['o6'] } : {}), V4('h8', 'Andy (G4)', withObl ? { attached: ['o8'] } : {})]
@@ -13189,7 +13189,7 @@ async function connectWithRetry(client, tries = 30){
         ok(r1 === true, '170q a hunt line with a leftover target opens the undirected window (got ' + r1 + ')'); }
     }
 
-    /* 171) v0.6.226 -- ROUND D, RULINGS D-115 (O-40; Johan, 14 Nov 12:06; the knob jackRunway): Smiling Jack's self-consistent runway --
+    /* 171) v0.6.226 -- ROUND D, RULINGS D-115 (O-40; the owner, 14 Nov 12:06; the knob jackRunway): Smiling Jack's self-consistent runway --
        R solves R(c1 + fc) + R(R-1)/2 = pool, so the price over it is pool - R*fc, never above the seat's pool; the knob at 0 is
        v0.6.225's flat pool / (c1 + fc). LAST LINE OF 171 is the closing brace below. */
     {
@@ -13316,7 +13316,7 @@ async function connectWithRetry(client, tries = 30){
         end([C]); }
     }
 
-    /* 173) v0.6.228 -- ROUND F ("Toreador 100 %", Johan 14 Nov): Perfect Paragon [PRE] as a stealth against an ally or a younger blocker
+    /* 173) v0.6.228 -- ROUND F ("Toreador 100 %", the owner 14 Nov): Perfect Paragon [PRE] as a stealth against an ally or a younger blocker
        (and off again for a later blocker it does not reach), Versailles' vote per titled Camarilla vampire, Scalpel Tongue's one
        requirement, Eyes of the Wild (a locked Gangrel's block, its paid +1, the relock, the clan), the locked routes in the block
        decision (decision == pick: Second Tradition's +2 for a locked prince), the Grand Ball on the turn it pays (the look-ahead rule).
@@ -14003,7 +14003,7 @@ async function connectWithRetry(client, tries = 30){
 
     }
 
-    /* 176) v0.6.231 -- O-44 answered (RULINGS D-121, Johan 17 Nov: the split): `cardWorth` prices only Smiling Jack's DEFENCE and the BURNS of
+    /* 176) v0.6.231 -- O-44 answered (RULINGS D-121, the owner 17 Nov: the split): `cardWorth` prices only Smiling Jack's DEFENCE and the BURNS of
        Jack; Jack's play and discard stay with the 14 July rule at both values (the benches at 1 played Jack in 25 of 288 matches, 89 at 0).
        LAST LINE OF 176 is the closing brace below. */
     {
@@ -14083,7 +14083,7 @@ async function connectWithRetry(client, tries = 30){
 
       // a3) the hold: a Hold on that lands in the window (the beat at a paced table) holds the master until it is released
       { const u = mkA([MIS]); u.o.paceMs = 40; let tRel = 0, tPay = 0; const s0 = u.send;
-        u.send = m => { s0(m); const t = txt7(m); if(/^Hanna is playing /.test(t)){ u._holdBy = new Set(['Johan']); setTimeout(() => { tRel = Date.now(); u._holdBy.clear(); }, 400); } if(/^Hanna pays 1 pool for Misdirection/.test(t)) tPay = Date.now(); };
+        u.send = m => { s0(m); const t = txt7(m); if(/^Hanna is playing /.test(t)){ u._holdBy = new Set(['Jonna']); setTimeout(() => { tRel = Date.now(); u._holdBy.clear(); }, 400); } if(/^Hanna pays 1 pool for Misdirection/.test(t)) tPay = Date.now(); };
         const terr = await turn7(u);
         ok(!terr && tRel > 0 && tPay >= tRel, '177a3 a Hold on in the window holds the master until it is released (got ' + JSON.stringify({ terr, tRel, tPay }) + ')'); }
 
@@ -14110,32 +14110,32 @@ async function connectWithRetry(client, tries = 30){
            '177b2 the first cancel wins (its card spent, the debt booked); the second is answered too late and its bot takes its card back (got ' + JSON.stringify(r) + ')'); }
       { const a = mkB(1, []), b = mkB(2, [SR]), c = mkB(3, [SR]); a.turnSeat = 1; wire7([a, c, b]);   // Nora's bot reads the opener and cancels first
         const r0 = IF7(a, '_asPlayed') ? await a._asPlayed('Asylum Hunting Ground', {}) : null;
-        const h = mkB(1, []); h.turnSeat = 1; h.players[2] = { seat: 3, name: 'Johan', online: true, bot: false }; wire7([h, b]);
+        const h = mkB(1, []); h.turnSeat = 1; h.players[2] = { seat: 3, name: 'Jonna', online: true, bot: false }; wire7([h, b]);
         b.hand = [SR]; b._ootDebt = 0; b._srSent = null;
         const pH = IF7(h, '_asPlayed') ? h._asPlayed('Asylum Hunting Ground', {}) : Promise.resolve(null);
         h._onFx({ t: 'fx', kind: 'play', seat: 3, card: { name: SR, kind: 'lib', faceDown: false } }); const rH = await pH;
         const r = { r0, noraLate: logs7(a).filter(l => /^Nora's Sudden Reversal comes too late for Hanna's Asylum Hunting Ground\.$/.test(l)).length, noraBack: ev7(c, 'sr-taken-back').length, viktorAsh: b.board.some(x => x.zone === 'ash' && x.name === SR),
-                    rH, came: h.chats.find(t => /^Johan: Viktor\u2019s Sudden Reversal came first/.test(t)) || null, tooLate: h.chats.some(t => /too late/.test(t)) };
+                    rH, came: h.chats.find(t => /^Jonna: Viktor\u2019s Sudden Reversal came first/.test(t)) || null, tooLate: h.chats.some(t => /too late/.test(t)) };
         ok(r0 && r0.cancelled === 'Viktor' && r.noraLate === 1 && r.noraBack === 1 && r.viktorAsh && rH && rH.cancelled === 'Viktor' && !!r.came && !r.tooLate,
            '177b3 the window takes its cancels in turn order from the player: Viktor (its prey) over Nora though Nora\'s line came first, Nora answered too late and her card back; a human\'s Sudden Reversal after a bot\'s in the same window is told the bot\'s came first (got ' + JSON.stringify(r) + ')'); }
 
       // c) humans: a human's master (the client's fx clone) cancelled by my line and a chat line; a human's Sudden Reversal in my open window
       //    cancels my master; after it closed, the human is told it came too late
-      { const b = mkB(2, [SR]); b.board = [V7('p1', 'Adisa')]; b.players[2] = { seat: 3, name: 'Johan', online: true, bot: false }; b.turnSeat = 3;
+      { const b = mkB(2, [SR]); b.board = [V7('p1', 'Adisa')]; b.players[2] = { seat: 3, name: 'Jonna', online: true, bot: false }; b.turnSeat = 3;
         b._onFx({ t: 'fx', kind: 'play', seat: 3, card: { name: 'Fame', kind: 'lib', faceDown: false }, target: { name: 'Adisa', kind: 'crypt', faceDown: false } }); await sleep(400);   // seat 2 answers second after the human at seat 3 (seat 1 first): a quarter second
-        const L = logs7(b), r = { line: L.find(l => /Sudden Reversal — cancels Johan's Fame/.test(l)) || null, chat: b.chats.find(t => /^Johan: your Fame is cancelled/.test(t)) || null, debt: b._ootDebt | 0, row: ev7(b, 'sr-cancel').length };
+        const L = logs7(b), r = { line: L.find(l => /Sudden Reversal — cancels Jonna's Fame/.test(l)) || null, chat: b.chats.find(t => /^Jonna: your Fame is cancelled/.test(t)) || null, debt: b._ootDebt | 0, row: ev7(b, 'sr-cancel').length };
         const p2 = mkB(2, [SR]), p3 = mkB(3, [SR]); [p2, p3].forEach(x => { x.players[0] = { seat: 1, name: 'Hanna', online: true, bot: false }; x.turnSeat = 1; }); wire7([p2, p3]);
         const hg = { t: 'fx', kind: 'play', seat: 1, card: { name: 'Academic Hunting Ground', kind: 'lib', faceDown: false } };
         p3._onFx(hg); p2._onFx(hg); await sleep(700);   // the network's order: the later seat reads the clone first
         const q = { p2: ev7(p2, 'sr-cancel').length, p3: ev7(p3, 'sr-cancel').length, p3hand: p3.hand.includes(SR) };
         ok(!!r.line && !!r.chat && r.debt === 1 && r.row === 1 && q.p2 === 1 && q.p3 === 0 && q.p3hand,
            '177c a human\'s master at my vampire: my Sudden Reversal\'s line and a chat line to its owner; two bots that would both cancel a human\'s master answer in turn order after the human -- the second reads the first\'s line and holds (got ' + JSON.stringify({ r, q }) + ')'); }
-      { const a = mkB(1, []); a.turnSeat = 1; a.players[2] = { seat: 3, name: 'Johan', online: true, bot: false };
+      { const a = mkB(1, []); a.turnSeat = 1; a.players[2] = { seat: 3, name: 'Jonna', online: true, bot: false };
         const hsr = () => a._onFx({ t: 'fx', kind: 'play', seat: 3, card: { name: SR, kind: 'lib', faceDown: false } });
         const p = IF7(a, '_asPlayed') ? a._asPlayed('Vessel', {}) : Promise.resolve(null); hsr(); const r0 = await p;
-        const b2 = mkB(1, []); b2.turnSeat = 1; b2.players[2] = { seat: 3, name: 'Johan', online: true, bot: false }; const p2 = IF7(b2, '_asPlayed') ? b2._asPlayed('Vessel', {}) : Promise.resolve(null); const r2 = await p2;
-        b2._onFx({ t: 'fx', kind: 'play', seat: 3, card: { name: SR, kind: 'lib', faceDown: false } }); const tooLate = b2.chats.find(t => /^Johan: too late — my Vessel has resolved/.test(t)) || null;
-        ok(r0 && r0.cancelled === 'Johan' && !!tooLate && r2 && r2.cancelled === null,
+        const b2 = mkB(1, []); b2.turnSeat = 1; b2.players[2] = { seat: 3, name: 'Jonna', online: true, bot: false }; const p2 = IF7(b2, '_asPlayed') ? b2._asPlayed('Vessel', {}) : Promise.resolve(null); const r2 = await p2;
+        b2._onFx({ t: 'fx', kind: 'play', seat: 3, card: { name: SR, kind: 'lib', faceDown: false } }); const tooLate = b2.chats.find(t => /^Jonna: too late — my Vessel has resolved/.test(t)) || null;
+        ok(r0 && r0.cancelled === 'Jonna' && !!tooLate && r2 && r2.cancelled === null,
            '177c2 a human\'s Sudden Reversal in my window cancels my master; after it, too late in chat; no cancel, no answer (got ' + JSON.stringify({ r0, tooLate, r2 }) + ')'); }
 
       // d) Meditative Grove: a bot's Deep Song [ANI] rush at my Salubri is cancelled as it is played, before any window (the Grove locks;
@@ -14163,15 +14163,15 @@ async function connectWithRetry(client, tries = 30){
         const r = { terr, calls, ash: h.board.some(c => c.zone === 'ash' && c.name === 'Deep Song'), hand: h.hand.includes('Deep Song'), locked: v.locked, booked: !!(h._turnActs && h._turnActs.l1 && h._turnActs.l1.has('card:deepsong')), ev: ev7(h, 'grove-cancelled').length };
         ok(!terr && r.calls === 2 && r.ash && !r.hand && r.locked === false && !r.booked && r.ev === 1,
            '177d3 through the minion phase: the cancelled rush is spent, its vampire unlocks and acts again, its booking off (got ' + JSON.stringify(r) + ')'); }
-      { const g = mkG(); g.players[0] = { seat: 1, name: 'Johan', online: true, bot: false }; g.table[1] = pub7(20, [V7('l1', 'Lucinde')]);
+      { const g = mkG(); g.players[0] = { seat: 1, name: 'Jonna', online: true, bot: false }; g.table[1] = pub7(20, [V7('l1', 'Lucinde')]);
         g._inCombat = true; g._combatMyVamp = g.board[0]; g._combatOppName = 'Lucinde';
         g._onFx({ t: 'fx', kind: 'play', seat: 1, card: { name: 'Rage of Apedemak', kind: 'lib', faceDown: false }, actor: { name: 'Lucinde', kind: 'crypt', faceDown: false } });
         const rage = logs7(g).some(l => /Meditative Grove/.test(l));
         g._onFx({ t: 'fx', kind: 'play', seat: 1, card: { name: "Dam the Heart's River", kind: 'lib', faceDown: false }, actor: { name: 'Lucinde', kind: 'crypt', faceDown: false } });
-        const r = { rage, line: logs7(g).find(l => /^Viktor locks Meditative Grove — Dam the Heart's River is cancelled/.test(l)) || null, chat: g.chats.find(t => /^Johan: Dam the Heart's River is cancelled by my Meditative Grove/.test(t)) || null, locked: g.board[2].locked };
+        const r = { rage, line: logs7(g).find(l => /^Viktor locks Meditative Grove — Dam the Heart's River is cancelled/.test(l)) || null, chat: g.chats.find(t => /^Jonna: Dam the Heart's River is cancelled by my Meditative Grove/.test(t)) || null, locked: g.board[2].locked };
         ok(!r.rage && !!r.line && !!r.chat && r.locked === true, '177d4 a human\'s frenzy combat card on my Salubri in our combat is cancelled and the human told; Rage of Apedemak (its own vampire) is not (got ' + JSON.stringify(r) + ')'); }
       { const fxp = (g, card) => g._onFx({ t: 'fx', kind: 'play', seat: 1, card: { name: card, kind: 'lib', faceDown: false }, actor: { name: 'Lucinde', kind: 'crypt', faceDown: false } });
-        const mkW = () => { const g = mkG(); g.players[0] = { seat: 1, name: 'Johan', online: true, bot: false }; g.table[1] = pub7(20, [V7('l1', 'Lucinde')]);
+        const mkW = () => { const g = mkG(); g.players[0] = { seat: 1, name: 'Jonna', online: true, bot: false }; g.table[1] = pub7(20, [V7('l1', 'Lucinde')]);
                             g._inCombat = true; g._combatMyVamp = g.board[0]; g._combatOppName = 'Lucinde'; return g; };
         const g = mkW(); fxp(g, 'Devil-Channel: Hands'); const dev = logs7(g).some(l => /Meditative Grove/.test(l));
         fxp(g, 'Whistling Up the Beast');
@@ -14543,7 +14543,7 @@ async function connectWithRetry(client, tries = 30){
       //    none and takes nothing (the build asked "What is your strike?" and booked a silent human's default hand strike against itself)
       { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Viktor', persona: 'expert', deckName: 'tzimisce', paceMs: 0, askSecs: 0.05, phaseSecs: 0.08, log: () => {} });
         u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.say = () => {}; u.note = () => {}; u.sentAll = []; u.send = m => u.sentAll.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
-        u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Viktor', bot: true }];
+        u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'Viktor', bot: true }];
         u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
         const v = { id: 'v1', name: 'Adrino Manauara (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 6 }; u.board = [v]; u.hand = [];
         u._owl = { vamp: v.name, opp: 'Lisa', card: 'One With the Land', at: Date.now() };
@@ -15754,7 +15754,7 @@ async function connectWithRetry(client, tries = 30){
         const r = mk182('banuhaqim'); const k5 = V2('k1', KB, { blood: 5, cap: 9 }); r.board = [k5]; r.hand = [BE, 'Raven Spy'];
         const rc = r._actionCtxFor(k5);
         ok(!rc.employAnimal,
-           '182g ...Raven Spy is not offered to Kasim through the card: every mode of it needs Animalism, which he lacks -- it would do nothing (the pilot\u2019s review, P4: until Johan rules on the basic version) (got ' + JSON.stringify({ ea: rc.employAnimal && rc.employAnimal.retainer }) + ')'); }
+           '182g ...Raven Spy is not offered to Kasim through the card: every mode of it needs Animalism, which he lacks -- it would do nothing (the pilot\u2019s review, P4: until the owner rules on the basic version) (got ' + JSON.stringify({ ea: rc.employAnimal && rc.employAnimal.retainer }) + ')'); }
       { const T = await turn2([BE, 'Dog Pack'], { what: 'pass' }, null, 'employAnimal');
         const line = T.got.lines.find(l => l === 'Kasim Bayar (G6) plays Biothaumaturgic Experiment [tha] — employs Dog Pack.');
         const onK = T.k.attached.map(id => (T.u.board.find(c => c.id === id) || {}).name);
@@ -15954,7 +15954,7 @@ async function connectWithRetry(client, tries = 30){
            '182j ...and the discard phase cycles it for Aunt Linda as before (no mode she can use: a dead card), not for Algirdas (got ' + JSON.stringify([dead(al, ['Raven Spy']), dead(ag, ['Raven Spy'])]) + ')'); }
     }
 
-    /* 183) v0.6.237 -- THE PLAYTEST ROUND (Johan's hotseat of 24 Nov 2026, four bots and a human; RULINGS D-136): (a) a vampire is
+    /* 183) v0.6.237 -- THE PLAYTEST ROUND (the owner's hotseat of 24 Nov 2026, four bots and a human; RULINGS D-136): (a) a vampire is
        spoken without KRCG's group tag in the influence sentence and the questions ('(ADV)' kept), the frozen lines keep the card's
        name; (b) Fame goes ON the famed vampire -- a give with attachTo through a whole master phase, nothing on my own board, the
        receiver links it to its host and arms its hook; a human's Fame given onto my vampire is linked too; (c) a cardless minion action
@@ -16083,81 +16083,81 @@ async function connectWithRetry(client, tries = 30){
         ok(/_hostVampFor\(d\.pick\.archetype, [^\n]*_hostInc && !d\.pick\.archetype \? d\.pick\.name : null\)/.test(src), '183d ...and the master phase names the card for a known income master only (an archetype keeps its own rule; v0.6.238: one whose income is a host’s, _hostInc)'); }
 
       // e) THE ACTOR'S WORD before the late bounce (a human bleeds my Ayelech, Deflection in hand, stealth 1 on the counter)
-      { const P = [{ seat: 1, name: 'Johan', bot: false }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Hanna', bot: true }];
+      { const P = [{ seat: 1, name: 'Jonna', bot: false }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Hanna', bot: true }];
         const mkT = (o) => { const u = mk3('Viktor', 2, 'tremere', P, o); u.sent = []; u.send = m => u.sent.push(m); u.says = []; u.say = p => u.says.push(p); u.chats = []; u.chat = t => u.chats.push(t); u.note = () => {};
           u.tally = { mode: 'block', a: 1, b: 0 }; u.board = [V3('v1', 'Ayelech', { blood: 5, cap: 8 })]; u.hand = ['Deflection']; u.pool = 20; u.turnSeat = 1;
           u.table = { 1: { pub: { pool: 20, cards: [V3('j1', 'Lisa')] } }, 3: { pub: { pool: 20, cards: [] } } }; return u; };
         const bounced = u => u.sent.some(m => /redirected to/.test(txt3(m)));
-        { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(250);
+        { const u = mkT({ askSecs: 3 }); u._onLog('Jonna', '<b>Lisa</b> bleeds for 2.'); await sleep(250);
           const q = u.chats.slice(), waiting = !!(u.pending && u.pending.lateWait); await sleep(1500); const early = bounced(u);
-          u._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); await sleep(150);
-          ok(waiting && q.length === 1 && /no block\. Any bleed modifiers\? I may still react to the total — say "no" or "it resolves" when you are done \(3s → I react\)$/.test(q[0]) && !early && bounced(u) && u.pool === 20 && ((u._rt && u._rt.Johan) || []).length === 1,
-             '183e a human actor’s total: the question carries the tempo’s clock, no bounce before the word, and It resolves BOUNCES it -- no pool lost; the word is Adaptive’s measurement (got ' + JSON.stringify({ q, waiting, early, bounced: bounced(u), pool: u.pool, rt: u._rt && u._rt.Johan }) + ')'); }
-        { const u = mkT({ askSecs: 1 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(600); const early = bounced(u); await sleep(800);
+          u._onSay({ who: 'Jonna', i: SAY.indexOf('It resolves') }); await sleep(150);
+          ok(waiting && q.length === 1 && /no block\. Any bleed modifiers\? I may still react to the total — say "no" or "it resolves" when you are done \(3s → I react\)$/.test(q[0]) && !early && bounced(u) && u.pool === 20 && ((u._rt && u._rt.Jonna) || []).length === 1,
+             '183e a human actor’s total: the question carries the tempo’s clock, no bounce before the word, and It resolves BOUNCES it -- no pool lost; the word is Adaptive’s measurement (got ' + JSON.stringify({ q, waiting, early, bounced: bounced(u), pool: u.pool, rt: u._rt && u._rt.Jonna }) + ')'); }
+        { const u = mkT({ askSecs: 1 }); u._onLog('Jonna', '<b>Lisa</b> bleeds for 2.'); await sleep(600); const early = bounced(u); await sleep(800);
           ok(!early && bounced(u) && u.pool === 20, '183e ...silence: the clock bounces it, not a fixed grace (got ' + JSON.stringify({ early, late: bounced(u) }) + ')'); }
-        { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(200); u._onLog('Johan', '<b>Lisa</b> adds +1 bleed (= 3).'); await sleep(700);
-          const afterMod = bounced(u), st = u.status(), ch = u.chats.slice(); u._onSay({ who: 'Johan', i: SAY.indexOf('No') }); await sleep(150);
+        { const u = mkT({ askSecs: 3 }); u._onLog('Jonna', '<b>Lisa</b> bleeds for 2.'); await sleep(200); u._onLog('Jonna', '<b>Lisa</b> adds +1 bleed (= 3).'); await sleep(700);
+          const afterMod = bounced(u), st = u.status(), ch = u.chats.slice(); u._onSay({ who: 'Jonna', i: SAY.indexOf('No') }); await sleep(150);
           ok(ch.length === 2 && /^Trainbot: bleed now 3 — any more\? Say "no" or "it resolves" when you are done \(3s → I react\)$/.test(ch[1]),
              '183e ...after a modifier the question is asked again, short, with its fresh clock (the egress review: a silent re-arm) (got ' + JSON.stringify(ch) + ')');
           ok(!afterMod && st.step === 'resolve-late' && bounced(u) && u.sent.some(m => txt3(m) === 'Lisa bleeds for 3. Target: Hanna\'s pool.'),
              '183e ...a modifier re-arms the wait (no bounce one react delay later), status names it, and No bounces the total of 3 (got ' + JSON.stringify({ afterMod, step: st.step, lines: u.sent.map(txt3).filter(Boolean) }) + ')'); }
-        { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(200); u._onChat('Johan', 'no more'); await sleep(150); const typed = bounced(u);
-          const v = mkT({ askSecs: 3 }); v._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(200); const r = v.step(); await sleep(100);
+        { const u = mkT({ askSecs: 3 }); u._onLog('Jonna', '<b>Lisa</b> bleeds for 2.'); await sleep(200); u._onChat('Jonna', 'no more'); await sleep(150); const typed = bounced(u);
+          const v = mkT({ askSecs: 3 }); v._onLog('Jonna', '<b>Lisa</b> bleeds for 2.'); await sleep(200); const r = v.step(); await sleep(100);
           ok(typed && r.did === 'resolve-late' && bounced(v), '183e ...a typed "no more" and the table controls give the word too (got ' + JSON.stringify({ typed, did: r.did, step: bounced(v) }) + ')'); }
         { const P4 = P.concat([{ seat: 4, name: 'Lina', bot: false }]); const u = mkT({ askSecs: 1 }); u.players = P4.map(q => Object.assign({ online: true }, q));
-          u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(250); const lw0 = u.pending && u.pending.lateWait;
+          u._onLog('Jonna', '<b>Lisa</b> bleeds for 2.'); await sleep(250); const lw0 = u.pending && u.pending.lateWait;
           u._onSay({ who: 'Lina', i: 0 }); await sleep(1400); const frozen = !!(lw0 && lw0._held && lw0.deadline === null && !lw0.timer && !lw0.done), held = bounced(u);
           u._onChat('Lina', 'carry on'); await sleep(500); const early = bounced(u); await sleep(900);
           const row = u.evs.filter(e => e.t === 'wait' && e.m.late).pop();
           ok(frozen && !held && !early && bounced(u) && !!row && row.m.held === 1 && row.m.end === 'clock',
              '183e ...a hold stands the wait (no clock, no deadline, no bounce), the release starts a full clock, and its row says held (the egress review) (got ' + JSON.stringify({ frozen, held, early, late: bounced(u), row: row && row.m }) + ')'); }
-        { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(250); const w0 = u.pending && u.pending.lateWait;
-          u._onLog('Johan', '<b>Lisa</b> bleeds for 1.'); await sleep(30); const row = u.evs.filter(e => e.t === 'wait' && e.m.late).pop();
+        { const u = mkT({ askSecs: 3 }); u._onLog('Jonna', '<b>Lisa</b> bleeds for 2.'); await sleep(250); const w0 = u.pending && u.pending.lateWait;
+          u._onLog('Jonna', '<b>Lisa</b> bleeds for 1.'); await sleep(30); const row = u.evs.filter(e => e.t === 'wait' && e.m.late).pop();
           ok(!!w0 && w0.done && !!row && row.m.end === 'left' && !(u.pending && u.pending.lateWait && u.pending.lateWait === w0),
              '183e ...a new action’s pending ends the old wait, "left" (its clock and reminder died with it only on a clear) (got ' + JSON.stringify({ done: w0 && w0.done, row: row && row.m }) + ')');
           const src = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
           ok(!/this\.o\.modGraceMs/.test(src) && /const pl = w\.plan = this\._waitPlan\('react', p\.who\);/.test(src), '183e ...the wait is a tempo wait (_waitPlan react); the fixed 4 s grace is gone'); }
         const askedT = async u => { for(let i = 0; i < 80 && !(u.pending && u.pending.lateWait); i++) await sleep(50); return !!(u.pending && u.pending.lateWait); };
         const nB = u => u.sent.filter(m => /redirected to/.test(txt3(m))).length;
-        { const u = mkT({ askSecs: 3, paceMs: 600 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); const asked = await askedT(u);
-          u._onLog('Johan', '<b>Lisa</b> adds +1 bleed (= 3).'); await sleep(150); const gap = !!(u.pending && !u.pending.lateWait && u.pending.lateDue);
-          u._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); await sleep(2600);
+        { const u = mkT({ askSecs: 3, paceMs: 600 }); u._onLog('Jonna', '<b>Lisa</b> bleeds for 2.'); const asked = await askedT(u);
+          u._onLog('Jonna', '<b>Lisa</b> adds +1 bleed (= 3).'); await sleep(150); const gap = !!(u.pending && !u.pending.lateWait && u.pending.lateDue);
+          u._onSay({ who: 'Jonna', i: SAY.indexOf('It resolves') }); await sleep(2600);
           ok(asked && gap && nB(u) === 1 && u.pool === 20 && u.sent.some(m => txt3(m) === 'Lisa bleeds for 3. Target: Hanna\'s pool.'),
              '183e ...at the client\u2019s pace, It resolves in my react delay after a modifier (no wait open) bounces the total of 3 -- it landed the bleed (the egress review, pass 2) (got ' + JSON.stringify({ asked, gap, bounces: nB(u), pool: u.pool }) + ')'); }
-        { const u = mkT({ askSecs: 3, paceMs: 600 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); const asked = await askedT(u);
-          u._dispatch({ t: 'say', i: SAY.indexOf('No'), who: 'Johan' }); await sleep(100); const inBeat = !!(u.pending && !u.pending.lateWait && u.pending.lateDue) && nB(u) === 0;   // through the wire: the beat runs from the table's last event
-          u._dispatch({ t: 'say', i: SAY.indexOf('It resolves'), who: 'Johan' }); await sleep(2600);
+        { const u = mkT({ askSecs: 3, paceMs: 600 }); u._onLog('Jonna', '<b>Lisa</b> bleeds for 2.'); const asked = await askedT(u);
+          u._dispatch({ t: 'say', i: SAY.indexOf('No'), who: 'Jonna' }); await sleep(100); const inBeat = !!(u.pending && !u.pending.lateWait && u.pending.lateDue) && nB(u) === 0;   // through the wire: the beat runs from the table's last event
+          u._dispatch({ t: 'say', i: SAY.indexOf('It resolves'), who: 'Jonna' }); await sleep(2600);
           ok(asked && inBeat && nB(u) === 1 && u.pool === 20, '183e ...No, then It resolves in my beat: one bounce, nothing lands (got ' + JSON.stringify({ asked, inBeat, bounces: nB(u), pool: u.pool }) + ')'); }
-        { const u = mkT({ askSecs: 3, paceMs: 600 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); const asked = await askedT(u);
-          u._dispatch({ t: 'say', i: SAY.indexOf('No'), who: 'Johan' }); await sleep(100); u.hand = [];   // my Deflection is gone before the beat ends
-          u._dispatch({ t: 'say', i: SAY.indexOf('It resolves'), who: 'Johan' }); await sleep(2600);
+        { const u = mkT({ askSecs: 3, paceMs: 600 }); u._onLog('Jonna', '<b>Lisa</b> bleeds for 2.'); const asked = await askedT(u);
+          u._dispatch({ t: 'say', i: SAY.indexOf('No'), who: 'Jonna' }); await sleep(100); u.hand = [];   // my Deflection is gone before the beat ends
+          u._dispatch({ t: 'say', i: SAY.indexOf('It resolves'), who: 'Jonna' }); await sleep(2600);
           ok(asked && nB(u) === 0 && u.says.includes('Pass') && u.pool === 18 && !u.pending,
              '183e ...and when no bounce is left after the beat I Pass, and the It resolves already said lands the bleed (it vanished) (got ' + JSON.stringify({ asked, bounces: nB(u), says: u.says, pool: u.pool, pending: !!u.pending }) + ')'); }
-        { const u = mkT({ askSecs: 3 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 2.'); await sleep(250); const w0 = u.pending && u.pending.lateWait;
-          u.board[0].locked = true; u._onLog('Johan', '<b>Lisa</b> adds +1 bleed (= 3).'); await sleep(200); const live = !!(u.pending && u.pending.lateWait);
-          u._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); await sleep(150);
+        { const u = mkT({ askSecs: 3 }); u._onLog('Jonna', '<b>Lisa</b> bleeds for 2.'); await sleep(250); const w0 = u.pending && u.pending.lateWait;
+          u.board[0].locked = true; u._onLog('Jonna', '<b>Lisa</b> adds +1 bleed (= 3).'); await sleep(200); const live = !!(u.pending && u.pending.lateWait);
+          u._onSay({ who: 'Jonna', i: SAY.indexOf('It resolves') }); await sleep(150);
           ok(!!w0 && w0.done && !live && u.says.includes('Pass') && u.pool === 17,
              '183e ...my bouncer locked before the modifier: I Pass, the wait ends with it, and It resolves lands the 3 -- the live wait swallowed it (the egress review, pass 2) (got ' + JSON.stringify({ w0: !!w0, done: w0 && w0.done, live, says: u.says, pool: u.pool }) + ')'); }
-        { const u = mkT({ askSecs: 3, paceMs: 600 }); u._onLog('Johan', '<b>Lisa</b> bleeds for 1.');
+        { const u = mkT({ askSecs: 3, paceMs: 600 }); u._onLog('Jonna', '<b>Lisa</b> bleeds for 1.');
           for(let i = 0; i < 60 && !u.says.includes('Pass'); i++) await sleep(50); const firstPass = u.says.includes('Pass') && !u.chats.length;
-          u._onLog('Johan', '<b>Lisa</b> adds +1 bleed (= 2).'); await sleep(150); const gap = !!(u.pending && !u.pending.lateWait && u.pending.lateDue);
-          u._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); await sleep(2600);
+          u._onLog('Jonna', '<b>Lisa</b> adds +1 bleed (= 2).'); await sleep(150); const gap = !!(u.pending && !u.pending.lateWait && u.pending.lateDue);
+          u._onSay({ who: 'Jonna', i: SAY.indexOf('It resolves') }); await sleep(2600);
           ok(firstPass && gap && nB(u) === 1 && u.pool === 20, '183e ...a bleed of 1 I passed unasked, then +1 and It resolves in my react delay: the bounce on the 2 -- with no first question the gap stayed open (the egress review, pass 3) (got ' + JSON.stringify({ firstPass, gap, bounces: nB(u), pool: u.pool }) + ')'); }
-        { const P5 = [{ seat: 1, name: 'Johan', bot: false }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Hanna', bot: true }];
+        { const P5 = [{ seat: 1, name: 'Jonna', bot: false }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Hanna', bot: true }];
           const V = mk3('Viktor', 2, 'tremere', P5, { askSecs: 3 }), H = mk3('Hanna', 3, 'malkavian', P5, { askSecs: 3 }); wire3(V, [H]); wire3(H, [V]);
           for(const q of [V, H]){ q.turnSeat = 1; q.pool = 20; q.tally = { mode: 'block', a: 1, b: 0 }; }
           V.board = [V3('v1', 'Ayelech', { blood: 5, cap: 8 })]; V.hand = ['Deflection']; H.board = [V3('h1', 'Colette', { cap: 5, locked: true })]; H.hand = [];
           const tb = () => ({ 1: { pub: { pool: 20, cards: [V3('j1', 'Lisa')] } }, 2: { pub: { pool: 20, cards: [V3('v1', 'Ayelech')] } }, 3: { pub: { pool: 20, cards: [V3('h1', 'Colette', { locked: true })] } } });
           V.table = tb(); H.table = tb();
-          const bl = '<b>Lisa</b> bleeds for 2. Target: Viktor\'s pool.'; V._onLog('Johan', bl); H._onLog('Johan', bl);
+          const bl = '<b>Lisa</b> bleeds for 2. Target: Viktor\'s pool.'; V._onLog('Jonna', bl); H._onLog('Jonna', bl);
           for(let i = 0; i < 60 && !(V.pending && V.pending.lateWait); i++) await sleep(25);
-          V._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); H._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); await sleep(1500);
-          const tell = V.lines.some(l => l.tier === 'chat' && l.txt === 'Johan, I bounced it to Hanna — say It resolves again once Hanna has answered.'), hArmed = !!(H.pending && H.pending.who === 'Johan');
-          H._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); await sleep(100);
+          V._onSay({ who: 'Jonna', i: SAY.indexOf('It resolves') }); H._onSay({ who: 'Jonna', i: SAY.indexOf('It resolves') }); await sleep(1500);
+          const tell = V.lines.some(l => l.tier === 'chat' && l.txt === 'Jonna, I bounced it to Hanna — say It resolves again once Hanna has answered.'), hArmed = !!(H.pending && H.pending.who === 'Jonna');
+          H._onSay({ who: 'Jonna', i: SAY.indexOf('It resolves') }); await sleep(100);
           ok(V.pool === 20 && tell && hArmed && H.pool === 18, '183e ...a bounce on the actor\u2019s It resolves asks them to say it again for the new target, whose pending waits for it -- the bleed vanished (the egress review, pass 3) (got ' + JSON.stringify({ vPool: V.pool, tell, hArmed, hPool: H.pool, vChats: V.lines.filter(l => l.tier === 'chat').map(l => l.txt) }) + ')'); } }
 
-      // f) A HUMAN'S BOUNCE BY CHAT: my bleed at Johan Sigvard; parts of names; questions; only the target; a bot at the new seat answers
-      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan Sigvard', bot: false }, { seat: 3, name: 'Hanna Bergström', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
+      // f) A HUMAN'S BOUNCE BY CHAT: my bleed at Jonna Sundin; parts of names; questions; only the target; a bot at the new seat answers
+      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Jonna Sundin', bot: false }, { seat: 3, name: 'Hanna Bergström', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
         const A = mk3('Viktor', 1, 'ventrue', P, { askSecs: 1.2 }), H = mk3('Hanna Bergström', 3, 'malkavian', P, { askSecs: 1.2 }); wire3(A, [H]); wire3(H, [A]);
         const parts = q => IF3(A, '_seatByNamePart') ? A._seatByNamePart(q, [3, 4]) : { seat: -1, cands: [] };
         const nm = { hanna: parts('Hanna').seat, berg: parts('bergstrom').seat, hb: parts('hanna berg').seat, hannes: parts('HANNES').seat, hann: parts('hann'), nobody: parts('xyz').seat, h: parts('h').seat, ha: parts('ha').seat, be: parts('be').seat, ber: parts('ber').seat };
@@ -16169,18 +16169,18 @@ async function connectWithRetry(client, tries = 30){
         H.table = { 1: { pub: { cards: [V3('a1', 'Alice Chen (G6)')] } }, 2: { pub: { cards: [V3('j1', 'Lisa')] } }, 4: { pub: { cards: [] } } };
         let terr = null; const turn = A._playTurn().catch(e => { terr = e.message; });
         for(let i = 0; i < 80 && !A.lines.some(l => l.tier === 'chat' && /Block\?/.test(l.txt)); i++) await sleep(50);
-        A._onChat('Johan Sigvard', 'bounce hann'); await sleep(40); A._onChat('Johan Sigvard', 'bounce Viktor'); await sleep(40); A._onChat('Johan Sigvard', 'bounce'); await sleep(40);
+        A._onChat('Jonna Sundin', 'bounce hann'); await sleep(40); A._onChat('Jonna Sundin', 'bounce Viktor'); await sleep(40); A._onChat('Jonna Sundin', 'bounce'); await sleep(40);
         A._onChat('Hannes', 'bounce Hanna'); await sleep(40);
-        A._onChat('Johan Sigvard', 'Bounce? Nah.'); await sleep(40); A._onChat('Johan Sigvard', 'bounce me'); await sleep(40); A._onChat('Johan Sigvard', 'Bounce. Nah'); await sleep(40);
+        A._onChat('Jonna Sundin', 'Bounce? Nah.'); await sleep(40); A._onChat('Jonna Sundin', 'bounce me'); await sleep(40); A._onChat('Jonna Sundin', 'Bounce. Nah'); await sleep(40);
         const before = A._actingVamp && A._actingVamp.target;
-        A._onChat('Johan Sigvard', 'bounce Bergström'); await sleep(40);
+        A._onChat('Jonna Sundin', 'bounce Bergström'); await sleep(40);
         const mid = A._actingVamp && { target: A._actingVamp.target, bounced: A._actingVamp.bounced };
         await Promise.race([turn, sleep(8000)]);
         const qs = A.lines.filter(l => l.tier === 'chat').map(l => l.txt);
-        ok(qs.some(t => t === 'Johan Sigvard: which one — Hanna Bergström or Hannes? Type bounce <name> (Hanna Bergström, Hannes).') && qs.some(t => /^Johan Sigvard: my own bleed cannot be bounced to me\./.test(t)) && qs.some(t => /^Johan Sigvard: bounce to whom\?/.test(t)) && before === 2,
+        ok(qs.some(t => t === 'Jonna Sundin: which one — Hanna Bergström or Hannes? Type bounce <name> (Hanna Bergström, Hannes).') && qs.some(t => /^Jonna Sundin: my own bleed cannot be bounced to me\./.test(t)) && qs.some(t => /^Jonna Sundin: bounce to whom\?/.test(t)) && before === 2,
            '183f the target’s ambiguous, own and bare bounces get a question; another seat’s is not read (got ' + JSON.stringify({ before, qs: qs.slice(1, 4) }) + ')');
-        const rp = qs.filter(t => /^Johan Sigvard: /.test(t));
-        ok(rp.length === 4 && rp[3] === 'Johan Sigvard: I see nobody called "me" here. Type bounce <name> (Hanna Bergström, Hannes).',
+        const rp = qs.filter(t => /^Jonna Sundin: /.test(t));
+        ok(rp.length === 4 && rp[3] === 'Jonna Sundin: I see nobody called "me" here. Type bounce <name> (Hanna Bergström, Hannes).',
            '183f ...talk is not a bounce: "Bounce? Nah." and "Bounce. Nah" get nothing (the egress review: "nah" read as Hannah), "bounce me" names nobody (got ' + JSON.stringify(rp) + ')');
         ok(!terr && !!mid && mid.target === 3 && mid.bounced === true && A.lines.some(l => l.tier === 'log' && l.txt === 'Alice Chen (G6) bleeds for 1. Target: Hanna Bergström\'s pool.') && A.evs.some(e => e.t === 'bounce-read' && e.m.to === 'Hanna Bergström'),
            '183f ...a typed bounce with a part of the name re-aims my bleed: the frozen re-announce, no pump after it, a bounce-read row (got ' + JSON.stringify({ terr, mid, logs: A.lines.filter(l => l.tier === 'log').map(l => l.txt).filter(t => /bleeds/.test(t)) }) + ')');
@@ -16189,9 +16189,9 @@ async function connectWithRetry(client, tries = 30){
            '183f ...the bot at the new seat arms and answers, and counts one action and one bleed, not two (got ' + JSON.stringify({ h: H.lines.filter(l => l.tier === 'say').map(l => l.txt), n: H._turnActN, rec: hRec && { a: hRec.actions, b: hRec.bleeds } }) + ')'); }
 
       // f2) AN OBSERVER of the acting bot's re-announce: the same action re-aimed (one action row, one bleed in the minion's record)
-      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan Sigvard', bot: false }, { seat: 3, name: 'Hanna Bergstr\u00f6m', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
+      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Jonna Sundin', bot: false }, { seat: 3, name: 'Hanna Bergstr\u00f6m', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
         const O = mk3('Hanna Bergstr\u00f6m', 3, 'malkavian', P); O.turnSeat = 1; O.table = { 1: { pub: { cards: [V3('a1', 'Alice Chen (G6)')] } } };
-        O._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1. Target: Johan Sigvard\'s pool.'); O._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1. Target: Hannes\'s pool.');
+        O._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1. Target: Jonna Sundin\'s pool.'); O._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1. Target: Hannes\'s pool.');
         const r = O.opp && O.opp[1] && O.opp[1].minions && O.opp[1].minions['Alice Chen (G6)'];
         ok((O._turnActN | 0) === 1 && !!r && r.actions === 1 && r.bleeds === 1 && !!O._obs && O._obs.targetSeat === 4,
            '183f ...an observer reads the acting bot\u2019s re-announce as the same action re-aimed: one action row, one bleed, the aim moved (got ' + JSON.stringify({ n: O._turnActN, rec: r && { a: r.actions, b: r.bleeds }, aim: O._obs && O._obs.targetSeat }) + ')');
@@ -16202,7 +16202,7 @@ async function connectWithRetry(client, tries = 30){
         ok((O2._turnActN | 0) === 1 && !!r2 && r2.bleeds === 1 && !!O2._obs && O2._obs.targetSeat === 4 && /^bleeds for /.test(O2._obs.verb || ''),
            '183f ...and so with a modifier\u2019s play line between the announce and the re-announce (the egress review: the play line hid the bleed -- a second action row and a second bleed) (got ' + JSON.stringify({ n: O2._turnActN, rec: r2 && { a: r2.actions, b: r2.bleeds }, obs: O2._obs && { aim: O2._obs.targetSeat, verb: O2._obs.verb } }) + ')');
         const O3 = mk3('Hanna Bergstr\u00f6m', 3, 'malkavian', P); O3.turnSeat = 1; O3.table = { 1: { pub: { cards: [V3('a1', 'Alice Chen (G6)')] } } };
-        O3._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1.'); O3._onLog('Johan Sigvard', '<b>Lisa</b> plays <b>Deflection</b>.'); O3._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1. Target: Hannes\'s pool.');
+        O3._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1.'); O3._onLog('Jonna Sundin', '<b>Lisa</b> plays <b>Deflection</b>.'); O3._onLog('Viktor', '<b>Alice Chen (G6)</b> bleeds for 1. Target: Hannes\'s pool.');
         const r3 = O3.opp && O3.opp[1] && O3.opp[1].minions && O3.opp[1].minions['Alice Chen (G6)'];
         ok((O3._turnActN | 0) === 1 && !!r3 && r3.actions === 1 && r3.bleeds === 1 && !!O3._obs && O3._obs.vamp === 'Alice Chen (G6)' && O3._obs.targetSeat === 4,
            '183f ...and with the bled human\u2019s own bounce card line between, the line START-HERE asks for (the egress review, pass 2: two actions, two bleeds) (got ' + JSON.stringify({ n: O3._turnActN, rec: r3 && { a: r3.actions, b: r3.bleeds }, obs: O3._obs && { vamp: O3._obs.vamp, aim: O3._obs.targetSeat } }) + ')');
@@ -16215,42 +16215,42 @@ async function connectWithRetry(client, tries = 30){
 
       // f3) A BOUNCE BETWEEN MY WINDOWS (the egress review): it waits for my next step, which re-announces it and opens the new target's window
       //     in the same tick; one after the bleed resolved, or was blocked, is answered, never applied
-      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan Sigvard', bot: false }, { seat: 3, name: 'Hanna Bergström', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
+      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Jonna Sundin', bot: false }, { seat: 3, name: 'Hanna Bergström', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
         { const u = mk3('Viktor', 1, 'ventrue', P); u.sent = []; u.send = m => u.sent.push(m); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true; u.tally = { mode: 'block', a: 1, b: 2 };
           u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 2, target: 2, played: new Set() };
-          const r = IF3(u, '_humanBounce') ? u._humanBounce('Johan Sigvard', 'bounce to Hannes!') : null, pb = u._actingVamp.pendingBounce, logs0 = u.sent.filter(m => m.t === 'log').length;
-          const pr = IF3(u, '_bounceGate') ? u._bounceGate({ what: 'no', who: 'Johan Sigvard' }) : Promise.resolve(null);
+          const r = IF3(u, '_humanBounce') ? u._humanBounce('Jonna Sundin', 'bounce to Hannes!') : null, pb = u._actingVamp.pendingBounce, logs0 = u.sent.filter(m => m.t === 'log').length;
+          const pr = IF3(u, '_bounceGate') ? u._bounceGate({ what: 'no', who: 'Jonna Sundin' }) : Promise.resolve(null);
           const logs = u.sent.filter(m => m.t === 'log').map(txt3), a = u._ask, q = u.chats[u.chats.length - 1];
           const oneTick = logs.length === 1 && logs[0] === "Alice Chen (G6) bleeds for 2. Target: Hannes's pool." && !!a && a.target === 4 && a.reactionsOnly && u._actingVamp.blockStepSeat === 4 && u.tally.b === 0;
           u._onSay({ who: 'Hannes', i: SAY.indexOf('No block') }); const ans = await Promise.race([pr, sleep(3000).then(() => 'stuck')]);
-          ok(r === true && !!pb && pb.seat === 4 && logs0 === 0 && oneTick && /^Trainbot: Alice Chen now bleeds Hannes for 2 \(Johan Sigvard bounced it\) — Hannes may block it \(the bounce allows that\), react, or say "no"/.test(q || '')
+          ok(r === true && !!pb && pb.seat === 4 && logs0 === 0 && oneTick && /^Trainbot: Alice Chen now bleeds Hannes for 2 \(Jonna Sundin bounced it\) — Hannes may block it \(the bounce allows that\), react, or say "no"/.test(q || '')
              && ans && ans.what === 'no' && u._actingVamp.target === 4 && u._actingVamp.bounced === true && !u._actingVamp.pendingBounce,
              '183f3 a bounce with no window of mine open waits (nothing re-aimed, nothing sent); my next step sends the re-announce and opens Hannes’s window in one tick -- the block step, a fresh intercept -- and his answer closes it (got ' + JSON.stringify({ r, pb, logs0, logs, ask: a && { t: a.target, ro: a.reactionsOnly }, q, ans, tally: u.tally }) + ')'); }
         { const u = mk3('Viktor', 1, 'ventrue', P); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true;
           u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 2, target: 2, played: new Set(), resolving: 'blocked' };
-          const r1 = IF3(u, '_humanBounce') && u._humanBounce('Johan Sigvard', 'bounce Hannes'); u._actingVamp.resolving = true; const r2 = IF3(u, '_humanBounce') && u._humanBounce('Johan Sigvard', 'bounce Hannes');
+          const r1 = IF3(u, '_humanBounce') && u._humanBounce('Jonna Sundin', 'bounce Hannes'); u._actingVamp.resolving = true; const r2 = IF3(u, '_humanBounce') && u._humanBounce('Jonna Sundin', 'bounce Hannes');
           u._actingVamp = null; u._acting = false; u.turnSeat = 1; u._lastBleed = { seat: 2, vamp: 'Alice Chen (G6)', at: Date.now(), how: true };
-          const r3 = IF3(u, '_humanBounce') && u._humanBounce('Johan Sigvard', 'Johan Sigvard bounces the bleed to Hannes'), r4 = IF3(u, '_humanBounce') && u._humanBounce('Hannes', 'bounce Johan');
-          u.turnSeat = 2; const r5 = IF3(u, '_humanBounce') && u._humanBounce('Johan Sigvard', 'bounce Hannes');
-          ok(r1 === true && r2 === true && r3 === true && !r4 && !r5 && u.chats.length === 3 && u.chats[0] === 'Johan Sigvard: Alice Chen’s bleed was blocked — there is nothing to bounce.'
-             && u.chats[1] === 'Johan Sigvard: too late — Alice Chen’s bleed has resolved.' && u.chats[2] === u.chats[1],
+          const r3 = IF3(u, '_humanBounce') && u._humanBounce('Jonna Sundin', 'Jonna Sundin bounces the bleed to Hannes'), r4 = IF3(u, '_humanBounce') && u._humanBounce('Hannes', 'bounce Jonna');
+          u.turnSeat = 2; const r5 = IF3(u, '_humanBounce') && u._humanBounce('Jonna Sundin', 'bounce Hannes');
+          ok(r1 === true && r2 === true && r3 === true && !r4 && !r5 && u.chats.length === 3 && u.chats[0] === 'Jonna Sundin: Alice Chen’s bleed was blocked — there is nothing to bounce.'
+             && u.chats[1] === 'Jonna Sundin: too late — Alice Chen’s bleed has resolved.' && u.chats[2] === u.chats[1],
              '183f3 ...after a block, after It resolves, or just after the bleed (still my turn) a bounce is answered and applies to nothing; another seat’s, or one in somebody else’s turn, is not mine to answer (got ' + JSON.stringify({ r1, r2, r3, r4, r5, chats: u.chats }) + ')'); }
         { const u = mk3('Viktor', 1, 'ventrue', P); u.sent = []; u.send = m => u.sent.push(m); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true;
           u.tempo = { mode: 'adaptive', waitSecs: 1 }; u.table = { 4: { pub: { cards: [V3('x1', 'Mira')] } } }; u._opp(4).handN = 0;
-          u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 2, target: 2, played: new Set(), pendingBounce: { seat: 4, by: 'Johan Sigvard', line: 'bounce Hannes' } };
-          const pr = IF3(u, '_bounceGate') ? u._bounceGate({ what: 'no', who: 'Johan Sigvard' }) : Promise.resolve(null); const asked = !!u._ask && u._ask.target === 4;
+          u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 2, target: 2, played: new Set(), pendingBounce: { seat: 4, by: 'Jonna Sundin', line: 'bounce Hannes' } };
+          const pr = IF3(u, '_bounceGate') ? u._bounceGate({ what: 'no', who: 'Jonna Sundin' }) : Promise.resolve(null); const asked = !!u._ask && u._ask.target === 4;
           if(u._ask) u._answer('no', 'Hannes'); await Promise.race([pr, sleep(2000)]);
           ok(asked && u._seatCanBlock(4, true) === false, '183f3 ...Adaptive asks a bounce\u2019s new target with an empty hand: it may block (the egress review, pass 2: the reactions-only skip took its block step) (got ' + JSON.stringify({ asked }) + ')'); }
         { const P2 = P.map(q => q.seat === 4 ? Object.assign({}, q, { name: 'Lina' }) : q);
           const hb = (hot, from, line) => { const u = mk3('Viktor', 1, 'ventrue', P2); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true; u._noServer = hot; u._ask = null;
             u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 2, target: 2, played: new Set() };
             const r = IF3(u, '_humanBounce') ? u._humanBounce(from, line) : null; const pb = u._actingVamp.pendingBounce; return { r, seat: pb ? pb.seat : 0, by: pb ? pb.by : null, chats: u.chats }; };
-          const got = { typed: hb(true, 'Lina', 'bounce Hanna'), panel: hb(true, 'Lina', 'Johan Sigvard bounces the bleed to Hanna'), other: hb(true, 'Lina', 'Lina bounces the bleed to Hanna'), online: hb(false, 'Lina', 'bounce Hanna') };
-          ok(got.typed.seat === 3 && got.typed.by === 'Johan Sigvard' && got.panel.r === false && got.panel.seat === 0 && !got.other.r && !got.online.r,
+          const got = { typed: hb(true, 'Lina', 'bounce Hanna'), panel: hb(true, 'Lina', 'Jonna Sundin bounces the bleed to Hanna'), other: hb(true, 'Lina', 'Lina bounces the bleed to Hanna'), online: hb(false, 'Lina', 'bounce Hanna') };
+          ok(got.typed.seat === 3 && got.typed.by === 'Jonna Sundin' && got.panel.r === false && got.panel.seat === 0 && !got.other.r && !got.online.r,
              '183f3 ...a hotseat sends the chat under its active human: a typed bounce is the bled human\u2019s; the same typed line online is not; the ring\u2019s line for the humans is no bounce of its own (its re-announce is) (the egress review, pass 2; the ring) (got ' + JSON.stringify(got) + ')'); }
         { const u = mk3('Viktor', 1, 'ventrue', P); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true; u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 2, target: 2, played: new Set() };
-          const r = ['bounce it', 'bounce to', 'bounced the bleed', 'Bounces are fun'].map(l => IF3(u, '_humanBounce') ? u._humanBounce('Johan Sigvard', l) : null);
-          ok(r[0] === true && r[1] === true && r[2] === true && r[3] === false && u.chats.length === 3 && u.chats.every(c => /^Johan Sigvard: bounce to whom\?/.test(c)),
+          const r = ['bounce it', 'bounce to', 'bounced the bleed', 'Bounces are fun'].map(l => IF3(u, '_humanBounce') ? u._humanBounce('Jonna Sundin', l) : null);
+          ok(r[0] === true && r[1] === true && r[2] === true && r[3] === false && u.chats.length === 3 && u.chats.every(c => /^Jonna Sundin: bounce to whom\?/.test(c)),
              '183f3 ...a bounce with no name is asked for one ("it", "to" and "the bleed" are no names); "Bounces are fun" is talk (the egress review, pass 2) (got ' + JSON.stringify({ r, chats: u.chats }) + ')'); }
         { const A = mk3('Viktor', 1, 'ventrue', P, { askSecs: 1.2 }), H = mk3('Hanna Bergström', 3, 'malkavian', P, { askSecs: 1.2 }); wire3(A, [H]); wire3(H, [A]);
           A.board = [V3('a1', 'Alice Chen (G6)', { blood: 5, cap: 6 })]; A.hand = []; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
@@ -16259,15 +16259,15 @@ async function connectWithRetry(client, tries = 30){
           H.table = { 1: { pub: { cards: [V3('a1', 'Alice Chen (G6)')] } }, 2: { pub: { cards: [V3('j1', 'Lisa')] } }, 4: { pub: { cards: [] } } };
           let terr = null; const turn = A._playTurn().catch(e => { terr = e.message; });
           for(let i = 0; i < 80 && !A.lines.some(l => l.tier === 'chat' && /Block\?/.test(l.txt)); i++) await sleep(50);
-          A._onSay({ who: 'Johan Sigvard', i: SAY.indexOf('No block') }); A._onChat('Johan Sigvard', 'bounce Hanna');
+          A._onSay({ who: 'Jonna Sundin', i: SAY.indexOf('No block') }); A._onChat('Jonna Sundin', 'bounce Hanna');
           const pend = A._actingVamp && A._actingVamp.pendingBounce, tgt0 = A._actingVamp && A._actingVamp.target;
           await Promise.race([turn, sleep(8000)]); await sleep(150);
           const L = A.lines.map(l => l.tier + ':' + l.txt), i1 = L.indexOf("log:Alice Chen (G6) bleeds for 1. Target: Hanna Bergström's pool.");
-          ok(!terr && !!pend && pend.seat === 3 && tgt0 === 2 && i1 >= 0 && (L[i1 + 1] || '') === 'chat:Alice Chen now bleeds Hanna Bergström for 1 (Johan Sigvard bounced it)' && H.pool === 19,
-             '183f3 ...through a whole turn: the Block? window closed on Johan’s No block and his bounce came in the same tick -- the re-announce and Hanna’s window go out together, she answers in it, and the bleed lands on her (v0.6.240: the question to the bot Hanna as sent now, no prefix, no human tail -- D-137) (got ' + JSON.stringify({ terr, pend, tgt0, at: i1, next: L[i1 + 1], hpool: H.pool }) + ')'); } }
+          ok(!terr && !!pend && pend.seat === 3 && tgt0 === 2 && i1 >= 0 && (L[i1 + 1] || '') === 'chat:Alice Chen now bleeds Hanna Bergström for 1 (Jonna Sundin bounced it)' && H.pool === 19,
+             '183f3 ...through a whole turn: the Block? window closed on Jonna’s No block and his bounce came in the same tick -- the re-announce and Hanna’s window go out together, she answers in it, and the bleed lands on her (v0.6.240: the question to the bot Hanna as sent now, no prefix, no human tail -- D-137) (got ' + JSON.stringify({ terr, pend, tgt0, at: i1, next: L[i1 + 1], hpool: H.pool }) + ')'); } }
 
       // f4) PASS 3 on the acting side: a bounce ends its sender's pause on the window; lateBounce 0 pumps on after a bounce between windows
-      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan', bot: false }, { seat: 3, name: 'Hanna', bot: true }];
+      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Jonna', bot: false }, { seat: 3, name: 'Hanna', bot: true }];
         const rig = (o) => { const A = mk3('Viktor', 1, 'ventrue', P, Object.assign({ askSecs: 4 }, o || {})), H = mk3('Hanna', 3, 'malkavian', P, { askSecs: 4 }); wire3(A, [H]); wire3(H, [A]);
           A.board = [V3('a1', 'Alice Chen', { blood: 5, cap: 6 })]; A.hand = []; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
           H.board = [V3('h1', 'Colette', { cap: 5, locked: true })]; H.hand = []; H.pool = 20; H.turnSeat = 1;
@@ -16275,28 +16275,28 @@ async function connectWithRetry(client, tries = 30){
           H.table = { 1: { pub: { cards: [V3('a1', 'Alice Chen')] } }, 2: { pub: { cards: [V3('j1', 'Lisa')] } } }; return { A, H }; };
         const askOpen = async A => { for(let i = 0; i < 120 && !A.lines.some(l => l.tier === 'chat' && /Block\?/.test(l.txt)); i++) await sleep(25); };
         { const { A, H } = rig(); const turn = A._playTurn().catch(() => {}); await askOpen(A);
-          A._onSay({ who: 'Johan', i: SAY.indexOf('Hold on\u2026') }); await sleep(50); A._onChat('Johan', 'bounce Hanna'); await sleep(600);
+          A._onSay({ who: 'Jonna', i: SAY.indexOf('Hold on\u2026') }); await sleep(50); A._onChat('Jonna', 'bounce Hanna'); await sleep(600);
           const open = !!A._ask, hSaid = H.lines.filter(l => l.tier === 'say').map(l => l.txt);
-          A._onSay({ who: 'Johan', i: SAY.indexOf('It resolves') }); await Promise.race([turn, sleep(8000)]); await sleep(100);
+          A._onSay({ who: 'Jonna', i: SAY.indexOf('It resolves') }); await Promise.race([turn, sleep(8000)]); await sleep(100);
           ok(!open && hSaid.length >= 1 && H.pool === 19, '183f4 a bounce answers the window: its sender\u2019s Hold on pause ends with it, and the new target\u2019s answer closes it at once -- it ran a full clock after the release (the egress review, pass 3) (got ' + JSON.stringify({ open, hSaid, hPool: H.pool }) + ')'); }
         const lb0 = async when => { const { A } = rig({ askSecs: 1.2, paceMs: 400, lateBounce: 0 }); let mods = 2, plays = 0;
           A._bestBleedModifierFor = () => mods > 0 ? { name: 'Stub Mod', n: 1 } : null; const dec = A.decide.bind(A); A.decide = (k, c) => k === 'bleed-modifier' ? { play: true, why: 'stub' } : dec(k, c);
           A._playBleedModifier = (v, mod) => { mods--; plays++; A._actingVamp.n += 1; A.send({ t: 'log', html: '<b>' + v.name + '</b> adds +1 bleed (= ' + A._actingVamp.n + ').' }); return true; };
           const turn = A._playTurn().catch(() => {}); await askOpen(A);
-          if(when === 'window') A._onChat('Johan', 'bounce Hanna'); else { A._onSay({ who: 'Johan', i: SAY.indexOf('No block') }); await sleep(250); A._onChat('Johan', 'bounce Hanna'); }
+          if(when === 'window') A._onChat('Jonna', 'bounce Hanna'); else { A._onSay({ who: 'Jonna', i: SAY.indexOf('No block') }); await sleep(250); A._onChat('Jonna', 'bounce Hanna'); }
           await Promise.race([turn, sleep(9000)]); return { plays, target: A.lines.filter(l => l.tier === 'log' && /Target: Hanna/.test(l.txt)).length }; };
         const w = await lb0('window'), pc = await lb0('pace');
         ok(w.plays === 2 && pc.plays === 2 && w.target >= 1 && pc.target >= 1, '183f4 ...lateBounce 0 (a bounced bleed is pumped on) holds for a bounce between windows as for one in a window (the egress review, pass 3) (got ' + JSON.stringify({ window: w, pace: pc }) + ')'); }
 
       // f5) THE BOT RING (client v2.6.187): 'X bounces the bleed to Y.' for the humans, then its own re-announce, then Pass (main's reply, 24 Nov)
-      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan Sigvard', bot: false }, { seat: 3, name: 'Hanna Bergström', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
-        const INFO = '<b>Johan Sigvard</b> bounces the bleed to <b>Hanna Bergström</b>.', RE = '<b>Alice Chen (G6)</b> bleeds for 1. Target: <b>Hanna Bergström</b>\'s pool.';
+      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Jonna Sundin', bot: false }, { seat: 3, name: 'Hanna Bergström', bot: true }, { seat: 4, name: 'Hannes', bot: false }];
+        const INFO = '<b>Jonna Sundin</b> bounces the bleed to <b>Hanna Bergström</b>.', RE = '<b>Alice Chen (G6)</b> bleeds for 1. Target: <b>Hanna Bergström</b>\'s pool.';
         const rig = () => { const A = mk3('Viktor', 1, 'ventrue', P, { askSecs: 1.5 }), H = mk3('Hanna Bergström', 3, 'malkavian', P, { askSecs: 1.5 }); wire3(A, [H]); wire3(H, [A]);
           A.board = [V3('a1', 'Alice Chen (G6)', { blood: 5, cap: 6 })]; A.hand = []; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
           H.board = [V3('h1', 'Colette', { cap: 5, locked: true })]; H.hand = []; H.pool = 20; H.turnSeat = 1;
           A.table = { 2: { pub: { cards: [V3('j1', 'Lisa')] } }, 3: { pub: { cards: [V3('h1', 'Colette', { locked: true })] } }, 4: { pub: { cards: [] } } };
           H.table = { 1: { pub: { cards: [V3('a1', 'Alice Chen (G6)')] } }, 2: { pub: { cards: [V3('j1', 'Lisa')] } }, 4: { pub: { cards: [] } } }; return { A, H }; };
-        const ring = (A, H) => { [A, H].forEach(q => q._onLog('Johan Sigvard', INFO)); const t1 = A._actingVamp && A._actingVamp.target; [A, H].forEach(q => q._onLog('Johan Sigvard', RE)); [A, H].forEach(q => q._onSay({ who: 'Johan Sigvard', i: SAY.indexOf('Pass') })); return t1; };
+        const ring = (A, H) => { [A, H].forEach(q => q._onLog('Jonna Sundin', INFO)); const t1 = A._actingVamp && A._actingVamp.target; [A, H].forEach(q => q._onLog('Jonna Sundin', RE)); [A, H].forEach(q => q._onSay({ who: 'Jonna Sundin', i: SAY.indexOf('Pass') })); return t1; };
         const mineRe = A => A.lines.filter(l => l.tier === 'log' && l.txt === 'Alice Chen (G6) bleeds for 1. Target: Hanna Bergström\'s pool.').length;
         { const { A, H } = rig(); let terr = null; const turn = A._playTurn().catch(e => { terr = e.message; });
           for(let i = 0; i < 80 && !A.lines.some(l => l.tier === 'chat' && /Block\?/.test(l.txt)); i++) await sleep(25);
@@ -16306,31 +16306,31 @@ async function connectWithRetry(client, tries = 30){
              '183f5 the ring in my Block? window: its line for the humans moves nothing, its re-announce moves my bleed (no re-announce of mine on top), and the bleed lands on Hanna (got ' + JSON.stringify({ terr, t1, mid, mine: mineRe(A), hPool: H.pool }) + ')'); }
         { const { A, H } = rig(); let terr = null; const turn = A._playTurn().catch(e => { terr = e.message; });
           for(let i = 0; i < 80 && !A.lines.some(l => l.tier === 'chat' && /Block\?/.test(l.txt)); i++) await sleep(25);
-          A._onSay({ who: 'Johan Sigvard', i: SAY.indexOf('No block') }); ring(A, H); const pend = A._actingVamp && A._actingVamp.pendingBounce;
+          A._onSay({ who: 'Jonna Sundin', i: SAY.indexOf('No block') }); ring(A, H); const pend = A._actingVamp && A._actingVamp.pendingBounce;
           await Promise.race([turn, sleep(8000)]); await sleep(150);
           ok(!terr && !!pend && pend.seat === 3 && mineRe(A) === 1 && H.pool === 19,
              '183f5 ...the ring between my windows (in the same tick as No block): my next step re-announces it with Hanna\u2019s window, she answers in it, and it lands on her (got ' + JSON.stringify({ terr, pend, mine: mineRe(A), hPool: H.pool }) + ')'); }
         { const u = mk3('Viktor', 1, 'ventrue', P); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true;
           u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 1, target: 2, played: new Set(), resolving: true };
-          u._onLog('Johan Sigvard', INFO); u._onLog('Johan Sigvard', RE);
-          ok(u._actingVamp.target === 2 && !u._actingVamp.bounced && u.chats.length === 1 && u.chats[0] === 'Johan Sigvard: too late — Alice Chen’s bleed has resolved.',
+          u._onLog('Jonna Sundin', INFO); u._onLog('Jonna Sundin', RE);
+          ok(u._actingVamp.target === 2 && !u._actingVamp.bounced && u.chats.length === 1 && u.chats[0] === 'Jonna Sundin: too late — Alice Chen’s bleed has resolved.',
              '183f5 ...the ring after my bleed resolved: its line is answered too late, its re-announce moves nothing (got ' + JSON.stringify({ target: u._actingVamp.target, bounced: u._actingVamp.bounced, chats: u.chats }) + ')'); }
         { const u = mk3('Viktor', 1, 'ventrue', P); u.sent = []; u.send = m => u.sent.push(m); u.chats = []; u.chat = t => u.chats.push(t); u._acting = true;
           u._actingVamp = { v: V3('a1', 'Alice Chen (G6)'), n: 1, target: 2, played: new Set() };
-          const pa = u._askBlock('Trainbot: Alice Chen (G6) bleeds Johan Sigvard for 1. Block?'); await sleep(20);
-          u._onChat('Johan Sigvard', 'bounce Hannes'); u._onLog('Johan Sigvard', '<b>Johan Sigvard</b> bounces the bleed to <b>Hannes</b>.'); u._onLog('Johan Sigvard', '<b>Alice Chen (G6)</b> bleeds for 1. Target: <b>Hannes</b>\'s pool.');
+          const pa = u._askBlock('Trainbot: Alice Chen (G6) bleeds Jonna Sundin for 1. Block?'); await sleep(20);
+          u._onChat('Jonna Sundin', 'bounce Hannes'); u._onLog('Jonna Sundin', '<b>Jonna Sundin</b> bounces the bleed to <b>Hannes</b>.'); u._onLog('Jonna Sundin', '<b>Alice Chen (G6)</b> bleeds for 1. Target: <b>Hannes</b>\'s pool.');
           const told = u.chats.filter(c => /now bleeds Hannes/.test(c)).length, mine = u.sent.filter(m => m.t === 'log' && /Target: Hannes/.test(txt3(m))).length;
           u._answer('no', 'Hannes'); await pa;
           ok(u._actingVamp.target === 4 && told === 1 && mine === 1, '183f5 ...a bounce told twice (typed, then the ring): one re-aim, one question to Hannes, one re-announce of mine (got ' + JSON.stringify({ target: u._actingVamp.target, told, mine }) + ')'); } }
 
       // g) THE PANEL'S LINE HAS ITS EVENT KIND
-      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Johan', bot: false }]; const u = mk3('Viktor', 1, 'ventrue', P);
-        const ev = u._evClassify('Johan', 'Johan bounces the bleed to Hanna');
-        ok(!!ev && ev.kind === 'bounce' && ev.by === 'Johan' && ev.to === 'Hanna', '183g "X bounces the bleed to Y" is a bounce event (got ' + JSON.stringify(ev) + ')'); }
+      { const P = [{ seat: 1, name: 'Viktor', bot: true }, { seat: 2, name: 'Jonna', bot: false }]; const u = mk3('Viktor', 1, 'ventrue', P);
+        const ev = u._evClassify('Jonna', 'Jonna bounces the bleed to Hanna');
+        ok(!!ev && ev.kind === 'bounce' && ev.by === 'Jonna' && ev.to === 'Hanna', '183g "X bounces the bleed to Y" is a bounce event (got ' + JSON.stringify(ev) + ')'); }
     }
 
-    /* 184) v0.6.238 -- DREAMS OF THE SPHINX STAYS IN PLAY ON ITS OWN (the sweep register 8.11; Johan, 24 Nov: 'it is a card in play
-       that is not attached to any vampire'). 'Put this card in play. Add 1 counter to this card each time you lock it ... You can lock
+    /* 184) v0.6.238 -- DREAMS OF THE SPHINX STAYS IN PLAY ON ITS OWN (the sweep register 8.11; the owner, 24 Nov: it is a card in play
+       that is not attached to any vampire). 'Put this card in play. Add 1 counter to this card each time you lock it ... You can lock
        this card during your unlock phase to gain 1 pool if you have the Edge ... Burn this card if it has 3 counters' (KRCG). Its
        curated poolGain mode is phase-tagged AND a lock mode, and the master finder's `known` (a host's income: Blood Doll, Vessel) took
        it for one: it went on a vampire and paid 1 pool every unlock phase with no lock, no Edge and no counter. (a) The host rule no
@@ -16532,7 +16532,7 @@ async function connectWithRetry(client, tries = 30){
     }
 
     /* 186) v0.6.240 -- THE CHAT ROUND (RULINGS D-137, BOARD's chat-round line; tools/chat-record.js + tools/ana-chat.py measure it at the
-       client's pace). Johan, 24 Nov: the bubbles stay and keep their content; one speaker at a time (a seat's bubble waits until another
+       client's pace). The owner, 24 Nov: the bubbles stay and keep their content; one speaker at a time (a seat's bubble waits until another
        seat's has left the screen, a short phrase holds the floor 1.5 s; ring order on a tie, the vote round driven by the previous voter);
        no "(bot):" prefix; a bot's question to a bot without the human's instruction tail. (a) chat() on the wire: no prefix and no
        '(bot)', the combat narration's 'NAME combat' kept, a note keeps 'NAME (bot)'; (b) _askBlock's tail only to a human addressee
@@ -16574,21 +16574,21 @@ async function connectWithRetry(client, tries = 30){
           u._actingVamp = { v: { id: 'r1', name: 'Ryan (G6)' }, n: 1, target: undirected ? null : target, kind: undirected ? 'stock' : 'bleed', played: new Set() };
           const pa = u._askBlock(q, opts); await sleep(20); const sent = u.wire.filter(w => w.m.t === 'chat').map(txt6); u._answer('no', null); await pa.catch(() => null); if(u._ask && u._ask.timer) clearTimeout(u._ask.timer); return sent; };
         const d1 = await run(['Hanna', 'Viktor'], [true, true], 2, 'Trainbot: Ryan (G6) bleeds Viktor for 1. Block?');
-        const d2 = await run(['Hanna', 'Johan'], [true, false], 2, 'Trainbot: Ryan (G6) bleeds Johan for 1. Block?');
+        const d2 = await run(['Hanna', 'Jonna'], [true, false], 2, 'Trainbot: Ryan (G6) bleeds Jonna for 1. Block?');
         const u1 = await run(['Hanna', 'Viktor', 'Mara'], [true, true, true], 0, 'Trainbot: Ryan (G6) hunts. Block?', {}, true);
-        const u2 = await run(['Hanna', 'Viktor', 'Johan'], [true, true, false], 0, 'Trainbot: Ryan (G6) hunts. Block?', {}, true);
+        const u2 = await run(['Hanna', 'Viktor', 'Jonna'], [true, true, false], 0, 'Trainbot: Ryan (G6) hunts. Block?', {}, true);
         const r1 = await run(['Hanna', 'Viktor'], [true, true], 2, 'Trainbot: Ryan (G6) — bleed total 2 on Viktor, no more modifiers. Any reaction before it resolves?', { reactionsOnly: true });
-        const r2 = await run(['Hanna', 'Johan'], [true, false], 2, 'Trainbot: Ryan (G6) — bleed total 2 on Johan, no more modifiers. Any reaction before it resolves?', { reactionsOnly: true });
-        ok(d1[0] === 'Ryan bleeds Viktor for 1. Block?' && /^Ryan bleeds Johan for 1\. Block\? — say "block" or "no" \(\d+s → no\)$/.test(d2[0] || '')
+        const r2 = await run(['Hanna', 'Jonna'], [true, false], 2, 'Trainbot: Ryan (G6) — bleed total 2 on Jonna, no more modifiers. Any reaction before it resolves?', { reactionsOnly: true });
+        ok(d1[0] === 'Ryan bleeds Viktor for 1. Block?' && /^Ryan bleeds Jonna for 1\. Block\? — say "block" or "no" \(\d+s → no\)$/.test(d2[0] || '')
            && u1[0] === 'Ryan hunts. Block?' && /^Ryan hunts\. Block\? — say "block" or "no"/.test(u2[0] || '')
            && r1[0] === 'Ryan — bleed total 2 on Viktor, no more modifiers. Any reaction before it resolves?' && /Any reaction before it resolves\? — reduce, bounce or say "no reaction"/.test(r2[0] || ''),
            '186b a question only bots are asked has no human tail (directed, undirected, reactions-only); a human addressee keeps it (got ' + JSON.stringify({ d1, d2, u1, u2, r1, r2 }) + ')'); }
 
       // c) the combat line's tail: none to a bot opponent, kept for a human or an unknown one (160n: the same through a combat between two bots)
-      { const u = mk6('Hanna', 1, P6(['Hanna', 'Viktor', 'Johan'], [true, true, false])); const T = ' Tell me if your side differs.';
+      { const u = mk6('Hanna', 1, P6(['Hanna', 'Viktor', 'Jonna'], [true, true, false])); const T = ' Tell me if your side differs.';
         const at = seat => { u._combatOpp = () => seat ? { seat, name: 'X', o: {}, rec: null } : null; return IF6(u, '_combatTell') ? u._combatTell(T) : 'no method'; };
         const g = { bot: at(2), human: at(3), unknown: at(0) };
-        const tier = (seat, o) => { const w = mk6('Hanna', 1, P6(['Hanna', 'Viktor', 'Johan'], [true, true, false]), o); w._combatOpp = () => seat ? { seat, name: 'X', o: {}, rec: null } : null; return IF6(w, '_combatNoteToBot') ? w._combatNoteToBot() : 'no method'; };
+        const tier = (seat, o) => { const w = mk6('Hanna', 1, P6(['Hanna', 'Viktor', 'Jonna'], [true, true, false]), o); w._combatOpp = () => seat ? { seat, name: 'X', o: {}, rec: null } : null; return IF6(w, '_combatNoteToBot') ? w._combatNoteToBot() : 'no method'; };
         const P3 = { paceMs: 3100 }, n = { bot: tier(2, P3), human: tier(3, P3), unknown: tier(0, P3), zero: tier(2, { paceMs: 3100, combatNotes: 0 }), noFloor: tier(2, { paceMs: 3100, chatFloor: 0 }), fast: tier(2), forced: tier(2, { combatNotes: 1 }) };
         ok(g.bot === '' && g.human === T && g.unknown === T && n.bot === true && n.human === false && n.unknown === false && n.zero === true && n.noFloor === false && n.fast === false && n.forced === true,
            '186c a combat line tells a human or unknown opponent "tell me if your side differs", a bot opponent nothing -- and to a bot at a table the floor paces it is a log line, whatever combatNotes says (a race is no knob); the floor off (chatFloor 0) or a fast table keeps the bubble; combatNotes 1 forces the log line (got ' + JSON.stringify({ g, n }) + ') [new methods: red on the old bytes proves only that; 160n runs both tiers through a combat between two bots]'); }
@@ -16647,7 +16647,7 @@ async function connectWithRetry(client, tries = 30){
         const spoke = u => u.wire.some(w => w.m.t === 'chat');
         const v1 = mkV(P); const armed1 = !!v1._refHeardW; await sleep(150); const early = spoke(v1); v1._dispatch({ t: 'chat', who: 'Mara', msg: 'No votes from me.' }); const woke1 = armed1 && !v1._refHeardW; await until6(() => spoke(v1), 8000);   // generous: the floor releases it at ~3.5 s, no time is asserted
         const pv1 = IF6(v1, '_refPrevVoter') ? v1._refPrevVoter() : null;
-        const v2 = mkV(P6(['Hanna', 'Johan', 'Viktor'], [true, false, true])); const armed2 = !!v2._refHeardW; const pv2 = IF6(v2, '_refPrevVoter') ? v2._refPrevVoter() : null; v2._dispatch({ t: 'chat', who: 'Hanna', msg: 'I vote 1 for.' }); const woke2 = armed2 && !v2._refHeardW; await until6(() => spoke(v2), 8000);
+        const v2 = mkV(P6(['Hanna', 'Jonna', 'Viktor'], [true, false, true])); const armed2 = !!v2._refHeardW; const pv2 = IF6(v2, '_refPrevVoter') ? v2._refPrevVoter() : null; v2._dispatch({ t: 'chat', who: 'Hanna', msg: 'I vote 1 for.' }); const woke2 = armed2 && !v2._refHeardW; await until6(() => spoke(v2), 8000);
         const v3 = mkV(P); const t3 = Date.now(); await until6(() => spoke(v3), 4000); const cap = Date.now() - t3;
         const v4 = mkV(P); await sleep(50); v4._dispatch({ t: 'tally', who: 'Hanna', mode: null, a: 0, b: 0 }); await sleep(1200);   // long enough for a bubble queued after the close to drain (the egress review's pass 3)
         const closed = !spoke(v4) && !v4._sq.some(o => o && o.t === 'chat') && !v4.wire.some(w => w.m.t === 'tally' && w.m.mode === 'vote') && !v4._refHeardW;
@@ -16672,7 +16672,7 @@ async function connectWithRetry(client, tries = 30){
         ok(dt >= 700 - 20 && dv < 600, '186k my next act waits until another seat’s bubble has left the floor (' + dt + ' ms; with chatFloor 0 only the beat: ' + dv + ' ms)'); }
 
       // l) a window only bots are asked starts its silence clock when my question has left the screen
-      { const u = mk6('Hanna', 1, P6(['Hanna', 'Viktor', 'Johan'], [true, true, false]), { paceMs: 300 }); const t0 = Date.now();
+      { const u = mk6('Hanna', 1, P6(['Hanna', 'Viktor', 'Jonna'], [true, true, false]), { paceMs: 300 }); const t0 = Date.now();
         const qf = (target, o) => { u._ask = Object.assign({ target, contested: false, _qAt: t0, _qMs: 4000 }, o || {}); return IF6(u, '_qFloorLeft') ? u._qFloorLeft() : null; };
         const bot = qf(2), human = qf(3); const z = mk6('Hanna', 1, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 0 }); z._ask = { target: 2, _qAt: t0, _qMs: 4000 }; const pace0 = IF6(z, '_qFloorLeft') ? z._qFloorLeft() : null;
         u._ask = null; z._ask = null;
@@ -16702,7 +16702,7 @@ async function connectWithRetry(client, tries = 30){
       { const on = (paceMs, chatFloor, askSecs) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', paceMs, log: () => {} }, chatFloor === undefined ? {} : { chatFloor }, askSecs === undefined ? {} : { askSecs })); return IF6(u, '_floorOn') ? u._floorOn() : null; };
         const g = { p0: on(0), p300: on(300), p1500: on(1500), p3100: on(3100), dflt: (() => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', log: () => {} }); return IF6(u, '_floorOn') ? u._floorOn() : null; })(), forced: on(300, 1), forced0: on(0, 1), off: on(3100, 0), ask20: on(3100, undefined, 20), ask3: on(3100, undefined, 3) };
         const tm = (mode, waitSecs, human) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'N', paceMs: 3100, log: () => {} }); u.seat = 1;
-          u.players = [{ seat: 1, name: 'N', bot: true }, { seat: 2, name: human ? 'Johan' : 'Mara', bot: !human }]; u.tempo = { mode, waitSecs, who: 'Johan', at: Date.now() }; return IF6(u, '_floorOn') ? u._floorOn() : null; };
+          u.players = [{ seat: 1, name: 'N', bot: true }, { seat: 2, name: human ? 'Jonna' : 'Mara', bot: !human }]; u.tempo = { mode, waitSecs, who: 'Jonna', at: Date.now() }; return IF6(u, '_floorOn') ? u._floorOn() : null; };
         Object.assign(g, { std3: tm('standard', 3, true), adapt: tm('adaptive', 8, true), turn: tm('turn', 3, true), stdBots: tm('standard', 3, false) });
         ok(g.p0 === false && g.p300 === false && g.p1500 === true && g.p3100 === true && g.dflt === true && g.forced === true && g.forced0 === false && g.off === false && g.ask20 === true && g.ask3 === false
            && g.std3 === false && g.adapt === false && g.turn === true && g.stdBots === true,
@@ -16713,7 +16713,7 @@ async function connectWithRetry(client, tries = 30){
         u._dispatch({ t: 'started', players: u.players }); ok((u._floorUntil | 0) === 0 && u._refHeard === null, '186j a new game starts with a free floor and no vote round (got ' + JSON.stringify({ floor: u._floorUntil, heard: u._refHeard }) + ')'); }
     }
 
-    /* 187) v0.6.241 -- the exactness round (Claude's playtests of 25 Nov 2026; Johan's kör 20:43): the table bugs the two games found
+    /* 187) v0.6.241 -- the exactness round (Claude's playtests of 25 Nov 2026; the owner's go-ahead 20:43): the table bugs the two games found
        (a)-(d), then the base starters' card gaps (e)-. (a) A1: a contest a human's Pass ended (Turn-based) leaves no safety net armed
        behind it -- the next question waits for its own answer (a 4-min timer fired 70 s into a new question at the table); (b) A2: an
        undirected contest whose last human has passed is a bot-only window -- the bots' clock declares the verdict, through the say and
@@ -16736,7 +16736,7 @@ async function connectWithRetry(client, tries = 30){
       console.log('\n[187] v0.6.241 -- the exactness round: the playtests’ table bugs and the base starters’ card gaps');
       const mkT7 = (extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'T', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 0.3, phaseSecs: 0.4, log: () => {} }, extra || {}));
         u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m); u.says = []; u.say = m => u.says.push(m); u.notes = []; u.note = m => u.notes.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
-        u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'T', bot: true }, { seat: 3, name: 'B3', bot: true }];
+        u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'T', bot: true }, { seat: 3, name: 'B3', bot: true }];
         u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } }, 3: { pub: { cards: [{ id: 'k1', name: 'Kim', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
         u.opp = u.opp || {}; u.opp[1] = Object.assign(u.opp[1] || {}, { handN: 5 }); u.opp[3] = Object.assign(u.opp[3] || {}, { handN: 5 });
         const v = { id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4 }; u.board = [v]; u.hand = [];
@@ -16744,29 +16744,29 @@ async function connectWithRetry(client, tries = 30){
         return { u, v }; };
       const race7 = (p, ms) => Promise.race([p, sleep(ms).then(() => ({ what: 'timeout' }))]);
 
-      // a) A1: Johan blocks, the verdict waits on him (Turn-based), his Pass declares it; the next question then waits for its own answer
+      // a) A1: Jonna blocks, the verdict waits on him (Turn-based), his Pass declares it; the next question then waits for its own answer
       { const { u } = mkT7({ tempo: { tempo: 'turn' }, tempoRemindMs: 60000, tempoGiveUpMs: 300 });
         const p1 = u._askBlock('Q1?'); await sleep(10);
         const a1 = u._ask; a1.contested = true; u.tally = { mode: 'block', a: 0, b: 1 }; u._restartAskTimer();   // his block attempt: a contested wait, its safety net re-armed
-        await sleep(40); u._onSay({ who: 'Johan', i: SAY.indexOf('Pass') });   // v0.6.194: the human's Pass ends the exchange at once -- the verdict from the counter
+        await sleep(40); u._onSay({ who: 'Jonna', i: SAY.indexOf('Pass') });   // v0.6.194: the human's Pass ends the exchange at once -- the verdict from the counter
         const r1 = await race7(p1, 1000);
         u.o.tempoGiveUpMs = 4000; u.notes = [];
         const p2 = u._askBlock('Q2?'); await sleep(500);   // the first wait's 300 ms net is long past
         const open2 = !!u._ask && !u._ask.done, noted = u.notes.filter(n => /no answer in/.test(n));
-        u._onChat('Johan', 'no'); const r2 = await race7(p2, 1000);
+        u._onChat('Jonna', 'no'); const r2 = await race7(p2, 1000);
         ok(r1.what === 'block' && open2 && !noted.length && r2.what === 'no',
-           '187a a contest Johan’s Pass ended leaves no clock behind: the next question stays open for its own answer (got ' + JSON.stringify({ r1: r1.what, open2, noted, r2: r2.what }) + '; v0.6.240: its net fired into the new question, "no answer in 4 min" 70 s after it was asked)'); }
+           '187a a contest Jonna’s Pass ended leaves no clock behind: the next question stays open for its own answer (got ' + JSON.stringify({ r1: r1.what, open2, noted, r2: r2.what }) + '; v0.6.240: its net fired into the new question, "no answer in 4 min" 70 s after it was asked)'); }
 
-      // b) A2: an undirected contest -- the prey B3 (a bot) blocks, the predator Johan passes -- is declared by the bots' clock, not the 4-min net
+      // b) A2: an undirected contest -- the prey B3 (a bot) blocks, the predator Jonna passes -- is declared by the bots' clock, not the 4-min net
       for(const via of ['say', 'chat']){
         const { u } = mkT7({ tempo: { tempo: 'turn' }, tempoRemindMs: 60000, tempoGiveUpMs: 5000 });   // askSecs 0.3 = the bots' clock
-        u._actingVamp = { v: u.board[0], n: 0, played: new Set(), target: null, kind: 'political' };     // undirected (a referendum, as the stalls were): seat 2's prey (B3) and predator (Johan) may block
+        u._actingVamp = { v: u.board[0], n: 0, played: new Set(), target: null, kind: 'political' };     // undirected (a referendum, as the stalls were): seat 2's prey (B3) and predator (Jonna) may block
         const t0 = Date.now(); const p = u._askBlock('Sully calls Kine Resources Contested. Block?'); await sleep(10);
         const a = u._ask, elig = a && a.eligible ? [...a.eligible].sort().join() : '';
-        a.contested = true; u.tally = { mode: 'block', a: 1, b: 1 }; u._restartAskTimer();               // B3 blocks with its intercept on the counter: the verdict waits on Johan (no clock) and on B3
-        await sleep(30); if(via === 'say') u._onSay({ who: 'Johan', i: SAY.indexOf('Pass') }); else u._onChat('Johan', 'Pass');
+        a.contested = true; u.tally = { mode: 'block', a: 1, b: 1 }; u._restartAskTimer();               // B3 blocks with its intercept on the counter: the verdict waits on Jonna (no clock) and on B3
+        await sleep(30); if(via === 'say') u._onSay({ who: 'Jonna', i: SAY.indexOf('Pass') }); else u._onChat('Jonna', 'Pass');
         const r = await race7(p, 2500), dt = Date.now() - t0;
-        ok(elig === 'B3,Johan' && r.what === 'block' && dt < 2500,
+        ok(elig === 'B3,Jonna' && r.what === 'block' && dt < 2500,
            '187b ' + via + ': an undirected contest whose last human has passed is a bot-only window -- the bots’ clock declares the verdict from the counter (got ' + JSON.stringify({ elig, what: r.what, dt }) + '; v0.6.240 waited out the 4-min net: the bot blocker never says Pass)');
         if(u._ask) u._answer('no', null); }
 
@@ -16794,14 +16794,14 @@ async function connectWithRetry(client, tries = 30){
 
       // d) A4: the watchdog's heartbeat -- silent while a poll or a combat step waits on the table, said while I am the one thinking
       { const wd = setup => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'W', persona: 'expert', paceMs: 300, log: () => {} });
-          u.seat = 1; u.started = true; u.turnSeat = 1; u.players = [{ seat: 1, name: 'W', bot: true }, { seat: 2, name: 'Johan' }]; u.chats = []; u.chat = m => u.chats.push(m); u.push = () => {};
+          u.seat = 1; u.started = true; u.turnSeat = 1; u.players = [{ seat: 1, name: 'W', bot: true }, { seat: 2, name: 'Jonna' }]; u.chats = []; u.chat = m => u.chats.push(m); u.push = () => {};
           setup(u);
           const orig = global.setTimeout; let cb = null;
           global.setTimeout = (f, ms, ...r) => { if(ms === 30000 && !cb){ cb = f; return { unref(){} }; } return orig(f, ms, ...r); };
           try { u._watchdogArm(); } finally { global.setTimeout = orig; }
           if(cb){ global.setTimeout = (f, ms, ...r) => (ms === 30000 ? { unref(){} } : orig(f, ms, ...r)); try { cb(); } finally { global.setTimeout = orig; } }
           return cb ? u.chats.some(c => /Still thinking/.test(c)) : 'no timer'; };
-        const g = { poll: wd(u => { u._refCall = { closed: false, paused: new Set(), heard: new Set() }; }), combat: wd(u => { u._phaseWait = { step: 0, done: false, who: 'Johan' }; }), thinking: wd(u => { u._acting = true; }) };
+        const g = { poll: wd(u => { u._refCall = { closed: false, paused: new Set(), heard: new Set() }; }), combat: wd(u => { u._phaseWait = { step: 0, done: false, who: 'Jonna' }; }), thinking: wd(u => { u._acting = true; }) };
         ok(g.poll === false && g.combat === false && g.thinking === true,
            '187d the turn watchdog stays silent while my poll or a combat step waits on the table, and still says it is thinking when I am (got ' + JSON.stringify(g) + '; v0.6.240 said "Still thinking…" over both waits)'); }
 
@@ -16863,7 +16863,7 @@ async function connectWithRetry(client, tries = 30){
       }
       // i) Mirror Walk [THA]: the rider mode wins the stealth tie; blocked, the blocker is locked and the action ends with no combat; the blocker's bot stays locked
       { const mkI = name => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'grinder', paceMs: 0, log: () => {} });
-          u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }]; u.started = true; u.caps.tally = true;
+          u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }]; u.started = true; u.caps.tally = true;
           u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; return u; };
         const u = mkI('Henrik'); u.seat = 2; u.turnSeat = 2;
         const ros = { id: 'i1', name: 'Rosalina Cortez (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3 };   // Tremere, [THA]
@@ -16917,11 +16917,11 @@ async function connectWithRetry(client, tries = 30){
           // the egress review's finding 3: blocked on a leave-torpor action, the rider locks the blocker and ends the action -- and the blocker gets no diablerie [PIB 20121216]
           const u5 = mkI('Henrik'); u5.seat = 2; u5.turnSeat = 2; u5.notes = []; u5.note = m => u5.notes.push(m);
           const tv = { id: 'i7', name: 'Rosalina Cortez (G6)', kind: 'crypt', zone: 'torpor', locked: false, blood: 3 }; u5.board = [tv];
-          u5._askBlock = async () => { u5._actingVamp.blockedLock = { card: 'Mirror Walk', at: 'THA' }; u5._lastBlockerName = 'Lisa'; u5._lastBlockerSeat = 1; return { what: 'block', who: 'Johan' }; };
+          u5._askBlock = async () => { u5._actingVamp.blockedLock = { card: 'Mirror Walk', at: 'THA' }; u5._lastBlockerName = 'Lisa'; u5._lastBlockerSeat = 1; return { what: 'block', who: 'Jonna' }; };
           await u5._leaveTorpor(tv);
           const l5 = u5.sent.filter(m => m.t === 'log').map(m => strip(m.html)).find(l => /is locked; the action ends unsuccessfully\./.test(l)) || null;
           const got5 = { l5, noDiab: u5.notes.some(n => /no diablerie/.test(n)), diabNote: u5.notes.some(n => /diablerise instead/.test(n)), zone: tv.zone };
-          ok(got5.l5 === "Rosalina Cortez (G6) is blocked — Mirror Walk [THA]: Johan's Lisa is locked; the action ends unsuccessfully." && got5.noDiab && !got5.diabNote && got5.zone === 'torpor',
+          ok(got5.l5 === "Rosalina Cortez (G6) is blocked — Mirror Walk [THA]: Jonna's Lisa is locked; the action ends unsuccessfully." && got5.noDiab && !got5.diabNote && got5.zone === 'torpor',
              '187i blocked on a leave-torpor action, Mirror Walk [THA] locks the blocker and ends the action, and the note offers no diablerie (got ' + JSON.stringify(got5) + ')'); }
           // the knob (HARNESS step 3: the tie is a decision): riderTie 0 keeps the first mode, v0.6.240's [tha]
           const uK = mkI('Henrik'); uK.o.riderTie = 0; const rK = { id: 'i8', name: 'Rosalina Cortez (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3 }; uK.board = [rK]; uK.hand = ['Mirror Walk'];
@@ -16962,7 +16962,7 @@ async function connectWithRetry(client, tries = 30){
       { const cfK = JSON.parse(require('fs').readFileSync(__dirname + '/elysium-cardfx.json', 'utf8'));
         let aniSup = null; for(const nm in cfK.crypt){ const d = cfK.crypt[nm].disc; if(d && d.sup && d.sup.includes('ani')){ aniSup = nm; break; } }
         const mkK = (hand, vampName) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Sven', persona: 'grinder', paceMs: 0, log: () => {} });
-          u.seat = 3; u.turnSeat = 2; u.started = true; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }];
+          u.seat = 3; u.turnSeat = 2; u.started = true; u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }];
           u.sent = []; u.send = m => u.sent.push(m); u.push = () => {};
           u._awaitOppManeuver = () => Promise.resolve(null); u._awaitOppPress = () => Promise.resolve(null); u._awaitOppTaken = () => Promise.resolve(null);
           u._awaitOppStrike = () => Promise.resolve({ vamp: 'Rosalina Cortez (G6)', dodge: true, dealt: 0 });
@@ -16982,7 +16982,7 @@ async function connectWithRetry(client, tries = 30){
       { const cfL = JSON.parse(require('fs').readFileSync(__dirname + '/elysium-cardfx.json', 'utf8'));
         let aniSup = null; for(const nm in cfL.crypt){ const d = cfL.crypt[nm].disc; if(d && d.sup && d.sup.includes('ani')){ aniSup = nm; break; } }
         const mkL = (hand, vampName) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Sven', persona: 'grinder', paceMs: 0, log: () => {} });
-          u.seat = 3; u.turnSeat = 2; u.started = true; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }];
+          u.seat = 3; u.turnSeat = 2; u.started = true; u.players = [{ seat: 1, name: 'Jonna' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }];
           u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.evs = []; u.onEvent = (t, d) => u.evs.push({ t, d });
           u._awaitOppManeuver = () => Promise.resolve(null); u._awaitOppPress = () => Promise.resolve(null); u._awaitOppTaken = () => Promise.resolve(null);
           u._awaitOppStrike = () => Promise.resolve({ vamp: 'Rosalina Cortez (G6)', dodge: true, dealt: 0 });

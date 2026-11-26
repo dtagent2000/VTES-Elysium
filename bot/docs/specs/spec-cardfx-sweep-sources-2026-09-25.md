@@ -13,7 +13,7 @@ or the private data repo (root CLAUDE.md), and vtes-rulings / vtes-skill are not
 
 # Cardfx sweep — source mapping (KRCG, vtes-rulings, vtes-skill)
 
-2026-09-25 · @the owner Adamsson
+2026-09-25 · the owner
 
 Card text comes from KRCG, the ruling on a card from vtes-rulings, the general rule from the rulebook in vtes-skill; the sweep compares our cardfx against all three and brings every disagreement to the owner.
 

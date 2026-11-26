@@ -19,7 +19,7 @@ original; this copy is the one sessions read.
 
 # Elysium Bots — Design: event log, shadow model, knowledge sources, bench
 
-2026-09-25 · @the owner Adamsson
+2026-09-25 · the owner
 
 ## Purpose and scope
 

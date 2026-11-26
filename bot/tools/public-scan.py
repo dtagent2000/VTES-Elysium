@@ -18,9 +18,12 @@ Exit 1 on a hit (in --tree, a hit outside WAITING), 2 on a usage error.
 """
 import hashlib, os, re, subprocess, sys
 
-NAMES = {   # sha256 of the lower-case word: the owner's first name and its Swedish genitive
+NAMES = {   # sha256 of the lower-case word: the owner's first name and its Swedish genitive, and the two other names of the owner's
+           # that the repository held before the cleanup round (D-142)
     'd9a31550033ee07d6e14302eea8202c07c266b633154513d817ca8bb91de40d1',
     '3470c3badec253e68895721ee5d190f6d964377856485449e0a3d6bd3b00db82',
+    '79bbe3aaee3096d9024c1cdd53c6d6cb155d7e72cc4d67f3ab9eab573c899fd3',
+    '74028dcdd9ec8860dfe06ec08196a92203f79779284f59a057041f8dc2951dff',
 }
 ALLOWED_PAIRS = {   # sha256 of 'word next' in lower case: a crypt card whose name begins with the word
     '41700266f4dc1aa924e99f260b8995d72b680ca7029bfe140da2a2e5e831a407',
@@ -34,7 +37,8 @@ människorna slutar börja först sist tyst rätt fel klart'''.split())
 SV_LETTER = re.compile(r'[åäöÅÄÖ]')
 QUOTE = re.compile(r'"([^"\n]{3,400})"|“([^”\n]{3,400})”|‘([^’\n]{3,400})’|«([^»\n]{3,400})»')
 WORD = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ]+")
-READ_ONLY = {'bot/elysium-server.js', 'bot/ELYSIUM-PROTOCOL.md', 'bot/elysium-vtes-bord.html', 'bot/elysium-hotseat-bots-plan.md'}
+READ_ONLY = {'bot/elysium-server.js', 'bot/ELYSIUM-PROTOCOL.md', 'bot/elysium-vtes-bord.html', 'bot/elysium-hotseat-bots-plan.md',
+             'bot/test-bot-canary.js'}   # main's release copies (ARCHITECTURE "Shared with main")
 THIRD_PARTY = re.compile(r'^bot/(vtes|vtes-v5|expansions|twda|twda-vdb)\.json$')
 WAITING = {   # the bundle and the sources it is compiled from: their comments and notes are the bundle's cleanup release (BOARD)
     'bot/elysium-bot.js', 'bot/elysium-cardfx.json', 'bot/elysium-cardfx.js', 'bot/START-HERE-BOTS.html', 'bot/cardfx-curated.json',
@@ -112,15 +116,18 @@ def self_test():
     check(scan_line(name.upper() + ' ruled') == ['name'], 'the name in capitals')
     check(scan_line('the crypt card ' + name + ' Wrede (G4)') == [], 'the crypt card that shares the word')
     check(scan_line(name + 'nes Castelein (G4)') == [], 'a longer name is another word')
-    check(scan_line('the owner: "Ja vi kör på det"') == ['quote (5 words)'], 'a Swedish quote')
-    check(scan_line('“det låter bra”') == ['quote (3 words)'], 'a curly Swedish quote')
-    check(scan_line('wait for "kör"') == [], 'one word is a term, not a quote')
-    check(scan_line('"Frau Schädel" and "Lyyli Yösydän"') == [], 'card names with an umlaut are not Swedish')
-    check(scan_line('"Livet slutar med spelet"') == ['quote (4 words)'], 'Swedish with no Swedish letter')
+    q, lq, rq = chr(34), chr(0x201c), chr(0x201d)   # the quote marks built here, so the scan of this file finds no quote
+    check(scan_line('the owner: ' + q + 'det regnar i dag och vi stannar inne' + q) == ['quote (8 words)'], 'a Swedish quote')
+    check(scan_line(lq + 'hej och tack' + rq) == ['quote (3 words)'], 'a curly Swedish quote')
+    check(scan_line('wait for ' + q + 'k' + chr(0xf6) + 'r' + q) == [], 'one word is a term, not a quote')
+    check(scan_line(q + 'Frau Sch' + chr(0xe4) + 'del' + q + ' and ' + q + 'Lyyli Y' + chr(0xf6) + 'syd' + chr(0xe4) + 'n' + q) == [],
+          'card names with an umlaut are not Swedish')
+    check(scan_line(q + 'leken slutar med kortet' + q) == ['quote (4 words)'], 'Swedish with no Swedish letter')
     check(scan_line('the client line "Lisa bounces the bleed to Hanna."') == [], 'an English table line')
     check(scan_line('the text "Prevent X+1 damage"') == [], 'English card text')
     check(owned('bot/docs/RULINGS.md') and owned('.claude/agents/x.md') and not owned('client/CLAUDE.md'), 'owned paths')
-    check(not owned('bot/elysium-vtes-bord.html') and not owned('bot/vtes.json'), 'main\'s copies and the data are not scanned')
+    check(not owned('bot/elysium-vtes-bord.html') and not owned('bot/test-bot-canary.js') and not owned('bot/vtes.json'),
+          'main\'s copies and the data are not scanned')
     check(scan_line(('deck-coverage-x-' + name.lower() + '-y.md').replace('-', ' ')) == ['name'], 'a name in a path')
     print('%d checks, %d failed' % (ok + bad, bad))
     return 1 if bad else 0

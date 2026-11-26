@@ -30,7 +30,7 @@
 const fs = require('fs'), path = require('path');
 
 const GEN_PRECON_VERSION = '1.1.1';
-/* The combat posture of each precon the bot does not embed (D-102, Johan 29 Oct 2026): chase = the fight is at close range (the strength
+/* The combat posture of each precon the bot does not embed (D-102, the owner 29 Oct 2026): chase = the fight is at close range (the strength
    decks: Brujah, Gangrel, Tzimisce, Path of Caine); snipe = long range with a ranged strike or steal in hand (Banu Haqim: Hunger of
    Marduk); every other precon waves (long range defensively). The embedded decks keep theirs in the bot's DECK_STRATEGY. */
 const POSTURE = { brujah: 'chase', gangrel: 'chase', tzimisce: 'chase', pathcaine: 'chase', banuhaqim: 'snipe' };

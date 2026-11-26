@@ -12,7 +12,7 @@ rm -rf "$OUT"; mkdir -p "$OUT"
 cat > "$OUT/scenario.json" <<'EOF'
 { "about": "tools/tokens-in-browser.sh: a human and one bot; the bot's board then gets a Grand Ball pair and a Smiling Jack in the page",
   "room": "tokens", "board": "structured",
-  "human": { "name": "Johan", "deck": "bot:malkavian", "seat": 1 },
+  "human": { "name": "Jonna", "deck": "bot:malkavian", "seat": 1 },
   "bots": [ { "name": "Viktor", "deck": "ventrue", "persona": "expert" } ] }
 EOF
 cd "$REPO" || exit 2

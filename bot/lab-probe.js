@@ -2,7 +2,7 @@
 'use strict';
 /* lab-probe.js v1.0.1 (17 Oct 2026, bot v0.6.206; v1.0.1 13 Nov 2026, bot v0.6.220: every bot's rngSeed from SEED, the table and its
    seat, so what the rules call random draws the same in every arm) -- THE PROBE LAB: one minion phase, the same table three times.
-   Johan (16 Oct): measure the probe reservation before and after. The arena meets the probe about once in three matches, so a
+   the owner (16 Oct): measure the probe reservation before and after. The arena meets the probe about once in three matches, so a
    series counts it but cannot weigh it. This lab builds N random tables where the probe order can fire (a stealth-bleed actor
    with a heavy bleed in hand and at most one stealth card, a prey with bodies up), and plays the actor's whole turn on each
    table once per arm -- probeHold 0 (as played since v0.6.143), 1 (the reservation as designed), 2 (only when my actors

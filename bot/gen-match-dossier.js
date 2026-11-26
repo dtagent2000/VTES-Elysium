@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* gen-match-dossier.js — A3: the battle dossier renderer            v1.0.5
-   Turns ONE arena trace into an LLM-first review document (Johan's #5:
+   Turns ONE arena trace into an LLM-first review document (the owner's #5:
    data optimally parseable, output = a "battle report" draft for review).
    Design: deterministic T<n> refs for citation, one event per line,
    manifests FIRST (intent before play), a per-turn FACIT line (every bot's
