@@ -148,6 +148,12 @@ is a handoff first. Bot-to-bot gaps are marked.
   playtests, 25 Nov; D-111 (6), BOARD's measurement debt] · human · trace it at the next human table: a bot's Dowager blocking a
   human's directed action, and a human's Dowager blocking a bot's (the bot could seed a human blocker's printed intercept into an
   untouched counter, as it seeds a human actor's stealth).
+- **4.23 A human's Pass at the strike step** — the bot counts it as no strike (0 damage), but the rulebook makes the hand strike the
+  default: "Each minion chooses their strike … by default from a hand strike" and "The default strike is a hand strike"
+  (https://archon.vekn.net/help/rules#choose-strike, #hand-strike). Seen with a second gap: after a human's combat card the bot
+  moves to the next step, so the human's next Pass answers one step later (Claude's strike step became a Pass, 2797.6 → 2816.8).
+  [Claude's playtest game 2, 25 Nov] · human · a human's Pass, or no strike line by the step's end, reads as a hand strike (the
+  minion's strength at close range, nothing at long range); the step waits for the human's answer to its own question.
 
 ## 5. Maneuvers: direction and source
 Which way a maneuver goes, and where a maneuver comes from (a card, equipment, a grant).
