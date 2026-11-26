@@ -14,12 +14,14 @@
   `bot-history/`; `docs/history/README.md` says how the references read; one coverage snapshot renamed; the words taken out of the
   other pages are in the data repo's `cleanup-2026-11-26-words.md`. `tools/public-scan.py` v1.1.0: the owner's names (by hash,
   camelCase parts too), Swedish chat quotes (a quote over a line break too) and lines of Swedish prose, on the lines a change adds
-  and its commits' messages (`tools/gates.sh`, a CI step on pull requests) or over the tree (`--tree`, the bundle's files WAITING
+  and its commits' messages (`tools/gates.sh`; CI's step on a pull request: its lines and the head commit's message) or over the
+  tree (`--tree`, the bundle's files WAITING
   for their release); main's copies, the third-party data and the tool-written Swedish pages' language are not scanned. *The lighter process*:
   HARNESS "One place for each fact"; the binding rules of one area moved from CLAUDE.md to ARCHITECTURE "Binding rules by area"
   and the measurement rules to HARNESS "Measurements" (the bootstrap 49,953 → BOOTSTRAP bytes); a review pass after the first checks
   the earlier findings and the fixes' diff, plus the scan (HARNESS, the reviewer's agent file). A handoff to main
-  (`handoffs/HANDOFF-to-main-2026-11-26-public-repository.md`: its files, the root CLAUDE.md's history line, the copies); BOARD's
+  (`handoffs/HANDOFF-to-main-2026-11-26-public-repository.md`: its files and the copies); the bot's "Where to start" line in the
+  shared root CLAUDE.md points to the data repo; BOARD's
   line for the bundle's cleanup release. Budgets by D-101: CLAUDE.md 14.5 KB, ARCHITECTURE 29.5 KB, HARNESS 14.5 KB, RULINGS 82
   KB, the total 205 KB (nothing binding cut). Kept: git history and the old PR bodies (the owner's choice).
   *Gates:* GATES-LINE. *Egress:* EGRESS-LINE.

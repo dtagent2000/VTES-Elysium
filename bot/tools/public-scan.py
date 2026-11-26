@@ -5,10 +5,11 @@ The repository is public: it carries no chat quotes and no names of private pers
 itself. Three rules, each hit printed as its place and its kind only, never the words, so the output can go into a PR body:
   name    a word (or a part of a camelCase or snake_case word) whose lower-case sha256 is in NAMES; a crypt card that shares the
           word is allowed by the sha256 of the pair (ALLOWED_PAIRS)
-  quote   a span of two or more words between quote marks (" ' and the typographic pairs, Swedish same-mark and low-high ones too)
-          that reads as Swedish, the chat's language: two of its common words, or one and a Swedish letter. A quote that wraps
-          over a line break is read with the next line; every span between two marks is tried, so an odd mark earlier on the
-          line does not hide one. A one-word term (the go-ahead word) is not a quote.
+  quote   a span of two or more words between quote marks that reads as Swedish, the chat's language: two of its common words,
+          or one and a Swedish letter. The double marks (" and the typographic ones, Swedish same-mark and low-high too) are one
+          kind, so a pair that mixes them is read, and every span between two of them is tried, so an odd mark earlier on the
+          line does not hide one; the single marks pair on one line (an apostrophe is not a mark). A quote that wraps is read with
+          the next two lines. A one-word term (the go-ahead word) is not a quote.
   sv      a line of Swedish prose with no quote marks: three distinct common Swedish words.
 The pages written in Swedish by a tool, and the tools that write them (SWEDISH_OK), are read by the name rule only.
 
@@ -18,7 +19,8 @@ commits. Not scanned: main's files (client/, the root's client, server, guides a
 Usage: python3 bot/tools/public-scan.py [--diff REF | --diff A..B | --tree] [--self-test]
   --diff REF   the lines the working tree adds against REF (staged, unstaged and untracked files too) and the messages of
                REF..HEAD; the default is origin/main
-  --diff A..B  the lines the commits A..B add and their messages (a reviewer's range; CI's HEAD^1..HEAD on a merge commit)
+  --diff A..B  the lines the commits A..B add and their messages (a reviewer's range; CI's HEAD^1..HEAD on a pull request's
+               merge commit reads its lines and, at the checkout's depth, the head commit's message only)
   --tree       every tracked file the scan reads, a count per file; the files WAITING lists (the bundle's cleanup release) are
                reported apart and do not fail the scan
 Exit 1 on a hit (in --tree, a hit outside WAITING), 2 on a usage error.
@@ -42,9 +44,9 @@ fortfarande varje mer flera många har hade blev kommer skulle kunna måste beh�
 säga ditt dina mitt vårt vår våra sitt hennes deras oss mig sig spelet kortet korten leken botten människorna slutar börja först
 sist tyst rätt fel klart'''.split())
 SV_LETTER = re.compile(r'[åäöÅÄÖ]')
-MARKS = [('"', '"'), ('\u201c', '\u201d'), ('\u201d', '\u201d'), ('\u201e', '\u201c\u201d'), ('\u2018', '\u2019'),
-         ('\u00ab', '\u00bb')]   # " “” ”” „“ ‘’ «»; the straight ' apart, as an apostrophe is not a mark (SINGLE)
-SINGLE = re.compile(r"(?:^|(?<=[\s(\[]))'(?=[^\s'])([^'\n]{2,300}?)(?<=[^\s'])'(?=[\s.,;:!?)\]]|$)")   # one pair on one line
+DOUBLE = '"\u201c\u201d\u201e\u00ab\u00bb'   # " “ ” „ « »: one kind, so a pair that mixes them is read
+SINGLE = re.compile(r"(?:^|(?<=[\s(\[=,:{+]))['\u2018\u2019](?=[^\s'])([^'\u2018\u2019\n]{2,300}?)(?<=[^\s'])['\u2019](?=[\s.,;:!?)\]}+]|$)")
+# a single-marked pair on one line: it opens after a space, a bracket or an operator and closes before one (an apostrophe is not)
 WORD = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ]+")
 PART = re.compile(r"[A-ZÀ-ÖØ-Þ]?[a-zß-öø-ÿ]+|[A-ZÀ-ÖØ-Þ]+(?![a-zß-öø-ÿ])")
 READ_ONLY = {'bot/elysium-server.js', 'bot/ELYSIUM-PROTOCOL.md', 'bot/elysium-vtes-bord.html', 'bot/elysium-hotseat-bots-plan.md',
@@ -70,9 +72,13 @@ def sha(s):
 
 
 def _swedish(span, need):
+    """(words, reads as Swedish): need distinct common words (a quote: 2, or 1 and a Swedish letter in a short one; a line: 3),
+    and in a long span a share of them, so a long English stretch between two marks, or a long line, with one stray word is not."""
     ws = [w.lower() for w in WORD.findall(span)]
-    sv = len(set(ws) & SWEDISH)
-    return len(ws), (sv >= need or (need == 2 and sv >= 1 and SV_LETTER.search(span) is not None))
+    sv = len(set(ws) & SWEDISH); share = sum(1 for w in ws if w in SWEDISH) / max(1, len(ws))
+    if len(ws) > (8 if need == 2 else 20) and share < 0.15:
+        return len(ws), False
+    return len(ws), (sv >= need or (need == 2 and len(ws) <= 8 and sv >= 1 and SV_LETTER.search(span) is not None))
 
 
 def name_hits(line, names=None, pairs=None):
@@ -89,16 +95,15 @@ def name_hits(line, names=None, pairs=None):
 
 
 def quote_spans(text, limit):
-    """(start, end, words) for every span between two quote marks of one kind that starts before limit and reads as Swedish."""
+    """(start, end, words) for every span between two double marks, or a single-marked pair, that starts before limit and reads
+    as Swedish."""
     out = []
-    for op, cl in MARKS:
-        pos = [i for i, c in enumerate(text) if c == op or c in cl]
-        for k in range(len(pos) - 1):
-            a, b = pos[k], pos[k + 1]
-            if a >= limit or b - a < 4 or b - a > 2000: continue
-            if op != cl and text[a] != op: continue   # a typographic pair opens with its opening mark
-            n, sv = _swedish(text[a + 1:b], 2)
-            if n >= 2 and sv: out.append((a, b, n))
+    pos = [i for i, c in enumerate(text) if c in DOUBLE]
+    for k in range(len(pos) - 1):
+        a, b = pos[k], pos[k + 1]
+        if a >= limit or b - a < 4 or b - a > 2000: continue
+        n, sv = _swedish(text[a + 1:b], 2)
+        if n >= 2 and sv: out.append((a, b, n))
     for m in SINGLE.finditer(text[:limit]):
         n, sv = _swedish(m.group(1), 2)
         if n >= 2 and sv: out.append((m.start(), m.end(), n))
@@ -111,7 +116,7 @@ def scan_lines(lines, swedish_ok=False, names=None, pairs=None):
     for i, l in enumerate(lines):
         hits.extend((i + 1, 'name') for _ in range(name_hits(l, names, pairs)))
         if swedish_ok: continue
-        nxt = lines[i + 1] if i + 1 < len(lines) else ''
+        nxt = ' '.join(lines[i + 1:i + 3])   # the next two lines: a quote that wraps
         spans = quote_spans(l + ' ' + nxt, len(l))
         for a, b, n in spans:
             hits.append((i + 1, 'quote (%d words)' % n)); break   # one quote hit a line is enough
@@ -155,18 +160,22 @@ def added_hunks(spec):
     return out
 
 
-def commit_messages(spec):
-    rng = spec if '..' in spec else spec + '..HEAD'
-    try:
-        raw = git('log', '--format=%h%x01%B%x00', rng)
-    except subprocess.CalledProcessError:
-        return []
+def parse_log(raw):
+    """(short hash, message lines) from `git log --format=%h%x01%B%x00`."""
     out = []
     for rec in raw.split('\x00'):
         rec = rec.strip('\n')
         if '\x01' in rec:
             h, body = rec.split('\x01', 1); out.append((h, body.split('\n')))
     return out
+
+
+def commit_messages(spec):
+    rng = spec if '..' in spec else spec + '..HEAD'
+    try:
+        return parse_log(git('log', '--format=%h%x01%B%x00', rng))
+    except subprocess.CalledProcessError:
+        return []
 
 
 def self_test():
@@ -176,14 +185,14 @@ def self_test():
         if cond: ok += 1
         else: bad += 1; print('FAIL', what)
     # an invented name stands in for the hashed ones, so this file names nobody
-    nm = 'Zorblax'; NM = {sha(nm.lower())}; PR = {sha((nm + ' wrede').lower())}
+    nm = 'Zorblax'; NM = {sha(nm.lower())}; PR = {sha((nm + ' quillfeather').lower())}
     sl = lambda s: scan_line(s, NM, PR)
     check(sl('approved by ' + nm + ' on 18 Sep') == ['name'], 'the name')
     check(sl(nm + "'s ruling") == ['name'], 'the name with an apostrophe s')
     check(sl(nm.upper() + ' ruled') == ['name'], 'the name in capitals')
     check(sl('a fixture ' + nm + 'Sundin and ' + nm.lower() + '_seat') == ['name', 'name'], 'camelCase and snake_case parts')
-    check(sl('the crypt card ' + nm + ' Wrede (G4)') == [], 'the crypt card that shares the word')
-    check(sl(nm + 'nes Castelein (G4)') == [], 'a longer name is another word')
+    check(sl('the crypt card ' + nm + ' Quillfeather (G4)') == [], 'a crypt card that shares the word')
+    check(sl(nm + 'ian Mossgrove (G4)') == [], 'a longer name is another word')
     q, lq, rq, lo = chr(34), chr(0x201c), chr(0x201d), chr(0x201e)   # the marks built here, so the scan of this file finds no quote
     a = chr(0xe4); o = chr(0xf6); aa = chr(0xe5)
     check(sl('the owner: ' + q + 'det regnar i dag och vi stannar inne' + q) == ['quote (8 words)'], 'a Swedish quote')
@@ -191,10 +200,19 @@ def self_test():
     check(sl(rq + 'hej och vi' + rq) == ['quote (3 words)'], 'a Swedish same-mark quote')
     check(sl(lo + 'hej och vi' + lq) == ['quote (3 words)'], 'a low-high quote')
     check(sl('an odd ' + q + ' mark, then ' + q + 'det regnar och vi stannar' + q) == ['quote (5 words)'], 'an odd mark first')
+    check(sl(q + 'hej och vi' + rq) == ['quote (3 words)'] and sl(lq + 'hej och vi' + q) == ['quote (3 words)'], 'mixed double marks')
+    check(sl("x='hej och vi'") == ['quote (3 words)'] and sl(chr(0x2019) + 'hej och vi' + chr(0x2019)) == ['quote (3 words)'],
+          'a single mark after an operator, and the same-mark single quote')
+    check([k for _, k in scan_lines([q + 'det regnar', 'i dag och', 'vi stannar inne' + q], False, NM, PR)] == ['quote (8 words)'],
+          'a quote over three lines')
+    check(parse_log('abc1234' + chr(1) + 'line one\nline two\n' + chr(0) + '\ndef5678' + chr(1) + 'other\n' + chr(0)) ==
+          [('abc1234', ['line one', 'line two']), ('def5678', ['other'])], 'the commit messages are parsed')
     check(sl('wait for ' + q + 'k' + o + 'r' + q) == [], 'one word is a term, not a quote')
     check(sl(q + 'Frau Sch' + a + 'del' + q + ' and ' + q + 'Lyyli Y' + o + 'syd' + a + 'n' + q) == [], 'card names with an umlaut')
     check(sl(q + 'leken slutar med kortet' + q) == ['quote (4 words)'], 'Swedish with no Swedish letter')
     check(sl(q + ' '.join(['och vi'] * 100) + q) == ['quote (200 words)'], 'a long quote (about 700 characters)')
+    check(sl(q + 'x' + q + ' ' + ' '.join(['a long English stretch'] * 20) + ' with k' + o + 'r once ' + q + 'y' + q) == [],
+          'a long English stretch between two quotes, with one stray word')
     check([k for _, k in scan_lines(['the owner: ' + q + 'det regnar i dag', 'och vi stannar inne' + q + ' (D-1)'], False, NM, PR)]
           == ['quote (8 words)'], 'a quote over a line break')
     check(sl('vi ska nog spela det ' + 'imorgon') == ['sv (Swedish prose)'], 'Swedish prose without marks')

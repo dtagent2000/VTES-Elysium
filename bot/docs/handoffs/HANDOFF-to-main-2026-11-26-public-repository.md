@@ -16,12 +16,13 @@ it (the guide to re-embed).
 ## 1. The ask
 1. **Your files** — `client/` and what you ship to the root (the client, the server, `START-HERE.html`, the root `README.md`):
    the same rule, in a round of yours. A count by `bot/tools/public-scan.py`'s rules over them (main at `2f18daf`): about 2,000
-   occurrences of the owner's names on about 1,800 lines in 61 files (five of them the copies in `bot/`), and about 90 lines with
-   the owner's words in Swedish quotes outside your session journal, which is itself Swedish prose (about 2,100 lines). The
+   occurrences of the owner's names on about 1,800 lines in 61 files (five of them the copies in `bot/`), and about 90 lines of
+   Swedish outside your session journal (about 60 of them quotes, most of the rest in `client/docs/elysium-learnings.md`); the
+   journal is itself Swedish prose (about 2,100 lines). The
    largest: `client/docs/elysium-session-journal.md`, the client html (in its comments and its changelog, at the root and in
    `client/`), `client/CLAUDE.md`, `client/docs/elysium-project-context.md`, `client/test-client-logic.js` (its fixtures among
    them), your canary, `client/docs/elysium-learnings.md`, `elysium-CHANGELOG.md`, `START-HERE-CLIENT-CHAT.md`, the hosting and
-   security plans, the server and the protocol (a few each) and about 40 of your replies in `client/docs/handoffs/`. The Host
+   security plans, the server and the protocol (a few each) and 30 of your 34 replies in `client/docs/handoffs/`. The Host
    Guide (`.docx`) names nobody. How you do it is yours; the bot's way, for comparison: the frozen records moved to the private
    repo, the living pages rewritten by role, the fixture human renamed to an invented name.
 2. **The root `CLAUDE.md`** (shared, each side its own lines): #113 changed the bot's "Where to start" line only (the bot's
