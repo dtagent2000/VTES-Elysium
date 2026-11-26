@@ -7,24 +7,30 @@
   proposals for a lighter process, and the recommended options on the round's question card (the words in the private data
   repo's RULINGS-WORDS.md). *The public repository* (D-141): RULINGS line by line in our own words and by role, the words of 52
   lines moved to RULINGS-WORDS.md verbatim (106 more only named the owner); D-140's and D-141's readings confirmed. The standing
-  pages, the register, the specs, the reports, the reviews, the handoffs, the coverage snapshots and this CHANGELOG
-  likewise; an example table line keeps an invented name. The suite's human fixture is an invented name (Jonna, and Jonna Sundin
-  where the bounce-by-name tests need two words), its comments and the tools' by role, no assertion changed. The frozen
-  `docs/history/` and `docs/archive/` (127 files) and the 14 July cardfx design log (Swedish) moved verbatim to the data repo's
-  `bot-history/`; `docs/history/README.md` says how the references read; one coverage snapshot renamed; the words taken out of the
-  other pages are in the data repo's `cleanup-2026-11-26-words.md`. `tools/public-scan.py` v1.1.0: the owner's names (by hash,
-  camelCase parts too), Swedish chat quotes (a quote over a line break too) and lines of Swedish prose, on the lines a change adds
-  and its commits' messages (`tools/gates.sh`; CI's step on a pull request: its lines and the head commit's message) or over the
-  tree (`--tree`, the bundle's files WAITING
-  for their release); main's copies, the third-party data and the tool-written Swedish pages' language are not scanned. *The lighter process*:
-  HARNESS "One place for each fact"; the binding rules of one area moved from CLAUDE.md to ARCHITECTURE "Binding rules by area"
-  and the measurement rules to HARNESS "Measurements" (the bootstrap 49,953 → BOOTSTRAP bytes); a review pass after the first checks
-  the earlier findings and the fixes' diff, plus the scan (HARNESS, the reviewer's agent file). A handoff to main
-  (`handoffs/HANDOFF-to-main-2026-11-26-public-repository.md`: its files and the copies); the bot's "Where to start" line in the
-  shared root CLAUDE.md points to the data repo; BOARD's
-  line for the bundle's cleanup release. Budgets by D-101: CLAUDE.md 14.5 KB, ARCHITECTURE 29.5 KB, HARNESS 14.5 KB, RULINGS 82
-  KB, the total 205 KB (nothing binding cut). Kept: git history and the old PR bodies (the owner's choice).
-  *Gates:* GATES-LINE. *Egress:* EGRESS-LINE.
+  pages, the register, the specs, the reports, the reviews, the handoffs, the coverage snapshots and this CHANGELOG likewise; an
+  example table line keeps an invented name. The suite's human fixture is an invented name (Jonna, and Jonna Sundin where the
+  bounce-by-name tests need two words), its comments and the tools' by role, no assertion changed. The frozen `docs/history/` and
+  `docs/archive/` (127 files) and the 14 July cardfx design log (Swedish) moved verbatim to the data repo's `bot-history/`;
+  `docs/history/README.md` says how the references read; one coverage snapshot renamed; the words taken out of the other pages
+  are in the data repo's `cleanup-2026-11-26-words.md`, hunk by hunk. The bot's "Where to start" line in the shared root
+  CLAUDE.md points to the data repo. `tools/public-scan.py` v1.1.0: the owner's names (by hash, camelCase parts too), Swedish
+  chat quotes (mixed marks, a quote over a line break) and lines of Swedish prose, on the lines a change adds and its commits'
+  messages (`tools/gates.sh`; CI's step on a pull request reads its lines and the head commit's message) or over the tree
+  (`--tree`, the bundle's files WAITING for their release); main's copies, the third-party data and the language of the
+  tool-written Swedish pages are not scanned. *The lighter process*: HARNESS "One place for each fact"; the binding rules of one
+  area moved from CLAUDE.md to ARCHITECTURE "Binding rules by area" and the measurement rules to HARNESS "Measurements" (the
+  bootstrap 49,953 → 39,453 bytes); a review pass after the first checks the earlier findings and the fixes' diff, plus the
+  scan (HARNESS, the reviewer's agent file). A handoff to main (`handoffs/HANDOFF-to-main-2026-11-26-public-repository.md`: its
+  files and the copies); BOARD's line for the bundle's cleanup release. Budgets by D-101: CLAUDE.md 14.5 KB, ARCHITECTURE 29.5
+  KB, HARNESS 14.5 KB, RULINGS 82 KB, the total 205 KB (nothing binding cut). Kept: git history and the old PR bodies (the
+  owner's choice).
+  *Gates:* `tools/gates.sh` PASS 14/14 on the head (check 34/34, lint clean, canary 235/0 ×2, cardfx 503/0, precon 18, the
+  self-tests, HB1 11/0, doc-budget, public-scan 35/0 and 0 hits, test-doc-budget every case red); `--sim` PASS 15/15 (the 240
+  IDENTICAL 240, `ana-gates.py` PASS 6/6) on ed77035's bytes; CI's suite 2841/0 ×3 with `bot-gates` green on 75b4de1 and c1c35bc
+  (the suite's bytes `0e306ac2` since ed77035; the bundle's are v0.6.241's, `d797e1fd`, cardfx `4627ff1c`); the JS token check:
+  every code token identical in the 11 changed scripts but two property reads keyed by the fixture's name. *Egress:* 23 findings
+  (stale-doc 8, half-done 6, rule-missed 5, unproven 3, test-weakened 1) in 3 passes, all on Fable (15, 5, 3), all fixed; pass 3's
+  three are gated, not re-reviewed (D-133's limit); one is the owner's to weigh: the hashes are not a secret (the tool says so).
 - **W1b — the workflow's follow-ups (26 Nov 2026, bot v0.6.241, no bot change)** — D-140 (the owner's follow-ups to W1 at 14:48,
   and the recommended option on Claude's question card) and D-141 (16:04, and the recommended options on the next card). The review
   of a round without a bot change (Claude's reading: no file of the bundle touched) runs on Fable from the first pass, and a clean

@@ -6,12 +6,15 @@ itself. Three rules, each hit printed as its place and its kind only, never the 
   name    a word (or a part of a camelCase or snake_case word) whose lower-case sha256 is in NAMES; a crypt card that shares the
           word is allowed by the sha256 of the pair (ALLOWED_PAIRS)
   quote   a span of two or more words between quote marks that reads as Swedish, the chat's language: two of its common words,
-          or one and a Swedish letter. The double marks (" and the typographic ones, Swedish same-mark and low-high too) are one
+          or one and a Swedish letter in a span of at most 30 words (a longer span between two unrelated marks with one stray
+          word is not a quote). The double marks (" and the typographic ones, Swedish same-mark and low-high too) are one
           kind, so a pair that mixes them is read, and every span between two of them is tried, so an odd mark earlier on the
           line does not hide one; the single marks pair on one line (an apostrophe is not a mark). A quote that wraps is read with
           the next two lines. A one-word term (the go-ahead word) is not a quote.
   sv      a line of Swedish prose with no quote marks: three distinct common Swedish words.
-The pages written in Swedish by a tool, and the tools that write them (SWEDISH_OK), are read by the name rule only.
+The pages written in Swedish by a tool, and the tools that write them (SWEDISH_OK), are read by the name rule only. The hashes
+keep the words out of a reader's sight and out of a text search; they are not a secret (a name list or the public card list
+reverses an unsalted hash of a name), and git history keeps the old text by the owner's choice.
 
 Scanned: the files the bot owns -- bot/ (but the read-only copies of main's release and the third-party data), .claude/, the
 bot's workflow and the root CLAUDE.md (shared: each side edits its own lines) -- and with --diff the messages of the range's
@@ -72,13 +75,11 @@ def sha(s):
 
 
 def _swedish(span, need):
-    """(words, reads as Swedish): need distinct common words (a quote: 2, or 1 and a Swedish letter in a short one; a line: 3),
-    and in a long span a share of them, so a long English stretch between two marks, or a long line, with one stray word is not."""
+    """(words, reads as Swedish): need distinct common words -- a quote 2, or 1 and a Swedish letter in a span of at most 30
+    words, so a long English stretch between two unrelated marks with one stray word is not a quote; a line 3."""
     ws = [w.lower() for w in WORD.findall(span)]
-    sv = len(set(ws) & SWEDISH); share = sum(1 for w in ws if w in SWEDISH) / max(1, len(ws))
-    if len(ws) > (8 if need == 2 else 20) and share < 0.15:
-        return len(ws), False
-    return len(ws), (sv >= need or (need == 2 and len(ws) <= 8 and sv >= 1 and SV_LETTER.search(span) is not None))
+    sv = len(set(ws) & SWEDISH)
+    return len(ws), (sv >= need or (need == 2 and len(ws) <= 30 and sv >= 1 and SV_LETTER.search(span) is not None))
 
 
 def name_hits(line, names=None, pairs=None):
@@ -213,9 +214,18 @@ def self_test():
     check(sl(q + ' '.join(['och vi'] * 100) + q) == ['quote (200 words)'], 'a long quote (about 700 characters)')
     check(sl(q + 'x' + q + ' ' + ' '.join(['a long English stretch'] * 20) + ' with k' + o + 'r once ' + q + 'y' + q) == [],
           'a long English stretch between two quotes, with one stray word')
+    check(sl(q + 'jag hade inte tid men regnet sl' + o + 'g mot taken' + q) == ['quote (9 words)'],
+          'a 9-word Swedish quote')
+    check(sl(q + 'rain fell in the town f' + o + 'r hours and nobody came out' + q) == ['quote (11 words)'],
+          'an 11-word quote with one common word and a Swedish letter')
+    check(sl(q + 'vi testade the new release on the server och the bots were fine all evening' + q) == ['quote (15 words)'],
+          'a mixed-language quote over 8 words with two common words')
+    check(sl('The lead-in says what was decided, and then the owner wrote: ' + q + 'vi ska nog g' + o + 'ra det imorgon') ==
+          ['sv (Swedish prose)'], 'a long line with an English lead-in and the opening of a quote')
     check([k for _, k in scan_lines(['the owner: ' + q + 'det regnar i dag', 'och vi stannar inne' + q + ' (D-1)'], False, NM, PR)]
           == ['quote (8 words)'], 'a quote over a line break')
     check(sl('vi ska nog spela det ' + 'imorgon') == ['sv (Swedish prose)'], 'Swedish prose without marks')
+    check(sl('vi ska spela imorgon') == ['sv (Swedish prose)'] and sl('vi ska imorgon') == [], 'a line needs three common words')
     check(sl('the client line "Lisa bounces the bleed to Hanna."') == [], 'an English table line')
     check(sl("the owner's ruling, the bots' readers and it's the 'go' word: Prevent X+1 damage") == [], 'apostrophes are not marks')
     check(sl("a label 'R" + chr(0xc4) + "TTELSE: kort utan effekt' in single marks") == ['quote (4 words)'], 'a Swedish label in single marks')
