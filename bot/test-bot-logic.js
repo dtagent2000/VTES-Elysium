@@ -7310,7 +7310,7 @@ async function connectWithRetry(client, tries = 30){
   ok(c.pool === 20 && x.blood === 3, '104c pool costs too; blood never above capacity (Brock: 3 of 3)');
   const src = require('fs').readFileSync(require.resolve('./elysium-bot.js'), 'utf8');
   const paid = (src.match(/this\._park\(act\.cost\.blood, 0\)/g) || []).length + (src.match(/this\._park\(act\.costBlood, 0\)/g) || []).length;
-  ok(paid === 10 && !/v\.blood = Math\.max\(0, \(v\.blood \| 0\) - act\.cost\.blood\);(?! this\._park)/.test(src), '104d every announce-time blood cost in the action branches is parked (' + paid + ' sites; v0.6.236: + the card rush\u2019s, Fleetness; + the attach / the experiment\u2019s employ, Shadow of the Beast and New Moon Sigil)');
+  ok(paid === 11 && !/v\.blood = Math\.max\(0, \(v\.blood \| 0\) - act\.cost\.blood\);(?! this\._park)/.test(src), '104d every announce-time blood cost in the action branches is parked (' + paid + ' sites; v0.6.241: + Creeping Sabotage\u2019s X blood; v0.6.236: + the card rush\u2019s, Fleetness; + the attach / the experiment\u2019s employ, Shadow of the Beast and New Moon Sigil)');
     }
 
     /* 105) v0.6.131 — debt 23b: when a referendum beats build-first */
@@ -7858,7 +7858,7 @@ async function connectWithRetry(client, tries = 30){
   const src121 = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
   const NS = /^(.+?) (?:plays|burns|locks) .+?: \+(\d+) stealth\.$/, NU = /^(.+?) attempts to block with \+(\d+) intercept \(.+\)\.$/;   // v0.6.205: + 'locks' (The Labyrinth)
   ok(NS.test('Colette plays Lost in Crowds: +1 stealth.') && NS.test('Colette burns The Path of Night: +1 stealth.') && NS.test('Ryan (G6) locks The Labyrinth: +1 stealth.') && NU.test('Oshri attempts to block with +2 intercept (Second Tradition: Domain).'), '121f the net\'s two readers match the bot\'s own stealth line and the unlock-reaction attempt line');
-  ok(/\(st\.fromBoard \? \(st\.lock \? 'locks' : 'burns'\) : 'plays'\) \+ ' ' \+ esc\(st\.name\) \+ why \+ ': \+' \+ st\.s \+ ' stealth\.'/.test(src121) && /attempts to block with \+' \+ unIc \+ ' intercept \(<b>'/.test(src121), '121f ...and those strings are still what the source emits (v0.6.228: a conditional stealth\'s rider sits before the colon, `why`; the reader still matches -- 173b)');
+  ok(/\(st\.fromBoard \? \(st\.lock \? 'locks' : 'burns'\) : 'plays'\) \+ ' ' \+ esc\(st\.name\) \+ \(st\.blockedLockEnd && st\.at \? ' \[' \+ esc\(st\.at\) \+ '\]' : ''\) \+ why \+ ': \+' \+ st\.s \+ ' stealth\.'/.test(src121) && NS.test('Rosalina Cortez plays Mirror Walk [THA]: +1 stealth.') && /attempts to block with \+' \+ unIc \+ ' intercept \(<b>'/.test(src121), '121f ...and those strings are still what the source emits (v0.6.228: a conditional stealth\'s rider sits before the colon, `why`; the reader still matches -- 173b)');
     }
 
     /* 122) v0.6.152 — THE BREATH: the beat anchored on the table's last event, the stealth first look after the beat, 'I currently have N stealth', intercept by chat */
@@ -16711,6 +16711,294 @@ async function connectWithRetry(client, tries = 30){
       // j) L-95: a new game's floor is free and no vote round is in flight
       { const u = mk6('Viktor', 2, P6(['Hanna', 'Viktor'], [true, true]), { paceMs: 300 }); u._floorUntil = Date.now() + 5000; u._refHeard = new Set(['Hanna']);
         u._dispatch({ t: 'started', players: u.players }); ok((u._floorUntil | 0) === 0 && u._refHeard === null, '186j a new game starts with a free floor and no vote round (got ' + JSON.stringify({ floor: u._floorUntil, heard: u._refHeard }) + ')'); }
+    }
+
+    /* 187) v0.6.241 -- the exactness round (Claude's playtests of 25 Nov 2026; Johan's kör 20:43): the table bugs the two games found
+       (a)-(d), then the base starters' card gaps (e)-. (a) A1: a contest a human's Pass ended (Turn-based) leaves no safety net armed
+       behind it -- the next question waits for its own answer (a 4-min timer fired 70 s into a new question at the table); (b) A2: an
+       undirected contest whose last human has passed is a bot-only window -- the bots' clock declares the verdict, through the say and
+       the chat paths (three 4-min stalls at the table: the bot blocker never says Pass); (c) A3: a bleed modifier's add line waits for a
+       free floor, so its question goes out with it and the target's answer comes after (D-137's gap); (d) A4: the turn watchdog says
+       nothing while I wait on the table -- the polls, a combat step -- and still speaks when I am thinking. (e) the sweep register 7.1:
+       Aire of Elation's 'with an additional +1 bleed if this vampire is Toreador' (fx.plusIf, _plusIf) -- a Toreador's [pre] is +2 and
+       [PRE] +3, any other clan's +1 / +2; (f) 7.2: The Warrens' 'with an additional +1 intercept if this Nosferatu is titled' -- a titled
+       Nosferatu's +3, an untitled one's +2, through both readers (_bestInterceptFor, _interceptStack), only on a directed action; a
+       condition the reader does not know fails closed. (g) the playtests' Life in the City: held while I have no ready vampire (game 1,
+       turn 1); (h) the playtests' second wake: a vampire woken for its block bounces in the same action with no second wake (game 1,
+       Eyes of Argus [AUS] then On the Qui Vive for one bleed) -- the record is the action's own. (i) Mirror Walk [THA] (Claude's spot
+       check): a superior Thaumaturgy vampire takes the rider mode on the stealth tie, and its play line names the level; blocked, the
+       blocker is locked and the action ends with no combat (BLOCKED_LOCK), the blocker's bot keeps its vampire locked, no combat.
+       (j) Creeping Sabotage's 'Cost: X blood' (the fidelity pass): X the copies already in play, paid by the acting vampire.
+       (k) the egress review, pass 2: a cancel heard under a before-range gate (BLOCKED_LOCK after a bounce) spends nothing --
+       Carrion Crows by the step's re-check, Wall of Filth by its helper's.
+       LAST LINE OF 187 is the closing brace below. */
+    {
+      console.log('\n[187] v0.6.241 -- the exactness round: the playtests’ table bugs and the base starters’ card gaps');
+      const mkT7 = (extra) => { const u = new Bot(Object.assign({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'T', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 0.3, phaseSecs: 0.4, log: () => {} }, extra || {}));
+        u.seat = 2; u.started = true; u.caps.tally = true; u.push = () => {}; u.sent = []; u.send = m => u.sent.push(m); u.says = []; u.say = m => u.says.push(m); u.notes = []; u.note = m => u.notes.push(m); u.chats = []; u.chat = m => u.chats.push(m); u.rows = []; u._emit = (ty, d) => u.rows.push({ ty, d });
+        u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'T', bot: true }, { seat: 3, name: 'B3', bot: true }];
+        u.table = { 1: { pub: { cards: [{ id: 'l1', name: 'Lisa', kind: 'crypt', zone: 'ready', blood: 4 }] } }, 3: { pub: { cards: [{ id: 'k1', name: 'Kim', kind: 'crypt', zone: 'ready', blood: 4 }] } } };
+        u.opp = u.opp || {}; u.opp[1] = Object.assign(u.opp[1] || {}, { handN: 5 }); u.opp[3] = Object.assign(u.opp[3] || {}, { handN: 5 });
+        const v = { id: 'v1', name: 'Sully', kind: 'crypt', zone: 'ready', locked: true, blood: 4, cap: 4 }; u.board = [v]; u.hand = [];
+        u._actingVamp = { v, n: 1, played: new Set(), target: 1, kind: 'bleed' };
+        return { u, v }; };
+      const race7 = (p, ms) => Promise.race([p, sleep(ms).then(() => ({ what: 'timeout' }))]);
+
+      // a) A1: Johan blocks, the verdict waits on him (Turn-based), his Pass declares it; the next question then waits for its own answer
+      { const { u } = mkT7({ tempo: { tempo: 'turn' }, tempoRemindMs: 60000, tempoGiveUpMs: 300 });
+        const p1 = u._askBlock('Q1?'); await sleep(10);
+        const a1 = u._ask; a1.contested = true; u.tally = { mode: 'block', a: 0, b: 1 }; u._restartAskTimer();   // his block attempt: a contested wait, its safety net re-armed
+        await sleep(40); u._onSay({ who: 'Johan', i: SAY.indexOf('Pass') });   // v0.6.194: the human's Pass ends the exchange at once -- the verdict from the counter
+        const r1 = await race7(p1, 1000);
+        u.o.tempoGiveUpMs = 4000; u.notes = [];
+        const p2 = u._askBlock('Q2?'); await sleep(500);   // the first wait's 300 ms net is long past
+        const open2 = !!u._ask && !u._ask.done, noted = u.notes.filter(n => /no answer in/.test(n));
+        u._onChat('Johan', 'no'); const r2 = await race7(p2, 1000);
+        ok(r1.what === 'block' && open2 && !noted.length && r2.what === 'no',
+           '187a a contest Johan’s Pass ended leaves no clock behind: the next question stays open for its own answer (got ' + JSON.stringify({ r1: r1.what, open2, noted, r2: r2.what }) + '; v0.6.240: its net fired into the new question, "no answer in 4 min" 70 s after it was asked)'); }
+
+      // b) A2: an undirected contest -- the prey B3 (a bot) blocks, the predator Johan passes -- is declared by the bots' clock, not the 4-min net
+      for(const via of ['say', 'chat']){
+        const { u } = mkT7({ tempo: { tempo: 'turn' }, tempoRemindMs: 60000, tempoGiveUpMs: 5000 });   // askSecs 0.3 = the bots' clock
+        u._actingVamp = { v: u.board[0], n: 0, played: new Set(), target: null, kind: 'political' };     // undirected (a referendum, as the stalls were): seat 2's prey (B3) and predator (Johan) may block
+        const t0 = Date.now(); const p = u._askBlock('Sully calls Kine Resources Contested. Block?'); await sleep(10);
+        const a = u._ask, elig = a && a.eligible ? [...a.eligible].sort().join() : '';
+        a.contested = true; u.tally = { mode: 'block', a: 1, b: 1 }; u._restartAskTimer();               // B3 blocks with its intercept on the counter: the verdict waits on Johan (no clock) and on B3
+        await sleep(30); if(via === 'say') u._onSay({ who: 'Johan', i: SAY.indexOf('Pass') }); else u._onChat('Johan', 'Pass');
+        const r = await race7(p, 2500), dt = Date.now() - t0;
+        ok(elig === 'B3,Johan' && r.what === 'block' && dt < 2500,
+           '187b ' + via + ': an undirected contest whose last human has passed is a bot-only window -- the bots’ clock declares the verdict from the counter (got ' + JSON.stringify({ elig, what: r.what, dt }) + '; v0.6.240 waited out the 4-min net: the bot blocker never says Pass)');
+        if(u._ask) u._answer('no', null); }
+
+      // c) A3: a modifier's add line is followed by its question -- the board waits behind it (the real queue: the 200 ms cascade between sends)
+      { const strip7 = h => String(h || '').replace(/<[^>]*>/g, '');
+        const P = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'Viktor', online: true, bot: true }];
+        const mk = (name, seat, deck) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'expert', paceMs: 60, chatFloor: 1, askSecs: 2, twdKnow: 0, log: () => {} });
+          u.seat = seat; u.started = true; u.players = P.map(p => Object.assign({}, p)); u.o.deckName = deck; u.fxClone = () => {}; u.lines = []; return u; };
+        const A = mk('Hanna', 1, 'tremere'), D = mk('Viktor', 2, 'nosferatu');
+        const wire = (from, to) => { from.ws = { send: m => {   // the socket under the real queue: every send is on the wire in its drain order
+          const at = Date.now(), d = m && m.t === 'say' ? { t: 'say', i: m.i, who: from.o.name } : (m && (m.t === 'log' || m.t === 'chat')) ? Object.assign({}, m, { who: from.o.name }) : null;
+          from.lines.push({ at, tier: m && m.t, txt: m && m.t === 'log' ? strip7(m.html) : m && m.t === 'chat' ? String(m.msg || '') : m && m.t === 'say' ? SAY[m.i] : '' });
+          if(d) setTimeout(() => { if(!to.out) to._dispatch(d); }, 30); } }; };
+        wire(A, D); wire(D, A);
+        const lb = { id: 'l1', name: 'Lloyd Brooks', kind: 'crypt', zone: 'ready', locked: false, blood: 6, cap: 6, attached: [] };
+        const dv = { id: 'd1', name: 'Baixinho (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3, cap: 3, attached: [] };
+        A.board = [lb]; A.hand = ['Conditioning']; A.pool = 20; A.cryptN = 0; A.unc = []; A.turnSeat = 1;
+        D.board = [dv]; D.hand = []; D.pool = 20; D.turnSeat = 1;
+        A.table = { 2: { pub: { cards: [{ id: 'p2', kind: 'crypt', name: dv.name, zone: 'ready', blood: 3, locked: true }] } } };
+        D.table = { 1: { pub: { cards: [{ id: 'p1', kind: 'crypt', name: lb.name, zone: 'ready', blood: 6 }] } } };
+        let terr = null; await race7(A._playTurn().catch(e => { terr = e.message; }), 25000);
+        const ix = A.lines.findIndex(l => l.tier === 'log' && /adds \+\d+ bleed \(= \d+\)\./.test(l.txt)), nx = ix >= 0 ? A.lines[ix + 1] : null, add = ix >= 0 ? A.lines[ix] : null;
+        ok(!terr && !!add && !!nx && nx.tier === 'chat' && /adds \+\d+ bleed — now \d+ on Viktor\. Any reaction\?/.test(nx.txt) && nx.at - add.at < 350,
+           '187c a modifier’s add line is followed on the wire by its question, one cascade step later; the board waits behind it (got ' + JSON.stringify({ terr, add: add && add.txt, next: nx && (nx.tier + ': ' + nx.txt), gap: add && nx ? nx.at - add.at : null }) + '; v0.6.240: the board took that slot, and a bot target answered the add line before the question was out)'); }
+
+      // d) A4: the watchdog's heartbeat -- silent while a poll or a combat step waits on the table, said while I am the one thinking
+      { const wd = setup => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'W', persona: 'expert', paceMs: 300, log: () => {} });
+          u.seat = 1; u.started = true; u.turnSeat = 1; u.players = [{ seat: 1, name: 'W', bot: true }, { seat: 2, name: 'Johan' }]; u.chats = []; u.chat = m => u.chats.push(m); u.push = () => {};
+          setup(u);
+          const orig = global.setTimeout; let cb = null;
+          global.setTimeout = (f, ms, ...r) => { if(ms === 30000 && !cb){ cb = f; return { unref(){} }; } return orig(f, ms, ...r); };
+          try { u._watchdogArm(); } finally { global.setTimeout = orig; }
+          if(cb){ global.setTimeout = (f, ms, ...r) => (ms === 30000 ? { unref(){} } : orig(f, ms, ...r)); try { cb(); } finally { global.setTimeout = orig; } }
+          return cb ? u.chats.some(c => /Still thinking/.test(c)) : 'no timer'; };
+        const g = { poll: wd(u => { u._refCall = { closed: false, paused: new Set(), heard: new Set() }; }), combat: wd(u => { u._phaseWait = { step: 0, done: false, who: 'Johan' }; }), thinking: wd(u => { u._acting = true; }) };
+        ok(g.poll === false && g.combat === false && g.thinking === true,
+           '187d the turn watchdog stays silent while my poll or a combat step waits on the table, and still says it is thinking when I am (got ' + JSON.stringify(g) + '; v0.6.240 said "Still thinking…" over both waits)'); }
+
+      // e) 7.1: Aire of Elation -- the additional +1 bleed for a Toreador ([pre] +1 / [PRE] +2 printed; KRCG's text)
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'E', persona: 'grinder', log: () => {} });
+        const tor = { id: 'e1', name: 'Adrianne (G1)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 };          // Toreador, [pre]
+        const torS = { id: 'e2', name: 'Aisha az-Zahra (G5)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 };    // Toreador, [PRE]
+        const bru = { id: 'e3', name: 'Adelino Da Silva (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 };   // Brujah, [pre]
+        u.board = [tor, torS, bru]; u.hand = ['Aire of Elation']; u.edge = false;
+        const n = v => { const m = u._bestBleedModifierFor(v, new Set(), false); return m && m.name === 'Aire of Elation' ? m.n : null; };
+        const got = { tor: n(tor), torS: n(torS), bru: n(bru) };
+        ok(got.tor === 2 && got.torS === 3 && got.bru === 1,
+           '187e Aire of Elation adds +1 more bleed when its vampire is Toreador: [pre] +2 and [PRE] +3 for a Toreador, +1 for a Brujah (got ' + JSON.stringify(got) + '; v0.6.240 read +1 / +2 / +1)');
+        const mo = { at: null, fx: { bleed: 1, plusIf: { add: { bleed: 1 }, if: { selfClan: 'Toreador', actorTitled: true } } } };
+        ok(typeof u._plusIf === 'function' && u._plusIf(mo, 'bleed', tor) === 0 && u._plusIf({ fx: { bleed: 1, plusIf: { add: { bleed: 1 }, if: { selfClan: 'Toreador' } } } }, 'intercept', tor) === 0,
+           '187e a condition the reader does not know fails closed (no bonus), and a bonus for another key adds nothing here');
+      }
+
+      // f) 7.2: The Warrens -- the additional +1 intercept for a titled Nosferatu, on an action directed at me
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'F', persona: 'grinder', log: () => {} });
+        const baron = { id: 'f1', name: 'Baron Dieudonne (G4)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 };   // Nosferatu, prince
+        const agr = { id: 'f2', name: 'Agrippina (G1)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 };           // Nosferatu, untitled
+        u.board = [baron, agr]; u.hand = ['The Warrens'];
+        const bleedAtMe = { kind: 'bleed' }, undirected = { kind: 'undirected' };
+        const ic = (v, p) => { const b = u._bestInterceptFor(v, null, p); return b && b.name === 'The Warrens' ? b.s : null; };
+        const got = { baron: ic(baron, bleedAtMe), agr: ic(agr, bleedAtMe), baronStack: u._interceptStack(baron, null, bleedAtMe).sum, agrStack: u._interceptStack(agr, null, bleedAtMe).sum, undirected: ic(baron, undirected) };
+        ok(got.baron === 3 && got.agr === 2 && got.baronStack === 3 && got.agrStack === 2 && got.undirected === null,
+           '187f The Warrens gives a titled Nosferatu +3 intercept and an untitled one +2, in the finder and the stack alike, and nothing on an undirected action (got ' + JSON.stringify(got) + '; v0.6.240 read +2 for both)');
+      }
+      // g) Life in the City is held with no ready vampire of mine: 'Add 1 blood to a ready vampire' needs its object (game 1, 61.8: turn 1)
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'G', persona: 'grinder', log: () => {} });
+        u.pool = 20; u.hand = ['Life in the City']; u.board = [];
+        const has = () => (u._bestMasterFor() || []).some(m => m.name === 'Life in the City');
+        const got = { none: has() };
+        u.board = [{ id: 'g1', name: 'Adrianne (G1)', kind: 'crypt', zone: 'torpor', locked: false, blood: 0 }]; got.torpor = has();
+        u.board.push({ id: 'g2', name: 'Barth (G3)', kind: 'crypt', zone: 'ready', locked: true, blood: 2 }); got.ready = has();
+        ok(got.none === false && got.torpor === false && got.ready === true,
+           '187g Life in the City waits for a ready vampire of mine: held with none in play and with one in torpor, offered once one is ready (locked or not) (got ' + JSON.stringify(got) + '; v0.6.240 played it on turn 1)');
+      }
+
+      // h) a vampire woken in this action needs no second wake (game 1, 2266.4 / 2296.1: Eyes of Argus [AUS], then On the Qui Vive, for one bleed)
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'H', persona: 'grinder', paceMs: 0, log: () => {} });
+        u.players = [{ seat: 1, name: 'Attacker' }, { seat: 2, name: 'H' }, { seat: 3, name: 'Prey' }]; u.seat = 2; u.caps.tally = true;
+        const at = { id: 'h1', name: 'Atiena (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 };   // an Anarch baron (Bait and Switch's player, section 32)
+        u.board = [at]; u.hand = ['On the Qui Vive'];
+        const mkP = () => ({ who: 'Attacker', amount: 2, kind: 'bleed', actingVampName: 'Ghoul', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() });
+        const p = mkP(); u.pending = p;
+        await u._commitBlock(p, { why: 'test (187h)' }); if(u._vWait) u._vwEnd(null);
+        const got = { woke: !u.hand.includes('On the Qui Vive') && !!(p.woken && p.woken.has('h1')) };
+        u.pending = p; p.contested = false; p.declined = true;   // the block failed; the same bleed goes on
+        u.hand = ["Wake with Evening's Freshness", 'Bait and Switch'];
+        const b = u._bestBounceFor(u.board, p.reacted, p); got.needsWake = b ? b.needsWake : 'none';
+        if(b) await u._commitBounce(p, b);
+        got.wakeKept = u.hand.includes("Wake with Evening's Freshness"); got.bounced = !u.hand.includes('Bait and Switch');
+        u.hand = ['Bait and Switch']; const bNo = u._bestBounceFor(u.board, new Set(), p); got.noWakeCard = !!(bNo && bNo.vamp === at && !bNo.needsWake);
+        u.hand = ["Wake with Evening's Freshness", 'Bait and Switch']; const bNew = u._bestBounceFor(u.board, new Set(), mkP()); got.newAction = bNew ? bNew.needsWake : 'none';
+        ok(got.woke && got.needsWake === false && got.wakeKept && got.bounced && got.noWakeCard && got.newAction === true,
+           '187h a vampire woken for its block bounces in the same action with no second wake (the wake card kept, or none needed in hand); a new action needs a wake again (got ' + JSON.stringify(got) + '; v0.6.240 spent a second wake)');
+      }
+      // i) Mirror Walk [THA]: the rider mode wins the stealth tie; blocked, the blocker is locked and the action ends with no combat; the blocker's bot stays locked
+      { const mkI = name => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name, persona: 'grinder', paceMs: 0, log: () => {} });
+          u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }]; u.started = true; u.caps.tally = true;
+          u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; return u; };
+        const u = mkI('Henrik'); u.seat = 2; u.turnSeat = 2;
+        const ros = { id: 'i1', name: 'Rosalina Cortez (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3 };   // Tremere, [THA]
+        const ays = { id: 'i2', name: 'Ayse Dhanial (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3 };      // Tremere, [tha]
+        u.board = [ros, ays]; u.hand = ['Mirror Walk'];
+        const sR = u._bestStealthFor(ros, new Set()), sA = u._bestStealthFor(ays, new Set());
+        const got = { sup: sR ? (sR.blockedLockEnd ? sR.at : 'tha') : null, inf: sA ? (sA.blockedLockEnd ? sA.at : 'tha') : null };
+        u._actingVamp = { v: ros, n: 1, played: new Set(), target: 1, kind: 'bleed' };
+        u._lastBlockerName = 'Lisa'; u._lastBlockerSeat = 3;
+        u.tally = { mode: 'block', a: 0, b: 1, ph: 0, rd: 1 };
+        if(sR) u._spendStealthCard(sR, u._actingVamp, {});   // the stealth play: books the rider on the action, names the level
+        got.pl = u.sent.filter(m => m.t === 'log').map(m => String(m.html).replace(/<[^>]*>/g, '')).find(l => /Mirror Walk/.test(l)) || null;
+        got.booked = !!(u._actingVamp.blockedLock && u._actingVamp.blockedLock.at === 'THA');
+        await u._resolveCombat(ros);   // the block succeeded: the combat's entry runs the 'if blocked' step first
+        const lines = u.sent.filter(m => m.t === 'log').map(m => String(m.html).replace(/<[^>]*>/g, ''));
+        const line = lines.find(l => /is locked; the action ends unsuccessfully\./.test(l)) || null;
+        got.line = line; got.combat = !!u._inCombat || u.sent.some(m => m.t === 'tally' && m.mode === 'combat');
+        // the blocker's bot: Sven's Lisa blocked Rosalina; the line ends the combat its verdict began, and Lisa stays locked
+        const b = mkI('Sven'); b.seat = 3; b.turnSeat = 2;
+        const lisa = { id: 'i3', name: 'Lisa', kind: 'crypt', zone: 'ready', locked: true, blood: 4 }; b.board = [lisa];
+        b._myBlockOf = { vamp: 'Rosalina Cortez (G6)', at: Date.now() };
+        if(line) b._onLog('Henrik', '<b>Rosalina Cortez (G6)</b> is blocked — <b>Mirror Walk</b> [THA]: <b>Sven</b>\'s <b>Lisa</b> is locked; the action ends unsuccessfully.');
+        got.cancel = !!(b._cotCancel && b._cotCancel.lock); got.hit = b._cotHit(lisa); got.lisaLocked = lisa.locked;
+        const ev = b._evClassify('Henrik', 'Rosalina Cortez (G6) is blocked — Mirror Walk [THA]: Sven\'s Lisa is locked; the action ends unsuccessfully.');
+        got.kind = ev && ev.kind; got.evBlocker = ev && ev.blocker;
+        ok(got.sup === 'THA' && got.inf === 'tha' && got.pl === 'Rosalina Cortez (G6) plays Mirror Walk [THA]: +1 stealth.' && got.booked && got.line === "Rosalina Cortez (G6) is blocked — Mirror Walk [THA]: Sven's Lisa is locked; the action ends unsuccessfully." && got.combat === false
+           && got.cancel && got.hit === true && got.lisaLocked === true && got.kind === 'blocked-lock' && got.evBlocker === 'Lisa',
+           '187i Mirror Walk [THA]: a superior Thaumaturgy vampire takes the rider mode on the tie ([tha] for an inferior one), its play line names the level; blocked, it locks the blocker and ends the action with no combat, and the blocker’s bot keeps its vampire locked with no combat (got ' + JSON.stringify(got) + '; v0.6.240 played [tha] and fought)');
+        // the action ended before block resolution: no 'after block resolution' card follows (Cats' Guidance [ani] stays in hand); the control unlocks
+        const pb = async withLine => { const b2 = mkI('Sven'); b2.seat = 3; b2.turnSeat = 2;
+          const ama = { id: 'i5', name: 'Amadeo (G2)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 }; b2.board = [ama]; b2.hand = ["Cats' Guidance"];
+          b2._myBlockOf = { vamp: 'Rosalina Cortez (G6)', at: Date.now() };
+          if(withLine) b2._onLog('Henrik', '<b>Rosalina Cortez (G6)</b> is blocked \u2014 <b>Mirror Walk</b> [THA]: <b>Sven</b>\'s <b>Amadeo (G2)</b> is locked; the action ends unsuccessfully.');
+          const hit = withLine ? b2._cotHit(ama) : null; await b2._maybePostBlockUnlock(ama, { kind: 'bleed' });
+          return { hit, kept: b2.hand.includes("Cats' Guidance"), locked: ama.locked }; };
+        const pbMW = await pb(true), pbCtl = await pb(false);
+        ok(pbMW.hit === true && pbMW.kept === true && pbMW.locked === true && pbCtl.kept === false && pbCtl.locked === false,
+           '187i a blocker Mirror Walk [THA] locked plays no after-block-resolution card (Cats\u2019 Guidance [ani] kept, still locked); after a real block the same hand unlocks (got ' + JSON.stringify({ pbMW, pbCtl }) + ')');
+        // the egress review's race (finding 1): a blocker hears the rider at the actor's stealth line, so at its own successful verdict no combat begins and nothing of one is spent
+        { const strip = x => String(x).replace(/<[^>]*>/g, '');
+          const mkB = () => { const b4 = mkI('Sven'); b4.seat = 3; b4.turnSeat = 2; b4.events = []; b4.onEvent = (t, d) => b4.events.push({ t, d });
+            const cv = { id: 'i6', name: 'Amadeo (G2)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }; b4.board = [cv]; b4.hand = ['Carrion Crows'];
+            b4.pending = { who: 'Henrik', amount: 1, kind: 'bleed', actingVampName: 'Rosalina Cortez (G6)', contested: true, reacted: new Set(), blockerVamp: cv, declined: false, attempted: new Set([cv.id]) };
+            b4.rc = 0; b4._resolveCombat = async () => { b4.rc++; }; return { b4, cv }; };
+          const A = mkB(); A.b4._onLog('Henrik', '<b>Rosalina Cortez (G6)</b> plays Mirror Walk [THA]: +1 stealth.');
+          const booked = !!(A.b4.pending && A.b4.pending.riderLock); A.b4._verdictAsTarget(true); await sleep(20);
+          const C = mkB(); C.b4._onLog('Henrik', '<b>Rosalina Cortez (G6)</b> plays Mirror Walk: +1 stealth.'); C.b4._verdictAsTarget(true); await sleep(20);
+          const got3 = { booked, combats: A.b4.rc, kept: A.b4.hand.includes('Carrion Crows'), locked: A.cv.locked, early: A.b4.events.some(e => e.t === 'bot:cot-cancelled' && e.d && e.d.early), ctlCombats: C.b4.rc };
+          ok(got3.booked && got3.combats === 0 && got3.kept && got3.locked === true && got3.early && got3.ctlCombats === 1,
+             '187i a blocker that heard "plays Mirror Walk [THA]" begins no combat at its own successful verdict: its vampire locked, Carrion Crows still in hand; the [tha] line leaves the combat to begin (got ' + JSON.stringify(got3) + '; the review found 4 Crows of 128 locks spent before the BLOCKED_LOCK line arrived)');
+          // the egress review's finding 3: blocked on a leave-torpor action, the rider locks the blocker and ends the action -- and the blocker gets no diablerie [PIB 20121216]
+          const u5 = mkI('Henrik'); u5.seat = 2; u5.turnSeat = 2; u5.notes = []; u5.note = m => u5.notes.push(m);
+          const tv = { id: 'i7', name: 'Rosalina Cortez (G6)', kind: 'crypt', zone: 'torpor', locked: false, blood: 3 }; u5.board = [tv];
+          u5._askBlock = async () => { u5._actingVamp.blockedLock = { card: 'Mirror Walk', at: 'THA' }; u5._lastBlockerName = 'Lisa'; u5._lastBlockerSeat = 1; return { what: 'block', who: 'Johan' }; };
+          await u5._leaveTorpor(tv);
+          const l5 = u5.sent.filter(m => m.t === 'log').map(m => strip(m.html)).find(l => /is locked; the action ends unsuccessfully\./.test(l)) || null;
+          const got5 = { l5, noDiab: u5.notes.some(n => /no diablerie/.test(n)), diabNote: u5.notes.some(n => /diablerise instead/.test(n)), zone: tv.zone };
+          ok(got5.l5 === "Rosalina Cortez (G6) is blocked — Mirror Walk [THA]: Johan's Lisa is locked; the action ends unsuccessfully." && got5.noDiab && !got5.diabNote && got5.zone === 'torpor',
+             '187i blocked on a leave-torpor action, Mirror Walk [THA] locks the blocker and ends the action, and the note offers no diablerie (got ' + JSON.stringify(got5) + ')'); }
+          // the knob (HARNESS step 3: the tie is a decision): riderTie 0 keeps the first mode, v0.6.240's [tha]
+          const uK = mkI('Henrik'); uK.o.riderTie = 0; const rK = { id: 'i8', name: 'Rosalina Cortez (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 3 }; uK.board = [rK]; uK.hand = ['Mirror Walk'];
+          const sK = uK._bestStealthFor(rK, new Set()), uD = mkI('Henrik'); uD.board = [rK]; uD.hand = ['Mirror Walk']; const sD = uD._bestStealthFor(rK, new Set());
+          ok(!!sK && !sK.blockedLockEnd && !!sD && sD.blockedLockEnd === true && uD.o.riderTie === 1,
+             '187i riderTie 0 keeps the tie at the first mode ([tha], v0.6.240), the default 1 takes [THA] (got ' + JSON.stringify({ k0: sK && (sK.at || 'tha'), k1: sD && sD.at, def: uD.o.riderTie }) + ')');
+      }
+      // j) Creeping Sabotage costs X blood, X the copies already in play (the fidelity pass; KRCG 'Cost: X blood')
+      { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'J', persona: 'grinder', log: () => {} });
+        const v = { id: 'j1', name: 'Agrippina (G1)', kind: 'crypt', zone: 'ready', locked: false, blood: 1 };
+        u.board = [v, { id: 'j0', name: 'Creeping Sabotage', kind: 'lib', zone: 'ash' }]; u.hand = ['Creeping Sabotage'];
+        const cost = c => c === null ? 'none' : ((c.cost && c.cost.blood) | 0);
+        const got = { zero: cost(u._bestCreepFor(v)) };   // one in the ash heap only: free
+        u.board.push({ id: 'j2', name: 'Creeping Sabotage', kind: 'lib', zone: 'ready', locked: false }); got.one = cost(u._bestCreepFor(v));
+        u.board.push({ id: 'j3', name: 'Creeping Sabotage', kind: 'lib', zone: 'ready', locked: false }); got.two = cost(u._bestCreepFor(v));   // 2 blood, the vampire has 1
+        v.blood = 2; got.twoPaid = cost(u._bestCreepFor(v));
+        ok(got.zero === 0 && got.one === 1 && got.two === 'none' && got.twoPaid === 2,
+           '187j Creeping Sabotage costs X blood, X the copies already in play: free with none, 1 with one, not offered to a vampire that cannot pay 2 (got ' + JSON.stringify(got) + '; v0.6.240 played every copy free)');
+        // the branch (the egress review: the payment had no test): X paid at announce, given back when the action is blocked, kept when it succeeds
+        const mkJ = () => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'U', persona: 'expert', deckName: 'nosferatu', paceMs: 0, askSecs: 1, log: () => {} });
+          u.seat = 2; u.started = true; u.turnSeat = 2; u.ownTurns = 5; u.cryptN = 0; u.pool = 20;
+          u.players = [{ seat: 1, name: 'Hanna', online: true, bot: true }, { seat: 2, name: 'U', online: true, bot: true }];
+          u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.notes = []; u.note = m => u.notes.push(m); u.chat = () => {};
+          u.evs = []; u.onEvent = (t, d) => u.evs.push({ t, d });
+          const vj = { id: 'j5', name: 'Agrippina (G1)', kind: 'crypt', zone: 'ready', locked: false, blood: 3, cap: 5, attached: [] };
+          u.board = [vj, { id: 'j6', name: 'Creeping Sabotage', kind: 'lib', zone: 'ready', locked: false }]; u.hand = ['Creeping Sabotage'];
+          let first = true; u._decideAction = (vv, ctx) => { if(first && ctx.creep){ first = false; return { pick: ctx.creep, why: 'the test' }; } return { pick: null, why: 'the test' }; };
+          u._resolveCombat = async () => {};
+          return { u, vj }; };
+        const runJ = async what => { const { u, vj } = mkJ(); let paidAt = null; u._askBlock = async () => { paidAt = vj.blood; return { what, who: 'Hanna' }; }; let terr = null;
+          await Promise.race([u._playTurn().catch(e => { terr = e.message; }), sleep(8000)]);
+          return { terr, paidAt, blood: vj.blood, copies: u.board.filter(c => c.kind === 'lib' && c.name === 'Creeping Sabotage' && c.zone === 'ready').length, returned: u.evs.some(e => e.t === 'bot:cost-returned' && e.d && e.d.blood === 1) }; };
+        const JB = await runJ('block'), JT = await runJ('no');
+        ok(!JB.terr && !JT.terr && JB.paidAt === 2 && JB.blood === 3 && JB.returned && JB.copies === 1 && JT.paidAt === 2 && JT.blood === 2 && !JT.returned && JT.copies === 2,
+           '187j the creep branch pays the X blood at announce (3 -> 2 while the block is asked), gives it back when the action is blocked (no copy added) and keeps it paid when it succeeds (the second copy in play) (got ' + JSON.stringify({ JB, JT }) + ')');
+      }
+      // k) a cancel heard under a before-range gate spends nothing (the egress review, pass 2: the line path, which a bounce's new target takes)
+      { const cfK = JSON.parse(require('fs').readFileSync(__dirname + '/elysium-cardfx.json', 'utf8'));
+        let aniSup = null; for(const nm in cfK.crypt){ const d = cfK.crypt[nm].disc; if(d && d.sup && d.sup.includes('ani')){ aniSup = nm; break; } }
+        const mkK = (hand, vampName) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Sven', persona: 'grinder', paceMs: 0, log: () => {} });
+          u.seat = 3; u.turnSeat = 2; u.started = true; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }];
+          u.sent = []; u.send = m => u.sent.push(m); u.push = () => {};
+          u._awaitOppManeuver = () => Promise.resolve(null); u._awaitOppPress = () => Promise.resolve(null); u._awaitOppTaken = () => Promise.resolve(null);
+          u._awaitOppStrike = () => Promise.resolve({ vamp: 'Rosalina Cortez (G6)', dodge: true, dealt: 0 });
+          const v = { id: 'k1', name: vampName, kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 8 }; u.board = [v]; u.hand = hand.slice();
+          u._myBlockOf = { vamp: 'Rosalina Cortez (G6)', at: Date.now() };
+          let fired = false; u._combatGate = async () => { if(!fired){ fired = true; u._onLog('Henrik', '<b>Rosalina Cortez (G6)</b> is blocked — <b>Mirror Walk</b> [THA]: <b>Sven</b>\'s <b>' + vampName + '</b> is locked; the action ends unsuccessfully.'); } };
+          return { u, v }; };
+        const K1 = mkK(['Carrion Crows'], aniSup), K2 = mkK(['Wall of Filth'], 'Trevon Parker (G6)');
+        await Promise.race([K1.u._resolveCombat(K1.v, 'Rosalina Cortez (G6)'), sleep(6000)]);
+        await Promise.race([K2.u._resolveCombat(K2.v, 'Rosalina Cortez (G6)'), sleep(6000)]);
+        const got = { crows: K1.u.hand.includes('Carrion Crows') && !K1.u._carrionCrows, wall: K2.u.hand.includes('Wall of Filth') && !K2.u.board.some(c => c.name === 'Wall of Filth'), locked: K1.v.locked && K2.v.locked };
+        ok(got.crows && got.wall && got.locked,
+           '187k a BLOCKED_LOCK line heard under a before-range gate spends nothing: Carrion Crows stays in hand (the step’s re-check), Wall of Filth too (its helper’s), the blockers stay locked (got ' + JSON.stringify(got) + ')');
+      }
+      // l) the same for Change of Target's line (the egress review, pass 3: the register's 11.4, its second half -- the step's and the
+      //    helpers' re-checks read `_cotCancel`, which `_onCot` sets for either line; v0.6.240 spent both cards)
+      { const cfL = JSON.parse(require('fs').readFileSync(__dirname + '/elysium-cardfx.json', 'utf8'));
+        let aniSup = null; for(const nm in cfL.crypt){ const d = cfL.crypt[nm].disc; if(d && d.sup && d.sup.includes('ani')){ aniSup = nm; break; } }
+        const mkL = (hand, vampName) => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'Sven', persona: 'grinder', paceMs: 0, log: () => {} });
+          u.seat = 3; u.turnSeat = 2; u.started = true; u.players = [{ seat: 1, name: 'Johan' }, { seat: 2, name: 'Henrik', bot: true }, { seat: 3, name: 'Sven', bot: true }];
+          u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.evs = []; u.onEvent = (t, d) => u.evs.push({ t, d });
+          u._awaitOppManeuver = () => Promise.resolve(null); u._awaitOppPress = () => Promise.resolve(null); u._awaitOppTaken = () => Promise.resolve(null);
+          u._awaitOppStrike = () => Promise.resolve({ vamp: 'Rosalina Cortez (G6)', dodge: true, dealt: 0 });
+          const v = { id: 'l1', name: vampName, kind: 'crypt', zone: 'ready', locked: true, blood: 5, cap: 8 }; u.board = [v]; u.hand = hand.slice();
+          u._myBlockOf = { vamp: 'Rosalina Cortez (G6)', at: Date.now() };
+          let fired = false; u._combatGate = async () => { if(!fired){ fired = true; u._onLog('Henrik', '<b>Rosalina Cortez (G6)</b> plays <b>Change of Target</b> — unlocks; the action ends unsuccessfully.'); } };
+          return { u, v }; };
+        const L1 = mkL(['Carrion Crows'], aniSup), L2 = mkL(['Wall of Filth'], 'Trevon Parker (G6)');
+        await Promise.race([L1.u._resolveCombat(L1.v, 'Rosalina Cortez (G6)'), sleep(6000)]);
+        await Promise.race([L2.u._resolveCombat(L2.v, 'Rosalina Cortez (G6)'), sleep(6000)]);
+        const rounds = U => U.evs.filter(e => e.t === 'bot:combat-round').length, told = U => U.evs.some(e => e.t === 'bot:cot-cancelled');
+        const got = { aniSup: !!aniSup, crows: L1.u.hand.includes('Carrion Crows') && !L1.u._carrionCrows,
+          wall: L2.u.hand.includes('Wall of Filth') && !L2.u.board.some(c => c.name === 'Wall of Filth'), rounds: rounds(L1.u) + rounds(L2.u), told: told(L1.u) && told(L2.u) };
+        ok(got.aniSup && got.crows && got.wall && got.rounds === 0 && got.told,
+           '187l a Change of Target line heard under a before-range gate spends nothing either: Carrion Crows and Wall of Filth stay in hand, no combat round, the cancel told (the register’s 11.4, its second half; v0.6.240 spent both) (got ' + JSON.stringify(got) + ')');
+      }
     }
 
 

@@ -65,8 +65,13 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    chat round): O-51 (the ruling doc's lines and R1-R9) and O-36's measurement, L-99, the chat tools, D-137 in CLAUDE.md's tier and
 #    event-log rules. Cut first: the round's own lines (HOWTO's chat tools 0.7 -> 0.4 KB, L-99, BOARD's found line; O-36 and O-51
 #    compacted); the register stood 0.8 KB over its ceiling, LESSONS 0.1, HOWTO 0.1 and the total 2.0 KB (the egress review's pass 1).
-PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:74500 $D/LESSONS.md:21000
-       $D/ARCHITECTURE.md:17000 $D/HARNESS.md:9000 $D/HOWTO.md:24000"
+#    RULINGS 74.5 -> 76.5 KB, LESSONS 21 -> 21.5 KB, ARCHITECTURE 17 -> 17.5 KB and the total 190 -> 193 KB on 25 Nov (bot v0.6.241, the
+#    exactness round): D-138 (the exact measure, Johan's words), O-52 (the pool floor, a proposal), O-53 (the playtests' table questions,
+#    the egress review's pass 2), L-100, HOWTO's fidelity lines, ARCHITECTURE's rider and knob. Cut first: the round's own lines (D-138
+#    2.0 -> 1.0 KB, O-52, L-100 and the HOWTO paragraph halved); the register stood 1.5 KB over its ceiling, LESSONS 0.1,
+#    ARCHITECTURE 0.1 and the total 1.8 KB with the release's gate line in STATUS.
+PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:76500 $D/LESSONS.md:21500
+       $D/ARCHITECTURE.md:17500 $D/HARNESS.md:9000 $D/HOWTO.md:24000"
 total=0
 for pb in $PAGES; do
   f=${pb%:*}; lim=${pb##*:}
@@ -76,7 +81,7 @@ for pb in $PAGES; do
 done
 boot=0; for f in "$R/CLAUDE.md" "$B/CLAUDE.md" "$D/STATUS.md" "$D/BOARD.md"; do boot=$((boot + $(wc -c < "$f" | tr -d ' '))); done
 if [ "$boot" -gt 50000 ]; then bad "bootstrap is $boot bytes, budget 50000"; else ok "bootstrap $boot / 50000"; fi
-if [ "$total" -gt 190000 ]; then bad "standing pages total $total bytes, budget 190000"; else ok "standing pages $total / 190000"; fi
+if [ "$total" -gt 193000 ]; then bad "standing pages total $total bytes, budget 193000"; else ok "standing pages $total / 193000"; fi
 
 # 2. paths named in the standing pages: a backticked token that looks like a file or a folder
 missing=0

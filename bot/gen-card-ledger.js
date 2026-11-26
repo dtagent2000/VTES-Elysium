@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-card-ledger.js v1.2.2 (20 Nov 2026, cardfx compiler v1.10.0: a merged entry's tier reads `curated, merged`, spec-card-sweep §4.4;
+/* gen-card-ledger.js v1.3.0 (25 Nov 2026, bot v0.6.241, RULINGS D-138: THE FIDELITY -- per deck two numbers beside the statuses: the copies
+   whose card's entry was read clause by clause against KRCG's text (cardfx-fidelity.json: checked, by date), and of those the playable
+   ones with no open SWEEP-REGISTER entry that changes the card's own play (active, missed, reachable: exact); a row's fidelity column;
+   a gap the register no longer lists fails the run; v1.2.2 20 Nov 2026, cardfx compiler v1.10.0: a merged entry's tier reads `curated, merged`, spec-card-sweep §4.4;
    v1.2.1 19 Nov 2026: the Sim line names the client the table ran on -- the queued bridge of client v2.6.177 moved
    the uses with no bot change; v1.2.0 19 Nov 2026, bot v0.6.234, RULINGS D-125: the whole library's verdicts and the effect vocabulary;
    v1.1.3 14 Nov 2026, bot v0.6.228: the verdict asks a mode for every discipline line of KRCG's text -- coverage v1.1.47;
@@ -54,7 +57,8 @@
      default decks: every deck-*.json whose name starts with "V5 " (gen-precon.js writes them).                                         */
 
 const fs = require('fs'), path = require('path');
-const LEDGER_VERSION = '1.2.2';   // v1.2.2 (20 Nov 2026, cardfx v1.10.0): a merged entry's tier is `curated, merged` (the census counts it curated)   // v1.2.1 (19 Nov 2026): the Sim line names the client   // v1.2.0 (19 Nov 2026, bot v0.6.234, RULINGS D-125): the whole library and the vocabulary   // v1.1.3 (14 Nov 2026, bot v0.6.228, round F): the discipline-line check (COV.coverDeck's textOf: KRCG's text when vtes.json is here)   // v1.1.2 (13 Nov 2026, bot v0.6.221): a master pick counts only when played; v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
+const LEDGER_VERSION = '1.3.0';   // v1.3.0 (25 Nov 2026, bot v0.6.241, D-138): the fidelity -- checked and exact per deck, a row's fidelity (cardfx-fidelity.json x SWEEP-REGISTER.md)
+// was: const LEDGER_VERSION = '1.2.2';   // v1.2.2 (20 Nov 2026, cardfx v1.10.0): a merged entry's tier is `curated, merged` (the census counts it curated)   // v1.2.1 (19 Nov 2026): the Sim line names the client   // v1.2.0 (19 Nov 2026, bot v0.6.234, RULINGS D-125): the whole library and the vocabulary   // v1.1.3 (14 Nov 2026, bot v0.6.228, round F): the discipline-line check (COV.coverDeck's textOf: KRCG's text when vtes.json is here)   // v1.1.2 (13 Nov 2026, bot v0.6.221): a master pick counts only when played; v1.1.1 (12 Nov 2026, bot v0.6.219, crypt wave A): FX_CLASS gains strikeDodge
 
 /* ---- the crypt (v1.1.0): the ability text, its effect classes, the readers that model it ---- */
 const SECT = '(?:Anarch|Camarilla|Independent|Sabbat|Laibon)';
@@ -280,8 +284,20 @@ function cryptSelfTest(quiet){   // returns the number of failed checks; quiet =
   eq(cenM.byVerdict.FULL, { n: 3, auto: 1, curated: 2, handler: 0 }, 'the census counts a merged entry in the curated tier');
   // the egress review (L-13): a ROW rendered through the page's own two functions, a merged entry and a whole hand entry
   const rowOf = e => rowLine(finishRow({ card: 'Synthetic Card', e, decks: { malkavian: 2 }, verdict: 'FULL', uses: 0, usesBy: {}, kc: null, names: [], per: [] }, {}, false, () => []), false, {});
-  eq([rowOf(mrg), rowOf(lib0.B)], ['| Synthetic Card | mod | curated, merged | FULL | playable (static) | malkavian 2 | — | — |  |', '| Synthetic Card | mod/react | curated | FULL | playable (static) | malkavian 2 | — | — |  |'],
-     'a row as the page writes it: a merged entry\'s tier reads curated, merged; a whole hand entry\'s curated');
+  eq([rowOf(mrg), rowOf(lib0.B)], ['| Synthetic Card | mod | curated, merged | FULL | playable (static) | malkavian 2 | — | — |  | — |', '| Synthetic Card | mod/react | curated | FULL | playable (static) | malkavian 2 | — | — |  | — |'],
+     'a row as the page writes it: a merged entry\'s tier reads curated, merged; a whole hand entry\'s curated (v1.3.0: and an unchecked fidelity, —)');
+  // v1.3.0 (D-138): the fidelity -- the register's open entries and their states, a row's fidelity, the problems the run fails on
+  const regT = ['## 7. Conditional', '- **7.1 Aire of Elation** — "[pre] +1 bleed …" (KRCG). [w5] · **active** (the toreador', '  smoke: 10 plays) · a key.',
+    '- **8.7 Who may play a mode** — Cloak the Gathering\u2019s [OBF] … [sweep] · latent (no deck) / reachable (the list\u2019s District).', '- **10.12 The route** [w6 §8] · reachable (gangrel) / latent.',
+    '- **14.4 A draw in flight** — no state written.', '', '## Not migrated: done since', '- **9.9 Old** · active'].join('\n');
+  const regM = registerEntries(regT);
+  eq([...regM.entries()].map(([k, v]) => k + ':' + v.state + '/' + v.states.join('+')), ['7.1:active/active', '8.7:latent/latent+reachable', '10.12:reachable/reachable+latent', '14.4:null/'], 'the register: the open entries above Not migrated, a bullet\'s lines joined, the first state after the evidence and a compound\'s others');
+  const fidT = { checked: { 'Aire of Elation': { on: '2026-11-25', gaps: ['7.1'] }, 'Cloak the Gathering': { on: '2026-11-25', gaps: ['8.7'] }, 'Protected District': { gaps: ['8.7@reachable'] }, 'Bonding': { on: '2026-11-25' }, 'Old Card': { gaps: ['9.9', '14.4', '7.1@missed'] } } };
+  const fd = n => fidelityOf([n], fidT, regM);
+  eq([fd('Aire of Elation').play, fd('Cloak the Gathering').play, fd('Protected District').play, fd('Bonding').play, fd('Nobody'), fidelityLabel(fd('Aire of Elation')), fidelityLabel(fd('Protected District')), fidelityLabel(fd('Bonding')), fidelityLabel(null)],
+     [true, false, true, false, null, '7.1 active', '8.7 reachable', 'checked', '\u2014'], 'a row\'s fidelity: an active gap changes play, a latent one does not, a compound entry\'s named half (8.7@reachable) does; checked with no gap; unchecked is —');
+  eq(fidelityProblems(fidT, regM, n => n !== 'Old Card'), ['Old Card: no cardfx library entry under this name', 'Old Card: gap 9.9 is not an open entry of SWEEP-REGISTER.md (fixed and deleted? drop it from cardfx-fidelity.json)', 'Old Card: gap 14.4 has no state in the register', 'Old Card: gap 7.1 names no state missed in the register (it names active)'],
+     'the fidelity problems: a card the library lacks, a gap the register no longer lists, a gap with no state, a half the entry does not name');
   if (!quiet || bad) console.log('gen-card-ledger --self-test: ' + (of - bad) + ' of ' + of + ' checks' + (bad ? ' -- FAILED' : ' passed'));
   return bad;
 }
@@ -305,6 +321,44 @@ function parseArgs(argv){
 
 const STATUS_ORDER = ['unresolved', 'inert', 'partial', 'not seated', 'unseen', 'playable (static)', 'playable'];
 const PLAYS = st => st === 'playable' || st === 'playable (static)';   // a row with nothing missing
+/* v1.3.0 (D-138): THE FIDELITY. `playable` is reach: every mode the bot can reach is read; a clause the entry leaves out is invisible to it
+   (Mirror Walk [THA] was FULL). cardfx-fidelity.json records the cards whose entry someone read clause by clause against KRCG's text, and
+   for each the open SWEEP-REGISTER entries that are its own gaps (the reader's mapping: an entry that only mentions a card is not its gap).
+   A copy is checked when its card is there, exact when it is also playable in its deck and none of its gaps is in a state that changes
+   a sim deck's own play (PLAY_STATES: active, missed, reachable -- a latent gap no sim deck reaches, a human's play and a trace debt do not). */
+const PLAY_STATES = ['active', 'missed', 'reachable'];
+function registerEntries(text){   // SWEEP-REGISTER.md -> Map id -> { title, state }: its open entries, the bullets above '## Not migrated' (a bullet's lines joined)
+  const body = String(text || '').split(/\n## Not migrated/)[0], out = new Map(), bullets = []; let cur = null;
+  for (const ln of body.split('\n')){
+    if (/^- \*\*\d+\.\d+ /.test(ln)){ if (cur) bullets.push(cur); cur = ln; }
+    else if (cur && /^\s{2,}\S/.test(ln)) cur += ' ' + ln.trim();
+    else { if (cur) bullets.push(cur); cur = null; }
+  }
+  if (cur) bullets.push(cur);
+  for (const b of bullets){ const m = /^- \*\*(\d+\.\d+) (.+?)\*\*/.exec(b); if (!m) continue;
+    const sts = [...b.matchAll(/(?:\u00b7|\/|\(\w\))\s*(?:\*\*)?(active|missed|reachable|latent|human|debt)\b/g)].map(x => x[1]);   // the states it names: the first after the evidence, and a compound's others ('latent (...) / reachable (...)', '(a) latent; (b) reachable')
+    out.set(m[1], { title: m[2], state: sts[0] || null, states: [...new Set(sts)] }); }
+  return out;
+}
+function fidelityOf(names, fid, reg){   // a row's card names -> null (unchecked) | { on, gaps: [{ id, state }], play }
+  const ck = fid && fid.checked; if (!ck) return null;
+  const f = names.map(n => ck[n]).find(Boolean); if (!f) return null;
+  const gaps = (f.gaps || []).map(g => { const [id, want] = String(g).split('@'), r = reg.get(id);   // 'id', or 'id@state': the half of a compound entry that is this card's (the reader's call)
+    return { id, state: !r ? 'gone' : want ? (r.states.includes(want) ? want : 'no ' + want) : (r.state || 'no state') }; });
+  return { on: f.on || null, gaps, play: gaps.some(g => PLAY_STATES.includes(g.state)) };
+}
+function fidelityLabel(fd){ return !fd ? '\u2014' : fd.gaps.length ? fd.gaps.map(g => g.id + ' ' + g.state).join(', ') : 'checked'; }
+function fidelityProblems(fid, reg, libHas){   // the run fails on these (the page is still written)
+  const P = [], ck = (fid && fid.checked) || {};
+  for (const [card, f] of Object.entries(ck)){
+    if (!libHas(card)) P.push(card + ': no cardfx library entry under this name');
+    (f.gaps || []).forEach(g => { const [id, want] = String(g).split('@');
+      if (!reg.has(id)) P.push(card + ': gap ' + id + ' is not an open entry of SWEEP-REGISTER.md (fixed and deleted? drop it from cardfx-fidelity.json)');
+      else if (want && !reg.get(id).states.includes(want)) P.push(card + ': gap ' + id + ' names no state ' + want + ' in the register (it names ' + (reg.get(id).states.join(', ') || 'none') + ')');
+      else if (!want && !reg.get(id).state) P.push(card + ': gap ' + id + ' has no state in the register'); });
+  }
+  return P;
+}
 /* v1.2.2 (the egress review, LESSONS L-13): a library row's derived fields and its line, each in one function the page and the self-test
    both call -- so the self-test renders a row through the code that writes the page */
 function finishRow(x, seatedBy, haveSim, suiteSections){
@@ -320,7 +374,7 @@ function finishRow(x, seatedBy, haveSim, suiteSections){
 }
 function rowLine(x, haveSim, seatedBy){
   return '| ' + x.card + ' | ' + (x.type || '—') + ' | ' + x.tier + ' | ' + x.verdict + ' | ' + x.status + ' | ' + Object.entries(x.decks).sort().map(([k, n]) => k + ' ' + n + (haveSim ? ' (' + (x.usesBy[k] || 0) + '/' + (seatedBy[k] || 0) + ')' : '')).join(', ') +
-    ' | ' + (x.rulings == null ? '—' : x.rulings) + ' | ' + (x.suite.length ? x.suite.slice(0, 8).join(', ') + (x.suite.length > 8 ? ' +' + (x.suite.length - 8) : '') : '—') + ' | ' + (PLAYS(x.status) || x.status === 'unseen' || x.status === 'not seated' ? '' : x.missing.join('; ')) + ' |';
+    ' | ' + (x.rulings == null ? '—' : x.rulings) + ' | ' + (x.suite.length ? x.suite.slice(0, 8).join(', ') + (x.suite.length > 8 ? ' +' + (x.suite.length - 8) : '') : '—') + ' | ' + (PLAYS(x.status) || x.status === 'unseen' || x.status === 'not seated' ? '' : x.missing.join('; ')) + ' | ' + fidelityLabel(x.fid) + ' |';   // v1.3.0: + the fidelity
 }
 function statusOf(verdict, uses, seated, haveSim){
   if (verdict === 'UNRESOLVED' || verdict === 'IN-CRYPT?') return 'unresolved';
@@ -401,6 +455,11 @@ function main(){
   }
   const haveSim = o.sims.length > 0;
   for (const x of rows.values()) finishRow(x, seatedBy, haveSim, suiteSections);
+  /* v1.3.0 (D-138): the fidelity -- the checks file and the register's open entries */
+  let fid = null; try { fid = JSON.parse(fs.readFileSync(path.join(__dirname, 'cardfx-fidelity.json'), 'utf8')); } catch (e){ fid = null; }
+  let regE = new Map(); try { regE = registerEntries(fs.readFileSync(path.join(__dirname, 'docs', 'SWEEP-REGISTER.md'), 'utf8')); } catch (e){}
+  for (const x of rows.values()) x.fid = fidelityOf([x.card, ...x.names], fid, regE);
+  const fidP = fid ? fidelityProblems(fid, regE, n => !!(COV.fx.lib && Object.prototype.hasOwnProperty.call(COV.fx.lib, n))) : ['no readable cardfx-fidelity.json: nothing is counted checked'];
 
   // the class map: unconsumed fx keys of every non-playable row, weighted by copies
   const meaningful = k => k && k !== '—' && !['paired', 'meta', 'crypt'].includes(String(COV.CLASS[k] || ''));
@@ -496,6 +555,8 @@ function main(){
   P('');
   P('**Status:** playable = the bot plays every mode it can reach and some deck played the card in the sim (per deck below: that deck did) · unseen = it could, its decks sat, it never did (a pricing question first, LESSONS L-9) · not seated = it could, but none of its decks sat in the sims given · playable (static) = it could, and no sim was given · partial = some modes, or a master played blind · inert = nothing the bot reads · unresolved = the name finds no card. **Uses** = decisions to play the card from hand (action picks, and a master pick once it was played: its own row, or gone from the hand by the next decide row of that bot) plus every card play the bot emits in a window, counted in the deck that played it, over the matches that deck sat in. A verdict is static (what the code CAN do); uses are what the table DID (L-47).');
   P('');
+  P('**Fidelity** (v1.3.0, RULINGS D-138): playable is *reach* -- it cannot see a clause an entry leaves out. **text-checked** = the copies whose card\'s entry was read clause by clause against KRCG\'s text (`cardfx-fidelity.json`); **exact** = of those, the ones playable in the deck with no open `docs/SWEEP-REGISTER.md` entry that changes the card\'s own play (' + PLAY_STATES.join(', ') + '; a latent gap, a human\'s play and a trace debt do not count). The ledger\'s last column lists a checked card\'s gaps by register id and state. An unchecked copy is not exact: its entry may be right, but no one has read it.' + (fidP.length ? ' **The run found ' + fidP.length + ' problem(s) in the fidelity file** (the console lists them).' : ''));
+  P('');
   P('## Summary (' + all.length + ' cards, ' + all.reduce((s, x) => s + x.copies, 0) + ' library copies)');
   P('');
   P('| status | cards (any deck) | copies (in their deck) |'); P('|---|---:|---:|');
@@ -504,10 +565,12 @@ function main(){
   P('## Per deck (library copies by status; seated = matches in the sim)');
   P('');
   const cols = shown;
-  P('| deck | ' + cols.join(' | ') + ' | seated |'); P('|---|' + cols.map(() => '---:').join('|') + '|---:|');
+  P('| deck | ' + cols.join(' | ') + ' | seated | text-checked | exact |'); P('|---|' + cols.map(() => '---:').join('|') + '|---:|---:|---:|');   // v1.3.0 (D-138): + the fidelity
   for (const d of decks){   // per deck, a card's status is its status IN THAT DECK: a card another deck played is still unseen here
     const c = st => all.filter(x => x.decks[d.key] && stIn(x, d.key) === st).reduce((s, x) => s + x.decks[d.key], 0);
-    P('| ' + d.key + ' | ' + cols.map(c).join(' | ') + ' | ' + (seatedBy[d.key] || 0) + ' |');
+    const lib = all.filter(x => x.decks[d.key]), n = lib.reduce((s, x) => s + x.decks[d.key], 0), sum = f => lib.filter(f).reduce((s, x) => s + x.decks[d.key], 0);
+    const chk = sum(x => !!x.fid), ex = sum(x => !!x.fid && !x.fid.play && PLAYS(stIn(x, d.key)));
+    P('| ' + d.key + ' | ' + cols.map(c).join(' | ') + ' | ' + (seatedBy[d.key] || 0) + ' | ' + chk + '/' + n + ' | ' + ex + '/' + n + ' |');
   }
   P('');
   /* the whole library (v1.2.0): two tables and the vocabulary -- a summary, never a row per card */
@@ -549,7 +612,7 @@ function main(){
   P('');
   P('## The ledger');
   P('');
-  P('| card | type | tier | verdict | status | decks: copies' + (haveSim ? ' (uses / matches seated)' : '') + ' | rulings | suite § | missing modes |'); P('|---|---|---|---|---|---|---:|---|---|');
+  P('| card | type | tier | verdict | status | decks: copies' + (haveSim ? ' (uses / matches seated)' : '') + ' | rulings | suite § | missing modes | fidelity |'); P('|---|---|---|---|---|---|---:|---|---|---|');
   for (const x of all) P(rowLine(x, haveSim, seatedBy));
   P('');
   /* the crypt (v1.1.0): after the library, so the library half of the page reads as before */
@@ -607,12 +670,14 @@ function main(){
     (krcg ? ' | crypt ' + cr.length + ' -- ' + CST.map(st => st + ' ' + cr.filter(x => x.status === st).length).join(', ') + ' | readers ' + readers.size + ' keys | classifier ' + check.agree + '/' + check.of : ' | crypt not read (no vtes.json)') + ' -> ' + path.relative(process.cwd(), o.out));
   console.log('  the whole library: ' + census.n + ' entries -- ' + ['playable (static)', 'partial', 'inert', 'unresolved'].map(st => st + ' ' + stCount(st)).join(', ') + ' | library keys ' + vocab.keys + ' (in the scan ' + vocab.read +
     ', compiler ' + (compilerKeys ? compilerKeys.size : '?') + ', hand-only ' + handOnly.size + ')' + (reg ? ' | register: backlog ' + reg.backlog + ', shared ' + reg.shared + ' (' + reg.owed + ' owed), unique ' + reg.unique + (regProblems.length ? ', ' + regProblems.length + ' PROBLEM(S)' : '') : ' | no register'));
+  { const ck = all.filter(x => x.fid); console.log('  fidelity: ' + ck.length + ' of ' + all.length + ' cards checked (' + ck.filter(x => x.fid.gaps.length).length + ' with gaps, ' + ck.filter(x => x.fid.play).length + ' changing play) -- ' + (fidP.length ? fidP.length + ' problem(s)' : 'no problem')); }
+  fidP.forEach(m => console.error('  fidelity: ' + m));
   check.miss.forEach(m => console.error('  classifier miss: ' + m));
   check.noClass.forEach(m => console.error('  a curated crypt key with no class (add it to FX_CLASS): ' + m));
   const strange = census.verdicts.filter(v => !VERDICTS.includes(v));
   strange.forEach(v => console.error('  a verdict this file does not know (add it to statusOf and VERDICTS): ' + v + ' on ' + census.byVerdict[v].n + ' library entries, counted as unresolved'));
-  return check.miss.length || check.noClass.length || strange.length ? 1 : 0;
+  return check.miss.length || check.noClass.length || strange.length || fidP.length ? 1 : 0;
 }
 
 if (require.main === module) process.exit(main());
-module.exports = { statusOf, cryptAbility, cryptSentences, cryptClassOf, cryptReaders, cryptStatusOf, FX_CLASS, LEDGER_VERSION };
+module.exports = { registerEntries, fidelityOf, fidelityLabel, fidelityProblems, PLAY_STATES, statusOf, cryptAbility, cryptSentences, cryptClassOf, cryptReaders, cryptStatusOf, FX_CLASS, LEDGER_VERSION };

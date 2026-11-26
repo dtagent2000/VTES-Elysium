@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-deck-coverage.js v1.1.55 — per-deck coverage report (16 July 2026; header version
+/* gen-deck-coverage.js v1.1.56 — per-deck coverage report (16 July 2026; header version
    string resynced 27 July: it had been frozen at v1.1.14 while the inline history below
    ran on to v1.1.30 — a stale header made the project copy look current and cost a
    diagnostic detour (the tool measured with the OLD CLASS map and reported the decks at
@@ -52,7 +52,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const COV_VERSION = '1.1.55';   // v1.1.55 (20 Nov 2026, the pilot's review, pass 2: F6, F1): `modeOf` (the bot loader's mode -> entry map, bot v0.6.236 K2) is a loader internal, not an fx key -- every run had printed it as an unclassified key; modeReachableBy mirrors _modeUsableBy's new gate (a level-less mode on a card with req.disc needs one of those disciplines, Flight from the crypt's flight)   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
+const COV_VERSION = '1.1.56';   // v1.1.56 (25 Nov 2026, the exactness round, bot v0.6.241): + plusIf ('paired': the conditional additional bleed / intercept, read beside bleed and intercept by _plusIf) and blockedLockEnd ('paired': Mirror Walk [THA]'s lock-and-end rider on its stealth) in the CLASS map   // v1.1.55 (20 Nov 2026, the pilot's review, pass 2: F6, F1): `modeOf` (the bot loader's mode -> entry map, bot v0.6.236 K2) is a loader internal, not an fx key -- every run had printed it as an unclassified key; modeReachableBy mirrors _modeUsableBy's new gate (a level-less mode on a card with req.disc needs one of those disciplines, Flight from the crypt's flight)   // v1.1.44 (C2): the one version the report and the exports print -- bump it with the header comment's
 
 const BOT = require('./elysium-bot.js');           // FX_NORM, loadCardfx, CARD_HANDLERS, DEFAULT_DECK
 const fx = BOT.loadCardfx(path.join(__dirname, 'elysium-cardfx.json'));
@@ -213,6 +213,8 @@ const CLASS = {
      classified. Until the bot reads a 'play' key the scan does not find it and its modes stay unconsumed; the restricting riders gate below. */
   rushTo: 'paired', maneuverGrant: 'paired', pressGrant: 'paired', pressDir: 'paired', ceBan: 'meta', ceGrant: 'paired',
   maneuverEach: 'play', attach: 'paired', rushBy: 'paired', hostOf: 'paired', poolOnHostLeave: 'paired', employAnimal: 'play', nullOppWeapons: 'meta', animal: 'meta',
+  blockedLockEnd: 'paired',   // v1.1.56 (bot v0.6.241): Mirror Walk [THA]'s rider -- _bestStealthFor takes the mode on the stealth tie, _ifBlockedStep applies it when the action is blocked (a rider of the stealth)
+  plusIf: 'paired',   // v1.1.56 (bot v0.6.241, the sweep register 7.1, 7.2): Aire of Elation's +1 bleed for a Toreador, The Warrens' +1 intercept for a titled Nosferatu -- _plusIf, read beside fx.bleed (_bestBleedModifierFor) and fx.intercept (_bestInterceptFor, _interceptStack); conditions other than selfClan / selfTitled fail closed
   press: 'contextual',   // v1.1.5: consumed via the press@ special-case below (Apportation's clean standalone shape only) -- 'contextual' here only silences the unknown-key warning for the excluded instances (co-located maneuver/strike/stealBlood, or an unverifiable req flag)
 };
 const cls = k => String(CLASS[k] || '');

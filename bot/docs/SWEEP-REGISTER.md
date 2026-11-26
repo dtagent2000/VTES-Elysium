@@ -35,7 +35,7 @@ What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
 source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's and v0.6.239's egress reviews; Claude orders the rounds, D-137).
-Active entries: 7.1, 7.2, 8.3, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 12.2.
+Active entries: 7.5, 8.3, 10.17, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 10.16, 12.2, 13.10.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -132,6 +132,12 @@ is a handoff first. Bot-to-bot gaps are marked.
   Deep Song's rush carries the frenzy tag).
 - **4.19 The opponent's pumps** are not read before its strike (its strike line carries the result): the wave decision and the
   dodge do not see them. [w2] · reachable (bot-to-bot).
+- **4.20 A human's Mirror Walk [THA]** — a bot blocker reads a bot actor's lines (RIDER_STEALTH, BLOCKED_LOCK; v0.6.241), not a
+  human's: the client writes the level into a human's play line by default (`playLineHtml`; the table helper `modeChoice`, off in
+  tournament mode or when the host locks it): `VAMP plays Mirror Walk [THA].`, or `Mirror Walk [THA] was played.` with no acting
+  vampire named. RIDER_STEALTH reads only the bot's `: +N stealth.` shape and nothing is said at the block, so the bot's blocker
+  begins its combat. [the exactness round; its egress review, pass 3] · human · a reader for the client's play line (the level;
+  the actor from the line or the action); with the helper off, the human says it (a chat word the blocker reads, as `bounce`).
 
 ## 5. Maneuvers: direction and source
 Which way a maneuver goes, and where a maneuver comes from (a card, equipment, a grant).
@@ -162,17 +168,18 @@ A card in play is known by its name where its record should follow the card (its
 
 ## 7. Conditional and capped values
 A value the text conditions or caps, compiled as a plain number.
-- **7.1 Aire of Elation** — "[pre] +1 bleed, with an additional +1 bleed if this vampire is Toreador … [PRE] +2 bleed, with an
-  additional +1 bleed if this vampire is Toreador" (KRCG); the entry carries 1 and 2. [sweep §4.3: amber] · **active** (the
-  toreador smoke: 10 plays, all by Toreador vampires, each 1 bleed short) · the condition on the key, read by the bleed modifier
-  finder and its readers.
-- **7.2 The Warrens** — "+2 intercept, with an additional +1 intercept if this Nosferatu is titled" (KRCG); the entry carries 2.
-  [w6 §8; sweep §4.3: amber] · **active** (the 240: 178 plays, 116 of them by nosferatu's four titled vampires — Belinde a
-  prince, Larissa Moreira, Lenny Burkhead and The Dowager primogen — each 1 intercept short) · the condition on the key, as
-  7.1's, read by the intercept finders and the block estimates.
 - **7.3 Kevlar Vest** — 2 only against guns; `_equipPrevent` prevents 1 against everything (sweep §4.3 calls it a red). [w1; sweep
   §4.3] · latent (tremere holds the vest and the only gun).
 - **7.4 Night Moves** — the bleed is capped at 1 pool. [sweep §4.3: red] · latent (nothing in the sewer deck bleeds for more).
+- **7.5 The `plusIf` row's other cards** — `_plusIf` (v0.6.241) reads a condition on my own vampire (`selfClan`, `selfTitled`) and
+  fails any other closed, and these entries carry the plain value: Protection Racket's "with an additional +1 intercept if the
+  acting minion is titled" (KRCG; `{intercept: 1}`), Ministry's additional +1 intercept if the acting vampire is Sabbat, Sense the
+  Sin [dai]'s if the acting minion has corruption counters, The Mausoleum, Venice's additional +1 vote while Ventrue Headquarters
+  is not in play (`cardfx-sharing.json`'s plusIf row: owed). [the exactness round's egress review, pass 3] · **active**
+  (Protection Racket: v0.6.241's V5 smokes, 13 plays, gangrel 8 and ravnos 5; 7 against a titled actor, Donny Kowalczyk ×2,
+  Alexander Silverson, The Dowager, Lloyd Brooks ×2 and Larissa Moreira, each booked at +1) / latent (Ministry, Sense the Sin,
+  The Mausoleum: no deck) · conditions on the acting minion (titled, sect, corruption) read where the intercept is summed against
+  a known actor; the Mausoleum's a check of the table.
 
 ## 8. Requirements, conditions and gates
 A requirement or a condition the text prints and a finder does not ask (the five playability layers' second and third, HARNESS), or
@@ -247,11 +254,14 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   entry carries the stealth only. [sweep §4.3: amber] · **missed** (the 240: 90 of its 306 plays by malkavian's three vampires
   with superior Obfuscate — Colette 41, Alexander Silverson 39, Dr. Stephen Norton 10 — always at [obf]: both modes carry +1
   stealth and `_bestStealthFor` replaces a pick only for more, so the first mode wins the tie) · the mode with the rider wins a
-  tie, and the lock is read (not Cloak the Gathering's [OBF], which another vampire plays: 8.7).
+  tie, and the lock is read (not Cloak the Gathering's [OBF], which another vampire plays: 8.7). v0.6.241 built the tie for a
+  rider the bot reads (Mirror Walk [THA]'s `blockedLockEnd`); this one's lock lands at resolution, after a failed blocker's
+  Deflection or Guard Dogs [ANK 20171017], on every minion that attempted and failed, across a bounce: a design of its own.
 - **10.2 Burning another's card in play, and Ventrue HQ** — Wasserschloss Anif, Austria's burn-it action ("Any minion can burn this
   card as a Ⓓ action"), Haven Uncovered's host burning the card, Pentex™ Subversion's ("Other minions can burn this card as a Ⓓ
-  action": its entry carries `noBlockMinion` only); Ventrue Headquarters locked only in my own referendums. [O-23; B; pilot; pass 3
-  found Pentex's] · **missed** (the 240: tremere's Wasserschloss banked blood in 67 matches and was never burned; nosferatu put
+  action": its entry carries `noBlockMinion` only), Creeping Sabotage's ("Minions can burn this card as a Ⓓ action") and Revelations
+  [AUS]'s ("Any minion can burn this card as a Ⓓ action"); Ventrue Headquarters locked only in my own referendums. [O-23; B; pilot; pass 3
+  found Pentex's; the exactness round's egress review the last two] · **missed** (the 240: tremere's Wasserschloss banked blood in 67 matches and was never burned; nosferatu put
   Haven Uncovered on another seat's vampire 68 times, never burned by its host; tremere's Pentex was on an opponent's minion in
   63 matches, never burned; the 240's 33 card burns were all Smiling Jack) / reachable (Ventrue HQ in another seat's referendum) ·
   a burn-it key the burn finder reads (`_bestBurnCardFor` reads only `burnCardAction`).
@@ -302,6 +312,22 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   their host burned. A burn by the table (`ctrl`), Archon Investigation and the Ravnos burn sweep them (v0.6.237's egress review:
   the table's burn by host and id too). What reads a card whose host is burned is not audited. [the playtest round's egress review]
   · reachable (any deck).
+- **10.16 Options the starters' curated entries leave out** — Anarch Troublemaker's "or burn an equipment on one of their minions"
+  (the entry carries the two locks only); Vessel's "you can burn a card named <Blood Doll> (if any)": any Blood Doll in play,
+  another Methuselah's too [LSJ 20071012, LSJ 20090811]. [the exactness round's fidelity pass; its egress review: Vessel's state]
+  · missed (Vessel; v0.6.241's 240: 366 of the 570 Vessels placed came after another seat had placed a Blood Doll in the same
+  match, 156 matches; no bot burns one) / reachable (ventrue ×1: Anarch Troublemaker, against tremere's equipment) · the burn of
+  an opponent's Blood Doll when Vessel is played; the equipment burn as the giver's choice when it is worth more than two locks.
+- **10.17 Bonding [DOM] spent for its stealth** — "+1 stealth and +1 bleed (limited)" (KRCG): `_spendStealthCard` adds the stealth
+  only, never the +1 bleed, and takes no limited slot, so Conditioning (limited) can follow in the same action ("one limited action
+  modifier may increase the bleed amount per action", the advanced rules 3.7.1). [the exactness round's egress review, pass 2]
+  · **active** (v0.6.241's 240: 208 stealth plays, 110 of their bleeds through without the +1, 18 followed by Conditioning in the
+  same action; v0.6.240's: 217, 118, 19) · the stealth spend applies the mode's bleed to the running amount and its limited slot,
+  as `_playBleedModifier` does.
+- **10.18 Life in the City on another Methuselah's vampire** — "Add 1 blood to a ready vampire" names no controller (the advanced
+  rules 6.1.4); the entry's `own-ready` and the handler pick only mine, and v0.6.241 holds the card while I have no ready vampire:
+  no legal object in the first round, a choice where another seat has one. [the exactness round's egress review, pass 2] · latent
+  (no bot gives another seat blood: no ally is modelled).
 
 ## 11. Windows: who is asked, and when
 Who may answer an action or a card, and in which window; a line read after its window closed.
@@ -315,8 +341,7 @@ Who may answer an action or a card, and in which window; a line read after its w
   of the 36 `oot` cards wait for their own triggers; two bots' Sudden Reversals at one human master (no arbiter). [w5 §12.10; w3] ·
   reachable (lasombra holds Sudden Reversal ×2, ravnos Archon Investigation ×1) / human (the two Reversals at a human's master).
 - **11.4 The before-range step** — Saulot's Guiding Wisdom's combat end in a combat my vampire did not start as the acting minion
-  (no before-range handshake between bots); after its first wait a bot blocker does not look for the actor's Change of Target
-  again before its own before-range plays (Carrion Crows, Wall of Filth, a strength pump). [w4] · reachable (salubri, toreador).
+  (no before-range handshake between bots). [w4] · reachable (salubri).
 - **11.5 A second block of the same action** [LSJ 20010814-2] — One With the Land's restriction again; Night Terrors' strike again.
   [w6 §8; pilot] · reachable (tzimisce, ravnos).
 - **11.6 Night Terrors before an attempt** [LSJ 20020612], or by another of my vampires. [w6 §8] · reachable (ravnos ×4).
@@ -381,8 +406,9 @@ Decisions on Claude's priors; each needs a design to Johan before it changes (D-
 - **13.9 Forced Confessional [dom]** unseen in 12 matches: a pricing question first (L-9). [w6 §8] · reachable (salubri ×4).
 - **13.10 A host's income with no host ends the master phase** — a Blood Doll or Vessel picked with no vampire to carry it `break`s
   the master phase's loop, so a later candidate (Dreams of the Sphinx, a Location) waits a turn; Guardian Angel's own case tries
-  the next. [v0.6.238's egress] · reachable (the first v0.6.238 bytes' 240: Dreams behind such a pick 4 times, never with no
-  vampire).
+  the next. [v0.6.238's egress; v0.6.241's egress review, pass 3: the count] · missed (v0.6.241's 240: 312 picks of the two in
+  round 1, before the picker has a vampire, none placed and the phase over; 120 of them with another master waiting, as The
+  Barrens; v0.6.240's the same).
 
 ## 14. Hand size and replacement
 The rulebook, drawing cards: "Whenever you play a card from your hand, you draw another from your library to replace it (unless
