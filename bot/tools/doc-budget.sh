@@ -85,8 +85,10 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    "Binding rules by area" and the measurement rules to HARNESS "Measurements" (the bootstrap from 49,953 bytes to under 40 KB), HARNESS's
 #    "One place for each fact" and the narrower review passes, and RULINGS by role: "the owner" is four bytes longer than the name it
 #    replaced on about 200 places, and D-142 is new; the quotes it paraphrased gave some back. Nothing binding was cut.
+#    HOWTO 24 -> 25 KB on 27 Nov (C1, the cross-check tool, rebased onto the cleanup round): its how-to; the page stood 21 bytes
+#    under its ceiling, with nothing left there that is history.
 PAGES="$B/CLAUDE.md:14500 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:82000 $D/LESSONS.md:21500
-       $D/ARCHITECTURE.md:29500 $D/HARNESS.md:14500 $D/HOWTO.md:24000"
+       $D/ARCHITECTURE.md:29500 $D/HARNESS.md:14500 $D/HOWTO.md:25000"
 total=0
 for pb in $PAGES; do
   f=${pb%:*}; lim=${pb##*:}

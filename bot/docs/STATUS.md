@@ -1,7 +1,7 @@
 # STATUS — Elysium Bots (rewritten at every release and round; 26 November 2026)
 
 **Bot v0.6.242** (26 Nov 2026, the bundle's cleanup release) · arena v1.4.17 · sim table v1.1.0 · cardfx compiler v1.11.4, curated 221 ·
-hotseat tool v1.5.0 · coverage tool v1.1.56 · card ledger v1.3.0 · review sheet v1.0.1 · precon generator v1.1.1 · `krcg-v5.js`
+hotseat tool v1.5.0 · coverage tool v1.1.56 · card ledger v1.3.0 · review sheet v1.1.0 · cross-check v1.0.0 · precon generator v1.1.1 · `krcg-v5.js`
 v1.0.0 · `ana-gates.py` v1.1.4 · the chat recorder and `tools/ana-chat.py` v1.0.0 · the workflow scripts (W1) ·
 `tools/public-scan.py` v1.1.1 · the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51;
 the root's release is client v2.6.189 / srv-2.6.53 (the canary's second run).

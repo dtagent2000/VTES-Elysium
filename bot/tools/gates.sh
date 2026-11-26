@@ -131,6 +131,7 @@ gate cardfx 0 g_vtes node test-cardfx.js
 gate precon 0 g_vtes node gen-precon.js --check
 gate ledger-self 0 node gen-card-ledger.js --self-test
 gate sheet-self 1 node gen-review-sheet.js --self-test
+gate cross-self 0 node gen-cross-check.js --self-test
 gate ana-gates-self 0 python3 ana-gates.py --self-test
 gate hb1 0 node diag-hb1-smoke.js
 hit '^bot/(elysium-bot\.js|elysium-bot-hotseat\.js|elysium-vtes-bord\.html|elysium-server\.js|ELYSIUM-PROTOCOL\.md|test-bot-hotseat\.js)$' && gate hotseat 1 node test-bot-hotseat.js

@@ -141,6 +141,12 @@ it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo
   development time only, from a clone OUTSIDE the repository at the pin in `tools/setup.sh` (it clones `~/zero-vtes`),
   then `node gen-review-sheet.js --deck KEY --zero ~/zero-vtes --out /tmp/sheet-KEY.md` (needs `vtes.json`; refuses a clone or a
   sheet inside the repository; names the commit it read). The sheet is scratch: what is committed is our own reading.
+- **The cross-check** (`gen-cross-check.js`, C1: spec-card-sweep §11.8) — our cardfx library against zero-vtes's definitions, card by card
+  and level by level: a family's values (agree, differ, ours only, theirs only, formula, a condition) and the flags where our entry says
+  less (a condition, a rider on a block, an extra cost, who plays it, an ongoing modifier, a line of KRCG's text with no mode of ours):
+  `node gen-cross-check.js --zero ~/zero-vtes --pairing /tmp/pairing.json --out /tmp/cross.md --json /tmp/cross.json`, scratch only.
+  The pairing (which of their tokens answer our keys) is a run-time file outside the repository until O-48 is answered; the readers
+  (`bot-card-reader`, HARNESS) settle each row against KRCG's text.
 - **The TWD profile** — `python3 twd-profile.py` / `twd-archetypes.py` (need `vtes.json`, `twda.json`; the archetypes also vtes-skill:
   README). Both overwrite the shipped files: run them in a scratch copy until a release; a rebuilt profile is first reproduced
   byte for byte by the old script (O-37); a new share is APPENDED.
