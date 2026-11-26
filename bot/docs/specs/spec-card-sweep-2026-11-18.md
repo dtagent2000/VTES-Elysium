@@ -88,11 +88,11 @@ the library nothing, even when most of it is shared. The bot has the consumers; 
 library cards curated by hand, the entry adds a key the compiler missed on 138 and drops a key the compiler set on 51.
 
 ## 2. The method (the owner, 18 Nov)
-His three steps, for each card: "1) vilka enkla minsta gemensamma finns som samtidigt återfinns på fler kort i biblioteket. 2)
-vilka mer avancerade korteffekter finns men som ändå delas mellan fler kort i biblioteket. 3) kvarvarande effekter blir då
-handkurerade." And their reach: "Vi GRANSKAR alla kort i V5-bibliotelet för punkt 1-2 (en starterlek i taget, ett kort i taget)
-utifrån detta men vi sveper igenom HELA biblioteket för steg 1 och 2 så att om vi vill fortsätta handkurera bortom V5 så kan vi
-börja med steg 3 direkt".
+The owner's three steps, for each card: (1) the simple least common denominators that are also found on more cards in the
+library; (2) the more advanced card effects that are still shared by several cards in the library; (3) the effects left over,
+which are then curated by hand. And their reach: every card of the V5 library is REVIEWED for steps 1 and 2 (one starter at a
+time, one card at a time), but the WHOLE library is swept for steps 1 and 2, so that curating by hand beyond V5 can later start
+at step 3 directly.
 
 This page calls his three steps T1, T2 and T3, because §3 has steps of its own and §4 has steps A to E. For every printed effect:
 - **T1, a common denominator.** A key the compiler already extracts. We check that it fires on this card.

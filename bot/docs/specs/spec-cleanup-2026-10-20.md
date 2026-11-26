@@ -80,7 +80,7 @@ rules errors come from. The card ledger (T2) keeps it honest: it says which entr
   Kevlar never equipped, Second Tradition illegal for an untitled vampire (45b).
 - The information boundary is designed (`handIntel` is filled only by reveal messages; bots look away from a
   debug seat) and has targeted tests (41a, section 140), but no test walks whole games for a leak.
-- the owner's rulings have no single home.
+- The owner's rulings have no single home.
 - The docs (§5.2).
 - There is no CI for `bot/`: "never claim a gate passed without having run it" rests on the agent alone. Main has
   run its gates in CI since 17 Oct (`.github/workflows/client-gates.yml`), and that file says the bot project
@@ -224,7 +224,7 @@ exist, or a version number in STATUS disagrees with `BOT_VERSION`.
 | READ-ME-FIRSTs | history; replaced by STATUS + the PR body (§8 Q3) |
 | `START-HERE-BOTS-CHAT.md` | stays; points at the new bootstrap (Appendix A) |
 | `REVIEW-vtes-player-2026-10-11.md` | its open items → BOARD, each credited; the text → the owner's private project notes |
-| the owner's rulings in memory and in the journal | RULINGS, checked against the memory notes (they are a dated record of the same decisions) |
+| The owner's rulings in memory and in the journal | RULINGS, checked against the memory notes (they are a dated record of the same decisions) |
 | Two design documents outside git (Claude Docs of 25 Sep: "Design: event log, shadow model, knowledge sources, bench" and "Cardfx sweep — source mapping") | linked from ARCHITECTURE; their standing parts copied into `specs/` |
 
 ### 5.5 The release ritual after C1

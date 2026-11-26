@@ -123,8 +123,8 @@ insight; coming: deal-propensity, vote alignment, hunt thresholds, block budgets
 metric bundle over K seeded games; optimizer = hill-climb or a small evolutionary loop (keep
 the best vectors, mutate, repeat). This is **self-play light: policy improvement by selection,
 not gradients** — fully inspectable, journalable, zero-dep, runs overnight on the owner's machine.
-Distinct local optima ARE personalities: this is precisely the "beslutsunderlag för strategi och
-taktik per persona" the goal ladder asks for.
+Distinct local optima ARE personalities: this is precisely the decision basis for strategy and
+tactics per persona that the goal ladder asks for.
 
 **L3 — feature-conditioned tactics (optional).** Knobs grow into small decision tables /
 bandit-style selection between discrete tactics conditioned on table features (threat level,

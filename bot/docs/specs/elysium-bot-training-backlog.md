@@ -123,7 +123,7 @@ per-archetype persona JSONs + a tuning journal.
 **Why:** "self-play light" — the highest lever-per-hour toward personas that FEEL distinct (strategy
 doc §4 L2); distinct local optima ARE the personalities.
 **How:** a driver script over T3; fitness per §5 (open question 3: pure VP vs a composite with style
-constraints). **Human-anchor rule:** every accepted profile gets at least one the owner live session before
+constraints). **Human-anchor rule:** every accepted profile gets at least one live session with the owner before
 it is called done — the Cicero lesson (§3.4) at hobby scale.
 **Why deferred:** strictly downstream of T3, and dramatically better with 4 real archetypes to tune.
 **Test:** tuned vs untuned profile over a fresh seed set shows a measurable, reproducible delta; plus

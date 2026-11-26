@@ -66,6 +66,6 @@ contract first).
 
 ## 5. A step for the table controls
 The bot's `status()` has a new step, `resolve-late`: the wait for a human actor's word on the bleed total (`asking`, `bleed
-modifiers (the owner)`, the clock's deadline). The Bot button's `step()` gives the word for the human (the bot reacts to the total, as
+modifiers (Lisa)`, the clock's deadline). The Bot button's `step()` gives the word for the human (the bot reacts to the total, as
 the clock would). `BOT_STEP_LABEL` has no entry for it, so the button reads `Step`; a label such as `Close modifiers` would match
 the others.

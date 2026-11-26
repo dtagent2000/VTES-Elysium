@@ -20,12 +20,12 @@ Same cards, same table. "Bleed for 6 now" and "fix my blood economy because the 
 
 ## 1. Four layers of knowledge (the owner's model)
 
-| # | layer | the sentence | knows | today | becomes |
+| # | layer | in short | knows | today | becomes |
 |---|---|---|---|---|---|
-| 1 | **own deck** | *"This is how I play my deck"* | what my cards do together, influence order, the deck's strategy, goals and lines | cardfx reads of own cards, the influence planner, `DECK_STRATEGY` texts (unread by code) | playbooks per deck: opening book, influence order, named LINES (§3), phase transitions |
-| 2 | **cards & archetypes** | *"This can stand in the way"* | what opponents' decks contain and do; the statistics of what they have shown | the table model `opp[seat]`, `readP`, `_oppPrior` | + the TWDA archetype baseline as prior; the per-minion / per-seat statistics |
-| 3 | **meta** | *"This is what I need to do to win"* | threat and board assessment, who is the problem, table politics — strictly apart from the mechanics | `_tableThreat`, lunge arithmetic, role weights, threat classes | the game-phase variable, target choice, the political forecast (§5), later deals and table talk in the chat tier |
-| 4 | **experience** | *"How often do I get it wrong"* | which of the layers above I actually use, and how reliably I execute | the four multipliers (`aggression`, `blockShy`, `insight`, `bareBlock`) | the persona (§2) |
+| 1 | **own deck** | *how I play my deck* | what my cards do together, influence order, the deck's strategy, goals and lines | cardfx reads of own cards, the influence planner, `DECK_STRATEGY` texts (unread by code) | playbooks per deck: opening book, influence order, named LINES (§3), phase transitions |
+| 2 | **cards & archetypes** | *what can stand in the way* | what opponents' decks contain and do; the statistics of what they have shown | the table model `opp[seat]`, `readP`, `_oppPrior` | + the TWDA archetype baseline as prior; the per-minion / per-seat statistics |
+| 3 | **meta** | *what I need to do to win* | threat and board assessment, who is the problem, table politics — strictly apart from the mechanics | `_tableThreat`, lunge arithmetic, role weights, threat classes | the game-phase variable, target choice, the political forecast (§5), later deals and table talk in the chat tier |
+| 4 | **experience** | *how often I get it wrong* | which of the layers above I actually use, and how reliably I execute | the four multipliers (`aggression`, `blockShy`, `insight`, `bareBlock`) | the persona (§2) |
 
 **Authority order when the layers disagree: 3 > 1 > 2.** The meta sets the goal ("survive the next round with the lunge threat intact"), the own-deck layer says how this deck reaches it (the Govern line), the archetype layer says what can go wrong (P(block) with 2 stealth ≈ high, bounce likely). Layer 2 never decides; it prices. In the example: L3's goal + L2's odds make the lunge's EV negative, and L1 has a line that meets L3's goal. Govern.
 

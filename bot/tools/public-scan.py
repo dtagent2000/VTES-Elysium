@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
-"""public-scan.py -- the public repository's name and quote scan (RULINGS D-141, D-142; HARNESS "Review until clean"). v1.0.0
+"""public-scan.py -- the public repository's name and quote scan (RULINGS D-141, D-142; HARNESS "Review until clean"). v1.1.0
 
-The repository is public: it carries no chat quotes and no names of private persons. This scan finds both without naming anyone
-itself: a name is kept as the sha256 of the lower-case word (a card name that shares the word is allowed by the sha256 of the
-pair), and a chat quote is a span of two or more words in double or curly quotes that reads as Swedish, the chat's language: two of
-its common words, or one and a Swedish letter (the docs are English; a one-word term such as the go-ahead word is not a quote). A hit prints its place and its kind only, never the
-words, so the scan's output can go into a PR body.
+The repository is public: it carries no chat quotes and no names of private persons. The scan finds both without naming anyone
+itself. Three rules, each hit printed as its place and its kind only, never the words, so the output can go into a PR body:
+  name    a word (or a part of a camelCase or snake_case word) whose lower-case sha256 is in NAMES; a crypt card that shares the
+          word is allowed by the sha256 of the pair (ALLOWED_PAIRS)
+  quote   a span of two or more words between quote marks (" ' and the typographic pairs, Swedish same-mark and low-high ones too)
+          that reads as Swedish, the chat's language: two of its common words, or one and a Swedish letter. A quote that wraps
+          over a line break is read with the next line; every span between two marks is tried, so an odd mark earlier on the
+          line does not hide one. A one-word term (the go-ahead word) is not a quote.
+  sv      a line of Swedish prose with no quote marks: three distinct common Swedish words.
+The pages written in Swedish by a tool, and the tools that write them (SWEDISH_OK), are read by the name rule only.
 
-Scanned: the files the bot owns -- bot/ (but the read-only copies of main's release and the third-party data), .claude/ and the
-bot's workflow. Not scanned: main's files (client/, the root's client, server and guides, the root CLAUDE.md and README).
+Scanned: the files the bot owns -- bot/ (but the read-only copies of main's release and the third-party data), .claude/, the
+bot's workflow and the root CLAUDE.md (shared: each side edits its own lines) -- and with --diff the messages of the range's
+commits. Not scanned: main's files (client/, the root's client, server, guides and README).
 Usage: python3 bot/tools/public-scan.py [--diff REF | --diff A..B | --tree] [--self-test]
-  --diff REF   the lines the working tree adds against REF (staged, unstaged and untracked files too); the default is origin/main
-  --diff A..B  the lines the commits A..B add (a reviewer's range; CI's HEAD^1..HEAD on a pull request's merge commit)
+  --diff REF   the lines the working tree adds against REF (staged, unstaged and untracked files too) and the messages of
+               REF..HEAD; the default is origin/main
+  --diff A..B  the lines the commits A..B add and their messages (a reviewer's range; CI's HEAD^1..HEAD on a merge commit)
   --tree       every tracked file the scan reads, a count per file; the files WAITING lists (the bundle's cleanup release) are
                reported apart and do not fail the scan
 Exit 1 on a hit (in --tree, a hit outside WAITING), 2 on a usage error.
@@ -30,13 +37,16 @@ ALLOWED_PAIRS = {   # sha256 of 'word next' in lower case: a crypt card whose na
 }
 SWEDISH = set('''och att jag inte det är på för med ska kan du eller nog också gärna tycker tänker låter kör bra ju då hur vad
 när någon några alla ingen inget inga sedan sen eftersom alltså bara mycket lite här där igen detta dessa som från vill vara blir
-finns gör går ser tror kanske tack hej japp nej absolut superbra jättebra kul vi ett mot över efter innan utan hela helt redan
-fortfarande varje mer flera många har hade blev kommer skulle kunna måste behöver verkar känns vet kolla testa spela köra lägga göra
-säga ditt din dina mitt min mina vårt vår våra sitt sin hans hennes deras oss dig mig sig spelet kortet korten leken botten
-människorna slutar börja först sist tyst rätt fel klart'''.split())
+finns gör går ser tror kanske hej japp nej absolut superbra jättebra kul vi ett mot över efter innan utan hela helt redan
+fortfarande varje mer flera många har hade blev kommer skulle kunna måste behöver verkar känns kolla testa spela köra lägga göra
+säga ditt dina mitt vårt vår våra sitt hennes deras oss mig sig spelet kortet korten leken botten människorna slutar börja först
+sist tyst rätt fel klart'''.split())
 SV_LETTER = re.compile(r'[åäöÅÄÖ]')
-QUOTE = re.compile(r'"([^"\n]{3,400})"|“([^”\n]{3,400})”|‘([^’\n]{3,400})’|«([^»\n]{3,400})»')
+MARKS = [('"', '"'), ('\u201c', '\u201d'), ('\u201d', '\u201d'), ('\u201e', '\u201c\u201d'), ('\u2018', '\u2019'),
+         ('\u00ab', '\u00bb')]   # " “” ”” „“ ‘’ «»; the straight ' apart, as an apostrophe is not a mark (SINGLE)
+SINGLE = re.compile(r"(?:^|(?<=[\s(\[]))'(?=[^\s'])([^'\n]{2,300}?)(?<=[^\s'])'(?=[\s.,;:!?)\]]|$)")   # one pair on one line
 WORD = re.compile(r"[A-Za-zÀ-ÖØ-öø-ÿ]+")
+PART = re.compile(r"[A-ZÀ-ÖØ-Þ]?[a-zß-öø-ÿ]+|[A-ZÀ-ÖØ-Þ]+(?![a-zß-öø-ÿ])")
 READ_ONLY = {'bot/elysium-server.js', 'bot/ELYSIUM-PROTOCOL.md', 'bot/elysium-vtes-bord.html', 'bot/elysium-hotseat-bots-plan.md',
              'bot/test-bot-canary.js'}   # main's release copies (ARCHITECTURE "Shared with main")
 THIRD_PARTY = re.compile(r'^bot/(vtes|vtes-v5|expansions|twda|twda-vdb)\.json$')
@@ -44,63 +54,118 @@ WAITING = {   # the bundle and the sources it is compiled from: their comments a
     'bot/elysium-bot.js', 'bot/elysium-cardfx.json', 'bot/elysium-cardfx.js', 'bot/START-HERE-BOTS.html', 'bot/cardfx-curated.json',
     'bot/deck-sewer.json',
 }
+SWEDISH_OK = re.compile(r'^bot/(docs/coverage/deck-coverage-.*\.md|docs/specs/cardfx-sweep-audit\.md|gen-deck-coverage\.js|'
+                        r'gen-sweep-audit\.js|tools/public-scan\.py)$')   # Swedish written by a tool (the coverage and audit
+                        # pages and their writers), and this file's own word list and test strings
 
 
 def owned(path):
     if path in READ_ONLY or THIRD_PARTY.match(path):
         return False
-    return path.startswith('bot/') or path.startswith('.claude/') or path == '.github/workflows/bot-gates.yml'
+    return path.startswith('bot/') or path.startswith('.claude/') or path in ('.github/workflows/bot-gates.yml', 'CLAUDE.md')
 
 
 def sha(s):
     return hashlib.sha256(s.encode('utf-8')).hexdigest()
 
 
-def scan_line(line):
-    """The kinds of hit on one line: a list of 'name' and 'quote (N words)'."""
-    hits = []
-    words = WORD.findall(line)
+def _swedish(span, need):
+    ws = [w.lower() for w in WORD.findall(span)]
+    sv = len(set(ws) & SWEDISH)
+    return len(ws), (sv >= need or (need == 2 and sv >= 1 and SV_LETTER.search(span) is not None))
+
+
+def name_hits(line, names=None, pairs=None):
+    names = NAMES if names is None else names; pairs = ALLOWED_PAIRS if pairs is None else pairs
+    hits = 0; words = WORD.findall(line)
     for i, w in enumerate(words):
-        if sha(w.lower()) in NAMES:
-            if i + 1 < len(words) and sha((w + ' ' + words[i + 1]).lower()) in ALLOWED_PAIRS:
-                continue
-            hits.append('name')
-    for m in QUOTE.finditer(line):
-        span = next(g for g in m.groups() if g is not None)
-        ws = [w.lower() for w in WORD.findall(span)]
-        if len(ws) < 2:
-            continue
-        sv = len(set(ws) & SWEDISH)
-        if sv >= 2 or (sv >= 1 and SV_LETTER.search(span)):   # a name with an umlaut (Frau Schädel) is not Swedish
-            hits.append('quote (%d words)' % len(ws))
+        parts = [w] + ([p for p in PART.findall(w) if p != w] if not w.islower() and not w.isupper() else [])
+        for p in parts:
+            if sha(p.lower()) in names:
+                if p == w and i + 1 < len(words) and sha((w + ' ' + words[i + 1]).lower()) in pairs:
+                    continue
+                hits += 1
+    return hits   # snake_case parts are words already: WORD stops at an underscore
+
+
+def quote_spans(text, limit):
+    """(start, end, words) for every span between two quote marks of one kind that starts before limit and reads as Swedish."""
+    out = []
+    for op, cl in MARKS:
+        pos = [i for i, c in enumerate(text) if c == op or c in cl]
+        for k in range(len(pos) - 1):
+            a, b = pos[k], pos[k + 1]
+            if a >= limit or b - a < 4 or b - a > 2000: continue
+            if op != cl and text[a] != op: continue   # a typographic pair opens with its opening mark
+            n, sv = _swedish(text[a + 1:b], 2)
+            if n >= 2 and sv: out.append((a, b, n))
+    for m in SINGLE.finditer(text[:limit]):
+        n, sv = _swedish(m.group(1), 2)
+        if n >= 2 and sv: out.append((m.start(), m.end(), n))
+    return out
+
+
+def scan_lines(lines, swedish_ok=False, names=None, pairs=None):
+    """(line number, kind) for every hit in a list of lines (each line read with the next, for a quote that wraps)."""
+    hits = []
+    for i, l in enumerate(lines):
+        hits.extend((i + 1, 'name') for _ in range(name_hits(l, names, pairs)))
+        if swedish_ok: continue
+        nxt = lines[i + 1] if i + 1 < len(lines) else ''
+        spans = quote_spans(l + ' ' + nxt, len(l))
+        for a, b, n in spans:
+            hits.append((i + 1, 'quote (%d words)' % n)); break   # one quote hit a line is enough
+        if not spans:
+            n, sv = _swedish(l, 3)
+            if sv: hits.append((i + 1, 'sv (Swedish prose)'))
     return hits
+
+
+def scan_line(line, names=None, pairs=None):
+    """The kinds of hit on one line alone."""
+    return [k for _, k in scan_lines([line], False, names, pairs)]
 
 
 def git(*args):
     return subprocess.run(['git'] + list(args), capture_output=True, text=True, check=True).stdout
 
 
-def added_lines(spec):
-    """(path, line number, text) for every line the diff adds; untracked files in full when spec is a single ref."""
+def added_hunks(spec):
+    """(path, [(line number, text)]) for every run of added lines in the diff; untracked files whole when spec is a single ref."""
     out = []
     cmd = ['-c', 'core.quotePath=false', 'diff', '--unified=0', '--no-color', '--no-renames', spec] if '..' in spec else \
           ['-c', 'core.quotePath=false', 'diff', '--unified=0', '--no-color', '--no-renames', spec, '--']
-    path = None; n = 0
+    path = None; n = 0; cur = None
     for raw in git(*cmd).split('\n'):
         if raw.startswith('+++ '):
-            path = raw[6:] if raw.startswith('+++ b/') else None
+            path = raw[6:] if raw.startswith('+++ b/') else None; cur = None
         elif raw.startswith('@@'):
-            m = re.search(r'\+(\d+)', raw); n = int(m.group(1)) if m else 0
+            m = re.search(r'\+(\d+)', raw); n = int(m.group(1)) if m else 0; cur = None
         elif raw.startswith('+') and path is not None:
-            out.append((path, n, raw[1:])); n += 1
+            if cur is None: cur = (path, []); out.append(cur)
+            cur[1].append((n, raw[1:])); n += 1
     if '..' not in spec:
         for p in git('ls-files', '--others', '--exclude-standard').split('\n'):
             if p and os.path.isfile(p):
                 try:
                     with open(p, encoding='utf-8') as f:
-                        out.extend((p, i, l.rstrip('\n')) for i, l in enumerate(f, 1))
+                        out.append((p, [(i, l.rstrip('\n')) for i, l in enumerate(f, 1)]))
                 except (UnicodeDecodeError, OSError):
                     pass
+    return out
+
+
+def commit_messages(spec):
+    rng = spec if '..' in spec else spec + '..HEAD'
+    try:
+        raw = git('log', '--format=%h%x01%B%x00', rng)
+    except subprocess.CalledProcessError:
+        return []
+    out = []
+    for rec in raw.split('\x00'):
+        rec = rec.strip('\n')
+        if '\x01' in rec:
+            h, body = rec.split('\x01', 1); out.append((h, body.split('\n')))
     return out
 
 
@@ -110,25 +175,40 @@ def self_test():
         nonlocal ok, bad
         if cond: ok += 1
         else: bad += 1; print('FAIL', what)
-    name = ''.join(['J', 'o', 'h', 'a', 'n'])
-    check(scan_line('approved by ' + name + ' on 18 Sep') == ['name'], 'the name')
-    check(scan_line(name + "'s ruling") == ['name'], 'the name with an apostrophe s')
-    check(scan_line(name.upper() + ' ruled') == ['name'], 'the name in capitals')
-    check(scan_line('the crypt card ' + name + ' Wrede (G4)') == [], 'the crypt card that shares the word')
-    check(scan_line(name + 'nes Castelein (G4)') == [], 'a longer name is another word')
-    q, lq, rq = chr(34), chr(0x201c), chr(0x201d)   # the quote marks built here, so the scan of this file finds no quote
-    check(scan_line('the owner: ' + q + 'det regnar i dag och vi stannar inne' + q) == ['quote (8 words)'], 'a Swedish quote')
-    check(scan_line(lq + 'hej och tack' + rq) == ['quote (3 words)'], 'a curly Swedish quote')
-    check(scan_line('wait for ' + q + 'k' + chr(0xf6) + 'r' + q) == [], 'one word is a term, not a quote')
-    check(scan_line(q + 'Frau Sch' + chr(0xe4) + 'del' + q + ' and ' + q + 'Lyyli Y' + chr(0xf6) + 'syd' + chr(0xe4) + 'n' + q) == [],
-          'card names with an umlaut are not Swedish')
-    check(scan_line(q + 'leken slutar med kortet' + q) == ['quote (4 words)'], 'Swedish with no Swedish letter')
-    check(scan_line('the client line "Lisa bounces the bleed to Hanna."') == [], 'an English table line')
-    check(scan_line('the text "Prevent X+1 damage"') == [], 'English card text')
-    check(owned('bot/docs/RULINGS.md') and owned('.claude/agents/x.md') and not owned('client/CLAUDE.md'), 'owned paths')
+    # an invented name stands in for the hashed ones, so this file names nobody
+    nm = 'Zorblax'; NM = {sha(nm.lower())}; PR = {sha((nm + ' wrede').lower())}
+    sl = lambda s: scan_line(s, NM, PR)
+    check(sl('approved by ' + nm + ' on 18 Sep') == ['name'], 'the name')
+    check(sl(nm + "'s ruling") == ['name'], 'the name with an apostrophe s')
+    check(sl(nm.upper() + ' ruled') == ['name'], 'the name in capitals')
+    check(sl('a fixture ' + nm + 'Sundin and ' + nm.lower() + '_seat') == ['name', 'name'], 'camelCase and snake_case parts')
+    check(sl('the crypt card ' + nm + ' Wrede (G4)') == [], 'the crypt card that shares the word')
+    check(sl(nm + 'nes Castelein (G4)') == [], 'a longer name is another word')
+    q, lq, rq, lo = chr(34), chr(0x201c), chr(0x201d), chr(0x201e)   # the marks built here, so the scan of this file finds no quote
+    a = chr(0xe4); o = chr(0xf6); aa = chr(0xe5)
+    check(sl('the owner: ' + q + 'det regnar i dag och vi stannar inne' + q) == ['quote (8 words)'], 'a Swedish quote')
+    check(sl(lq + 'hej och vi' + rq) == ['quote (3 words)'], 'a curly Swedish quote')
+    check(sl(rq + 'hej och vi' + rq) == ['quote (3 words)'], 'a Swedish same-mark quote')
+    check(sl(lo + 'hej och vi' + lq) == ['quote (3 words)'], 'a low-high quote')
+    check(sl('an odd ' + q + ' mark, then ' + q + 'det regnar och vi stannar' + q) == ['quote (5 words)'], 'an odd mark first')
+    check(sl('wait for ' + q + 'k' + o + 'r' + q) == [], 'one word is a term, not a quote')
+    check(sl(q + 'Frau Sch' + a + 'del' + q + ' and ' + q + 'Lyyli Y' + o + 'syd' + a + 'n' + q) == [], 'card names with an umlaut')
+    check(sl(q + 'leken slutar med kortet' + q) == ['quote (4 words)'], 'Swedish with no Swedish letter')
+    check(sl(q + ' '.join(['och vi'] * 100) + q) == ['quote (200 words)'], 'a long quote (about 700 characters)')
+    check([k for _, k in scan_lines(['the owner: ' + q + 'det regnar i dag', 'och vi stannar inne' + q + ' (D-1)'], False, NM, PR)]
+          == ['quote (8 words)'], 'a quote over a line break')
+    check(sl('vi ska nog spela det ' + 'imorgon') == ['sv (Swedish prose)'], 'Swedish prose without marks')
+    check(sl('the client line "Lisa bounces the bleed to Hanna."') == [], 'an English table line')
+    check(sl("the owner's ruling, the bots' readers and it's the 'go' word: Prevent X+1 damage") == [], 'apostrophes are not marks')
+    check(sl("a label 'R" + chr(0xc4) + "TTELSE: kort utan effekt' in single marks") == ['quote (4 words)'], 'a Swedish label in single marks')
+    check(scan_lines(['vi ska nog spela det'], True, NM, PR) == [], 'a Swedish tool page: names only')
+    check(owned('bot/docs/RULINGS.md') and owned('.claude/agents/x.md') and owned('CLAUDE.md') and not owned('client/CLAUDE.md'),
+          'owned paths')
     check(not owned('bot/elysium-vtes-bord.html') and not owned('bot/test-bot-canary.js') and not owned('bot/vtes.json'),
           'main\'s copies and the data are not scanned')
-    check(scan_line(('deck-coverage-x-' + name.lower() + '-y.md').replace('-', ' ')) == ['name'], 'a name in a path')
+    check(sl(('deck-coverage-x-' + nm.lower() + '-y.md').replace('-', ' ')) == ['name'], 'a name in a path')
+    check(SWEDISH_OK.match('bot/docs/coverage/deck-coverage-v5-starter-x.md') and not SWEDISH_OK.match('bot/docs/RULINGS.md'),
+          'the Swedish tool pages')
     print('%d checks, %d failed' % (ok + bad, bad))
     return 1 if bad else 0
 
@@ -146,27 +226,29 @@ def main(argv):
         i += 1
     os.chdir(git('rev-parse', '--show-toplevel').strip())
     hits = []; waiting = {}
+    path_hit = lambda p: name_hits(p.replace('-', ' ').replace('_', ' ').replace('/', ' ')) > 0
     if mode == 'tree':
         for p in git('ls-files').split('\n'):
             if not p or not owned(p) or not os.path.isfile(p): continue
-            for h in scan_line(p.replace('-', ' ').replace('_', ' ')):
-                if h == 'name': hits.append((p, 0, 'name in the path'))
+            if path_hit(p): hits.append((p, 0, 'name in the path'))
             try:
                 with open(p, encoding='utf-8') as f: lines = f.read().split('\n')
             except (UnicodeDecodeError, OSError): continue
-            for n, l in enumerate(lines, 1):
-                for h in scan_line(l):
-                    if p in WAITING: waiting[p] = waiting.get(p, 0) + 1
-                    else: hits.append((p, n, h))
+            for n, h in scan_lines(lines, bool(SWEDISH_OK.match(p))):
+                if p in WAITING: waiting[p] = waiting.get(p, 0) + 1
+                else: hits.append((p, n, h))
     else:
         new_paths = git('-c', 'core.quotePath=false', 'diff', '--name-only', '--no-renames', '--diff-filter=A', spec).split('\n')
         if '..' not in spec: new_paths += git('ls-files', '--others', '--exclude-standard').split('\n')
         for p in new_paths:
-            if p and owned(p) and 'name' in scan_line(p.replace('-', ' ').replace('_', ' ')):
-                hits.append((p, 0, 'name in the path'))
-        for p, n, l in added_lines(spec):
+            if p and owned(p) and path_hit(p): hits.append((p, 0, 'name in the path'))
+        for p, rows in added_hunks(spec):
             if not owned(p): continue
-            for h in scan_line(l): hits.append((p, n, h))
+            for n, h in scan_lines([l for _, l in rows], bool(SWEDISH_OK.match(p))):
+                hits.append((p, rows[n - 1][0], h))
+        for h, body in commit_messages(spec):
+            for n, k in scan_lines(body):
+                hits.append(('commit ' + h, n, k))
     for p, n, h in hits:
         print('%s:%d: %s' % (p, n, h))
     for p in sorted(waiting):
@@ -174,7 +256,7 @@ def main(argv):
     files = len({p for p, _, _ in hits})
     print('public-scan: %s (%d hits in %d files%s; %s)' % ('PASS' if not hits else 'FAIL', len(hits), files,
           ', %d waiting in %d files' % (sum(waiting.values()), len(waiting)) if waiting else '',
-          'the tree' if mode == 'tree' else 'the lines ' + spec + ' adds'))
+          'the tree' if mode == 'tree' else 'the lines ' + spec + ' adds, and its commits\' messages'))
     print('RESULT: %d hits in %d files%s' % (len(hits), files, ' (%d waiting)' % sum(waiting.values()) if waiting else ''))   # gates.sh's count
     return 1 if hits else 0
 

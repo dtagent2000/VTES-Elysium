@@ -3,7 +3,7 @@
 ## Before you build
 - L-1 **Find the general measure before writing the deck rule** (19 Sep): "two superior-Animalism vampires first" was a special case of "raise the vampire that can play your library" (`_deckFit`).
 - L-2 **the owner's three layers**: statistics → general handling → deck persona; put the change in the lowest layer it belongs to (19 Sep).
-- L-3 **When the owner states a doctrine, do not generalise it past his words** (20 Sep): probe-first became the default when he had reserved it for "no stealth in hand".
+- L-3 **When the owner states a doctrine, do not generalise it past his words** (20 Sep): probe-first became the default when the owner had reserved it for the case of no stealth in hand.
 - L-4 **A new general level gets ONE consumer first** (19 Sep, the critical pool); spend a paired control only where the knob has consumers.
 - L-5 **Before shipping a rule with a threshold, count how often the condition is TRUE in an existing series** (21 Sep): the pump rule and the rich-library rule never fired.
 - L-6 **Read the rulebook section before building on a rule from memory** (18 Sep): the cost-on-success reading overturned a day of design.

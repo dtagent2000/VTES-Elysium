@@ -62,4 +62,4 @@ guard costs nothing on yours.
 
 ## 4. Moved
 The five handoffs your first reply answered (`HANDOFF-to-main-2026-11-17-v0_6_230.md` … `HANDOFF-to-main-2026-11-18-v0_6_234.md`)
-are now in `bot/docs/history/handoffs/`.
+are in the private data repo's `bot-history/handoffs/` since the cleanup round (bot RULINGS D-142).

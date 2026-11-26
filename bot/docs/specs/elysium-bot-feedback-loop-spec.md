@@ -24,7 +24,7 @@ The arena tells us what bots do to bots. It cannot tell us whether a game agains
 
 ## 2. Report B — the post-match survey
 
-**Content.** Two ratings and a text: *Var det roligt?* 1–5, *Var det utmanande?* 1–5, *Något du vill säga om bottens spel?* (free text, optional). Optional: which bot (when several) the answer is about. Asked once, after the game ends, only to humans who played against a bot; skippable in one click; never shown twice for the same match.
+**Content.** Two ratings and a text: *Was it fun?* 1–5, *Was it challenging?* 1–5, *Anything you want to say about the bots' play?* (free text, optional). Optional: which bot (when several) the answer is about. Asked once, after the game ends, only to humans who played against a bot; skippable in one click; never shown twice for the same match.
 
 **Where.** Client (a small modal at game end) → server (relay) → Discord. The server attaches `matchId`, the bots' persona/deck/version, and the human's seat (not name). Opt-in is the same host setting as Report A, or its own — the owner's call (§5).
 

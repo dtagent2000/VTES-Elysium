@@ -41,7 +41,7 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    HARNESS stood 53 bytes under its ceiling, HOWTO 206 and the total 566. The total keeps 1.4 KB of room for B and C (spec-card-
 #    sweep 4.1); STATUS gave the bootstrap the root CLAUDE.md's zero-vtes line and the finished decks' BOARD line.
 #    RULINGS 67 -> 67.5 KB on 20 Nov (a docs round on bot v0.6.235; the total stays): the owner's D-128 and D-129. Cut first: O-47
-#    and D-127's built story; the egress review then found the short D-129 said more than the owner had (a "No" for his "not now"),
+#    and D-127's built story; the egress review then found the short D-129 said more than the owner had (a No for the owner's not now),
 #    and his hedges cost 0.2 KB the register did not have (it stood 39 bytes under its ceiling).
 #    RULINGS 67.5 -> 68 KB and the total 179 -> 180 KB the same day (a docs round on bot v0.6.235, the library by effect):
 #    the owner's D-130 and D-131 and the open O-48. Cut first: 0.9 KB of the register's built stories and measurements (D-17,
@@ -82,9 +82,9 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    design-question sentence; at the round's end HARNESS stood 0.8 KB over its old ceiling, RULINGS 2.0 KB and the total 2.7 KB.
 #    CLAUDE.md 25 -> 14.5 KB, ARCHITECTURE 17.5 -> 29.5 KB, HARNESS 11 -> 14.5 KB, RULINGS 79.5 -> 82 KB and the total 198 -> 205 KB
 #    on 26 Nov (the cleanup round, no bot change; D-141, D-142): the binding rules of one area moved from CLAUDE.md to ARCHITECTURE
-#    "Binding rules by area" and the measurement rules to HARNESS "Measurements" (the bootstrap 49,953 -> about 38,500 bytes), HARNESS's
+#    "Binding rules by area" and the measurement rules to HARNESS "Measurements" (the bootstrap from 49,953 bytes to under 40 KB), HARNESS's
 #    "One place for each fact" and the narrower review passes, and RULINGS by role: "the owner" is four bytes longer than the name it
-#    replaced on 125 places, and D-142 is new; the quotes it paraphrased gave some back. Nothing binding was cut.
+#    replaced on about 200 places, and D-142 is new; the quotes it paraphrased gave some back. Nothing binding was cut.
 PAGES="$B/CLAUDE.md:14500 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:82000 $D/LESSONS.md:21500
        $D/ARCHITECTURE.md:29500 $D/HARNESS.md:14500 $D/HOWTO.md:24000"
 total=0

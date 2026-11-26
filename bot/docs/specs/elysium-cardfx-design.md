@@ -7,7 +7,8 @@
 > "own-deck-only" card-knowledge scope in `elysium-bot-spec.md` §5 (that section now
 > points here). Companion docs: `elysium-bot-spec.md` (the bot roadmap),
 > `ELYSIUM-PROTOCOL.md` §12 (the frozen wire lines the library complements),
-> `cardfx-persistent-lock-design-decisions.md` (14 July — the full back-and-forth
+> `cardfx-persistent-lock-design-decisions.md` (in the private data repo's `bot-history/specs/` since the cleanup round;
+> 14 July — the full back-and-forth
 > behind the persistent/lock tags below: the owner's original proposal, the revisions,
 > and where the first pass under-translated his own opening instruction — read that
 > before re-litigating any of §4's design calls from scratch).
