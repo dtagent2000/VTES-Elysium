@@ -4,7 +4,7 @@
 # The arena smoke, a new section's destructive check and main's client suite stay by hand (CLAUDE.md "Gates"):
 #   always     node --check on every bot/ script · the correctness lint (as CI) · the canary twice (bot/'s copies; the root's release
 #              with client/ELYSIUM-PROTOCOL.md) · test-cardfx · gen-precon --check · the self-tests (card ledger, review sheet,
-#              ana-gates, public-scan) · HB1 · doc-budget · public-scan (the name and quote scan on the lines the change adds, D-142)
+#              the cross-check, ana-gates, public-scan) · HB1 · doc-budget · public-scan (the name and quote scan on the lines the change adds, D-142)
 #   when hit   test-bot-hotseat.js (~1 min) when the bot, the hotseat tool or a read-only copy changed; test-doc-budget.sh when
 #              the doc check changed
 #   --sim      the footprint: the 240-match client design (the four starters, every seating x 10 deals) on the base's bundle and on
