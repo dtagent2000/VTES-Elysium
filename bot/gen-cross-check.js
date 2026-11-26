@@ -232,7 +232,7 @@ function report(r, meta){
     for (const f of fs2) P('- **' + f.card + '** `' + f.level + '` ' + f.flag + (f.tokens.length ? ' (' + f.tokens.join(', ') + ')' : '') + (f.what ? ': ' + f.what : '') + (f.ours ? ' · ours: ' + (f.ours.join(', ') || 'no fx') : ''));
     P('');
   }
-  if (r.defsUnjoined.length) { P('## Definitions with no entry of ours (' + r.defsUnjoined.length + ')'); P(''); P(r.defsUnjoined.slice(0, 60).join(' · ') + (r.defsUnjoined.length > 60 ? ' …' : '')); P(''); }
+  if (r.defsUnjoined.length && !meta.card) { P('## Definitions with no entry of ours (' + r.defsUnjoined.length + ')'); P(''); P(r.defsUnjoined.slice(0, 60).join(' · ') + (r.defsUnjoined.length > 60 ? ' …' : '')); P(''); }
   return L.join('\n') + '\n';
 }
 
@@ -304,7 +304,7 @@ if (require.main === module){
   }
   const lib2 = only ? Object.fromEntries(Object.entries(lib).filter(([k]) => RS.normName(k) === RS.normName(only))) : lib;
   const r = crossCheck({ lib: lib2, cards, defs, ctx, P, decks });
-  const md = report(r, { commit, defs: defs.size, lib: Object.keys(lib2).length, pairing: path.basename(pairing), P, all: a.includes('--all') || !!only });
+  const md = report(r, { commit, defs: defs.size, lib: Object.keys(lib2).length, pairing: path.basename(pairing), P, all: a.includes('--all') || !!only, card: only });
   if (out) fs.writeFileSync(out, md); else process.stdout.write(md);
   if (js) fs.writeFileSync(js, JSON.stringify({ version: VERSION, commit, fam: r.fam, flags: r.flags }, null, 1));
   if (out) console.log('gen-cross-check v' + VERSION + ': ' + r.fam.length + ' family rows, ' + r.flags.length + ' flags -> ' + out);
