@@ -29,6 +29,9 @@ Mutant isolation for the hold gate: `python3 tools/mutants/mutate-v0_6_198.py /t
 One suite section against any bot file (the destructive check of a new section, sub-minute): `bash tools/run-section.sh <bot.js> <section.js>`.
 A human's Grand Ball at main's play-test rig: `tools/playtest-ball/` (the scenario, its steps in `about`, and a Ball-heavy Toreador test deck; round C).
 The hotseat with bots in a real browser: `node tools/hotseat-in-browser.js [--bot FILE] [--sweeps N]` (Playwright; counts the answers dropped as stale; round E).
+The chat at the client's pace (the chat round, D-137): `node tools/chat-record.js --out REC.jsonl [--bot FILE] [--seed 7] [--knob k=v]` records a bots-only
+hotseat table's bubbles with their times (real clock, 10-15 min); `python3 tools/ana-chat.py REC.jsonl [AFTER.jsonl] [--lines] [--gate]` reads them as the
+client draws them (the floor, the three-bubble limit, prefixes, human tails, the line inventory).
 
 The ten legacy ad-hoc tests of the v0.6.10x era (not gates, four of them stale reds) were deleted by round C2 (11 Nov 2026; git keeps them): the suite covers their behaviours.
 

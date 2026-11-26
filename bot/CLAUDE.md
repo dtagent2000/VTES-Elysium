@@ -89,8 +89,8 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   LABEL is explanation, not a decision: only a confident label (margin ≥ 2, coverage ≥ 0.85) may inform a decision, benched like
   any knob. A new profile share is APPENDED (readers index `f[0..3]`); a rebuilt profile is first reproduced byte for byte by the
   old script. Bots look away from a seat that announced DEBUG mode.
-- **The tier rule (v0.6.114).** [D-64, L-55] `note()` for events (log tier, no bubble), `chat()` ONLY for questions and instructions to a human,
-  `say()` for the quick phrases (the `SAY` table: Hold on, No block, Block! …). Before adding a `chat(...)`, ask whether an fx clone or a frozen log line already carries the
+- **The tier rule (v0.6.114).** [D-64, L-55] `note()` for events (log tier, no bubble), `chat()` ONLY for questions and instructions to a human
+  (D-137: the same question to a bot without the human's tail; one speaker at a time where `_floorOn`), `say()` for the quick phrases (the `SAY` table: Hold on, No block, Block! …). Before adding a `chat(...)`, ask whether an fx clone or a frozen log line already carries the
   event; if so it is a note or nothing. `fxClone` takes `{ actor: vamp }` for every minion play. A new `note()` text is a LOG line
   other bots' L12 parsers read: check it against `L12.actObs` (`^(.+?) (hunts|plays (.+?))[.!]`) and the frozen §12 shapes; never end
   a note with `plays X.` or `hunts.`.
@@ -130,7 +130,7 @@ in the PR. A design question still gets an analysis, a proposal and a "kör" fir
   message means, a timing race) is never behind a knob; when a release mixes the two, split them before shipping. Every decision
   knob has a 0-path that is the previous behaviour, documented in its line.
 - **The event log (v0.6.176).** [L-56] A new frozen line gets its event kind in `_evClassify` in the same release as its parser. The
-  classifier reads the line as SENT (`NAME (bot)`), specific shapes before generic ones.
+  classifier reads the line as SENT (`NAME (bot)` on the log tier; a chat has no prefix since D-137), specific shapes first.
 - **The ledger gate (v0.6.163).** [R-23; L-33, L-39] An effect that moves something between two bots and shows on only one side is a bug until
   explained. Resolve an effect at its RULES moment, not when its line arrives; pair the rows before accepting an explanation for a
   total; a bleed `through` that no seat took is `VANISHED` (gate 0).

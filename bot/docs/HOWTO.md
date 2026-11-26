@@ -108,6 +108,10 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   rig as it is; an in-page bot's Grand Ball pair and Jack, each chip and hover text, a screenshot. A diagnostic.
 - **The hotseat in a browser** — `node tools/hotseat-in-browser.js [--bot F] [--sweeps N]`: the client's hotseat with three bots
   in Chromium (NODE_PATH: playwright); counts stale-dropped answers.
+- **The chat at the client's pace** (D-137) — `node tools/chat-record.js --out REC.jsonl [--bot F] [--seed 7]`: four bots on the
+  hotseat at the client's pace, real clock, 10–15 min (detach); every bubble with its time. `python3 tools/ana-chat.py REC.jsonl
+  [AFTER.jsonl] [--lines] [--gate]`: the floor, overlaps, prefixes, tails, seconds a turn, the lines before | after. The same seed
+  on both bytes, and the 240 too (L-99).
 - **A human's Grand Ball** — `bot/tools/playtest-ball/scenario.json` (its `about` has the steps) and a Toreador test deck, at main's rig.
 - **A debug bot at a live table** — `node elysium-bot.js --server ws://HOST:8123 --room R --pass P --debug [--no-debug-weights]`;
   refused at a Tournament table; its hand goes to the whole table and the other bots look away.
@@ -182,7 +186,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
 - **Prototype instrumentation**: wrap `Bot.prototype` methods in a scratch script to tag stashes and log every consumption; the
   same script is the post-fix proof.
 - **The guilt experiment**: disarm a suspect condition with `&& false`, rerun — green = guilty, everything else exonerated.
-- **Feed a classifier the SENT text** (`NAME (bot)`), never the template; specific shapes before generic ones.
+- **Feed a classifier the SENT text** (a note's `NAME (bot)`; a chat without it since v0.6.240), never the template; specific shapes first.
 - **A peek is not a take**: `_awaitOppStrikePeek` leaves the line pending; `_awaitOppStrike` consumes it.
 - **e2e waits**: `waitFor` walks and consumes, `waitAny` is cursorless — two messages with no causal order need `waitAny`; the
   server never echoes a sender's own log lines (prove the attacker's note in the DEFENDER's inbound).
