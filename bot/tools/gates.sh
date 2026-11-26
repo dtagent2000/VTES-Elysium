@@ -101,7 +101,7 @@ g_sim(){   # the footprint: one copy of this bot/ with the base's bundle (A) aga
   python3 ana-gates.py "$s/B" > "$OUT/sim-gates.log" 2>&1; local grc=$?
   va=$(grep -oE "BOT_VERSION = '[0-9.]+'" "$s/base/elysium-bot.js" | grep -oE '[0-9.]+[0-9]'); vb=$(grep -oE "BOT_VERSION = '[0-9.]+'" elysium-bot.js | grep -oE '[0-9.]+[0-9]')
   if [ "$va" != "$vb" ]; then
-    mkdir -p "$s/Bn"; for f in "$s"/B/match-*.jsonl; do sed "s/$vb/$va/g" "$f" > "$s/Bn/$(basename "$f")"; done
+    mkdir -p "$s/Bn"; for f in "$s"/B/match-*.jsonl; do sed "s/${vb//./\\.}/$va/g" "$f" > "$s/Bn/$(basename "$f")"; done   # the dots escaped: 0.6.299 must not match 0,6,299
     echo "versions $va -> $vb; with the version put back: $(python3 ana-sim-diff.py "$s/A" "$s/Bn" | tail -1)" | tee "$OUT/sim-normalized.log"
   fi
   python3 ana-sim-diff.py "$s/A" "$s/B" > "$OUT/sim-diff.log" 2>&1
