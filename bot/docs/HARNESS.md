@@ -1,11 +1,11 @@
-# HARNESS — the roles, the round, the reviews, the release ritual (20 Oct 2026; roles and sessions 26 Nov 2026, D-139)
+# HARNESS — the roles, the round, the reviews, the release ritual (20 Oct 2026; roles and sessions 26 Nov 2026, D-139, D-140)
 
-## Roles and tools (Johan, 26 Nov 2026: D-139; the models by task, D-131)
+## Roles and tools (the owner, 26 Nov 2026: D-139, D-140; the models by task, D-131)
 | who | does | model |
 |---|---|---|
 | the lead (the chat) | the design, the bot's code, Johan's questions, the docs, the PR; the one writer in the checkout | the chat's |
 | `bot-card-reader` (`.claude/agents/`) | a batch of cards against KRCG's text and the rulings, zero-vtes a witness; verdicts to scratch | Sonnet |
-| `bot-egress-reviewer` (`.claude/agents/`) | the egress review below; pass 1 on its own model, every later pass a new instance on Fable | Opus, Fable |
+| `bot-egress-reviewer` (`.claude/agents/`) | the egress review below; pass 1 on its own model (on Fable in a round without a bot change), every later pass a new instance on Fable | Opus, Fable |
 | Explore (built in) | where a decision lives in `elysium-bot.js`; a search across many files | its own |
 | CI (`.github/workflows/bot-gates.yml`) | the unattended gates and the suite ×3, the release gate (D-139) | — |
 
@@ -19,8 +19,9 @@ One round a chat. Start: the bootstrap (CLAUDE.md), `bash tools/setup.sh`, a bra
 minutes after a reply ends: a long run finishes inside the turn (detached and polled, never under a foreground `timeout` that can cut
 a green run) or runs in CI. A series or a bench lives in
 scratch, never in `bot/` (a 240-match sim is ~120 MB); `pkill -f` never (kill by PID); third-party data is fetched, never
-committed. End: STATUS's Next and the PR are the handoff; the claude.ai project keeps its instruction, START-HERE-BOTS-CHAT.md
-and one handoff doc (claude/HANDOFF.md), which the lead rewrites with the Projects tool at the end of every round.
+committed. End: STATUS's Next and the PR are the handoff; the claude.ai project keeps its instruction, START-HERE-BOTS-CHAT.md,
+one handoff doc (claude/HANDOFF.md, which the lead rewrites with the Projects tool at the end of every round) and the owner's
+reviews of other projects. A round's dated report goes to `docs/reports/` (D-140).
 
 ## The round
 1. **Take a board line** (`BOARD.md`), or Johan's instruction; a red daily `bot gates` run on `main` comes first (HOWTO "CI"). Read
@@ -41,12 +42,21 @@ and one handoff doc (claude/HANDOFF.md), which the lead rewrites with the Projec
    message when it is a release.
 6. **Egress review** (fresh context, until clean: below). Its findings are fixed or listed in the PR body.
 7. **Docs:** STATUS rewritten (version, gates, next); a CHANGELOG entry; the BOARD line deleted, found lines added (a card problem:
-   `SWEEP-REGISTER.md`, D-135); RULINGS when Johan ruled or a rules reading changed; LESSONS only for a new CLASS of lesson; a
+   `SWEEP-REGISTER.md`, D-135); RULINGS when the owner ruled (by role, the words to the data repo: D-141) or a rules reading changed; LESSONS only for a new CLASS of lesson; a
    HANDOFF when main must act. `bash tools/doc-budget.sh` green.
 8. **PR against `main`**: at the top what the round needs from Johan, then what changed and why, the `tools/gates.sh` table and CI's suite
    counts, the sim footprint (IDENTICAL / SAME-PLAY / DIVERGED, outcomes changed, zeroPool), the release bytes' sha256 when it is a
    release, the `Egress:` line and "anything I'm unsure about". CI must be green before Johan merges (a flake, or a red the PR did
-   not cause: re-run once and say so, HOWTO "CI"). Johan merges and deletes the branch.
+   not cause: re-run once and say so, HOWTO "CI").
+9. **A match, in a round with a bot change** (D-140): before the merge, ask the owner whether to play a real match in the human seat
+   (main's rig, `client/playtest/`); it finds what the 240 cannot. Its report goes to `docs/reports/`, its bugs to the register or
+   BOARD, its questions for the owner to RULINGS, what it teaches about play to `.claude/skills/bot-play-notes/SKILL.md`: a docs
+   commit in the PR, listed in its body. A fix to the round's own change goes back to step 3 and a new review pass.
+10. The owner merges and deletes the branch.
+
+**Unsure items** (D-141) get a verdict when they show up, not only at the end: **checked now** when the item bears on a
+claim, a gate or a rule of the round and the tools at hand can settle it; **carried** to claude/HANDOFF.md's "Check first" with what
+would settle it; or **dropped** with one line on why it does not matter. The PR's "anything I'm unsure about" shows all three.
 
 ## The egress review (every round; a fresh-context agent)
 The reviewer (`bot-egress-reviewer`) gets: the commit range, the board line, the RULINGS lines it cites and the pages the change
@@ -57,13 +67,14 @@ loosened), `rule-missed` (a CLAUDE.md or RULINGS line the change contradicts), `
 Three findings of one class across rounds become a rule in CLAUDE.md or a lesson. The PR body carries the line
 `Egress: <n> findings (<classes>) in <p> passes, <fixed> fixed, <listed> listed`.
 
-**Review until clean** (D-133, D-139). The lead fixes what a pass finds and the gates run again; then a NEW reviewer, one that took
-no part in an earlier pass and did none of the work, checks the fixes and the whole diff. Pass 1 runs on the reviewer's own model;
-every later pass on a model other than the lead's (Fable, `model: fable`, while the lead is on Opus). A round that
-changes no bot behaviour may end on a clean pass 1 (Claude's reading of D-139, for Johan to confirm), said in the PR. The loop ends at a clean pass or
-after three, and what is still open goes to Johan in the PR. Where the rules or the text do not reach, it stops and asks him.
-KRCG's text, the rulings and zero-vtes stay the witnesses outside every model. High-stakes work is also checked by an agent that has
-not seen it: facts against their sources, arithmetic by running it, a document by opening it.
+**Review until clean** (D-133, D-139, D-140). The lead fixes what a pass finds and the gates run again; then a NEW reviewer, one
+that took no part in an earlier pass and did none of the work, checks the fixes and the whole diff. Pass 1 runs on the reviewer's
+own model and every later pass on a model other than the lead's (Fable, `model: fable`, while the lead is on Opus): a round with a
+bot change ends only on a clean pass of the other model (D-139). A round without a bot change (no file of the bundle touched) runs
+pass 1 on Fable too, and a clean pass 1 ends it (D-140). The loop ends at a clean pass or after three; what is open goes to the owner.
+Where the rules or the text do not reach, it stops and asks him. KRCG's text, the rulings and zero-vtes stay the witnesses outside
+every model. High-stakes work is also checked by an agent that has not seen it: facts against their sources, arithmetic by running
+it, a document by opening it.
 
 ## Graded rules readings (card waves; the charter)
 Each curated card reading is graded by a fresh read-only agent (`bot-card-reader`) against KRCG's text and vtes-rulings: **green**
@@ -80,7 +91,7 @@ requirements met and costs payable · the timing window allows it · the player 
 2. The round's own: the CHANGELOG note (newest first, with the gates and the sim footprint), the footer's counts, the rest of STATUS
    (`tools/doc-budget.sh` checks its versions against the code), a HANDOFF to main only when main must act (re-embed the guide, a
    new bot line in §12, a client change). README and START-HERE-BOTS-CHAT carry no versions.
-3. Gates on the release bytes: CI's suite ×3 on the PR (`tools/ci-status.sh`: each run's count and the sha256 it ran).
+3. Gates on the release bytes: CI's suite ×3 on the PR (`tools/ci-status.sh`).
 4. The PR body = the record: no READ-ME-FIRST, journal or context entry (spec-cleanup §5.5; its §8 Q2 / Q3 are open, RULINGS O-28).
 
 ## When main must act
@@ -90,13 +101,11 @@ Main replies in `client/docs/handoffs/REPLY-to-bot-*.md`; a reply is consumed in
 handoff moves to `history/handoffs/`. Never both halves in one PR.
 
 ## The handshake with the client's versions
-The read-only copies in `bot/` are refreshed from main's release, as a commit of their own ("copies: client vX / srv-Y"):
-`elysium-vtes-bord.html` and `elysium-server.js` from the root, `ELYSIUM-PROTOCOL.md` and `test-bot-canary.js` from `client/`,
-`elysium-hotseat-bots-plan.md` from `client/docs/` (ARCHITECTURE "Shared with main"). The canary runs against both the copies and
+The read-only copies in `bot/` are refreshed from main's release (where each lives: ARCHITECTURE "Shared with main"), as a
+commit of their own ("copies: client vX / srv-Y"). The canary runs against both the copies and
 main's release (`tools/gates.sh`: canary, canary-root). STATUS names both versions; `tools/doc-budget.sh` checks them.
 
 ## Upkeep (between rounds, or when a check says so)
-- **Every docs change:** `bash tools/doc-budget.sh` green; after changing the check itself, `bash tools/test-doc-budget.sh`.
 - **When a page nears its budget:** cut history, never a binding rule; then raise the budget in `tools/doc-budget.sh` (D-101).
   LESSONS takes a new line only for a new class; BOARD lines that are done are deleted.
 - **Every few rounds:** RULINGS' Open lines with Johan; BOARD top to bottom; the read-only copies refreshed when the root moved.

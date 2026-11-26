@@ -47,7 +47,7 @@ Probes: `diag-give-probe.js`, `diag-a1-stash-probe.js`. Docs: `bash tools/doc-bu
 ## docs/
 - standing pages (the bootstrap): `STATUS.md` (now), `BOARD.md` (the asks), `RULINGS.md` (Johan's rulings and the design decisions, numbered), `LESSONS.md`, `ARCHITECTURE.md`, `HARNESS.md` (the round, the reviews, the release ritual), `HOWTO.md`
 - `elysium-bot-CHANGELOG.md` (one entry per release) · `CARDS.md` (the card ledger, generated) · `SWEEP-REGISTER.md` (the problems the sweep finds, by class: D-135; BOARD has a line per class) · `PROJECT-INSTRUCTIONS.md` (the claude.ai project instruction) · `START-HERE-BOTS-CHAT.md`
-- `specs/` design canon · `handoffs/` open handoffs to main (main's replies: `client/docs/handoffs/REPLY-to-bot-*.md`) · `reports/` series and bench reports · `reviews/` the 11 Sep deep review and the 14 Oct play-test review · `coverage/` deck-coverage snapshots · `archive/` superseded manifests and TODOs
+- `specs/` design canon · `handoffs/` open handoffs to main (main's replies: `client/docs/handoffs/REPLY-to-bot-*.md`) · `reports/` series, bench and playtest reports · `reviews/` the 11 Sep deep review and the 14 Oct play-test review · `coverage/` deck-coverage snapshots · `archive/` superseded manifests and TODOs
 - `history/` verbatim: the session journal, the project context, the dated learnings, `SKILLS-2026-10-20.md`, `CLAUDE-v2-2026-10-20.md` (the old bootstrap with its version handshake and debts 1–71), every READ-ME-FIRST (`readme/`), consumed handoffs (`handoffs/`), delivered round specs (`specs/`)
 
 ## Credit

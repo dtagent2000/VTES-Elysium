@@ -1,4 +1,4 @@
-# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (20 October 2026; the workflow 26 Nov, D-139)
+# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (20 October 2026; the workflow 26 Nov, D-139, D-140)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
 **Now:** versions, the deploy state, open PRs and the last gate numbers are in `bot/docs/STATUS.md`, and only there.
@@ -13,7 +13,7 @@ cat bot/docs/BOARD.md         # the open asks — take one
 bash bot/tools/setup.sh       # KRCG's data built into vtes.json, zero-vtes cloned outside the repository at its pin
 git checkout -b <topic>       # never work on main
 ```
-Then, when the task touches them: `bot/docs/RULINGS.md` (Johan's rulings, numbered), `LESSONS.md`, `ARCHITECTURE.md`, `HOWTO.md`,
+Then, when the task touches them: `bot/docs/RULINGS.md` (the owner's rulings, numbered), `LESSONS.md`, `ARCHITECTURE.md`, `HOWTO.md`,
 `HARNESS.md` (the round, the egress review, the release ritual). `bot/README.md` maps the folder.
 
 ## What is where
@@ -25,6 +25,7 @@ Then, when the task touches them: `bot/docs/RULINGS.md` (Johan's rulings, number
 - `bot/tools/`: `setup.sh`, `gates.sh` (the local gates, the PR's table), `release.sh` (the release ritual's mechanics),
   `ci-status.sh` (CI's suite ×3, the release gate), `run-section.sh` (one suite section against any bot), `mutants/`,
   `doc-budget.sh` (the standing pages' budgets). The agents the round uses: `.claude/agents/bot-*.md` (HARNESS "Roles and tools").
+  Claude's notes as a player (strategy, tactics, the bots as opponents): `.claude/skills/bot-play-notes/SKILL.md` (D-140).
 - NOT in git: `vtes.json` and the TWDA (`twda.json`); the root `CLAUDE.md` names their sources and fetch commands. Fetch from the
   source; when the sandbox cannot reach it, attach the private repo `dtagent2000/VTES-Elysium-data` and copy from there.
   Series traces (`serie-*/`, `bench-*/`, sim dirs) are generated and live in scratch.
@@ -32,5 +33,6 @@ Then, when the task touches them: `bot/docs/RULINGS.md` (Johan's rulings, number
 ## The loop
 BOARD line → analyse / propose / "kör" when it is a design question → branch → change → `tools/gates.sh` + a draft PR for CI's suite ×3 → egress review →
 STATUS + CHANGELOG + BOARD (RULINGS / LESSONS when they changed; a HANDOFF when main must act) → commit + push often → PR against
-`main` with the gate numbers and the sim footprint → Johan merges. A release additionally bumps `BOT_VERSION` and copies the bundle
+`main` with the gate numbers and the sim footprint → in a round with a bot change, ask the owner before the merge about a real
+match in the human seat (its report to `bot/docs/reports/`) → the owner merges. A release additionally bumps `BOT_VERSION` and copies the bundle
 to the repository root. No READ-ME-FIRST and no journal entry any more (20 Oct 2026): the PR body and STATUS are the record.

@@ -45,8 +45,8 @@ said while the bot waits on the table (a poll, a combat step, a verdict). Your c
 1. Re-embed the guide.
 2. Add section 2's line to PROTOCOL §12, and section 3's level in the stealth line (`CARD [LVL]` for a rider mode); then the bot
    adds the canary cases for both (as for v0.6.217's lines).
-3. From Claude's playtests (the project's playtest doc of game 2, 25 Nov): the resolution panel's proposals A–E are Johan's to
-   weigh first (RULINGS O-53); nothing to build before he has.
+3. From Claude's playtests (`bot/docs/reports/playtest-claude-game2-2026-11-25.md`, 25 Nov): the resolution panel's proposals A–E are the owner's
+   to weigh first (RULINGS O-53); nothing to build before that.
 
 ## 6. Run here
 On the release bytes (the sha256 in the PR body): your canary on `bot/`'s copies and on the root's v2.6.188 (235/0 each), your
