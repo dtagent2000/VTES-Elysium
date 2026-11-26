@@ -1,12 +1,11 @@
 # HOWTO — running, debugging, analysing (20 Oct 2026)
 
 Everything runs from inside `bot/`. Third-party data (`vtes.json`, the TWDA) is fetched or copied from the private data repo first
-(root `CLAUDE.md`). The card data is KRCG's v5 dump, written as the v3-shaped `vtes.json` every tool reads by `krcg-v5.js`:
-`curl -o vtes-v5.json https://static.krcg.org/data/v5/vtes.json && curl -o expansions.json https://static.krcg.org/data/v5/expansions.json
-&& node krcg-v5.js` (`--compare OLD.json` prints the field diff against a v3 file by card id). When the network policy blocks it (a 403
-on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo and copy the two dump files in. KRCG's v3 file
-(static.krcg.org/data/v4/vtes.json) is only a `--compare` input now. The TWDA: `twda.json`, KRCG's
-v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twda.py` refuses the old list). Check what a reader `open()`s before naming a file.
+(root `CLAUDE.md`): `bash tools/setup.sh` (D-139) fetches KRCG's v5 dump and writes the v3-shaped `vtes.json` every tool reads with
+`krcg-v5.js` (`--compare OLD.json` prints the field diff against a v3 file by card id), clones zero-vtes at its pin outside the
+repository, and with `--twda` fetches KRCG's v5 TWDA as `twda.json` (`twda.py` refuses the old list). When the network policy blocks
+it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo and copy the two dump files in. KRCG's v3 file
+(static.krcg.org/data/v4/vtes.json) is only a `--compare` input now. Check what a reader `open()`s before naming a file.
 
 ## Running
 - **The sim table** — `node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 10 --trace /tmp/sim-x`: every
@@ -46,22 +45,21 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`). All 12
   deal from seed 1: a single copy deep in a library is never drawn ('unseen' is then the deal, not the bot) — add `--seeds 4`
   to see one played.
-- **The suite, frozen** (the ×3 gate; three snapshots in a row, one run at a time, ~300–600 s each), from the repo root:
-  ```
-  S=<a scratch dir>; L=r1; D=$S/snap-$L; rm -rf $D; mkdir -p $D/bot; cp elysium-vtes-bord.html $D/     # root client one level up: 154f
-  (cd bot && tar --exclude='./serie-*' --exclude='./bench-*' -cf - .) | tar -xf - -C $D/bot
-  cd $D/bot && sha256sum elysium-bot.js test-bot-logic.js elysium-cardfx.json > ../sha.txt
-  timeout 900 node --max-old-space-size=6144 test-bot-logic.js > ../suite.log 2>&1; echo "EXIT $?" >> ../suite.log   # run_in_background, then poll
-  ```
-  The next edit in `bot/` cannot leak into a run, and the PR quotes the sha that ran. The heap flag is not optional: at 4 GB
-  the suite dies out of memory in section 180 since v0.6.236 (CLAUDE.md "Gates"; C6: each `new Bot` parses its own cardfx, ~2.9 MB of heap -- a likely share, not profiled).
+- **The local gates and the suite** — `bash tools/gates.sh` runs the local gates the diff needs and writes OUT/summary.md, the PR's
+  table (`--sim` the 240's footprint against the base's bundle, `--smokes` the 14 V5 smokes; run those in the background and poll).
+  The suite ×3 is CI's, the release gate (D-139): `bash tools/ci-status.sh` prints each run's count and the sha256 it ran. When CI
+  cannot run, `tools/gates.sh --suite N` runs it here, each run in a frozen snapshot (`bot/` copied to scratch with the root's client
+  one level up for 154f, the sha beside the log, `timeout 900`, ~300–600 s a run), so the next edit cannot leak into a run. The heap
+  flag is not optional: at 4 GB the suite dies out of memory in section 180 since v0.6.236 (C6: each `new Bot` parses its own
+  cardfx, ~2.9 MB of heap -- a likely share, not profiled).
 - **CI** (`.github/workflows/bot-gates.yml`, D-109): every PR that touches `bot/` or the bundle, every such push to `main` and a
-  daily run on `main` (03:17 UTC) run the gates that need no person and no previous bytes (the step list is the file); on any
-  other PR the job `bot-gates` skips its gate steps and succeeds, so the check can be required on `main`. A gate that skips fails
+  daily run on `main` (03:17 UTC) run the gates that need no person and no previous bytes (the step list is the file) and the suite
+  ×3 in parallel jobs; `bot-gates`, the required check, is green only when all are. On any other PR the checks and the suite are
+  skipped and `bot-gates` succeeds. A gate that skips fails
   its step, and the root's bundle must equal `bot/`'s (a bundle change ships as a release). A red daily run is the bot's to
   answer; a mail may reach nobody (GitHub mails the cron line's last editor), so look:
   `gh api 'repos/dtagent2000/vtes-elysium/actions/workflows/bot-gates.yml/runs?branch=main&per_page=1' --jq '.workflow_runs[0] | {event, conclusion}'`
-  Still the round's: the suite ×3, the sim footprint, the arena smoke and
+  Still the round's (`tools/gates.sh` runs the local ones): the sim footprint, the arena smoke and
   the audits, a new section's destructive check, main's client suite when the wire changes (red by design until main re-embeds a
   new guide). A red the PR did not cause: the suite's 78c flake -- re-run the failed job once (`gh run rerun <id> --failed`) and
   say so in the PR; `test-cardfx` / `gen-precon --check` red with no card change -- KRCG's data moved, a round of its own; a
@@ -69,7 +67,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   hand, from `bot/`: `npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .`
   -- every finding fails; the suppressions file is `{}` and only shrinks (never `--suppress-all` / `--suppress-rule`:
   CI fails a PR that adds one).
-- **The canary against main's release** (the second canary run): a scratch dir with `bot/test-bot-canary.js`, `bot/elysium-bot.js`,
+- **The canary against main's release** (the second canary run; `tools/gates.sh`'s canary-root): a scratch dir with `bot/test-bot-canary.js`, `bot/elysium-bot.js`,
   `bot/elysium-cardfx.json` (the human-Ball memo checks), the root's `elysium-vtes-bord.html` and `client/ELYSIUM-PROTOCOL.md`; `node test-bot-canary.js` there.
 - **Main's client suite beside the release bytes** (when the wire or the timing changed): a scratch copy of `client/` (never the
   real one — THE RULE), the bot bundle from `bot/` copied into it (`elysium-bot.js`, `elysium-cardfx.json/.js`,
@@ -139,7 +137,7 @@ v5 TWDA (`curl -fL -o twda.json https://static.krcg.org/data/v5/twda.json`; `twd
   cardfx-sharing.js` reports on the compiled library (compile first); `test-cardfx.js` is the gate; its header lists what it does
   not guard.
 - **The review sheet** (`gen-review-sheet.js`, spec-card-sweep §3.1) — zero-vtes (Lionel Panhaleux's engine, MIT) is read at
-  development time only, from a clone OUTSIDE the repository: `git clone https://github.com/lionel-panhaleux/zero-vtes ~/zero-vtes`,
+  development time only, from a clone OUTSIDE the repository at the pin in `tools/setup.sh` (it clones `~/zero-vtes`),
   then `node gen-review-sheet.js --deck KEY --zero ~/zero-vtes --out /tmp/sheet-KEY.md` (needs `vtes.json`; refuses a clone or a
   sheet inside the repository; names the commit it read). The sheet is scratch: what is committed is our own reading.
 - **The TWD profile** — `python3 twd-profile.py` / `twd-archetypes.py` (need `vtes.json`, `twda.json`; the archetypes also vtes-skill:

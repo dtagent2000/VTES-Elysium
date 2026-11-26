@@ -14,7 +14,7 @@ point to `docs/RULINGS.md` (R-, D-, O-) and `docs/LESSONS.md` (L-). History live
 5. When the task touches them: `docs/RULINGS.md` (any rules or design question — check it before asking Johan), `docs/LESSONS.md`
    (before building anything with timing, tests or measurements), `docs/ARCHITECTURE.md` (where a decision lives),
    `docs/HOWTO.md` (running, debugging, analysing), `docs/HARNESS.md` (the round, the reviews, the release ritual).
-6. `git checkout -b <topic>` — never work on `main`.
+6. `bash tools/setup.sh` (KRCG's data, zero-vtes at its pin); `git checkout -b <topic>` — never work on `main`.
 
 Run every suite and tool from inside `bot/`: the folder is flat on purpose, everything expects its inputs beside it.
 `bot/README.md` maps the files. `tools/doc-budget.sh` checks the standing pages (run it before any docs PR);
@@ -30,12 +30,12 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 `START-HERE-BOTS.html`) to the repository root. Never edit the root in place.
 
 ## Gates (the one complete list; HARNESS and the root CLAUDE.md point here; STATUS has the last known green numbers)
-- `node --check` on every changed file.
-- `node test-bot-logic.js` ×3, ALONE, each run in a frozen snapshot (HOWTO: "a frozen snapshot"). ~300–600 s a run: launch it
-  detached with `timeout 900` and poll (`run_in_background`); never a foreground `timeout` that can cut a green run. Section 78c
-  (pace scaling) was a timing flake (F-Q2, closed): if it fails, rerun once and say so in the PR.
-  The suite needs every owned file beside it — a missing `elysium-bot-arena.js` aborts and looks like a failure. It also needs a
-  big heap: at 4 GB it dies out of memory in section 180 since v0.6.236 (`--max-old-space-size=6144`, HOWTO; C6).
+- `bash tools/gates.sh` runs the local gates below that the diff needs and writes the PR's table. `node --check` on every changed file.
+- `test-bot-logic.js` ×3: CI's three parallel runs on the pushed commit are the release gate (D-139; `tools/ci-status.sh` prints each
+  run's count and the sha256 it ran). Locally the touched sections (`tools/run-section.sh`); a full local run (`tools/gates.sh
+  --suite N`: frozen snapshots, detached, polled) only when CI cannot run, said in the PR. Section 78c (pace scaling) was a timing
+  flake (F-Q2, closed): if it fails, re-run it once and say so. The suite needs every owned file beside it (a missing
+  `elysium-bot-arena.js` aborts) and a 6 GB heap: at 4 GB it dies in section 180 (C6).
 - `node test-bot-canary.js` — the §12 grammar contract against `elysium-vtes-bord.html` + `ELYSIUM-PROTOCOL.md` beside it (the
   read-only copies); without them it skips loudly, never fakes a pass. Run it a second time against main's current release
   (HOWTO: "the canary against main's release").
@@ -58,9 +58,10 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 - CI (D-109; HOWTO "CI"): `.github/workflows/bot-gates.yml` runs the unattended gates and the correctness lint on every PR.
 
 ## The round
-`docs/HARNESS.md` has it in full: take a BOARD line → analyse, propose, wait for "kör" on any "how should we do X" [D-87] → change →
-gates → a fresh-context egress review → STATUS rewritten, CHANGELOG entry, the BOARD line deleted (RULINGS / LESSONS when they
-changed) → PR against `main` with the gate numbers and the review's line. Commit and push as soon as a step is green (context can
+`docs/HARNESS.md` has it in full, with the roles (the lead, the agents and their models, CI) [D-139]: take a BOARD line → analyse,
+propose, wait for "kör" on any "how should we do X" [D-87] → change → gates → a fresh-context egress review (passes after the first on
+Fable) → STATUS rewritten, CHANGELOG entry, the BOARD line deleted (RULINGS / LESSONS when they changed) → PR against `main` with
+the gate numbers and the review's line. Commit and push as soon as a step is green (context can
 run out). Johan merges. End every implementation round with an honest "anything I'm unsure about" paragraph, unasked — it is a real
 hunt, not a formality. Johan's combining rule (16 Oct 2026) [D-92]: a fix found during a round may ride in that round when it fits; say so
 in the PR. A design question still gets an analysis, a proposal and a "kör" first.

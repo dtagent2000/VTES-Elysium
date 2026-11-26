@@ -32,17 +32,16 @@ client, server and start scripts from `client/` to `/`. Nothing at the root is e
 - Client work: `client/CLAUDE.md` and `client/docs/` (main's own bootstrap, journal, learnings, backlog).
 
 ## Gates (summary — the full lists live in each half's CLAUDE.md)
-- Bot (the complete list: `bot/CLAUDE.md` "Gates"): `node --check` on every changed file → `test-bot-logic.js` ×3 (≈300–600 s; run detached with `timeout 900` and
-  poll) → `test-bot-canary.js` (needs the released client + protocol beside it — the copies in `bot/`) →
-  `test-cardfx.js` when cardfx changed (needs `vtes.json` beside it — download it into `bot/` first, see below) → `diag-hb1-smoke.js` when the
-  bot's browser surface changed → `test-bot-hotseat.js` when anything near the hotseat bridge changed.
+- Bot (the complete list: `bot/CLAUDE.md` "Gates"): `bot/tools/gates.sh` runs the local ones the diff needs (`node --check`, the
+  canary against the copies in `bot/` and the root's release, `test-cardfx.js` with `vtes.json` beside it — see below, HB1, the
+  hotseat gate); CI runs `test-bot-logic.js` ×3 in parallel, the release gate (bot RULINGS D-139).
   Run everything from inside `bot/` — the suites, the arena and the tools expect their files beside them.
 - Client: see `client/CLAUDE.md`.
 
 ## Data that is not in git
 Third-party data is never committed or hosted here; each session fetches it from its source:
 - `bot/vtes.json` (KRCG's cards in the v3 shape every bot tool reads) is BUILT from KRCG's v5 dump. Before `test-cardfx.js`,
-  the compiler or the TWD tools:
+  the compiler or the TWD tools, `bash bot/tools/setup.sh` (it clones zero-vtes too), or by hand:
   `cd bot && curl -o vtes-v5.json https://static.krcg.org/data/v5/vtes.json && curl -o expansions.json
   https://static.krcg.org/data/v5/expansions.json && node krcg-v5.js` (all three ignored). The client reads the same dump at
   run time.
