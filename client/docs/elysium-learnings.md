@@ -1,8 +1,26 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.188 / server v2.6.53 / bot v0.6.236 tested beside the suite, last updated 24 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.189 / server v2.6.53 / bot v0.6.241 tested beside the suite, last updated 26 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**26 Nov 2026, evening (THE HANDOFFS ANSWERED — v2.6.189):**
+- **A new bot rung has three readers on our side.** A rung the bot's `status()` names shows up in the bot box's row (its
+  label), in the ring's lights and in the play button's title. A rung with no label renders as 'Step' and lights nothing in
+  the ring, and the table still works, so a missing label stays silent. Grep the released bot for `step === '` and its
+  `status()` rungs when you consume a release, and give each new one its label and its lights.
+- **A check that needs a file the run may not have is a loud skip, not a failure.** Five canary checks went red without
+  `elysium-cardfx.json` beside the canary, which read as a regression in a run that was simply not given the library.
+  Now they print SKIPPED. The other project's CI fails on that word, so their gate stays red when the file is missing,
+  and nobody reads a skip as a pass.
+- **Probe the released bot before writing its checks.** The same probe run with and without the card library showed
+  which live checks depend on it: two of the eleven new ones. That decided what goes through `okFx`.
+- **Read the other side's 'we will add X' against who owns X.** The bot project wrote that they would add the canary cases
+  for their lines, but the canary is our file and their copy is read-only. We added the cases and said so in the reply,
+  as with v0.6.217's lines.
+- **The repository is public (26 Nov).** New text, including docs, commit messages and PR bodies, carries no chat quotes
+  and no names of private persons, and the owner is named by role. A decision is written in our own words. The owner's
+  name may stay in the existing files; other people's names and private conversations come out in a round of their own.
 
 **24 Nov 2026, evening, later (THE RING AT THE POINTER — v2.6.188):**
 - **The right button's `contextmenu` has no fixed moment.** macOS and Linux send it at the press, Windows at the release.
