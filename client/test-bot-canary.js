@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================================
-   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.6.0
+   test-bot-canary.js — the §12 CONTRACT CANARY                       v1.7.0
    ----------------------------------------------------------------------------
    PROTOCOL.md §12 is the authoritative, "frozen" bot contract. Three things
    must agree at all times: (1) what §12 DOCUMENTS, (2) what the CLIENT
@@ -42,6 +42,11 @@
    SAME acting minion with the new target's pool -- the shape a bot's own bounce writes -- then Pass. The re-announce is
    built by the client's own BLEED_LINE and read by L12.bleed; a live acting bot follows it to the new target, and a live
    new target arms the bleed from the minion's controller. (The header said v1.4.0 through v1.5.0; the number caught up.)
+   v1.7.0 (26 Nov 2026, client v2.6.189): section 12 -- bot v0.6.236-241's lines (the handoffs of 20, 24 and 25 Nov): the
+   rush line opened to any rush card and its level, Priority Contract placed and burned, a card put on a minion, Biothaumaturgic
+   Experiment's employ, the 'if blocked' line that locks the blocker, and a rider mode's level on the stealth line. And the
+   loud skip the bot project asked for on 19 Nov: without elysium-cardfx.json beside the canary, a check that needs the bots'
+   card library prints a line with SKIPPED instead of failing (their CI fails on that word, so a missing file stays red there).
    ========================================================================== */
 
 const fs = require('fs');
@@ -59,6 +64,12 @@ const { L12 } = require('./elysium-bot.js');
 
 let passN = 0, failN = 0;
 function ok(cond, label){ if(cond) passN++; else { failN++; console.log('  \u2717 ' + label); } }
+/* v1.7.0 (the bot project's ask of 19 Nov): a check that needs the bots' card library -- the bot reads elysium-cardfx.json
+   beside itself -- is skipped LOUDLY when the file is not there: one line each with the token SKIPPED (their CI fails on it),
+   and the summary counts them. Never a fake pass, never a red line for a file the run was not given. */
+const FX_FILE = 'elysium-cardfx.json', HAS_FX = fs.existsSync(path.join(__dirname, FX_FILE));
+let skipN = 0;
+function okFx(cond, label){ if(HAS_FX) return ok(cond, label); skipN++; console.log('  \u25cb SKIPPED -- needs ' + FX_FILE + ' beside the canary (the bots read the card from it): ' + label); }
 
 const CLIENT = fs.readFileSync(path.join(__dirname, 'elysium-vtes-bord.html'), 'utf8');
 const PROTOCOL = fs.readFileSync(path.join(__dirname, 'ELYSIUM-PROTOCOL.md'), 'utf8');
@@ -418,14 +429,14 @@ ok(!!(L12.debugOff && 'Ann (bot) leaves DEBUG mode: the table is in Tournament m
     u.table[1].pub.cards = [tor('c1', 'Catalina Vega', lockFirst), tor('c2', 'Flávio Gonçalves'), gbCard];
     u._onLog('Johan', 'Phase: ' + B('Minion') + '.'); if (typeof u._hMemoBoard === 'function') u._hMemoBoard(1); return u; };   // guarded: an older bot (no human memo before v0.6.225) gives red lines, not a crash
   let u = ballTable(true, true), mm = memoOf(u)[0];
-  ok(!!mm && mm.card === 'Toreador Grand Ball' && mm.lock === 'Catalina Vega' && mm.free === 'Flávio Gonçalves' && mm.via === 'pair', 'a live bot reads a human\'s Ball from the client\'s play line and its Target (the pair) and the lock on their board: Flávio acts unblocked (' + JSON.stringify(mm) + ')');
+  okFx(!!mm && mm.card === 'Toreador Grand Ball' && mm.lock === 'Catalina Vega' && mm.free === 'Flávio Gonçalves' && mm.via === 'pair', 'a live bot reads a human\'s Ball from the client\'s play line and its Target (the pair) and the lock on their board: Flávio acts unblocked (' + JSON.stringify(mm) + ')');
   u = ballTable(false, true); mm = memoOf(u)[0];
-  ok(!!mm && mm.free === 'Flávio Gonçalves' && mm.via === 'only', 'without the Target it reads the human\'s only other ready Toreador');
+  okFx(!!mm && mm.free === 'Flávio Gonçalves' && mm.via === 'only', 'without the Target it reads the human\'s only other ready Toreador');
   u = ballTable(true, false); mm = memoOf(u)[0];
   const asked = u._sent.find(m => m && m.t === 'chat');
-  ok(!!mm && mm.free === null && !!asked && asked.text === 'Johan, your Toreador Grand Ball: which Toreador acts unblocked — Catalina Vega or Flávio Gonçalves?', 'with no lock to read, the bot that speaks for the table asks in the documented shape: ' + JSON.stringify(asked && asked.text));
+  okFx(!!mm && mm.free === null && !!asked && asked.text === 'Johan, your Toreador Grand Ball: which Toreador acts unblocked — Catalina Vega or Flávio Gonçalves?', 'with no lock to read, the bot that speaks for the table asks in the documented shape: ' + JSON.stringify(asked && asked.text));
   u._onChat('Johan', 'Flavio'); mm = memoOf(u).slice(-1)[0];
-  ok(!!mm && mm.free === 'Flávio Gonçalves' && mm.via === 'answer', 'and the owner\'s free-text answer (one name, accents aside) becomes its memory');
+  okFx(!!mm && mm.free === 'Flávio Gonçalves' && mm.via === 'answer', 'and the owner\'s free-text answer (one name, accents aside) becomes its memory');
 
   u = mk8(); u._onLog('Johan', CL('c1', 'Lisa') + ' bleeds for 1.');
   ok(!!(u.pending && u.pending.amount === 1 && u.pending.who === 'Johan'), 'the prey test: a human\'s bleed with no target reaches its prey bot');
@@ -517,7 +528,7 @@ ok(!!(L12.debugOff && 'Ann (bot) leaves DEBUG mode: the table is in Tournament m
   let u = mk9(); u.pool = 10; u._onLog('Ann', B('Ann') + ' locks ' + B('Privileged Position') + ' — ' + B('Bot') + ' burns 1 pool.');
   ok(u.pool === 9, 'a live bot named as the prey pays Privileged Position\'s pool (pool ' + u.pool + ')');
   u = mk9(); u.board = [inPlay('t1', 'Tension in the Ranks')]; u._onLog('Ann', B('Ann') + ' discards two masters to burn ' + B('Bot') + '\'s ' + B('Tension in the Ranks') + '.');
-  ok(u.board[0] && u.board[0].zone === 'ash', 'a live bot burns its Tension in the Ranks on the line that names it as the owner');
+  okFx(u.board[0] && u.board[0].zone === 'ash', 'a live bot burns its Tension in the Ranks on the line that names it as the owner');
   u = mk9(); u.board = [inPlay('r1', 'Anarch Revolt')]; u._onLog('Ann', 'Referendum passes — ' + B('Anarch Revolt') + ': burn ' + B('Bot') + '\'s ' + B('Anarch Revolt') + '.');
   ok(u.board[0] && u.board[0].zone === 'ash' && u._sent.some(m => m && m.t === 'log' && strip(m.html) === 'Bot burns Anarch Revolt (the referendum passed).'), 'a live bot burns its card on a burn referendum\'s pass line and says so at the table');
   u = mk9(); u._w5Hostages = new Map([['h1', { seat: 3, name: 'Sully' }], ['h2', { seat: 3, name: 'Lisa' }]]);
@@ -588,5 +599,95 @@ ok(!!(L12.debugOff && 'Ann (bot) leaves DEBUG mode: the table is in Tournament m
   ok(i1 > 0 && i2 > i1 && i3 > i2, 'client source: the line, the re-announce, then Pass -- in that order');
 }
 
-console.log('\n' + passN + '/' + failN + (failN ? ' \u2014 FAIL' : ' \u2014 all green'));
+/* ---- 12) v2.6.189 (bot v0.6.237-241 consumed): bot v0.6.236's and v0.6.241's lines (bot/docs/handoffs/HANDOFF-to-main-
+   2026-11-20-v0.6.236.md section 3, -11-24-v0.6.237.md section 2, -11-25-v0.6.241.md sections 2 and 3). Section 12 of the
+   protocol documents each shape; L12 reads a line built from it (the rush line opened to any rush card, with m[5] the level;
+   Priority Contract placed; a card put on a minion; the employ through Biothaumaturgic Experiment); the three module constants
+   outside L12 -- CONTRACT_BURN, BLOCKED_LOCK, RIDER_STEALTH -- are pinned through a live bot's _onLog and the state the handoffs
+   name. Two of the live checks need the bots' card library (the rush card's terms, the rider): okFx. Positives only. */
+{
+  [['VAMP enters combat with NAME\'s VAMP (CARD [LVL]).', 'the rush line opened to any rush card and its level'],
+   ['(Hunter\'s Mark [CEL][THA])', 'a rush card\'s level, one bracket per discipline'],
+   ['(Ambush)', 'a rush card with no level'],
+   ['VAMP defends (rushed by VAMP, CARD [LVL]).', 'the rushed bot\'s note'],
+   ['Combat begins: VAMP against VAMP (CARD [LVL]).', 'the rusher\'s note'],
+   ['NAME combat — VAMP maneuvers to long (Fleetness).', 'a granted maneuver naming its card'],
+   ['NAME combat — VAMP presses to continue (Hunter\'s Mark).', 'a granted press naming its card'],
+   ['ME plays Priority Contract — on OWNER\'s HOST, chosen: VAMP.', 'Priority Contract placed'],
+   ['VAMP enters combat with OWNER\'s HOST (Priority Contract).', 'the rush through Priority Contract'],
+   ['ME burns Priority Contract and gains 3 pool (WHY).', 'Priority Contract burned for its pool'],
+   ['VAMP plays CARD [LVL] — on HOST.', 'a card put on a minion'],
+   ['VAMP plays Biothaumaturgic Experiment [tha] — employs RETAINER.', 'Biothaumaturgic Experiment\'s employ'],
+   ['VAMP is blocked — CARD [LVL]: NAME\'s BLOCKER is locked; the action ends unsuccessfully.', 'the \'if blocked\' line that locks the blocker'],
+   ['VAMP plays Mirror Walk [THA]: +1 stealth.', 'a rider mode\'s level on the stealth line'],
+   ['the ACTING bot writes the same line itself', 'the acting bot\'s own re-announce after a typed bounce']
+  ].forEach(([tag, what]) => ok(sec12.includes(tag), 'PROTOCOL §12 documents ' + what + ': "' + tag + '"'));
+
+  const rd = (key, line, want, what) => { const m = line.match(L12[key] || /$^/);
+    ok(!!m && want.every((w, i) => m[i + 1] === w), 'bot L12.' + key + ' reads ' + what + (m ? ' (' + JSON.stringify(m.slice(1)) + ')' : ' -- no match: "' + line + '"')); };
+  rd('havenRush', 'Gilbert enters combat with Bot\'s Sully (Hunter\'s Mark [CEL][THA]).', ['Gilbert', 'Bot', 'Sully', 'Hunter\'s Mark', '[CEL][THA]'], 'a rush card and its level');
+  rd('havenRush', 'Gilbert enters combat with Bot\'s Sully (Ambush).', ['Gilbert', 'Bot', 'Sully', 'Ambush', undefined], 'a rush card with no level');
+  rd('havenRush', 'Gilbert enters combat with Bot\'s Sully (Frontal Assault).', ['Gilbert', 'Bot', 'Sully', 'Frontal Assault', undefined], 'a card in play as before, with no level');
+  rd('havenRush', 'Kasim Bayar (G6) enters combat with Viktor\'s Theo Bell (G2 ADV) (Hunter\'s Mark [CEL][THA]).', ['Kasim Bayar (G6)', 'Viktor', 'Theo Bell (G2 ADV)', 'Hunter\'s Mark', '[CEL][THA]'], 'a vampire named (G2 ADV) beside a card and its level');
+  rd('havenRush', 'Kasim Bayar (G6) enters combat with Viktor\'s Anxo Vilela (G6) (Priority Contract).', ['Kasim Bayar (G6)', 'Viktor', 'Anxo Vilela (G6)', 'Priority Contract', undefined], 'the rush through Priority Contract');
+  rd('contractM', 'Hanna plays Priority Contract — on Viktor\'s Anxo Vilela (G6), chosen: Kasim Bayar (G6).', ['Hanna', 'Priority Contract', 'Viktor', 'Anxo Vilela (G6)', 'Kasim Bayar (G6)'], 'the placer, the card, the host\'s owner, the host and the chosen');
+  rd('uAttach', 'Kasim Bayar (G6) plays Biothaumaturgic Experiment [THA] — on Bijou (G6).', ['Kasim Bayar (G6)', 'Biothaumaturgic Experiment', 'THA', 'Bijou (G6)'], 'the vampire, the card, its level and the host');
+  rd('uAttach', 'Kasim Bayar (G6) plays Shadow of the Beast [pro] — on themselves.', ['Kasim Bayar (G6)', 'Shadow of the Beast', 'pro', 'themselves'], 'a card on the acting vampire itself');
+  rd('uEmployVia', 'Kasim Bayar (G6) plays Biothaumaturgic Experiment [tha] — employs Dog Pack.', ['Kasim Bayar (G6)', 'Biothaumaturgic Experiment', 'tha', 'Dog Pack'], 'the vampire, the card, its level and the retainer');
+  rd('uStrength', 'Kasim Bayar (G6) plays Preternatural Strength [pot] — on themselves (+1 strength).', ['Kasim Bayar (G6)', 'Preternatural Strength', 'pot', '1'], 'Preternatural Strength\'s line, its own shape as before');
+
+  const { Bot } = require('./elysium-bot.js');
+  const B = s => '<b>' + s + '</b>';
+  const mk12 = name => { const sent = []; const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: name || 'Bot', persona: 'expert', deckName: 'malkavian', paceMs: 0, askSecs: 30, log: () => {} });
+    u.seat = 2; u.started = true; u.send = m => sent.push(m); u.push = () => {}; u.chat = t => sent.push({ t: 'chat', text: t }); u._reactWindow = () => {};
+    u.players = [{ seat: 1, name: 'Hanna', bot: true }, { seat: 2, name: 'Bot', bot: true }, { seat: 3, name: 'Ann', bot: true }];
+    u._sent = sent; return u; };
+  const vamp = (id, name, o) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', blood: 4, cap: 4, locked: false, faceDown: false }, o || {});
+  const done = u => { try { if (u.pending && u._clearPending) u._clearPending('canary end'); } catch (_e) {} u.out = true; };
+  let u = mk12(); u.turnSeat = 1; u.board = [vamp('m1', 'Sully', { blood: 5 }), vamp('m2', 'Alice Chen (G6)', { blood: 3 })];
+  u.table = { 1: { pub: { cards: [vamp('g1', 'Gilbert')] } } };
+  u._onLog('Hanna', B('Gilbert') + ' enters combat with ' + B('Bot') + '\'s ' + B('Sully') + ' (Hunter\'s Mark [CEL][THA]).');
+  { const p = u.pending;
+    okFx(!!(p && p.kind === 'rush' && p.via === 'card' && p.card === 'Hunter\'s Mark' && p.lvl === '[CEL][THA]' && p.ceBan === 'r1' && p.noLock === true && p.targetActs === false && p.rushTarget === 'Sully'),
+      'a live bot rushed by a card and its level opens its window on Haven\'s terms: the card, the level and its ban (' + JSON.stringify(p && { kind: p.kind, via: p.via, card: p.card, lvl: p.lvl, ceBan: p.ceBan, noLock: p.noLock, targetActs: p.targetActs }) + ')'); }
+  done(u);
+  u = mk12(); u.board = [vamp('a1', 'Anxo Vilela (G6)')];
+  u._onLog('Hanna', B('Hanna') + ' plays ' + B('Priority Contract') + ' — on ' + B('Bot') + '\'s ' + B('Anxo Vilela (G6)') + ', chosen: ' + B('Kasim Bayar (G6)') + '.');
+  { const rec = Object.values(u._contractSeen || {}).find(r => r && r.host === 'Anxo Vilela (G6)');
+    ok(!!(rec && rec.chosen === 'Kasim Bayar (G6)' && rec.by === 'Hanna' && rec.owner === 'Bot'), 'a live bot records the contract on its vampire: the placer and the chosen (' + JSON.stringify(rec) + ')'); }
+  u._onLog('Hanna', B('Hanna') + ' burns ' + B('Priority Contract') + ' and gains 3 pool (' + B('Bot') + '\'s ' + B('Anxo Vilela (G6)') + ' went to torpor).');
+  ok(!Object.values(u._contractSeen || {}).some(r => r && r.host === 'Anxo Vilela (G6)'), 'and its record of the contract ends on the placer\'s burn line (CONTRACT_BURN)');
+  { const e = u.ev && u.ev.last && u.ev.last('contract-burn'); ok(!!(e && e.by === 'Hanna' && e.card === 'Priority Contract' && e.n === 3), 'its classifier types the burn line: the placer, the card, the pool (' + JSON.stringify(e && { by: e.by, card: e.card, n: e.n }) + ')'); }
+  done(u);
+  u = mk12(); u.turnSeat = 1; u.board = [vamp('v1', 'Sully')];
+  u.table = { 1: { pub: { cards: [vamp('k1', 'Kasim Bayar (G6)', { blood: 5 }), vamp('b1', 'Bijou (G6)', { blood: 3 })] } } };
+  u._onLog('Hanna', B('Kasim Bayar (G6)') + ' plays ' + B('Biothaumaturgic Experiment') + ' [THA] — on ' + B('Bijou (G6)') + '.');
+  { const p = u.pending; ok(!!(p && p.kind === 'undirected' && p.sub === 'attach' && p.actingVampName === 'Kasim Bayar (G6)' && p.role === 'prey'), 'a live bot, the actor\'s prey, opens its block window on a card put on a minion (' + JSON.stringify(p && { kind: p.kind, sub: p.sub, vamp: p.actingVampName, role: p.role }) + ')'); }
+  done(u);
+  u = mk12(); u.turnSeat = 1; u.board = [vamp('v1', 'Sully')];
+  u.table = { 1: { pub: { cards: [vamp('k1', 'Kasim Bayar (G6)', { blood: 5 })] } } };
+  u._onLog('Hanna', B('Kasim Bayar (G6)') + ' plays ' + B('Biothaumaturgic Experiment') + ' [tha] — employs ' + B('Dog Pack') + '.');
+  { const p = u.pending; ok(!!(p && p.kind === 'undirected' && p.sub === 'equip' && p.card === 'Dog Pack' && p.actingVampName === 'Kasim Bayar (G6)'), 'and on the employ through the card it weighs the retainer (' + JSON.stringify(p && { sub: p.sub, card: p.card, vamp: p.actingVampName }) + ')'); }
+  done(u);
+  u = mk12(); u.turnSeat = 1; u.board = [vamp('v1', 'Sully')];
+  u.table = { 1: { pub: { cards: [vamp('k1', 'Kasim Bayar (G6)', { blood: 5 })] } } };
+  u._onLog('Hanna', B('Kasim Bayar (G6)') + ' plays ' + B('Preternatural Strength') + ' [pot] — on themselves (+1 strength).');
+  { const p = u.pending; ok(!!(p && p.kind === 'undirected' && p.sub === 'strength'), 'Preternatural Strength\'s line still opens the strength window (' + JSON.stringify(p && { sub: p.sub }) + ')'); }
+  done(u);
+  u = mk12(); u._myBlockOf = { vamp: 'Rosalina Cortez', at: Date.now() };
+  u._onLog('Ann', B('Rosalina Cortez') + ' is blocked — ' + B('Mirror Walk') + ' [THA]: ' + B('Bot') + '\'s ' + B('The Dowager') + ' is locked; the action ends unsuccessfully.');
+  ok(!!(u._cotCancel && u._cotCancel.vamp === 'Rosalina Cortez' && u._cotCancel.lock === true), 'a live bot that blocked Rosalina Cortez hears the line: the combat its block began never begins, its blocker locked (BLOCKED_LOCK)');
+  { const e = u.ev && u.ev.last && u.ev.last('blocked-lock'); ok(!!(e && e.vamp === 'Rosalina Cortez' && e.card === 'Mirror Walk' && e.at === 'THA' && e.owner === 'Bot' && e.blocker === 'The Dowager'), 'its classifier types the line: the actor, the card, the level, the owner and the blocker (' + JSON.stringify(e && { vamp: e.vamp, card: e.card, at: e.at, owner: e.owner, blocker: e.blocker }) + ')'); }
+  { const me = vamp('d1', 'The Dowager'); u.board = [me]; u._combatOppName = 'Rosalina Cortez';
+    ok(typeof u._cotHit === 'function' && u._cotHit(me) === true && me.locked === true, 'at its first combat step the blocker learns the combat never began, and stays locked'); }
+  done(u);
+  u = mk12(); u.turnSeat = 3; u.board = [vamp('d1', 'The Dowager')];
+  u.table = { 3: { pub: { cards: [vamp('r1', 'Rosalina Cortez')] } } };
+  u._onLog('Ann', B('Rosalina Cortez') + ' bleeds for 1. Target: ' + B('Bot') + '\'s pool.');
+  u._onLog('Ann', B('Rosalina Cortez') + ' plays ' + B('Mirror Walk') + ' [THA]: +1 stealth.');
+  okFx(!!(u.pending && u.pending.riderLock && u.pending.riderLock.vamp === 'Rosalina Cortez' && u.pending.riderLock.card === 'Mirror Walk' && u.pending.riderLock.at === 'THA'), 'a live bot that may block hears the rider on the stealth line and books it on the action (RIDER_STEALTH: ' + JSON.stringify(u.pending && u.pending.riderLock) + ')');
+  done(u);
+}
+
+console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green') + (skipN ? ' (' + skipN + ' SKIPPED: ' + FX_FILE + ' is not beside the canary)' : ''));
 process.exit(failN ? 1 : 0);
