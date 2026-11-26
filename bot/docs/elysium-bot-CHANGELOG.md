@@ -3,6 +3,33 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
+- **W1 — the workflow round (26 Nov 2026, bot v0.6.241, no bot change)** — Johan's D-139 on Claude's workflow proposal (the
+  question card: "Kör, W1 först", "Ja, CI ×3", "Ja, sista passet", each the recommended option). The chat leads and agents take the
+  big reads and the reviews; the mechanical steps are scripts; CI carries the suite ×3. Scripts (`tools/`): `setup.sh` (KRCG's v5
+  dump built into `vtes.json`, kept for a day; zero-vtes cloned outside the repository at the pin `f9f227f`, refused inside it;
+  `--twda`; the machine), `gates.sh` (the fixed local gates, the hotseat gate and test-doc-budget when the diff touches them, one
+  summary for the PR, exit 1 on a FAIL or a SKIPPED; `--sim` the 240's footprint against the base's bundle in two frozen copies of
+  `bot/`, read again with the version put back when it changed; `--smokes` the 14 V5 smokes; `--suite N` frozen local runs when CI
+  cannot run), `release.sh` (`BOT_VERSION`, STATUS's version line, START-HERE-BOTS.html's chip, footer version and date, the bundle
+  copied to the root, main's `check-versions.js` in `client/`, the sha256; it refuses on `main` and a version below the current
+  one, the current one resumes) and `ci-status.sh` (CI's checks on a commit and each suite run's count and sha256). Agents (`.claude/agents/`): `bot-card-reader` (Sonnet: a batch of cards against KRCG's text and the rulings, zero-vtes a
+  witness, verdicts as JSON lines to scratch) and `bot-egress-reviewer` (Opus; every pass after the first a new instance on Fable).
+  CI: `bot-gates.yml` in four jobs, the decision, the checks, the suite ×3 in parallel (each run's count and the sha256 it ran as a
+  notice) and `bot-gates`, the ruleset's required check, green only when every job is (a PR with no bot path: the checks and the
+  suite skipped, `bot-gates` green). Docs: HARNESS (the roles and tools, sessions, the round and the ritual on the scripts, the
+  review's Fable passes), CLAUDE.md (the bootstrap's setup, the gates, the round), the root CLAUDE.md's gate summary and data line,
+  HOWTO (the data, the local gates and the suite, CI, the review sheet's clone), RULINGS D-139 (D-109's ×3 amended), STATUS, README,
+  PROJECT-INSTRUCTIONS (a new block for Johan to paste: the rolling handoff, setup, the agents, CI ×3) and START-HERE-BOTS-CHAT
+  (setup.sh, the tools, the loop).
+  Budgets by D-101: HARNESS 10 KB, RULINGS 77.5 KB, the total 195 KB (cut first: the steps the scripts now carry).
+  *Gates:* `tools/gates.sh --sim` PASS 13/13 on v0.6.241's release bytes (the 240 IDENTICAL 240, `ana-gates.py` PASS 6/6); CI's
+  suite 2841/0 ×3 on `d797e1fd`; its
+  failures shown on planted faults in throwaway worktrees (a syntax error: check and lint FAIL; no `vtes.json`: cardfx and precon FAIL
+  with the setup line; a bumped `BOT_VERSION`: doc-budget FAIL and the hotseat gate run); `release.sh` in a throwaway worktree
+  (0.6.240 refused, 0.6.242 set the chip, the footer, the date and STATUS's line, eight byte copies, check-versions agrees; 0.6.242
+  again resumes); `tools/test-doc-budget.sh` every case red, the baseline green. *Egress:* 34 findings (stale-doc 15, half-done
+  12, unproven 4, test-weakened 2, rule-missed 1) in 3 passes (Opus 19, Fable 9, Fable 6), all fixed; the loop ended at D-133's third
+  pass, not a clean one: pass 3's fixes (wording, one count format) are gated, not re-reviewed.
 - **The sweep register (20 Nov 2026, bot v0.6.236, no bot change; PR #96)** — Johan's words of 19:45–19:48 recorded; the asks of 19:22
   (the pilot's flow proposals, a D line on KRCG's MCP) are in STATUS, open. RULINGS R-47 closes O-49 (his 19:45 answer as Claude
   read it, with the rules directors' posts by their links: a retainer's discipline is a requirement to employ it, its effect in

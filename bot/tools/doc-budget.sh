@@ -70,8 +70,12 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    the egress review's pass 2), L-100, HOWTO's fidelity lines, ARCHITECTURE's rider and knob. Cut first: the round's own lines (D-138
 #    2.0 -> 1.0 KB, O-52, L-100 and the HOWTO paragraph halved); the register stood 1.5 KB over its ceiling, LESSONS 0.1,
 #    ARCHITECTURE 0.1 and the total 1.8 KB with the release's gate line in STATUS.
-PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:76500 $D/LESSONS.md:21500
-       $D/ARCHITECTURE.md:17500 $D/HARNESS.md:9000 $D/HOWTO.md:24000"
+#    HARNESS 9 -> 10 KB, RULINGS 76.5 -> 77.5 KB and the total 193 -> 195 KB on 26 Nov (W1, the workflow round, no bot change):
+#    Johan's D-139 and HARNESS's roles, sessions and scripts. Cut first: the sandbox habits and the release ritual's steps that the
+#    scripts now carry, HOWTO's frozen-suite recipe (tools/gates.sh --suite), the data commands (tools/setup.sh) and D-109's x3; HARNESS
+#    stood 1.0 KB over its ceiling, RULINGS 0.6 KB and the total 1.5 KB after the round's review passes.
+PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:77500 $D/LESSONS.md:21500
+       $D/ARCHITECTURE.md:17500 $D/HARNESS.md:10000 $D/HOWTO.md:24000"
 total=0
 for pb in $PAGES; do
   f=${pb%:*}; lim=${pb##*:}
@@ -81,7 +85,7 @@ for pb in $PAGES; do
 done
 boot=0; for f in "$R/CLAUDE.md" "$B/CLAUDE.md" "$D/STATUS.md" "$D/BOARD.md"; do boot=$((boot + $(wc -c < "$f" | tr -d ' '))); done
 if [ "$boot" -gt 50000 ]; then bad "bootstrap is $boot bytes, budget 50000"; else ok "bootstrap $boot / 50000"; fi
-if [ "$total" -gt 193000 ]; then bad "standing pages total $total bytes, budget 193000"; else ok "standing pages $total / 193000"; fi
+if [ "$total" -gt 195000 ]; then bad "standing pages total $total bytes, budget 195000"; else ok "standing pages $total / 195000"; fi
 
 # 2. paths named in the standing pages: a backticked token that looks like a file or a folder
 missing=0
