@@ -74,12 +74,12 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    Johan's D-139 and HARNESS's roles, sessions and scripts. Cut first: the sandbox habits and the release ritual's steps that the
 #    scripts now carry, HOWTO's frozen-suite recipe (tools/gates.sh --suite), the data commands (tools/setup.sh) and D-109's x3; HARNESS
 #    stood 1.0 KB over its ceiling, RULINGS 0.6 KB and the total 1.5 KB after the round's review passes.
-#    HARNESS 10 -> 11 KB, RULINGS 77.5 -> 79.5 KB and the total 195 -> 197.5 KB the same day (W1b, no bot change): D-140 and D-141
+#    HARNESS 10 -> 11 KB, RULINGS 77.5 -> 79.5 KB and the total 195 -> 198 KB the same day (W1b, no bot change): D-140 and D-141
 #    (the owner's follow-ups to W1: the review of a round without a bot change, O-48's answer, the match question, the play notes,
 #    the project's docs; then a public repository without chat quotes or names, and a verdict for every unsure item), HARNESS's
 #    steps 9 and 10 and its unsure items. Cut first: the handshake's copy list (ARCHITECTURE has it), a repeated ci-status note, the
 #    upkeep's docs-change line (CLAUDE.md and step 7 carry it), D-139's replaced reading, O-48's line and CLAUDE.md's repeated
-#    design-question sentence; at the round's end HARNESS stood 0.8 KB over its old ceiling, RULINGS 1.8 KB and the total 2.4 KB.
+#    design-question sentence; at the round's end HARNESS stood 0.8 KB over its old ceiling, RULINGS 2.0 KB and the total 2.7 KB.
 PAGES="$B/CLAUDE.md:25000 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:79500 $D/LESSONS.md:21500
        $D/ARCHITECTURE.md:17500 $D/HARNESS.md:11000 $D/HOWTO.md:24000"
 total=0
@@ -91,7 +91,7 @@ for pb in $PAGES; do
 done
 boot=0; for f in "$R/CLAUDE.md" "$B/CLAUDE.md" "$D/STATUS.md" "$D/BOARD.md"; do boot=$((boot + $(wc -c < "$f" | tr -d ' '))); done
 if [ "$boot" -gt 50000 ]; then bad "bootstrap is $boot bytes, budget 50000"; else ok "bootstrap $boot / 50000"; fi
-if [ "$total" -gt 197500 ]; then bad "standing pages total $total bytes, budget 197500"; else ok "standing pages $total / 197500"; fi
+if [ "$total" -gt 198000 ]; then bad "standing pages total $total bytes, budget 198000"; else ok "standing pages $total / 198000"; fi
 
 # 2. paths named in the standing pages: a backticked token that looks like a file or a folder
 missing=0

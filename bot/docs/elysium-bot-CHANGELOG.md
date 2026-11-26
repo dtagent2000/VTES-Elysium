@@ -12,17 +12,18 @@
   notes as a player: `.claude/skills/bot-play-notes/SKILL.md` (how to play a match for an evaluation, strategy, tactics, the bots
   as opponents, open questions for the knowledge and meta layers; from the playtests of 25 Nov; each note keeps what was seen apart
   from what is reasoned). The public repository carries no chat quotes and no names of private persons (D-141): this branch was
-  rewritten before its merge so that it adds none, and the owner's verbatim words behind D-140 and D-141, two chat handoffs of 20
-  Nov and the 24 Nov playtest feedback went to the private data repo (its #3); main's existing names and quotes are the next chat's
-  cleanup round. Every unsure item gets a verdict when it shows up: checked now, carried to the handoff or dropped with a reason
-  (D-141, HARNESS). The claude.ai project's dated docs: Claude's two playtest reports and the card-fidelity spot check copied to
-  `docs/reports/`; three superseded docs deleted without a copy (the 26 Nov handoff: STATUS; the 25 Nov chat round's handoff: its
-  baseline in v0.6.240's entry, its scripts the chat recorder and `tools/ana-chat.py`; the 18 Nov sweep plan:
+  rewritten before its merge so that it adds none, and the owner's verbatim words behind D-139, D-140, D-141 and O-43's stub, two
+  chat handoffs of 20 Nov and the 24 Nov playtest feedback went to the private data repo (its #3); main's existing names and quotes
+  are the next chat's cleanup round. Every unsure item gets a verdict when it shows up: checked now, carried to the handoff or
+  dropped with a reason (D-141, HARNESS). The claude.ai project's dated docs: Claude's two playtest reports and the card-fidelity
+  spot check copied to `docs/reports/`; three superseded docs deleted without a copy (the 26 Nov handoff: STATUS; the 25 Nov chat
+  round's handoff: its baseline in v0.6.240's entry, its scripts the chat recorder and `tools/ana-chat.py`; the 18 Nov sweep plan:
   `specs/spec-card-sweep-2026-11-18.md` grew from it); the project keeps its instruction, START-HERE-BOTS-CHAT.md, the handoff and
-  the owner's reviews of other projects. O-53 and the open handoff to main for v0.6.241 point to `docs/reports/`; v0.6.241's entry
-  below keeps the project's paths of that day. PROJECT-INSTRUCTIONS (the block to paste), START-HERE-BOTS-CHAT, README, STATUS.
-  Budgets by D-101: HARNESS 11 KB, RULINGS 79.5 KB, the total 197.5 KB (cut first: the handshake's copy list, a repeated ci-status
-  note, the upkeep's docs-change line, D-139's reading, O-48's line, CLAUDE.md's repeated design-question sentence).
+  the owner's reviews of other projects. O-53 and the open handoff to main for v0.6.241 point to `docs/reports/`, and game 2's
+  summary no longer contradicts its own bounce rows; v0.6.241's entry below keeps the project's paths of that day.
+  PROJECT-INSTRUCTIONS (the block to paste), START-HERE-BOTS-CHAT, README, STATUS. Budgets by D-101: HARNESS 11 KB, RULINGS 79.5
+  KB, the total 198 KB (cut first: the handshake's copy list, a repeated ci-status note, the upkeep's docs-change line, D-139's
+  reading, O-48's line, CLAUDE.md's repeated design-question sentence).
   *Gates:* GATES_TBD *Egress:* EGRESS_TBD
 - **W1 — the workflow round (26 Nov 2026, bot v0.6.241, no bot change)** — Johan's D-139 on Claude's workflow proposal (the
   question card: "Kör, W1 först", "Ja, CI ×3", "Ja, sista passet", each the recommended option). The chat leads and agents take the

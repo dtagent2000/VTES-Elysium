@@ -42,7 +42,7 @@ reviews of other projects. A round's dated report goes to `docs/reports/` (D-140
    message when it is a release.
 6. **Egress review** (fresh context, until clean: below). Its findings are fixed or listed in the PR body.
 7. **Docs:** STATUS rewritten (version, gates, next); a CHANGELOG entry; the BOARD line deleted, found lines added (a card problem:
-   `SWEEP-REGISTER.md`, D-135); RULINGS when Johan ruled or a rules reading changed; LESSONS only for a new CLASS of lesson; a
+   `SWEEP-REGISTER.md`, D-135); RULINGS when the owner ruled (by role, the words to the data repo: D-141) or a rules reading changed; LESSONS only for a new CLASS of lesson; a
    HANDOFF when main must act. `bash tools/doc-budget.sh` green.
 8. **PR against `main`**: at the top what the round needs from Johan, then what changed and why, the `tools/gates.sh` table and CI's suite
    counts, the sim footprint (IDENTICAL / SAME-PLAY / DIVERGED, outcomes changed, zeroPool), the release bytes' sha256 when it is a
@@ -55,7 +55,7 @@ reviews of other projects. A round's dated report goes to `docs/reports/` (D-140
 10. The owner merges and deletes the branch.
 
 **Unsure items** (D-141) get a verdict when they show up, not only at the end: **checked now** when the item bears on a
-claim, a gate or a rule of the round and the tools at hand can settle it; **carried** to the handoff's "Check first" with what
+claim, a gate or a rule of the round and the tools at hand can settle it; **carried** to claude/HANDOFF.md's "Check first" with what
 would settle it; or **dropped** with one line on why it does not matter. The PR's "anything I'm unsure about" shows all three.
 
 ## The egress review (every round; a fresh-context agent)

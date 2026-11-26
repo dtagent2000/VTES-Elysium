@@ -2,8 +2,8 @@
 
 Same rig and bytes as game 1 (`playtest-claude-game1-2026-11-25.md`, whose numbers are used below): bot v0.6.240, client
 v2.6.188, Turn-based, `--offline` (text cards). Claude played the Nosferatu starter in seat 1 against Viktor (Ventrue), Isolde
-(Toreador) and Henrik (Tremere), all Expert. The game ran 55 min and was stopped in round 8. By then Viktor had ousted Isolde with
-bleeds that Claude bounced his way and a lethal Conditioning plus Daring the Dawn; Claude was on pool 6 and Henrik on pool 5. The
+(Toreador) and Henrik (Tremere), all Expert. The game ran 55 min and was stopped in round 8. By then Viktor had ousted Isolde: he bounced
+Claude's bleeds onto her, then bled her out with a lethal Conditioning plus Daring the Dawn; Claude was on pool 6 and Henrik on pool 5. The
 rig logged 0 page errors and 0 closed sockets. Times are seconds since the rig started. Screenshots are in the session (`/tmp/pt-g2/*.png`).
 
 ## The proposals, tested where the bugs came back

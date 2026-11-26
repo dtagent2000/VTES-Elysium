@@ -18,8 +18,7 @@ later game contradicts a note, change it and say so; never delete it silently.
 
 ## How to play a match for an evaluation
 - Seen: a match shows what the 240 cannot. Examples are a stall and a stale timer in Turn-based, an answer that arrives before its
-  question, and a human's cards the bots do not read (register class 4) [games 1–2, 25 Nov]. The owner, 26 Nov: a match picks up
-  much that the 240 misses.
+  question, and a human's cards the bots do not read (register class 4) [games 1–2, 25 Nov].
 - Claude's method, as used [games 1–2]:
   - Use main's rig (`client/playtest/`) in Turn-based, with text cards (`--offline`) and Expert bots.
   - Note the time of anything odd from the rig's seconds, and read its cause in `bot/elysium-bot.js` before calling it a bug.
@@ -61,7 +60,7 @@ later game contradicts a note, change it and say so; never delete it silently.
 
 ## The bots as opponents (what to expect, what to test)
 - **Bounces.**
-  - Seen, bots only (the 24 Nov counts, register 4.6: the release bytes' 240 and a five-starter run): Malkavian, Tremere and
+  - Seen, bots only (the 24 Nov counts, CHANGELOG v0.6.238 and register 4.6: the release bytes' 240 and a five-starter run): Malkavian, Tremere and
     Ventrue hold bounces; Nosferatu and Toreador hold none.
   - Seen: a first target with a usable bounce bounced every bleed of 2 or more (345 of 345) and took most bleeds of 1. A bot that
     is a bounce's new target does not bounce onward (register 4.6).
