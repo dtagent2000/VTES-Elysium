@@ -19,14 +19,14 @@
   (`--tree`, the bundle's files WAITING for their release); main's copies, the third-party data and the language of the
   tool-written Swedish pages are not scanned. *The lighter process*: HARNESS "One place for each fact"; the binding rules of one
   area moved from CLAUDE.md to ARCHITECTURE "Binding rules by area" and the measurement rules to HARNESS "Measurements" (the
-  bootstrap 49,953 → 39,453 bytes); a review pass after the first checks the earlier findings and the fixes' diff, plus the
+  bootstrap 49,953 → 39,473 bytes); a review pass after the first checks the earlier findings and the fixes' diff, plus the
   scan (HARNESS, the reviewer's agent file). A handoff to main (`handoffs/HANDOFF-to-main-2026-11-26-public-repository.md`: its
   files and the copies); BOARD's line for the bundle's cleanup release. Budgets by D-101: CLAUDE.md 14.5 KB, ARCHITECTURE 29.5
   KB, HARNESS 14.5 KB, RULINGS 82 KB, the total 205 KB (nothing binding cut). Kept: git history and the old PR bodies (the
   owner's choice).
-  *Gates:* `tools/gates.sh` PASS 14/14 on the head (check 34/34, lint clean, canary 235/0 ×2, cardfx 503/0, precon 18, the
-  self-tests, HB1 11/0, doc-budget, public-scan 35/0 and 0 hits, test-doc-budget every case red); `--sim` PASS 15/15 (the 240
-  IDENTICAL 240, `ana-gates.py` PASS 6/6) on ed77035's bytes; CI's suite 2841/0 ×3 with `bot-gates` green on 75b4de1 and c1c35bc
+  *Gates:* `tools/gates.sh --sim` PASS 15/15 on 153c492 (check 34/34, lint clean, canary 235/0 ×2, cardfx 503/0, precon 18, the
+  self-tests, HB1 11/0, doc-budget, public-scan 35/0 and 0 hits, test-doc-budget every case red, the 240 IDENTICAL 240 with
+  `ana-gates.py` PASS 6/6); CI's suite 2841/0 ×3 with `bot-gates` green on 153c492, and on 75b4de1, c1c35bc and f7e6a7e before it
   (the suite's bytes `0e306ac2` since ed77035; the bundle's are v0.6.241's, `d797e1fd`, cardfx `4627ff1c`); the JS token check:
   every code token identical in the 11 changed scripts but two property reads keyed by the fixture's name. *Egress:* 23 findings
   (stale-doc 8, half-done 6, rule-missed 5, unproven 3, test-weakened 1) in 3 passes, all on Fable (15, 5, 3), all fixed; pass 3's

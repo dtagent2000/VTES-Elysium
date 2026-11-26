@@ -12,7 +12,8 @@ change), after the private data repo's #4, which holds what #113 moves out; C1's
 ## Last gates (v0.6.241's release bytes, `d797e1fd`, cardfx `4627ff1c`; the suite file since #113 `0e306ac2`)
 26 Nov: the suite 2841/0 ×3 · canary 235/0 ×2, main's v1.6.0 247/0 · cardfx 503/0 · hotseat 12/0 · HB1 11/0 · lint clean ·
 main's client suite 430/1 (the guide's embed) · the arena smoke PASS 7/7 · the 240 against v0.6.240 DIVERGED 196 / SAME-PLAY 44,
-`ana-gates.py` PASS 6/6. #113 (the same bundle): `tools/gates.sh --sim` PASS 15/15, the 240 IDENTICAL 240; CI's suite in #113.
+`ana-gates.py` PASS 6/6. #113 (the same bundle): `tools/gates.sh --sim` PASS 15/15 on 153c492, the 240 IDENTICAL 240; CI's
+suite 2841/0 ×3 there.
 
 ## Next (the owner's order of 26 Nov; D-142)
 1. **The bundle's cleanup release** (v0.6.242; BOARD): `elysium-bot.js`'s comments, the cardfx notes, the guide's example and the
