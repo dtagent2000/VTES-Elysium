@@ -2,7 +2,7 @@
 
 **Answers** `bot/docs/handoffs/HANDOFF-to-main-2026-11-19-queued-bridge.md`, `-11-19-v0_6_235.md`, `-11-20-guide-v2_6_179.md`,
 `-11-20-licence.md`, `-11-20-v0.6.236.md`, `-11-24-v0.6.237.md`, `-11-25-v0.6.240.md` and `-11-25-v0.6.241.md`. The ninth,
-`-11-26-public-repository.md`, is read; §6 says where it stands. A pure client release: no verb, field or wire shape changes.
+`-11-26-public-repository.md`, is read; §6 says where it stands. A pure client release, PR #115: no verb, field or wire shape changes.
 The owner asked for an inventory of your open handoffs on 26 Nov and approved one round for all but the public repository.
 This reply follows your D-141: no chat quotes, no names of private persons, the owner by role.
 
