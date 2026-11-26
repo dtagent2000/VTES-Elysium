@@ -45,8 +45,9 @@ it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo
   `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`). All 12
   deal from seed 1: a single copy deep in a library is never drawn ('unseen' is then the deal, not the bot) — add `--seeds 4`
   to see one played.
-- **The local gates and the suite** — `bash tools/gates.sh` runs the local gates the diff needs and writes OUT/summary.md, the PR's
-  table (`--sim` the 240's footprint against the base's bundle, `--smokes` the 14 V5 smokes; run those in the background and poll).
+- **The local gates and the suite** — `bash tools/gates.sh` runs the fixed local gates (the hotseat gate and test-doc-budget when the
+  diff touches them) and writes OUT/summary.md, the PR's table (`--sim` the 240's footprint against the base's bundle, both sides
+  frozen, `--smokes` the 14 V5 smokes; run those in the background and poll).
   The suite ×3 is CI's, the release gate (D-139): `bash tools/ci-status.sh` prints each run's count and the sha256 it ran. When CI
   cannot run, `tools/gates.sh --suite N` runs it here, each run in a frozen snapshot (`bot/` copied to scratch with the root's client
   one level up for 154f, the sha beside the log, `timeout 900`, ~300–600 s a run), so the next edit cannot leak into a run. The heap
@@ -59,7 +60,7 @@ it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo
   its step, and the root's bundle must equal `bot/`'s (a bundle change ships as a release). A red daily run is the bot's to
   answer; a mail may reach nobody (GitHub mails the cron line's last editor), so look:
   `gh api 'repos/dtagent2000/vtes-elysium/actions/workflows/bot-gates.yml/runs?branch=main&per_page=1' --jq '.workflow_runs[0] | {event, conclusion}'`
-  Still the round's (`tools/gates.sh` runs the local ones): the sim footprint, the arena smoke and
+  Still the round's: the sim footprint (`tools/gates.sh --sim`), the arena smoke and
   the audits, a new section's destructive check, main's client suite when the wire changes (red by design until main re-embeds a
   new guide). A red the PR did not cause: the suite's 78c flake -- re-run the failed job once (`gh run rerun <id> --failed`) and
   say so in the PR; `test-cardfx` / `gen-precon --check` red with no card change -- KRCG's data moved, a round of its own; a

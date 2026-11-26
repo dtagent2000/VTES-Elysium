@@ -12,7 +12,7 @@
 # Usage: bash bot/tools/setup.sh [--refresh] [--twda] [--zero DIR] [--zero-ref REF]
 set -u
 B=$(cd "$(dirname "$0")/.." && pwd); R=$(cd "$B/.." && pwd)
-ZERO_PIN=f9f227f   # zero-vtes's commit the sweep reads (26 Nov 2026: 2,120 definitions in crates/engine/src/cards/defs.rs)
+ZERO_PIN=f9f227f   # zero-vtes's commit the sweep reads (26 Nov 2026: 2,130 CardDef statics in crates/engine/src/cards/defs.rs, 2,120 of them `pub static` cards)
 ZERO_URL=https://github.com/lionel-panhaleux/zero-vtes
 KRCG=https://static.krcg.org/data/v5
 refresh=0; twda=0; zdir="$HOME/zero-vtes"; zref="$ZERO_PIN"; fail=0
@@ -28,6 +28,8 @@ while [ $# -gt 0 ]; do
   shift
 done
 say(){ printf '%-10s %s\n' "$1" "$2"; }
+absp(){ python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$1"; }   # resolved from the caller's directory, nothing created
+zabs=$(absp "$zdir"); zdir="$zabs"; rabs=$(absp "$R")
 
 # 1. KRCG's cards
 cd "$B" || exit 1
@@ -46,9 +48,8 @@ if [ "$twda" = 1 ]; then
 fi
 
 # 2. zero-vtes, outside the repository, at the pin
-zpar=$(cd "$(dirname "$zdir")" 2>/dev/null && pwd -P); zabs="$zpar/$(basename "$zdir")"   # resolved before anything is created
 case "$zabs/" in
-  "$(cd "$R" && pwd -P)/"*) say zero-vtes "FAIL: $zdir is inside the repository; clone it outside (spec-card-sweep §5)"; fail=1 ;;
+  "$rabs/"*) say zero-vtes "FAIL: $zdir is inside the repository; clone it outside (spec-card-sweep §5)"; fail=1 ;;
   *)
     if [ ! -d "$zdir/.git" ]; then
       if [ -n "$(ls -A "$zdir" 2>/dev/null)" ]; then say zero-vtes "FAIL: $zdir exists and is not a git checkout"; fail=1

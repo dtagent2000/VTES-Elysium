@@ -9,8 +9,8 @@
 | Explore (built in) | where a decision lives in `elysium-bot.js`; a search across many files | its own |
 | CI (`.github/workflows/bot-gates.yml`) | the unattended gates and the suite ×3, the release gate (D-139) | — |
 
-Scripts: `tools/setup.sh` (KRCG's data, zero-vtes at its pin), `tools/gates.sh` (the local gates the diff needs, `--sim` the
-footprint, `--smokes` the V5 smokes; one summary for the PR), `tools/release.sh` (the ritual's mechanics), `tools/ci-status.sh`
+Scripts: `tools/setup.sh` (KRCG's data, zero-vtes at its pin), `tools/gates.sh` (the local gates, `--sim` the footprint,
+`--smokes` the V5 smokes; one summary for the PR), `tools/release.sh` (the ritual's mechanics), `tools/ci-status.sh`
 (CI's checks and each suite run's count and sha256). An agent costs more of Johan's usage than the lead's own work: use one where it keeps a big
 read out of the lead's context or where independent eyes are the point (the review), not for small jobs.
 
@@ -19,13 +19,14 @@ One round a chat. Start: the bootstrap (CLAUDE.md), `bash tools/setup.sh`, a bra
 minutes after a reply ends: a long run finishes inside the turn (detached and polled, never under a foreground `timeout` that can cut
 a green run) or runs in CI. A series or a bench lives in
 scratch, never in `bot/` (a 240-match sim is ~120 MB); `pkill -f` never (kill by PID); third-party data is fetched, never
-committed. End: STATUS's Next and the PR are the handoff; the claude.ai project keeps its instruction and one handoff doc
-(claude/HANDOFF.md), rewritten each round.
+committed. End: STATUS's Next and the PR are the handoff; the claude.ai project keeps its instruction, START-HERE-BOTS-CHAT.md
+and one handoff doc (claude/HANDOFF.md), which the lead rewrites with the Projects tool at the end of every round.
 
 ## The round
 1. **Take a board line** (`BOARD.md`), or Johan's instruction; a red daily `bot gates` run on `main` comes first (HOWTO "CI"). Read
    the RULINGS lines it cites. A design question ("how should we do X"): analyse, propose (what · why · where · size · how it will be
-   measured), wait for "kör". Fixes found on the way may ride when they fit (the combining rule, D-92); say so in the PR.
+   measured), wait for "kör"; the round's decisions go to Johan together, in one question card, before the build (D-139). Fixes
+   found on the way may ride when they fit (the combining rule, D-92); say so in the PR.
 2. **Branch** from `main`. Never on `main`.
 3. **Change.** Rules corrections never behind a knob; decision changes behind a knob with a 0-path (CLAUDE.md, knob hygiene).
    A new frozen line: its parser and its `_evClassify` kind in the same release; its §12 entry and canary case are main's (a
@@ -33,7 +34,8 @@ committed. End: STATUS's Next and the PR are the handoff; the claude.ai project 
    `step()` rung. A new combat event: its frozen line, its parser in `_parseCombatNarration`, its section through `_onLog`.
 4. **Tests first for the destructive proof:** a new section is run against the pre-change bot with `tools/run-section.sh` (red),
    then the new bytes (green). Then `bash tools/gates.sh` (`--sim` for a behaviour change, `--smokes` when cardfx or a deck
-   changed) and, once pushed, CI's suite ×3 (`tools/ci-status.sh`): every gate CLAUDE.md "Gates" lists for the change. Never claim
+   changed) and CI's suite ×3: CI runs on a pull request, on its merge commit, so open the PR as a draft at the first push
+   (`tools/ci-status.sh`: each run's count and the sha256 it ran). Every gate CLAUDE.md "Gates" lists for the change; never claim
    a gate passed without having run it; a gate that could not run is said so in the PR.
 5. **Commit and push as soon as a step is green** — context can run out. Small commits, English messages, the version in the
    message when it is a release.
@@ -58,10 +60,10 @@ Three findings of one class across rounds become a rule in CLAUDE.md or a lesson
 **Review until clean** (D-133, D-139). The lead fixes what a pass finds and the gates run again; then a NEW reviewer, one that took
 no part in an earlier pass and did none of the work, checks the fixes and the whole diff. Pass 1 runs on the reviewer's own model;
 every later pass on Fable (`model: fable`), so the pass that can end the loop is another model's than the executor's. A round that
-changes no bot behaviour may end on a clean pass 1 (Claude's reading of D-139), said in the PR. The loop ends at a clean pass or
+changes no bot behaviour may end on a clean pass 1 (Claude's reading of D-139, for Johan to confirm), said in the PR. The loop ends at a clean pass or
 after three, and what is still open goes to Johan in the PR. Where the rules or the text do not reach, it stops and asks him.
-KRCG's text, the rulings and zero-vtes stay the witnesses outside every model. For particularly high-stakes work the check is also
-done by a separate agent that has not seen the work: facts against their sources, arithmetic by running it, a document by opening it.
+KRCG's text, the rulings and zero-vtes stay the witnesses outside every model. High-stakes work is also checked by an agent that has
+not seen it: facts against their sources, arithmetic by running it, a document by opening it.
 
 ## Graded rules readings (card waves; the charter)
 Each curated card reading is graded by a fresh read-only agent (`bot-card-reader`) against KRCG's text and vtes-rulings: **green**
@@ -69,17 +71,16 @@ Each curated card reading is graded by a fresh read-only agent (`bot-card-reader
 the entry says so), **red** (the reading contradicts the text or a ruling). The round's PR lists the grades; only reds go to Johan.
 A T2 list (a consumer made general, with the cards it reads) is graded card by card the same way; zero-vtes is a third witness, never
 the judge (spec-card-sweep §3). The five playability layers are the checklist: source region legal · phase / type / actor gates ·
-requirements met and costs payable · the timing window allows it · the player holds priority (jol-rebuild's `timing-windows.md`).
+requirements met and costs payable · the timing window allows it · the player holds priority.
 
 ## The release ritual
-1. `bash tools/release.sh X.Y.Z`: `BOT_VERSION` (the line carries the version only), START-HERE-BOTS.html's chip, footer version and
-   date, the bundle copied to the root (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.js`,
-   `elysium-twd-archetypes.json/.js`, `START-HERE-BOTS.html`; never an edit at the root), main's `check-versions.js` in `client/`,
-   the release bytes' sha256 for the PR.
-2. The round's own: the CHANGELOG note (newest first, with the gates and the sim footprint), the footer's counts, STATUS rewritten
+1. `bash tools/release.sh X.Y.Z`: `BOT_VERSION` (the line carries the version only), STATUS's version line, START-HERE-BOTS.html's
+   chip, footer version and date, the bundle copied to the root (CLAUDE.md "The one rule"; never an edit at the root), main's
+   `check-versions.js` in `client/`, the release bytes' sha256 for the PR.
+2. The round's own: the CHANGELOG note (newest first, with the gates and the sim footprint), the footer's counts, the rest of STATUS
    (`tools/doc-budget.sh` checks its versions against the code), a HANDOFF to main only when main must act (re-embed the guide, a
    new bot line in §12, a client change). README and START-HERE-BOTS-CHAT carry no versions.
-3. Gates on the release bytes: CI's suite ×3 on the pushed commit (`tools/ci-status.sh`: each run's count and the sha256 it ran).
+3. Gates on the release bytes: CI's suite ×3 on the PR (`tools/ci-status.sh`: each run's count and the sha256 it ran).
 4. The PR body = the record: no READ-ME-FIRST, journal or context entry (spec-cleanup §5.5; its §8 Q2 / Q3 are open, RULINGS O-28).
 
 ## When main must act
@@ -96,8 +97,7 @@ main's release (`tools/gates.sh`: canary, canary-root). STATUS names both versio
 
 ## Upkeep (between rounds, or when a check says so)
 - **Every docs change:** `bash tools/doc-budget.sh` green; after changing the check itself, `bash tools/test-doc-budget.sh`.
-- **When a page nears its budget:** cut what is history, never a binding rule; when what remains still needs room, raise the budget
-  in `tools/doc-budget.sh` (D-101). LESSONS takes a new line only for a new class; BOARD lines that are done are deleted.
-- **Every few rounds:** read RULINGS' Open lines with Johan; read BOARD top to bottom; refresh the read-only copies when the root
-  has moved.
+- **When a page nears its budget:** cut history, never a binding rule; then raise the budget in `tools/doc-budget.sh` (D-101).
+  LESSONS takes a new line only for a new class; BOARD lines that are done are deleted.
+- **Every few rounds:** RULINGS' Open lines with Johan; BOARD top to bottom; the read-only copies refreshed when the root moved.
 - **History comments** in `elysium-bot.js`: trim to a "why" + a rule id in the functions a round touches (spec-cleanup §8 Q6).

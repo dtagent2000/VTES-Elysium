@@ -30,9 +30,10 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 `START-HERE-BOTS.html`) to the repository root. Never edit the root in place.
 
 ## Gates (the one complete list; HARNESS and the root CLAUDE.md point here; STATUS has the last known green numbers)
-- `bash tools/gates.sh` runs the local gates below that the diff needs and writes the PR's table. `node --check` on every changed file.
-- `test-bot-logic.js` ×3: CI's three parallel runs on the pushed commit are the release gate (D-139; `tools/ci-status.sh` prints each
-  run's count and the sha256 it ran). Locally the touched sections (`tools/run-section.sh`); a full local run (`tools/gates.sh
+- `bash tools/gates.sh` runs the fixed local gates below (two more when the diff touches them; `--sim` the footprint) and writes
+  the PR's table; the rest by hand. `node --check` on every changed file.
+- `test-bot-logic.js` ×3: CI's three parallel runs on the PR are the release gate (D-139; `tools/ci-status.sh` reads them; CI runs
+  on pull requests: a draft PR at the first push). Locally the touched sections (`tools/run-section.sh`); a full local run (`tools/gates.sh
   --suite N`: frozen snapshots, detached, polled) only when CI cannot run, said in the PR. Section 78c (pace scaling) was a timing
   flake (F-Q2, closed): if it fails, re-run it once and say so. The suite needs every owned file beside it (a missing
   `elysium-bot-arena.js` aborts) and a 6 GB heap: at 4 GB it dies in section 180 (C6).

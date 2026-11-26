@@ -18,7 +18,8 @@ main's client suite 430/1 (the guide's embed) · the arena smoke PASS 7/7 · the
 1. **C1**, the cross-check against zero-vtes (spec-card-sweep §11.8, D-132): the tool (a family's values level by level, and where
    our entry says less: a condition, an end-if-blocked rider, a cost), then `stealth` / `actStealth`, `intercept` and `bleed` over
    the library. The fidelity pass over the other 13 V5 decks then reads only the flagged cards (D-138).
-2. The register's active entries Bonding [DOM] (10.17) and Protection Racket (7.5): a small release each (D-135).
+2. The register's active entries Bonding [DOM] (10.17) and Protection Racket (7.5) (Johan's order), then 8.3 and 11.1: a small
+   release each (D-135).
 3. Johan's answers, then a PR each: O-53 (the playtests' table questions; the resolution panel is main's, a handoff) and O-52
    (the pool floor); Cloak the Gathering (8.7) and Raven Spy (1.3). Then Johan playtests the combined version.
 4. Faceless Night [OBF] (10.1) waits for its design. Not yet in the register: a human's Carrion Crows (its environmental damage)
@@ -29,6 +30,5 @@ main's client suite 430/1 (the guide's embed) · the arena smoke PASS 7/7 · the
 
 ## Not yet consumed from main
 Client v2.6.187 (#102, the bot ring) and v2.6.188 (#104, no wire change). Handed to main, unanswered (`docs/handoffs/`): the
-queued bridge (19 Nov: the canary's five cardfx checks skip loudly), v0.6.235's bundle, the guide for v2.6.179 and the licence
-(20 Nov, D-128), v0.6.236's lines, v0.6.237's, v0.6.240's (the chat's shape; re-embed the guide), v0.6.241's (`BLOCKED_LOCK` and
-`RIDER_STEALTH` for §12; re-embed the guide).
+queued bridge (19 Nov), v0.6.235's bundle, the guide for v2.6.179 and the licence (D-128), v0.6.236's and v0.6.237's lines,
+v0.6.240's (the chat's shape; re-embed the guide), v0.6.241's (`BLOCKED_LOCK`, `RIDER_STEALTH` for §12; re-embed the guide).
