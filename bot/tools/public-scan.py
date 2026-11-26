@@ -175,6 +175,7 @@ def main(argv):
     print('public-scan: %s (%d hits in %d files%s; %s)' % ('PASS' if not hits else 'FAIL', len(hits), files,
           ', %d waiting in %d files' % (sum(waiting.values()), len(waiting)) if waiting else '',
           'the tree' if mode == 'tree' else 'the lines ' + spec + ' adds'))
+    print('RESULT: %d hits in %d files%s' % (len(hits), files, ' (%d waiting)' % sum(waiting.values()) if waiting else ''))   # gates.sh's count
     return 1 if hits else 0
 
 

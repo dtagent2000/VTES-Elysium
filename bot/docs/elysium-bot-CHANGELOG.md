@@ -3,6 +3,25 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
+- **The cleanup round (26 Nov 2026, bot v0.6.241, no bot change; PR #113)** — D-142: the owner's approval at 17:57 of Claude's three
+  proposals for a lighter process, and the recommended options on the round's question card (the words in the private data
+  repo's RULINGS-WORDS.md). *The public repository* (D-141): RULINGS line by line in our own words and by role, the words of 52
+  lines moved to RULINGS-WORDS.md verbatim (106 more only named the owner); D-140's and D-141's readings confirmed. The standing
+  pages, the register, CARDS, the specs, the reports, the reviews, the handoffs, the coverage snapshots and this CHANGELOG
+  likewise; an example table line keeps an invented name. The suite's human fixture is an invented name (Jonna, and Jonna Sundin
+  where the bounce-by-name tests need two words), its comments and the tools' by role, no assertion changed. The frozen
+  `docs/history/` and `docs/archive/` (127 files) and the 14 July cardfx design log (Swedish) moved verbatim to the data repo's
+  `bot-history/`; `docs/history/README.md` says how the references read; one coverage snapshot renamed; the words taken out of the
+  other pages are in the data repo's `cleanup-2026-11-26-words.md`. `tools/public-scan.py` v1.0.0: the owner's names (by hash) and
+  Swedish chat quotes on the lines a change adds (`tools/gates.sh`, a CI step on pull requests) or over the tree (`--tree`, the
+  bundle's files WAITING for their release); main's copies and the third-party data are not scanned. *The lighter process*:
+  HARNESS "One place for each fact"; the binding rules of one area moved from CLAUDE.md to ARCHITECTURE "Binding rules by area"
+  and the measurement rules to HARNESS "Measurements" (the bootstrap 49,953 → 38,5xx bytes); a review pass after the first checks
+  the earlier findings and the fixes' diff, plus the scan (HARNESS, the reviewer's agent file). A handoff to main
+  (`handoffs/HANDOFF-to-main-2026-11-26-public-repository.md`: its files, the root CLAUDE.md's history line, the copies); BOARD's
+  line for the bundle's cleanup release. Budgets by D-101: CLAUDE.md 14.5 KB, ARCHITECTURE 29.5 KB, HARNESS 14.5 KB, RULINGS 82
+  KB, the total 205 KB (nothing binding cut). Kept: git history and the old PR bodies (the owner's choice).
+  *Gates:* GATES-LINE. *Egress:* EGRESS-LINE.
 - **W1b — the workflow's follow-ups (26 Nov 2026, bot v0.6.241, no bot change)** — D-140 (the owner's follow-ups to W1 at 14:48,
   and the recommended option on Claude's question card) and D-141 (16:04, and the recommended options on the next card). The review
   of a round without a bot change (Claude's reading: no file of the bundle touched) runs on Fable from the first pass, and a clean
