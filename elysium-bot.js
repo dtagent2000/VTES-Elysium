@@ -1921,7 +1921,7 @@ class Bot {
     });
     return best;
   }
-  _stealthStack(vamp, played){       // v0.6.143 (the project owner's stealth-bleed doctrine, 20 Sep): how many DIFFERENT stealth cards this vampire can still play this action (same name once per action) and what they add up to -- 'two in hand is decent, three with a +bleed card is really good, one is a gamble'
+  _stealthStack(vamp, played){       // v0.6.143 (the project owner's stealth-bleed doctrine, 20 Sep): how many DIFFERENT stealth cards this vampire can still play this action (same name once per action) and what they add up to -- two stealth cards in hand make a fair bleed, three with a +bleed card a strong one, a single card a gamble
     const seen = new Set(); let S = 0, sum = 0; const bl = this._myActIsBleed(vamp);
     (this.hand || []).forEach(n => { const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('mod') || seen.has(FX_NORM(h.name))) return;
       if(!this._mayPlay(h.name, h.e, played)) return; if(((h.e.cost && h.e.cost.blood) || 0) > (vamp.blood | 0)) return;
@@ -3711,7 +3711,7 @@ class Bot {
     if(!ahead && this._probe && v.id !== this._probe.puncherId && ctx.card && (ctx.card.n | 0) >= 2 && this.board.some(c => c && c.id === this._probe.puncherId && c.zone === 'ready' && !c.locked)){   // v0.6.143: a prober bleeds small -- the heavy card waits for the puncher
       this._emit('probe-hold', { vamp: v.name, card: ctx.card.name, n: ctx.card.n | 0 });   // v0.6.206: the reservation's own row -- the measurement counts it
       ctx.cardReserved = ctx.card.name; ctx.card = null; }
-    if(this.o.stealthStack !== 0 && ctx.card && (ctx.card.n | 0) >= 2 && !(ctx.card.st | 0)){   // v0.6.143 HOLD THE GOVERN (the project owner): a heavy bleed with NO stealth in hand into a prey with a body up is a card thrown at a blocker -- a weight, not a ban ('room to hold back')
+    if(this.o.stealthStack !== 0 && ctx.card && (ctx.card.n | 0) >= 2 && !(ctx.card.st | 0)){   // v0.6.143 HOLD THE GOVERN (the project owner): a heavy bleed with NO stealth in hand into a prey with a body up is a card thrown at a blocker -- a weight, not a ban (it leaves room to hold back)
       const up = this._preyUnlockedN(), stk = this._stealthStack(v, new Set());
       if(up > 0 && stk.S === 0){ const pT = this._pBleedThrough(); const w = +Math.max(0.4, Math.min(1, pT / 0.7)).toFixed(2);   // v0.6.143b: the weight IS the statistic -- at the prior (0.7 through) nothing is held, at 0.3 through the card is worth x0.43
         if(w < 1) ctx.holdBleed = { up, w, why: 'no stealth in hand, my prey has ' + up + ' unlocked ' + (up === 1 ? 'body' : 'bodies') + ' and lets ' + Math.round(pT * 100) + ' % of my bleeds through' }; }
@@ -3967,8 +3967,8 @@ class Bot {
   /* The DIRECTION is the R2 answer, not a new judgement: a referendum that costs
      me pool gets my votes against it, one that costs me nothing gets none. The
      bot cannot model table diplomacy yet, and inventing a preference it cannot
-     defend is worse than abstaining -- the project owner's framing for this whole submenu was
-     "some reaction at least", not a politics engine. Persona weighting, bargaining
+     defend is worse than abstaining -- the project owner framed this whole submenu as at least
+     some reaction, not a politics engine. Persona weighting, bargaining
      and vote-trading are the obvious next dimension, deliberately not v1. */
   _castTitleVotes(m){
     if(this._castThisRef || this._callingReferendum || this.out) return;
@@ -13061,7 +13061,7 @@ class Bot {
           }
           if(_fmM && _fmT){
             /* N3: Fame -- the frozen line names owner+vampire so EVERY observer can track it. v0.6.237 (the project owner's playtest, 24 Nov:
-               'Fame is not played on an opponent's vampire but laid in the Nosferatu's own area'): the card goes ON the famed
+               the bot laid Fame in its Nosferatu's own area instead of playing it on an opponent's vampire): the card goes ON the famed
                vampire, a `give` with `attachTo` to its seat -- the path a human's Fame takes onto another seat's vampire (the
                client's qrGiveToTarget); since N3 it was tabled on MY board (the M2 placement). The receiver links it to its host
                (_onGiven). Haven Uncovered, Priority Contract and Pentex keep the tabling: their readers look for the card on the

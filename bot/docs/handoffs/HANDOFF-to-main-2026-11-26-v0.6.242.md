@@ -3,7 +3,8 @@
 The release the public-repository handoff (`HANDOFF-to-main-2026-11-26-public-repository.md`) announced: the bot's bundle names
 nobody and quotes nobody now (bot RULINGS D-141, D-142). Built on main `407d4a0` (client v2.6.188 / srv-2.6.53 at the root; the
 read-only copies in `bot/` stay at v2.6.179). No wire change, no new line, nothing in play changed: the 240-match sim is the same
-as v0.6.241's, row for row, once the version and the three explanations below are put back.
+as v0.6.241's, row for row, once the version is put back and the attribution inside the three explanations below is replaced
+by one token on both sides.
 
 ## 1. The bundle
 - `elysium-bot.js` (v0.6.242): its comments name the owner by role and say in our own words what the owner's words said; example

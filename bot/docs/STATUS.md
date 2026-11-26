@@ -13,8 +13,8 @@ on main after #114).
 ## Last gates (v0.6.242's release bytes, `154debea`, cardfx `52477ed1`; the suite file `0e306ac2`)
 26 Nov, on bb857db: `tools/gates.sh --sim` PASS 15/15 (canary 235/0 ×2 · cardfx 503/0 · hotseat 12/0 · HB1 11/0 · lint clean ·
 precon 18 · doc-budget · public-scan 0 hits, the tree 0) · CI's suite 2841/0 ×3 · main's client suite beside these bytes 430/1
-(the guide's embed) · the 240 against v0.6.241 SAME-PLAY 240, IDENTICAL 240 with the version and the decide rows' changed
-attribution put back on both sides (only the results' wall and cpu times differ), `ana-gates.py` PASS 6/6.
+(the guide's embed) · the 240 against v0.6.241 SAME-PLAY 240, IDENTICAL 240 with the version put back and the decide rows' changed
+attribution replaced by one token on both sides (only the results' wall and cpu times differ), `ana-gates.py` PASS 6/6.
 
 ## Next (the owner's order of 26 Nov; D-142)
 1. **C1** (spec-card-sweep §11.8, D-132): #112 rebased on main, its release then v0.6.243; the readers on the flagged rows, the

@@ -403,19 +403,21 @@
 
 ## Bot
 - **v0.6.242 (26 Nov 2026; PR #114)** — The bundle's cleanup release (BOARD's first Product line; RULINGS D-141, D-142 (4),
-  D-143): the bundle names nobody and quotes nobody. `elysium-bot.js`: its 311 mentions of the owner by role, "the project owner"
-  (in this file "the owner" is a card's owner); 66 quotes or renderings of the owner's words in our own words with no quote marks:
+  D-143): the bundle names nobody and quotes nobody. `elysium-bot.js`: of its 311 mentions of the owner, 304 by role, "the project
+  owner" (in this file "the owner" is a card's owner), six in example table lines by invented names (Hanna, Lisa) and one in the
+  sewer deck's name; 70 quotes or renderings of the owner's words in our own words with no quote marks:
   the six Swedish quotes the scan found, three short Swedish ones it cannot see (one listed word and no å/ä/ö, or the other way
   round), the go-ahead word in quote marks and the English renderings (the handoff's Check first 4); rulebook, card and guide
-  text, the bot's own lines and the client's words keep their marks; the example table lines in comments name invented players
-  (Hanna, Lisa). The code
+  text, the bot's own lines and the client's words keep their marks. The code
   changed in four strings only, each checked against the old file with comments removed (TypeScript's printer): the sewer deck's
   name and the attribution inside three decide-row explanations (the bounce on a total; the master pick with no known income
   asset, curated and uncurated), which show only in a debug table's ⚙ lines and in traces. The curated cardfx notes (43
   mentions; one rendering repeated over 25 hunting-ground entries; the go-ahead word) likewise, recompiled: the library is
   v0.6.241's apart from the notes and the stamp (221 curated, 1,696 modelled). The guide's archetype example names an invented
   player. The sewer deck takes the client's menu label as its name, Inside Dirt (Nosferatu), in `deck-sewer.json` and its
-  embedded copy (D-143; `gen-precon.js --check` equal), the name the bot sends to the server. `tools/public-scan.py` v1.1.1:
+  embedded copy (D-143; `gen-precon.js --check` finds their cards equal, the names compared by hand), the name the bot sends to
+  the server. Riding (D-92): the master rule's wording in quote marks in two of the suite's test names and two specs, now without
+  marks (no assertion changed). `tools/public-scan.py` v1.1.1:
   `WAITING` is empty and `--tree` finds 0 hits. A handoff to main (`handoffs/HANDOFF-to-main-2026-11-26-v0.6.242.md`: re-embed
   the guide; the deck's new name). The owner's words behind D-143: the data repo's RULINGS-WORDS.md (its #5). No prediction:
   nothing in play changed, and the owner chose no match in the human seat (D-143).
