@@ -7,12 +7,12 @@
   question card: "Kör, W1 först", "Ja, CI ×3", "Ja, sista passet", each the recommended option). The chat leads and agents take the
   big reads and the reviews; the mechanical steps are scripts; CI carries the suite ×3. Scripts (`tools/`): `setup.sh` (KRCG's v5
   dump built into `vtes.json`, kept for a day; zero-vtes cloned outside the repository at the pin `f9f227f`, refused inside it;
-  `--twda`; the machine), `gates.sh` (the local gates the diff needs, one summary for the PR, exit 1 on a FAIL or a SKIPPED; `--sim`
-  the 240's footprint against the base's bundle in one copy of `bot/`, read again with the version put back when it changed;
-  `--smokes` the 14 V5 smokes; `--suite N` frozen local runs when CI cannot run), `release.sh` (`BOT_VERSION`, START-HERE-BOTS.html's
-  chip, footer version and date, the bundle copied to the root, main's `check-versions.js` in `client/`, the sha256; it refuses on
-  `main` and a version not above the current one) and `ci-status.sh` (CI's checks on a commit and each suite run's count and
-  sha256). Agents (`.claude/agents/`): `bot-card-reader` (Sonnet: a batch of cards against KRCG's text and the rulings, zero-vtes a
+  `--twda`; the machine), `gates.sh` (the fixed local gates, the hotseat gate and test-doc-budget when the diff touches them, one
+  summary for the PR, exit 1 on a FAIL or a SKIPPED; `--sim` the 240's footprint against the base's bundle in two frozen copies of
+  `bot/`, read again with the version put back when it changed; `--smokes` the 14 V5 smokes; `--suite N` frozen local runs when CI
+  cannot run), `release.sh` (`BOT_VERSION`, STATUS's version line, START-HERE-BOTS.html's chip, footer version and date, the bundle
+  copied to the root, main's `check-versions.js` in `client/`, the sha256; it refuses on `main` and a version below the current
+  one, the current one resumes) and `ci-status.sh` (CI's checks on a commit and each suite run's count and sha256). Agents (`.claude/agents/`): `bot-card-reader` (Sonnet: a batch of cards against KRCG's text and the rulings, zero-vtes a
   witness, verdicts as JSON lines to scratch) and `bot-egress-reviewer` (Opus; every pass after the first a new instance on Fable).
   CI: `bot-gates.yml` in four jobs, the decision, the checks, the suite ×3 in parallel (each run's count and the sha256 it ran as a
   notice) and `bot-gates`, the ruleset's required check, green only when every job is (a PR with no bot path: the checks and the
@@ -20,11 +20,13 @@
   review's Fable passes), CLAUDE.md (the bootstrap's setup, the gates, the round), the root CLAUDE.md's gate summary and data line,
   HOWTO (the data, the local gates and the suite, CI, the review sheet's clone), RULINGS D-139 (D-109's ×3 amended), STATUS, README.
   Budgets by D-101: HARNESS 10 KB, RULINGS 77.5 KB, the total 195 KB (cut first: the steps the scripts now carry).
-  *Gates:* `tools/gates.sh --sim` PASS 12/12 on v0.6.241's release bytes (the 240 IDENTICAL 240, `ana-gates.py` PASS 6/6); its
+  *Gates:* `tools/gates.sh --sim` PASS 13/13 on v0.6.241's release bytes (the 240 IDENTICAL 240, `ana-gates.py` PASS 6/6); CI's
+  suite 2841/0 ×3 on `d797e1fd`; its
   failures shown on planted faults in throwaway worktrees (a syntax error: check and lint FAIL; no `vtes.json`: cardfx and precon FAIL
-  with the setup line; a bumped `BOT_VERSION`: doc-budget FAIL and the hotseat gate run); `release.sh` in a throwaway worktree (an
-  equal version refused; 0.6.242: the chip, the footer and the date set, eight byte copies, check-versions agrees);
-  `tools/test-doc-budget.sh` every case red, the baseline green; CI on the PR: see the PR. *Egress:* see the PR.
+  with the setup line; a bumped `BOT_VERSION`: doc-budget FAIL and the hotseat gate run); `release.sh` in a throwaway worktree
+  (0.6.240 refused, 0.6.242 set the chip, the footer, the date and STATUS's line, eight byte copies, check-versions agrees; 0.6.242
+  again resumes); `tools/test-doc-budget.sh` every case red, the baseline green. *Egress:* pass 1 (Opus) 19 findings, pass 2
+  (Fable) 9, all fixed; pass 3 (Fable): the PR.
 - **The sweep register (20 Nov 2026, bot v0.6.236, no bot change; PR #96)** — Johan's words of 19:45–19:48 recorded; the asks of 19:22
   (the pilot's flow proposals, a D line on KRCG's MCP) are in STATUS, open. RULINGS R-47 closes O-49 (his 19:45 answer as Claude
   read it, with the rules directors' posts by their links: a retainer's discipline is a requirement to employ it, its effect in

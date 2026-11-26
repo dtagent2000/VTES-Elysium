@@ -8,11 +8,11 @@
 #   when hit   test-bot-hotseat.js (~1 min) when the bot, the hotseat tool or a read-only copy changed; test-doc-budget.sh when
 #              the doc check changed
 #   --sim      the footprint: the 240-match client design (the four starters, every seating x 10 deals) on the base's bundle and on
-#              this one, in one copy of this bot/ (HOWTO); ana-sim-diff.py, and ana-gates.py on the new run. When BOT_VERSION
+#              this one, in two frozen copies of this bot/ (HOWTO); ana-sim-diff.py, and ana-gates.py on the new run. When BOT_VERSION
 #              differs, the new traces are read again with the version put back (a clean-up round must be IDENTICAL).
 #   --smokes   the 14 V5 smokes (each other precon with the four starters, 12 random seatings from seed 1), ana-gates.py on each
 #   --suite N  N full suite runs, each in a frozen snapshot (6 GB heap, timeout 900): only when CI cannot run (D-139)
-#   --all      every conditional gate
+#   --all      both when-hit gates, whatever the diff (the flags stay flags)
 # Output: OUT/summary.md (the PR's table: a row per gate, the release bytes' sha256, the totals; rewritten after every gate, so a
 # poll sees progress) and OUT/<gate>.log. Exit 1 on a FAIL or a SKIPPED (a gate that skips did not run). OUT defaults to
 # /tmp/gates-<branch>-<time> and is never inside the repository. Run --sim, --smokes or --suite in the background and poll.
@@ -26,7 +26,7 @@ while [ $# -gt 0 ]; do
     --out) out="$2"; shift ;;
     --sim) sim=1 ;;
     --smokes) smokes=1 ;;
-    --suite) suite="$2"; shift ;;
+    --suite) suite="$2"; case "$suite" in ''|*[!0-9]*) echo "gates.sh: --suite takes a number" >&2; exit 2 ;; esac; shift ;;
     --all) all=1 ;;
     -h|--help) sed -n '2,19p' "$0"; exit 0 ;;
     *) echo "gates.sh: unknown argument $1" >&2; exit 2 ;;
@@ -137,7 +137,7 @@ hit '^bot/(elysium-bot\.js|elysium-bot-hotseat\.js|elysium-vtes-bord\.html|elysi
 gate doc-budget 0 g_docs
 hit '^bot/tools/(test-)?doc-budget\.sh$' && gate test-doc-budget 0 bash tools/test-doc-budget.sh
 [ "$sim" = 1 ] && gate sim-240 0 g_sim
-[ "$sim" = 0 ] && hit '^bot/(elysium-bot\.js|elysium-cardfx\.json|cardfx-curated\.json|cardfx-compile\.js)$' && { printf '| sim-240 | NOT RUN | the bot or cardfx changed: a behaviour change needs --sim | - |\n' >> "$ROWS"; summary; }
+[ "$sim" = 0 ] && printf '%s\n' "$changed" | grep -qE '^bot/(elysium-bot\.js|elysium-cardfx\.json|cardfx-curated\.json|cardfx-compile\.js)$' && { printf '| sim-240 | NOT RUN | the bot or cardfx changed: a behaviour change needs --sim | - |\n' >> "$ROWS"; summary; }
 [ "$smokes" = 1 ] && gate v5-smokes 0 g_smokes
 i=1; while [ "$i" -le "$suite" ]; do gate "suite-$i" 0 g_vtes g_suite "$i"; i=$((i + 1)); done   # 178a4 passes silently without vtes.json
 summary

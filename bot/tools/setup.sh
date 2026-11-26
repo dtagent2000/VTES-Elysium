@@ -22,7 +22,7 @@ while [ $# -gt 0 ]; do
     --twda) twda=1 ;;
     --zero) zdir="$2"; shift ;;
     --zero-ref) zref="$2"; shift ;;
-    -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
     *) echo "setup.sh: unknown argument $1" >&2; exit 2 ;;
   esac
   shift
