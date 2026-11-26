@@ -1,6 +1,6 @@
 # elysium-bot-table-model-spec.md — the per-opponent table model (B2's foundation)
 
-*Drafted 17 September 2026 after B2's null point (`serie-5p30/match-1-mu5fgte0.jsonl`: the sewer prey never blocked a stealth-0 weenie bleeder in 11 windows). Johan's framing: "a block can be dangerous depending on the opponent's clan and what they have revealed so far — Nosferatu combat, say." This spec turns that into one record per opponent, read by every decision that today guesses. Status: SHIPPED as v0.6.118 (17 Sep 2026) with Johan's three answers and the two forecast reads (§4) folded in; §8 closed.*
+*Drafted 17 September 2026 after B2's null point (`serie-5p30/match-1-mu5fgte0.jsonl`: the sewer prey never blocked a stealth-0 weenie bleeder in 11 windows). The owner's framing: a block can be dangerous depending on the opponent's clan and what it has revealed so far — Nosferatu combat, say. This spec turns that into one record per opponent, read by every decision that today guesses. Status: SHIPPED as v0.6.118 (17 Sep 2026) with the owner's three answers and the two forecast reads (§4) folded in; §8 closed.*
 
 ---
 
@@ -66,14 +66,14 @@ Everything above is either already parsed somewhere in the bot or sits in the pu
 - **`oppPosture(seat)`** — the opponent's version of `_posture()` (disabling / grinding / resisting), from `oppAxes`. **Reader:** the T3 weight already keys on posture; it should key on the ACTOR's, which is what the doctrine (§2.2) meant.
 - **`predatorIsBleeder()`** — `oppAxes(predSeat)` includes bleed/stealth-bleed OR `bleeds.n ≥ 2`. **Reader (new, B2 posture):** the minion loop leaves one unlocked body when true and the pool is below a persona threshold — the "keep a blocker" rule the null point lacked (Grinder locked both at pool 6).
 
-### 4b. The two statistical reads Johan asked for (17 Sep), and the prior slot
+### 4b. The two statistical reads the owner asked for (17 Sep), and the prior slot
 - **`oppForecast(seat)`** — pool damage the seat's READY minions can deal next turn (all ready ones: they unlock before their turn — the first b2s1 run counted only unlocked and read 99 on the bot's own turn): per minion `avgBleed × hitRate` from the L12 announce/verdict ledger; a minion with no history takes the seat average, then the prior (`1 + bleed-discipline coverage`). **`turnsToOust(seat)`** = `pool / (forecast × (1 + oustRange))`, `oustRange = max(0, 8 − pool) × 0.25` — the 6–8 window where a predator prioritises pool damage.
 - **`oppCombatCost(seat, blocker)`** — pool-equivalents lost if a block SUCCEEDS: `min(dmg, blood) + P(torpor) × 3`, `dmg` = prior (combat disciplines, weapons) blended with the damage that seat actually dealt me, `P(torpor) = clamp((dmg − blood + 1)/3)`.
-- **`_oppPrior(seat)`** — the slot: today disciplines + weapons + clan; later Johan's archetype baseline from TWDA (crypt profile + first masters + ash, including discards). Every read blends `prior × k/(k+n) + observed × n/(k+n)`, so a better prior needs no reader change.
+- **`_oppPrior(seat)`** — the slot: today disciplines + weapons + clan; later the owner's archetype baseline from TWDA (crypt profile + first masters + ash, including discards). Every read blends `prior × k/(k+n) + observed × n/(k+n)`, so a better prior needs no reader change.
 
 ## 5. The three B2 tactical changes written against the model (same release, v0.6.118)
 
-1. **Bare block — as EV (Johan, 17 Sep).** In `block-as-target`, when `icp <= 0` and `stealthA === 0` and an unlocked body exists: `gain = amount + 0.5` (the tempo), `cost = oppCombatCost(actor, body)`, block when `gain − cost ≥ margin` (novice 1.0 / grinder 0.5 / shark 0). Knob `bareBlock: off | chump | any` (novice / grinder / shark) gates the DISCRETIONARY case; `chump` is danger-aware — against a seat with `oppCombat < 0.3` any body qualifies, otherwise cap ≤ 2 with blood ≥ 1. **Desperation** (`turnsToOust ≤ 1`) overrides the knob and the margin for every persona.
+1. **Bare block — as EV (the owner, 17 Sep).** In `block-as-target`, when `icp <= 0` and `stealthA === 0` and an unlocked body exists: `gain = amount + 0.5` (the tempo), `cost = oppCombatCost(actor, body)`, block when `gain − cost ≥ margin` (novice 1.0 / grinder 0.5 / shark 0). Knob `bareBlock: off | chump | any` (novice / grinder / shark) gates the DISCRETIONARY case; `chump` is danger-aware — against a seat with `oppCombat < 0.3` any body qualifies, otherwise cap ≤ 2 with blood ≥ 1. **Desperation** (`turnsToOust ≤ 1`) overrides the knob and the margin for every persona.
 2. **Desperation before the return.** `urgency` (already computed: `0.6 + min(1.4, amount / pool)`) moves above the intercept return so a pool-4 prey with an unlocked body weighs the block even without intercept. Below `poolFloor`, `urgency` alone can carry a bare block.
 3. **Keep a blocker.** In the minion loop, when `predatorIsBleeder()` and `turnsToOust ≤` the persona limit (novice 2.5 / grinder 2 / shark 1.2): the LAST unlocked ready minion stays home — unless the prey is at lunge range (pool ≤ 4: the oust beats the wall) or the minion must hunt (0 blood).
 
@@ -85,13 +85,13 @@ All three read the model; none reads a card name or a deck name.
 - **Destructive:** 92a–d throw on v0.6.117 (new methods); 92e–g fail gracefully (fixtures use the existing `decide`).
 - **Arena (doctrine §6):** rerun the null-point recipe ×3 (same seats). Prediction: hacking's prey survives past round 6 in ≥2 of 3; the prey's T1 block rate rises from 0/11 to > 30 %; hacking's oust tempo (rounds to first oust) is the control — it should lengthen, not the VP sum shrink to zero. The price referee must read 0 mismatch on every match.
 
-## 7. Explicitly NOT in this spec (Johan's list, decided)
+## 7. Explicitly NOT in this spec (the owner's list, decided)
 
 - **TWDA matching** — later, and only as a prior for turns 1–2 (clan + disciplines → archetype probabilities) once the model exists to receive it. Not a matching engine.
 - **Cross-match memory** (a file per player) — no. Player meta (§2.7) is a separate, later question.
 - **Hand guessing** — `readP`/`_pCat` stay the only inference; the model records what was shown.
 
-## 8. Johan's answers (17 Sep) — closed
+## 8. The owner's answers (17 Sep) — closed
 1. Persona knob as proposed; it gates only the bare block, all personas keep the full intercept logic; desperation overrides.
 2. Equipment counts (164 auto-tier equipment entries carry strike/aggr/maneuver/stealth keys).
 3. Thresholds are statistics, not constants: the per-minion forecast and the combat-consequence EV above.
@@ -104,7 +104,7 @@ Sewer prey T1 block rate 3/14, 4/14, 1/10 (was 0/11); 10 of 14 windows still "no
 ## 10. Second measurement (serie-b2s2, v0.6.118b THE HOME QUOTA)
 A grinding deck keeps 1 body home by design (2 at ≥ 4 ready); acting order puts the worst blocker first so the body kept is the one worth keeping. Tremere: "no unlocked body" 27 → 13 of its T1 windows, block rate 21 → 28 %, 7 quota-keeps. Sewer/hacking/malkavian unchanged as intended (racing decks). Results 6/7/6 rounds; sewer or tremere still first out; hacking swept once, nosferatu twice. **The reading that matters:** bleed-through per series — hacking 57, nosferatu 80, versus sewer 21, tremere 18, malkavian 7. The three slower decks lose because they apply no pressure, not because they cannot block: B2's next step is offence (opening book, per-deck playbooks, the game-phase variable), and the forecast calibration rides along. Anomaly to check: 3 quota-keeps were logged for the sewer bot, whose axes should give no quota.
 
-## (old) 8. Open questions for Johan
+## (old) 8. Open questions for the owner
 
 1. `bareBlock` defaults per persona: novice off / grinder chump / shark any — or grinder any too?
 2. Should `oppCombat` count **equipment** on their ready vampires (weapons are public and cheap to read) in v1, or leave to v2?

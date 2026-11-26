@@ -11,7 +11,7 @@
 
 ---
 
-## 1. The goal ladder (Johan, 16 July 2026)
+## 1. The goal ladder (the owner, 16 July 2026)
 
 Card-by-card least-common-denominator tagging + qualitative database sweeps **until four working
 bots with distinct archetype decks exist**. THEN go deep: per-persona strategy and tactics, and
@@ -89,7 +89,7 @@ importantly: Cicero was **not pure self-play** — it anchored planning in human
 precisely because pure self-play in a negotiation game drifts into conventions humans can't
 cooperate with. Its architecture — strategy core + intent-conditioned dialogue — is the right
 *shape* for VTES table talk. And its lesson applies to our tuning too, at hobby scale: **keep
-Johan-in-the-loop live sessions as the human anchor**, or the bots will optimize for beating
+Owner-in-the-loop live sessions as the human anchor**, or the bots will optimize for beating
 each other in ways that feel alien at a real table.
 
 ### 3.5 The restricted-pool reframe (the one that changes the calculus)
@@ -122,9 +122,9 @@ per-run markdown scorecard, same culture as every other gate.
 insight; coming: deal-propensity, vote alignment, hunt thresholds, block budgets…). Fitness = a
 metric bundle over K seeded games; optimizer = hill-climb or a small evolutionary loop (keep
 the best vectors, mutate, repeat). This is **self-play light: policy improvement by selection,
-not gradients** — fully inspectable, journalable, zero-dep, runs overnight on Johan's machine.
-Distinct local optima ARE personalities: this is precisely the "beslutsunderlag för strategi och
-taktik per persona" the goal ladder asks for.
+not gradients** — fully inspectable, journalable, zero-dep, runs overnight on the owner's machine.
+Distinct local optima ARE personalities: this is precisely the decision basis for strategy and
+tactics per persona that the goal ladder asks for.
 
 **L3 — feature-conditioned tactics (optional).** Knobs grow into small decision tables /
 bandit-style selection between discrete tactics conditioned on table features (threat level,
@@ -172,19 +172,19 @@ Order of construction matters: **intent model first, words second.**
   3-bot/pool-12 baseline on sandbox hardware (≈73/h at 4 seats, ≈62/h at 5, ≈45/h at pool 30);
   ms/player-turn is the stable unit (~3.7–4.1 s across seats), and ask-window length measured FLAT
   (bot-vs-bot handshakes resolve on answer, not timeout). L2 arithmetic: a 20-candidate × 20-game
-  generation ≈ 400 games ≈ **4 h — "a night"**. Caveat: Johan's hardware will shift absolutes;
+  generation ≈ 400 games ≈ **4 h — "a night"**. Caveat: the owner's hardware will shift absolutes;
   magnitudes and knob sensitivities transfer. Full matrix in the training backlog's T1 entry.
 - **Fitness noise magnitude unknown.** Multiplayer + kingmaking may need hundreds of games per
   configuration for a stable signal even with duplicate seating. Measure, then design K.
 - **Bot-vs-bot overfitting.** Selection tunes personas to beat *each other*; without a human
-  anchor they may drift from human-meaningful play (§3.4's lesson). Mitigation: periodic Johan
+  anchor they may drift from human-meaningful play (§3.4's lesson). Mitigation: periodic the owner
   live sessions as calibration, and style-constraint terms in fitness if needed.
 - **Coverage tool's stated approximations** (play-context not simulated; 2p bounce deadness out
   of scope; income requires `phase`) — documented in the tool header and every report.
 - **Seeding is unsolved** (L1's open design point). Until it exists, arena results are
   directional, not reproducible.
 
-## 8. Open questions for Johan
+## 8. Open questions for the owner
 
 1. **Which four archetypes?** This decides every curation queue. (Classic spread to react to:
    stealth-bleed / vote-pressure / wall-intercept / combat-rush — but your table, your call.)
@@ -195,9 +195,9 @@ Order of construction matters: **intent model first, words second.**
    default playbook, or keep them deliberately as the modifier-window's (step 2) test cards?
 6. **Table-talk voice:** in-character flavour per persona, or plain strategic prose?
 
-## 9. Deck-read / insight v2 — opponent modelling on TWDA priors (Johan, 16 July)
+## 9. Deck-read / insight v2 — opponent modelling on TWDA priors (the owner, 16 July)
 
-**The idea (Johan's):** connect the bot to the tournament/community deck archives so that what
+**The idea (the owner's):** connect the bot to the tournament/community deck archives so that what
 opponents REVEAL (influenced vampires, played cards, public ash heaps) updates a posterior over which
 archetype they are on — and from that, expected remaining copies of the cards that matter: "this deck
 class runs ~7 Deflection; 5 are visibly spent; odds a 6th sits in hand right now ≈ 25%" (worked
@@ -256,7 +256,7 @@ Promoted to **T9a/T9b** in `elysium-bot-training-backlog.md`.
 - **16 July 2026 (later the same day)** — the T-items moved to the track's OWN backlog
   (`elysium-bot-training-backlog.md`, T1–T9 with a recommended priority order: T6→T1→T9a now, the
   T2→T3→T4→T9b chain at the 4-archetype milestone, T7/T8 opportunistic); §9 deck-read / insight v2
-  added on Johan's TWDA-priors proposal (T9a verification spike queued before any build); the main
+  added on the owner's TWDA-priors proposal (T9a verification spike queued before any build); the main
   backlog now only points here. Split-out rationale: parallel-session patch separation.
 - **16 July 2026 (evening)** — T9a verification spike executed: **verdict GO**. Archive source
   (KRCG twda.json, MIT, ~4,500 decks), visibility (VEKN tournament rules: library count is Public
@@ -273,13 +273,13 @@ Promoted to **T9a/T9b** in `elysium-bot-training-backlog.md`.
 - **24 July 2026** — The evaluation round (bot v0.6.42): full-project review with live gate
   re-verification (cardfx 186/0 incl. disk-matches-fresh-compile, bot-logic 401/0 ×3, coverage
   reproduced exactly; library scope: 2,364 entries / 1,518 fx-tagged / 54 curated / 3 handlers out
-  of 4,149 cards). The three-step roadmap agreed with Johan (five decks 100% → arena/data era →
-  politics) recorded in the training backlog as the superseding priority block; **T6 gained Johan's
+  of 4,149 cards). The three-step roadmap agreed with the owner (five decks 100% → arena/data era →
+  politics) recorded in the training backlog as the superseding priority block; **T6 gained the owner's
   context-schema requirement** (hand + board digest + resources + considered-AND-gate-excluded
   options per reason object — the decide traces ARE step 2's training data). **T1 executed** —
   arena v1.1.4 (per-match timing, games/hour summary, --bots 2–5, persona↔deck conflation warning):
   ≈105 games/h baseline, §7's first risk resolved. Evaluation finds queued: hunting-ground
-  per-VAMPIRE ledger (Johan-confirmed rule; today's global flag is conservative-only), spec §1
+  per-VAMPIRE ledger (owner-confirmed rule; today's global flag is conservative-only), spec §1
   staleness at v0.6.10, the grinder deck file absent from the project.
 - **13 November 2026** — two new plan reads (bot v0.6.224, RULINGS D-114, `spec-jack-burn-2026-11-13.md`; written by `_planJack`
   at each strategize — my unlock and the minion head — only with the knob `jackBurn`): `plan.reads.jack`, another seat's Smiling

@@ -1,8 +1,8 @@
 # spec-sweep-pilot — step B, the Banu Haqim pilot (20 Nov 2026, on bot v0.6.235)
 
-**Status:** Johan's kör on the pilot: D-125 and D-127 (B before C, the merge built first), D-132 (20 Nov 09:47: the pilot stays
-first, "som ett prov av svepets arbetsflöde före skörden"), and the round's instruction (20 Nov 09:55): "Kör B:s andra del,
-Banu Haqim-piloten (STATUS Next 1). Använd agenter enligt D-131." This page is the round's record: the review sheet's split, who
+**Status:** the owner's go-ahead on the pilot: D-125 and D-127 (B before C, the merge built first), D-132 (20 Nov 09:47: the pilot stays
+first, as a test of the sweep's flow before the harvest), and the round's instruction (20 Nov 09:55): run B's second part, the
+Banu Haqim pilot (STATUS Next 1), with agents as D-131 allows. This page is the round's record: the review sheet's split, who
 else prints each effect, Claude's design under that kör (marked (C)), the predictions registered before the build, and the
 flow's friction. Parent: `specs/spec-card-sweep-2026-11-18.md` §3, §4 (row B), §4.4, §11. Measured on `bot-docs-room` (`79b71b6`,
 bot v0.6.235), KRCG's v5 dump of 20 Nov and a zero-vtes checkout at `0ed0d19` (20 Nov; 1,996 definitions).
@@ -173,7 +173,7 @@ knob; the new plays are live, as the V5 waves' were (D-122 – D-124).
   keeps Adaptive's maneuver step. Eldritch Glimmer [THA] reads its printed floor, 4R (compiler v1.11.4). `maneuverTo` narrows a
   compiled maneuver; it is no whole-mode reading (D-134 names the rush and the hand strike).
 - "Requires an Anarch" is asked by every finder (`_modeUsableBy`, `_entryReqOk`, `_masterReqOk`), not only the rush's.
-- The experiment's [tha] employs only a retainer whose text the vampire can use (O-49 for Johan); the plain employ asks a
+- The experiment's [tha] employs only a retainer whose text the vampire can use (O-49 for the owner); the plain employ asks a
   retainer's requirement (R-46, a rules correction in its own commit); contracts are never placed on Iliana (G2).
 - Priority Contract is held when its chosen vampire would stay home or hunt this turn (`_aheadNoAct`), and burned for its pool
   only when the host itself goes down, not when it changes controller.

@@ -1,6 +1,6 @@
 # Cardfx sweep — source mapping (KRCG, vtes-rulings, vtes-skill) (copied into git 20 Oct 2026)
 
-**Origin:** the Claude Doc of the same name (Johan's, 25 Sep 2026, https://claude.ai/artifact/AGzYhap2bMyc4vwhRFzUUj), copied
+**Origin:** the Claude Doc of the same name (the owner's, 25 Sep 2026, https://claude.ai/artifact/AGzYhap2bMyc4vwhRFzUUj), copied
 verbatim below (spec-cleanup-2026-10-20.md §5.4).
 
 **Status on 20 Oct 2026:** the sweep ran on 25–26 Sep: the pilot and the full library (`reports/REPORT-cardfx-sweep-pilot.md`,
@@ -13,9 +13,9 @@ or the private data repo (root CLAUDE.md), and vtes-rulings / vtes-skill are not
 
 # Cardfx sweep — source mapping (KRCG, vtes-rulings, vtes-skill)
 
-2026-09-25 · @Johan Adamsson
+2026-09-25 · the owner
 
-Card text comes from KRCG, the ruling on a card from vtes-rulings, the general rule from the rulebook in vtes-skill; the sweep compares our cardfx against all three and brings every disagreement to Johan.
+Card text comes from KRCG, the ruling on a card from vtes-rulings, the general rule from the rulebook in vtes-skill; the sweep compares our cardfx against all three and brings every disagreement to the owner.
 
 Our cardfx today holds 2,365 library cards: 1,670 with modes, 780 of them keyed by discipline level (`tha` / `THA`), 395 with an action stealth and 110 with a strike. The sweep checks those fields, starting with the cards in our four starter decks.
 
@@ -55,7 +55,7 @@ The three sources join on the VEKN card id; our cardfx joins by card name, so th
 
 ## The sweep process
 
-The sweep writes a diff report, never silent edits: every card where cardfx, the text and the rulings disagree gets a row, and Johan rules on the ones a rule cannot settle.
+The sweep writes a diff report, never silent edits: every card where cardfx, the text and the rulings disagree gets a row, and the owner rules on the ones a rule cannot settle.
 
 1. **Pilot:** every card in the four starter decks plus the Hacking / Wall / Sewer lists — the cards the bots actually play, so a wrong field shows up in series.
 2. **Then by type, most bot-relevant first:** combat cards, action modifiers (stealth, bleed), reactions (intercept, bounce), actions, political actions, equipment, allies and retainers.
@@ -73,7 +73,7 @@ The sweep writes a diff report, never silent edits: every card where cardfx, the
 
 ## Knowledge-layer questions → vtes-skill strategy
 
-The strategy references answer the questions Johan deferred to the knowledge layer; they are read now so the event log records what they need, and used after the sweep.
+The strategy references answer the questions the owner deferred to the knowledge layer; they are read now so the event log records what they need, and used after the sweep.
 
 | Deferred question | Strategy reference | What we take |
 | --- | --- | --- |

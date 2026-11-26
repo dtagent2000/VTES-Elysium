@@ -11,8 +11,8 @@
 # ones): the sim footprint, the arena smoke and the series audits, the destructive check of a new section, and main's client suite
 # beside the bundle when the wire changes (its embedded-guide check is red by design until main re-embeds a new guide). A gate that
 # cannot find its inputs SKIPS with exit 0 by design (the canary's rule), so the steps below fail on a skip line. Added in round C4
-# (6 Nov 2026, Johan's yes to the clean-up spec's Q5; his "best practice" for the triggers and the required check); the suite's
-# three jobs and the aggregate check in W1.
+# (6 Nov 2026, the owner's yes to the clean-up spec's Q5, with best practice for the triggers and the required check); the suite's
+# three jobs and the aggregate check in W1; the name and quote scan in the cleanup round (D-142).
 name: bot gates
 
 on:
@@ -111,6 +111,9 @@ jobs:
               if (v.count > b){ console.log("::error file=bot/tools/eslint-suppressions.json::" + f + " " + r + ": " + b + " -> " + v.count + " suppressed; the file only shrinks"); bad = 1; }
             }
             process.exit(bad);' "$RUNNER_TEMP/base-suppressions.json"
+      - name: The public repository's name and quote scan on the lines this pull request adds (RULINGS D-141, D-142)
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        run: python3 tools/public-scan.py --diff HEAD^1..HEAD
       - name: "The root's bundle is bot/'s (deploy = copy: a bundle change ships as a release)"
         if: ${{ !cancelled() }}
         run: |

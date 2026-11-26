@@ -1,6 +1,6 @@
 # REPORT — serie-cmb1: combat read per deck (22 Sep 2026)
 
-**Design:** balanced (serie-bal1 design.txt, 6 cyclic orders × 2), `--fixed-seats`, start pool 30, all expert, seeds 9981–9992, bot **v0.6.155**, arena v1.4.2, server srv-2.6.38 (uploaded 22 Sep). 12/12 matches last-standing, 0 timeouts. Descriptive — no version delta, no predictions; the question is "do the yardstick decks (Nosferatu, Tremere) fight the way Johan pictures them?" Tool: `ana-combat.py serie-cmb1` (new).
+**Design:** balanced (serie-bal1 design.txt, 6 cyclic orders × 2), `--fixed-seats`, start pool 30, all expert, seeds 9981–9992, bot **v0.6.155**, arena v1.4.2, server srv-2.6.38 (uploaded 22 Sep). 12/12 matches last-standing, 0 timeouts. Descriptive — no version delta, no predictions; the question is whether the yardstick decks (Nosferatu, Tremere) fight the way the owner pictures them. Tool: `ana-combat.py serie-cmb1` (new).
 
 Results (for context only, 12 matches is inside the noise yardstick): malkavian 6 wins / 22 VP, ventrue 2 / 9, tremere 2 / 12, nosferatu 2 / 5.
 
@@ -11,19 +11,19 @@ The trace records MY side of every round: `decide combat-strike` per round (vamp
 
 ### Nosferatu — "a dangerous combat deck once it gets into a fight"
 71 combats, 90 rounds. 55 combats (77 %) end after one round; 14 reach round 2 (all from an opponent's press or an Underbridge Stray), 2 go longer.
-- **Immortal Grapple ×17: 9 with Roundhouse, 8 with bare hands.** Confirms Johan's picture: the decision (`_resolveCombatRound`, "play unless it would cost me a non-hand strike/dodge") never asks what the hand holds or what the opponent plays. Half the Grapples are wasted on 1-damage fists.
+- **Immortal Grapple ×17: 9 with Roundhouse, 8 with bare hands.** Confirms the owner's picture: the decision (`_resolveCombatRound`, "play unless it would cost me a non-hand strike/dodge") never asks what the hand holds or what the opponent plays. Half the Grapples are wasted on 1-damage fists.
 - **Superior Grapple's optional press is never consumed** (documented since July, `_bestPressFor` excludes the bundled shape). This is the deck's ONLY press engine — Roundhouse superior 3 + Grapple press + Roundhouse 3 = 6 in two rounds torpors nearly any starter vampire. Without it the deck is structurally one-round, and the one-round fight is exactly what Majesty and Theft of Vitae are built to survive. **Biggest single fix for Nosferatu.**
-- **Taste of Vitae ×12: 8 after bare hands**, 4 after a Roundhouse/Crows round. Johan's 21 Sep note holds unchanged (purpose = blood economy → pair with a big damage round).
+- **Taste of Vitae ×12: 8 after bare hands**, 4 after a Roundhouse/Crows round. The owner's 21 Sep note holds unchanged (purpose = blood economy → pair with a big damage round).
 - **Roundhouse ×25 in 90 rounds** (28 %); hand-limited (8 copies), plausible.
 - **Carrion Crows ×9** (2 copies) — plays the first round it can, fine.
-- **Rush: 2 landed in 12 matches** (6 Deep Song in the deck, played as bleed instead); 60 of 71 combats come from Nosferatu BLOCKING. The deck fights defensively. Johan's noted Fame → rush → torpor chain (21 Sep) still never runs.
+- **Rush: 2 landed in 12 matches** (6 Deep Song in the deck, played as bleed instead); 60 of 71 combats come from Nosferatu BLOCKING. The deck fights defensively. The owner's noted Fame → rush → torpor chain (21 Sep) still never runs.
 - Torpors caused: Nosferatu combat put an opponent in torpor ~2 times in 12 matches (torpor rows within 4 s of a Roundhouse/Grapple). Own torpors: 1.
 - Never dodges, never maneuvers (no such cards; Guard Dogs/Instinctive Reaction superior grant a maneuver on the block — never fired here). Correct for the list.
 
 ### Tremere — "a bleed/combat hybrid that nips at both pool and blood"
 118 combats, 133 rounds — the table's most frequent fighter, mostly as a BLOCKER (93 blocks vs 40 blocked actions).
 - **Theft of Vitae ×49 in 133 rounds** (37 %); 84 rounds with bare hands for 1. Hand-limited (10 copies).
-- **ZERO maneuvers in 133 rounds.** Apportation ×14, all as PRESS ([tha]); the [THA] maneuver is never chosen because `_bestManeuverFor`'s `wantLong` needs a `req.rangeLong` strike in hand and Theft is "ranged" (usable at both ranges) — so the "vinka"/long-range posture Johan describes for Tremere does not exist in the bot. Going long with a ranged steal against a hand-striker is unanswerable damage; the bot never does it.
+- **ZERO maneuvers in 133 rounds.** Apportation ×14, all as PRESS ([tha]); the [THA] maneuver is never chosen because `_bestManeuverFor`'s `wantLong` needs a `req.rangeLong` strike in hand and Theft is "ranged" (usable at both ranges) — so the "vinka"/long-range posture the owner describes for Tremere does not exist in the bot. Going long with a ranged steal against a hand-striker is unanswerable damage; the bot never does it.
 - **Press quality: 14 Apportation presses → next round Theft ×8, bare hands ×6.** The `blood > 1` threshold presses into a second round it has nothing to win in 43 % of cases.
 - Own torpors 2 (one after a Roundhouse, one after a Grapple round — Nosferatu's fists do land when the fight lasts).
 
@@ -42,7 +42,7 @@ The trace records MY side of every round: `decide combat-strike` per round (vamp
 2. **Superior Grapple's press consumed**: when Grapple POT was played this round, the press step may continue at close range (skip determine range next round, already built) — press when next round's expected damage (Roundhouse in hand) ≥ the opponent's expected return. Same "do I want to" term as 3.
 3. **Press worth** (Tremere, Nosferatu): replace `blood > 1` with expected-value: press only when I hold a strike/steal card for the next round (or Roundhouse-class damage) AND my blood survives the opponent's shown average return; never press a Majesty/Theft deck into a round I'd fight with fists.
 4. **`_bestPressFor` excludes prevent-bundled modes** (Hidden Strength [FOR]) — bug.
-5. **Taste of Vitae** only after a round where my strike was a card (Roundhouse/Crows active), i.e. expected opponent blood loss ≥ 2; Johan's rule.
+5. **Taste of Vitae** only after a round where my strike was a card (Roundhouse/Crows active), i.e. expected opponent blood loss ≥ 2; the owner's rule.
 6. **Range posture per deck** in `_bestManeuverFor`: `chase` (Nosferatu: never leave close, follow a long-maneuver back when a maneuver is available), `snipe` (Tremere: go long when I hold a ranged strike/steal and the opponent has shown no ranged strike), `wave` (Malkavian/Ventrue: go long defensively when I hold no strike and the opponent's fists hurt). Reads the deck's `posture` the strategy layer already carries; today's `wantLong` becomes the `snipe` term.
 7. **R0** — the `combat-round` trace row, so the next series can measure dealt/taken/range instead of inferring it.
 Not in this release: dodge-vs-strike weighting (no dodge cards in the four lists), cancelling an incoming press, the before-range window for the other 82 cards, First Strike, strength weapons.

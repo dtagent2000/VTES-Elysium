@@ -1,9 +1,9 @@
 # spec-card-sweep — finishing the V5 sweep by sharing (18 Nov 2026, on bot v0.6.234)
 
-**Status:** kör — Johan, 18 Nov ("Vi kör, med dina rekommendationer för besluten"), on the proposal this page records: the method of
-§2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question he asked with his "kör"; he took
+**Status:** the go-ahead — the owner, 18 Nov, with Claude's recommendations for the decisions, on the proposal this page records:
+the method of §2, the flow, the order and §7's four decisions (RULINGS D-125). §4.2 answers a question asked with the go-ahead, taken
 its answer on 19 Nov (RULINGS D-126). On 19 Nov he answered the question about zero-vtes's maintainer (§5). The page's own round changed no
-code. Measured on main `6baf99b`. On 20 Nov Johan ruled the focus, exactness first, and a new order after B: the library by
+code. Measured on main `6baf99b`. On 20 Nov the owner ruled the focus, exactness first, and a new order after B: the library by
 effect, then the starters' remainder (§11, RULINGS D-130). Later that morning he kept the pilot first and took the
 concentrated sweep and review until clean (§11.8, RULINGS D-132, D-133); his intention for after the alignment is §11.9.
 Step B, the pilot (Banu Haqim), is built: bot v0.6.236, RULINGS D-134, `specs/spec-sweep-pilot-2026-11-20.md` (its design, its
@@ -44,7 +44,7 @@ dry run and the seven decks' readings (§4.3, observed), the merge's design (§4
   section (the dump's history), which pay for the zero-vtes line and the finished decks' BOARD line; the standing pages' by D-101
   (HARNESS 8.5 KB, HOWTO 23 KB, the total 179 KB; `tools/doc-budget.sh`): 1.4 KB under the total and 0.95 KB under RULINGS.
 
-**The finished decks' round** (19 Nov, bot v0.6.235; RULINGS D-127, Johan's "kör" on the four recommendations of A2) built
+**The finished decks' round** (19 Nov, bot v0.6.235; RULINGS D-127, the owner's go-ahead on the four recommendations of A2) built
 §4.3's seven live reds and the 19 Nov egress review's two faults: cardfx v1.9.12 tags the condition sentences (onlyBleed 43
 cards, notBleed 3, onlyPredatorActs 1, oncePerUnlock 2, pressDir 31, noReplace 42), the bot reads each where it plays the card,
 my own rescue and leaving torpor are undirected, and a typed 'no' answers by the quick phrase's rule. In v0.6.235's 240 each red
@@ -87,12 +87,12 @@ hand entries: `cardfx-curated.json` overlays whole entries (`cardfx-compile.js`,
 the library nothing, even when most of it is shared. The bot has the consumers; the library does not have the data. Of the 161
 library cards curated by hand, the entry adds a key the compiler missed on 138 and drops a key the compiler set on 51.
 
-## 2. The method (Johan, 18 Nov)
-His three steps, for each card: "1) vilka enkla minsta gemensamma finns som samtidigt återfinns på fler kort i biblioteket. 2)
-vilka mer avancerade korteffekter finns men som ändå delas mellan fler kort i biblioteket. 3) kvarvarande effekter blir då
-handkurerade." And their reach: "Vi GRANSKAR alla kort i V5-bibliotelet för punkt 1-2 (en starterlek i taget, ett kort i taget)
-utifrån detta men vi sveper igenom HELA biblioteket för steg 1 och 2 så att om vi vill fortsätta handkurera bortom V5 så kan vi
-börja med steg 3 direkt".
+## 2. The method (the owner, 18 Nov)
+The owner's three steps, for each card: (1) the simple least common denominators that are also found on more cards in the
+library; (2) the more advanced card effects that are still shared by several cards in the library; (3) the effects left over,
+which are then curated by hand. And their reach: every card of the V5 library is REVIEWED for steps 1 and 2 (one starter at a
+time, one card at a time), but the WHOLE library is swept for steps 1 and 2, so that curating by hand beyond V5 can later start
+at step 3 directly.
 
 This page calls his three steps T1, T2 and T3, because §3 has steps of its own and §4 has steps A to E. For every printed effect:
 - **T1, a common denominator.** A key the compiler already extracts. We check that it fires on this card.
@@ -104,14 +104,14 @@ The rule: **no hand key before "who else prints this?" has an answer on file.**
 
 After the cards (his words, in short): the remaining cards of each starter are hand-curated together with the official guide's
 strategy lines, so the deck is judged fairly in play. When all starters are done the strategies are evaluated, by archetype and
-then by deck (step E, outside this page). A starter is published when Johan is satisfied with its tests.
+then by deck (step E, outside this page). A starter is published when the owner is satisfied with its tests.
 
 ## 3. One starter, one round
 *Since 20 Nov (§11, D-130) this flow is step D's, the starters' remainder; step C goes by family.*
 Two rounds when the starter needs a new mechanism.
 1. **The review sheet**, generated and never committed. Per card: KRCG's text, our compiled entry with each key's origin (compiler
    or hand), zero-vtes's definition with "printed by N cards" for each effect, their windows, the rulings count, every disagreement.
-2. **Split** each effect into T1, T2 or T3. Claude proposes; doubts and reds go to Johan as today.
+2. **Split** each effect into T1, T2 or T3. Claude proposes; doubts and reds go to the owner as today.
 3. **Build** T1 and T2 for the whole library, T3 for the card.
 4. **Grade** as HARNESS says (green, amber, red against KRCG's text and vtes-rulings, by a fresh read-only agent). A T2 card list
    is graded per effect the same way: each listed card against KRCG's text. zero-vtes is a third witness.
@@ -124,8 +124,8 @@ and its guide check is listed. The crypt keeps D-108's waves by class; the start
 ## 4. The order
 | step | what | done when |
 |---|---|---|
-| **A. Set up** (one round, no behaviour change) | §4.1: the tools, the dry run, the docs, the merge's design. The seven finished decks' review sheets too (§4.2, D-126). | The tools run in the round's gates; the dry run's counts stand in the PR and in §4.3; Johan has the merge's design. |
-| **B. The pilot: Banu Haqim** (one round) | The new flow end to end, the merge of hand entries built first (§4.1, §4.4; Johan's "kör" 19 Nov, D-127). Its 4 remaining cards are shared-only by §1's measure, most of them the maneuver and press grants with the rush cards; Hunting the Quarry and Night Terrors' strike (wave 6's riders) ride with them. Priority Contract (4 copies) is one of the six misreads below and is read again here. | 77 of 77 copies playable, no disagreement open on its sheet, the library table moved, the flow's friction written down. |
+| **A. Set up** (one round, no behaviour change) | §4.1: the tools, the dry run, the docs, the merge's design. The seven finished decks' review sheets too (§4.2, D-126). | The tools run in the round's gates; the dry run's counts stand in the PR and in §4.3; the owner has the merge's design. |
+| **B. The pilot: Banu Haqim** (one round) | The new flow end to end, the merge of hand entries built first (§4.1, §4.4; the owner's go-ahead of 19 Nov, D-127). Its 4 remaining cards are shared-only by §1's measure, most of them the maneuver and press grants with the rush cards; Hunting the Quarry and Night Terrors' strike (wave 6's riders) ride with them. Priority Contract (4 copies) is one of the six misreads below and is read again here. | 77 of 77 copies playable, no disagreement open on its sheet, the library table moved, the flow's friction written down. |
 | **C. The harvest** (one or two rounds) | The 145 hand-only keys asked "who else prints this?"; the seven finished decks first (§4.2, D-126). The compiler's known misses (`bloodAdd` and `bloodAddTo` on 59 card-keys). The cross-check of what is already playable against zero-vtes, with the five other misreads. | No row of the sharing register is `backlog`; the number of library cards turned playable is reported. |
 | **D. The other twelve starters** | Nearest first, re-ranked from the ledger after every starter: each round's shared effects close cards in other starters too. Appendix A has where they stand. | Each starter done as §3. |
 | **E. The strategy evaluation** | After the sweep, outside this page. | — |
@@ -157,7 +157,7 @@ Built in A:
   windows) and `data/rulings-v5.csv` (the rulings ledger). Its output is scratch, like a series. No gate and no CI step needs the
   checkout.
 - **The dry run.** A sample of the harvest done in scratch, so that C's size is known before B: 20 of §1's 46 cards, the 20 in
-  the finished decks if Johan confirms §4.2, otherwise the first 20 in the ledger's order of the 26 that are in no finished deck.
+  the finished decks if the owner confirms §4.2, otherwise the first 20 in the ledger's order of the 26 that are in no finished deck.
   For each card Claude first names which effect type(s) of its zero-vtes definition its single-card keys model, and reports that
   choice; a key that only qualifies another (Revelations' `dir`, `persistent`) is noted and not counted. The candidates are the
   library cards whose definitions share a named effect type; Claude reads KRCG's text of each and keeps those that print the
@@ -170,7 +170,7 @@ Built in A:
   With that cut A lowers the total's ceiling again or makes `tools/test-doc-budget.sh`'s total case pad to the ceiling: the case
   trips only while `bot/CLAUDE.md`, STATUS and BOARD together stay above 42,750 bytes (44,733 today).
 
-Designed in A; Johan's "kör" on 19 Nov (RULINGS D-127); built at the start of B (the pilot writes the first remainder with it):
+Designed in A; the owner's go-ahead on 19 Nov (RULINGS D-127); built at the start of B (the pilot writes the first remainder with it):
 - **Merging hand entries.** `cardfx-compile.js` lets a curated entry add to the compiled entry instead of replacing it, opt-in per
   entry, so that a hand entry can carry the remainder only. An entry that does not opt in compiles byte for byte as today, and A
   opts none in: the committed `elysium-cardfx.json` does not change. The design answers how a hand mode meets a compiled mode; how
@@ -178,7 +178,7 @@ Designed in A; Johan's "kör" on 19 Nov (RULINGS D-127); built at the start of B
   set; which `src` it carries, since the ledger's tier and the hand-only count read it; and whether the cost rule's inheritance
   applies (CLAUDE.md). The design is §4.4.
 
-### 4.2 The finished decks (Johan, 18 Nov: should T1 and T2 be checked again for the cards already done?)
+### 4.2 The finished decks (the owner, 18 Nov: should T1 and T2 be checked again for the cards already done?)
 The five finished starters with `hacking` and `sewer` hold 104 library cards:
 - **63 hand entries.** They are in the harvest whatever the answer: D-125 asks every hand-only key. 55 of the 124 single-card
   keys sit on them, and zero-vtes builds 20 of those cards from shared effects only (Chantry's `rescueTorpor`, The Barrens'
@@ -186,7 +186,7 @@ The five finished starters with `hacking` and `sewer` hold 104 library cards:
 - **41 compiled entries never hand-curated** (the 25 Sep sweep checked those with modes by script). 37 have a zero-vtes
   definition: a review sheet checks them at once, and a disagreement becomes a review item.
 
-Johan's answer (19 Nov, D-126: Claude's yes to both): the 41 are read again, their seven sheets in step A2; and the
+The owner's answer (19 Nov, D-126: Claude's yes to both): the 41 are read again, their seven sheets in step A2; and the
 finished decks come first in the harvest, because their consumers are the best proven (the four starters sat in 408 of the
 ledger's sim matches each).
 
@@ -311,7 +311,7 @@ keys (the title family shares through its `ref.fx` keys) and its debt stays repo
 
 The pilot's and each starter's predictions are registered in their own rounds, before the build.
 
-### 4.4 The merge of hand entries (designed in A2, "kör" 19 Nov: D-127; built at the start of B)
+### 4.4 The merge of hand entries (designed in A2, the go-ahead 19 Nov: D-127; built at the start of B)
 **The first opt-ins** (the pilot, bot v0.6.236): five entries merge — Biothaumaturgic Experiment, New Moon Sigil, Night Terrors,
 Priority Contract, Shadow of the Beast; the lines below that say nothing opts in describe #92 as built.
 **Built** (20 Nov 2026: cardfx compiler v1.10.0, PR #92; no bot or cardfx byte changed, nothing opts in). Where the design below
@@ -395,21 +395,21 @@ of its effect types with our keys is committed with C1's cross-check tool, as de
 `main` when C1 merges.
 
 The maintainer and the credit. The clean-up spec allowed zero-vtes as a third check "only after asking its maintainer"
-(`specs/spec-cleanup-2026-10-20.md`, T3), and the repository does not show that this was done. Johan, 19 Nov: "Vi kan släppa nog
-villkoret för Lionel kanske eftersom han har MIT-licens (dock ska vi ju ge honom credit såklart), men jag ska nog ändå skriva till
-honom på Discord o ta upp att jag ska lägga till licens också ifall det är så att han mot förmodan skulle hitta något matnyttigt
-hos oss för sin lösning också". These pages read his "nog … kanske" as the condition dropped (D-125): step A does not wait on it.
+(`specs/spec-cleanup-2026-10-20.md`, T3), and the repository does not show that this was done. The owner, 19 Nov: the
+condition can probably be dropped, as zero-vtes is MIT-licensed (credit owed, of course), and the owner would still write to its
+maintainer that our repository gets a licence too, in case something of ours is of use to that project. These pages read the
+hedge as the condition dropped (D-125): step A does not wait on it.
 The credit is owed, and `bot/README.md` gives it from this round on. Claude's proposal, not ruled: when the repository has a
 licence, the root README's credits name zero-vtes too; that README is main's file, so it goes as a handoff (BOARD, the V5 sweep).
 `specs/spec-cardfx-sweep-sources-2026-09-25.md` stays the source mapping for KRCG, vtes-rulings and vtes-skill; this section adds
 the fourth source.
 
-**The maintainer's answer** (19 Nov, relayed by Johan): Lionel Panhaleux lets us mention and use zero-vtes as we wish and is glad
+**The maintainer's answer** (19 Nov, relayed by the owner): Lionel Panhaleux lets us mention and use zero-vtes as we wish and is glad
 of the credit. He points to `https://mcp.krcg.org/`, an MCP server meant as a reference for LLMs (alpha) that will later test
 rulings and decks with the engine and the bots, and offers the engine as a Rust component and the bots' open weights to anyone
 who wants an offline version. Everything is alpha: the cards come in set by set, and the interfaces will change after a later
 compaction, with no stability promised. What we take: the permission and the credit (D-125, `bot/README.md`). What we leave for now:
-the engine and the weights (this section's "not used": nothing of zero-vtes runs with the bot; an offline engine would be Johan's
+the engine and the weights (this section's "not used": nothing of zero-vtes runs with the bot; an offline engine would be the owner's
 design question) and the MCP server (a tool a session may try; its answers are proposals under the rule of evidence above).
 
 ## 6. What every round reports
@@ -456,29 +456,29 @@ the round: RULINGS 65,733, the standing pages 173,985, the bootstrap 49,442 of 5
 - zero-vtes moves fast: the review sheet pins the commit it read.
 - Two chats work in `bot/`. Rounds stay one at a time.
 - The counts of §11.4 use zero-vtes's vocabulary as a stand-in for ours: a family of ours need not be one of their types.
-- The first reader changes how a human's stealth is counted at the table: a design question that goes to Johan first (§11.6).
+- The first reader changes how a human's stealth is counted at the table: a design question that goes to the owner first (§11.6).
 
-## 11. Exactness first: the library by effect (Johan, 20 Nov 2026; RULINGS D-130)
+## 11. Exactness first: the library by effect (the owner, 20 Nov 2026; RULINGS D-130)
 
-**Status:** kör — Johan, 20 Nov ("Yes det låter superbra! Då kan vi gå vidare"), on the method as Claude had put it to him in
+**Status:** the go-ahead — the owner, 20 Nov, on the method as Claude had put it in
 that morning's chat (§11.1): his own proposal with two refinements of Claude's, and Claude's answer to his question about the
-format. §11.2 writes that method out; what it adds beyond the chat is Claude's design, marked (C), and goes to Johan with the
+format. §11.2 writes that method out; what it adds beyond the chat is Claude's design, marked (C), and goes to the owner with the
 first reader's design (§11.6). It amends §3's flow and §4's
 order after B. Everything this section does not name stands: §2's three tiers, §5's rule of evidence, the gates, the graded
 readings, D-104's release rule, §4.2's guard on the finished decks. This round changes no code. Measured on main `77da0b7`
 (bot v0.6.235) and a zero-vtes checkout at `05e812e` (19 Nov).
 
-### 11.1 What was said: Johan's words and Claude's answers
-- **The focus and the goal.** "då kör vi fokus på kortregelexaktheten att börja med helt enkelt med målsättning att bottarna ska
-  kunna bedöma vad som händer när någon spelar kort".
-- **The method**, as his question: should we just as well sweep the library from the card data zero-vtes already has first
-  "och sedan handkurera det som är kvar och behövs per startlek?" Claude answered yes, with two refinements: by effect and not by
+### 11.1 What was said: the owner's points and Claude's answers
+- **The focus and the goal.** The focus is card-rule exactness to begin with, the goal that the bots can judge what happens when
+  someone plays a card.
+- **The method**, as the owner's question: should we just as well sweep the library from the card data zero-vtes already has
+  first, and then hand-curate what is left and needed per starter? Claude answered yes, with two refinements: by effect and not by
   card; their data as the map and the answer sheet, not as content.
-- **The format**, as his next question: do we use their tagging and classifications "rakt av", or translate them into the format
-  we have used ourselves? Claude answered that we translate.
-- **His answer to both:** "Yes det låter superbra! Då kan vi gå vidare". This page reads it as his kör on the method and on the
-  format as Claude had put them in the chat.
-- Claude's reading, as he put it to Johan: §2's method of 18 Nov is not replaced; it is the same three tiers in a new order, the
+- **The format**, as the next question: do we use their tagging and classifications as they are, or translate them into the
+  format we have used ourselves? Claude answered that we translate.
+- **The answer to both:** the go-ahead. This page reads it as the go-ahead on the method and on the format as Claude had put them
+  in the chat.
+- Claude's reading, as put to the owner: §2's method of 18 Nov is not replaced; it is the same three tiers in a new order, the
   whole library first and the starters last.
 
 ### 11.2 The method
@@ -523,7 +523,7 @@ readings, D-104's release rule, §4.2's guard on the finished decks. This round 
 | step | what | done when |
 |---|---|---|
 | **B. The pilot: Banu Haqim** | Unchanged (D-127): the merge of hand entries first (§4.4), then the pilot. The merge is what lets a hand entry keep its remainder only, so a family's keys reach the hand-curated cards. | As §4. |
-| **C. The library by effect** (was: the harvest) | One family a round, two when it needs a new mechanism (as §3); since D-132 several families a round (§11.8): the cross-check of the whole library for the family, every disagreement read against KRCG's text, our entries corrected, the reader (since D-132 in a round of its own: §11.8 (3)). The harvest's items ride in it: a hand-only key is asked "who else prints this?" when its family comes up, the seven finished decks' keys first within a family (Claude's reading of D-126 under this order, §11.6); the compiler's known misses; the five other misreads; §4.3's latent reds and ambers; the condition sentences' untagged variants (since 20 Nov 2026 these are `SWEEP-REGISTER.md` entries, D-135: 9.8–9.11, class 7, 8.5 and the others it names). A `backlog` key whose family lies beyond the horizon is answered in D, with the starter that holds its card, or when Johan sends C on. | §11.4's horizon is reached. Every disagreement on a finished family's sheet is corrected, noted or explained. The sharing register has no `backlog` row for a key of a finished family. |
+| **C. The library by effect** (was: the harvest) | One family a round, two when it needs a new mechanism (as §3); since D-132 several families a round (§11.8): the cross-check of the whole library for the family, every disagreement read against KRCG's text, our entries corrected, the reader (since D-132 in a round of its own: §11.8 (3)). The harvest's items ride in it: a hand-only key is asked "who else prints this?" when its family comes up, the seven finished decks' keys first within a family (Claude's reading of D-126 under this order, §11.6); the compiler's known misses; the five other misreads; §4.3's latent reds and ambers; the condition sentences' untagged variants (since 20 Nov 2026 these are `SWEEP-REGISTER.md` entries, D-135: 9.8–9.11, class 7, 8.5 and the others it names). A `backlog` key whose family lies beyond the horizon is answered in D, with the starter that holds its card, or when the owner sends C on. | §11.4's horizon is reached. Every disagreement on a finished family's sheet is corrected, noted or explained. The sharing register has no `backlog` row for a key of a finished family. |
 | **D. The starters' remainder** (was: the other twelve starters) | Nearest first, re-ranked from the ledger after every starter: the unique effects a starter needs, and its strategy baseline. | Each starter done as §3. |
 
 ### 11.4 What the numbers say, and the horizon (measured 20 Nov, read-only; appendix C)
@@ -540,7 +540,7 @@ readings, D-104's release rule, §4.2's guard on the finished decks. This round 
 
 So, for the cards zero-vtes defines, a sweep by effect gives nearly every card a part of its reading (95 %) and a little over
 half of them all of it (56 %). Of our whole library that is 75 % and 44 %: the 500 entries with no definition are read by our
-patterns alone. The rest carries an effect that exists on one card: hand work, done where a starter needs it. That is Johan's
+patterns alone. The rest carries an effect that exists on one card: hand work, done where a starter needs it. That is the owner's
 split.
 
 Appendix B counted 980 effect types on 18 Nov (the count behind §1's measures) by another count: an effect's name only, over
@@ -549,7 +549,7 @@ an ability asks as its terms; on 18 Nov's data it gives 1,411 types over 1,717 d
 distance from 980 to 1,543, and two days of new definitions the rest.
 
 **The horizon.** C runs through the effect types on 25 or more definitions (44 today: they touch 1,602 of the 1,891 entries,
-85 %, and describe 332 in full, 18 %), grouped into our families as each round names them. Then the numbers are measured again and Johan says whether the sweep goes on by effect or turns to D.
+85 %, and describe 332 in full, 18 %), grouped into our families as each round names them. Then the numbers are measured again and the owner says whether the sweep goes on by effect or turns to D.
 
 ### 11.5 What a family's round reports (adds to §6)
 - **the family**: our keys, and the pairing in our words;
@@ -565,14 +565,14 @@ distance from 980 to 1,543, and two days of new definitions the rest.
   answer: yes, in a development tool only, never in the bundle or in the card data. Answered 26 Nov (D-140): yes, as Claude
   recommended; C1 commits the pairing with its cross-check tool.
 - **D-126 under the new order.** It put the finished decks first in the harvest; §11.3 reads that as first within a family.
-  Claude's reading, for Johan to confirm.
+  Claude's reading, for the owner to confirm.
 - **How the bundle tells the bot that an effect is exact** (a field of the entry, or a list beside the library): the first
   family's round designs it. The canary's cardfx checks are main's: a shape they read differently is a handoff first.
-- **The first reader's design** goes to Johan before it is built: who moves the counter when a human plays a stealth card
+- **The first reader's design** goes to the owner before it is built: who moves the counter when a human plays a stealth card
   (the human, as today, or the bot from the card), and how a number entered both ways is not counted twice.
 - **#92's three compile failures beyond §4.4's letter** (the near miss on a mode's `when`, an added mode without `fx`, a half
-  opt-in): each turns a silent mistake into a compile error. Johan's word is pending; none blocks the pilot.
-- **Their wrong readings.** Claude's proposal, not ruled: the noted ones are kept as a list in each round's PR, for Johan to pass
+  opt-in): each turns a silent mistake into a compile error. The owner's word is pending; none blocks the pilot.
+- **Their wrong readings.** Claude's proposal, not ruled: the noted ones are kept as a list in each round's PR, for the owner to pass
   to zero-vtes's maintainer if he wishes.
 
 ### 11.7 Predictions for the first family (registered before its tool exists; D-93, L-44)
@@ -589,8 +589,8 @@ or a condition.
 The counts and their verdicts are written here when the first family is built. The 175 is the scan's own number: the tool's
 count may differ, and then the bands are read as shares of its count.
 
-### 11.8 The concentrated sweep (Johan, 20 Nov 2026; RULINGS D-132, D-133)
-**What was said.** At 09:43 Johan wanted to push the alignment with zero-vtes through "med lite tempo" and asked what exactly the
+### 11.8 The concentrated sweep (the owner, 20 Nov 2026; RULINGS D-132, D-133)
+**What was said.** At 09:43 the owner wanted to push the alignment with zero-vtes through at some pace and asked what exactly the
 pilot is to do. Claude: it teaches the bots to play the Banu Haqim cards they cannot play today (Blood Rage 2, Hunter's Mark 4,
 Fleetness 2, Biothaumaturgic Experiment 1; Priority Contract 4, read again as a misread; Hunting the Quarry and Night Terrors'
 strike ride with them), so the starter is 77 of 77 playable: a small test of the sweep's flow before the harvest. And four
@@ -600,35 +600,35 @@ rounds instead of one a family); (3) parallel agents read the differing cards ag
 (4) the reader in rounds of its own, the first right after round 1, so the design question about the counter does not slow the
 alignment. The price Claude named: bigger rounds and bigger diffs to review; corrected numbers change the bots' own play, so
 each round is a release with a sim footprint. Point 1 would amend D-127, point 4 D-130.
-- 09:47, Johan: "Yes okej nej men att ha den som ett prov av svepets arbetsflöde före skörden låter bra, jag ville bara bekräfta
-  din tanke. Men då kör vi på den koncentrerade svepningen efter det då? :)" Claude read "the concentrated sweep" as points 2, 3
+- 09:47, the owner: the pilot as a test of the sweep's flow before the harvest is good (the question was only to confirm Claude's
+  thinking); then the concentrated sweep after it. Claude read "the concentrated sweep" as points 2, 3
   and 4, and named point 4 on its own because it changes D-130.
-- 09:49, Johan: "Kan agenterna itirera utifrån sin förståelse tills de når ett utfall som är helt korrekt (som de ser det)?"
-  Claude: an agent already iterates inside its task (tests, fix, run again); what it cannot see is its own blind spots (#92's
+- 09:49, the owner asked whether the agents can iterate from their own understanding until they reach an outcome that is fully
+  correct as they see it. Claude: an agent already iterates inside its task (tests, fix, run again); what it cannot see is its own blind spots (#92's
   executor reported everything green; the reviewer then found 8 faults and 16 mutations no test caught). What makes the loop land
   on correct, and not only on "correct as the agent sees it", is a yardstick outside the agent: hard gates, a reviewer with fresh
-  eyes who did none of the work, and Johan where the rules or the text do not reach. The proposal: review until clean (HARNESS),
+  eyes who did none of the work, and the owner where the rules or the text do not reach. The proposal: review until clean (HARNESS),
   about 25 to 30 minutes of Opus a pass. The risk that stays: executor and reviewer are the same model; zero-vtes is valuable as
   an independent witness.
-- 09:51, Johan: "Vi kör på det upplägget du tycker bli bra, i grund vill jag bara försöka aligna och komma ikapp med korten så
-  effektivt som möjligt." He left the setup to Claude's judgment; his aim is efficiency.
+- 09:51, the owner: the go-ahead on the setup Claude thinks best; at bottom the aim is to align with the cards and catch up on
+  them as efficiently as possible. The setup was left to Claude's judgment; the aim is efficiency.
 
-**How C runs** (C: Claude's setup, which Johan left to him, D-132; the rest of §11 stands):
+**How C runs** (C: Claude's setup, which the owner left to Claude, D-132; the rest of §11 stands):
 1. **Rounds by families.** C1: the cross-check tool (a family's keys against zero-vtes's effect types over the whole library, the
    disagreements listed per card, the pairing committed with the tool since O-48's answer, D-140) and `stealth` / `actStealth`,
-   `intercept`, `bleed`. C2: combat. C3 (and C4): the rest of §11.4's horizon. Then the numbers are measured again and Johan says
+   `intercept`, `bleed`. C2: combat. C3 (and C4): the rest of §11.4's horizon. Then the numbers are measured again and the owner says
    whether the sweep goes on by effect or turns to D (§11.4).
 2. **Inside a round.** The tool lists the disagreements; agents read them in parallel batches against KRCG's text and the
    rulings, each from a written brief; each card is corrected, noted or explained (§11.2 (5)); a separate agent reviews, until
    clean (D-133). One agent writes in the checkout at a time; the reading agents write to scratch.
 3. **The readers** (amends D-130's "a family's round also builds the bot's reader of that effect in a human's play"): rounds of their own, the first right after C1, its
-   design to Johan first (§11.6). A reader acts only on a family that is exact (§11.2 (6)).
+   design to the owner first (§11.6). A reader acts only on a family that is exact (§11.2 (6)).
 4. **Each round is a release**: corrected numbers change the bots' own play, so the round carries the gates and a sim footprint.
 
-### 11.9 After the alignment: Johan's intention, not a ruling (20 Nov 2026)
-- 09:51, Johan: "Sedan kanske försöka kurera 5 okurerade startlekar samtdigti i olika svep följt av speltest och utvärdering,
-  sedan itirering osv tills de ser teoretiskt bra ut och sedan mänsklig testning :)"
-- 09:52, Johan: "Och använda våra 5 färdiga v5-startlekar som "ankare" att jämföra mot typ om det kan vara en idé"
+### 11.9 After the alignment: the owner's intention, not a ruling (20 Nov 2026)
+- 09:51, the owner: perhaps then curate five uncurated starters at once in separate sweeps, followed by playtests and an
+  evaluation, then iterate until they look good in theory, and then test with humans.
+- 09:52, the owner: and perhaps use our five finished V5 starters as anchors to compare against.
 
 Claude's notes, not ruled: after the alignment the starters' remainders are small and independent, so the reading and the
 curation can run in parallel; the bot is one file and its suite another, so the code is woven in one starter at a time, with the
@@ -645,7 +645,7 @@ tested at tables with anchors, whose play is the best proven). To be designed wh
 - **Free block bars** (Beast Meld-class) and `chosen` (Seduction-class) have tags, no consumer. Done when the V5 sweep needs them
   and the ledger lists them playable. Docs: RULINGS O-21.
 
-The fold moved both ahead in Johan's order (the grade column stood below C5 and C6, the block bars under "Known, not built"):
+The fold moved both ahead in the owner's order (the grade column stood below C5 and C6, the block bars under "Known, not built"):
 his to reorder. Later the same day (D-135) the block bars went to `SWEEP-REGISTER.md` (10.3); the grade column stays a C rider.
 
 ## Appendix A — what each starter still lacks (cards, v0.6.234)

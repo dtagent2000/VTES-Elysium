@@ -14,14 +14,14 @@
 > edge is worth 3.0 and synergy tops out at 3.5. The weights are UNCALIBRATED
 > against real play; this is the first thing an arena series should tune.
 
-**Origin:** Johan, 12 Sep 2026. The v0.6.75 `_pickRaise` is a greedy single-vampire
+**Origin:** the owner, 12 Sep 2026. The v0.6.75 `_pickRaise` is a greedy single-vampire
 scorer. It picks the best candidate RIGHT NOW but never looks ahead across turns.
 The incremental transfer model (same session — `this.inf =` not `+=`, partial blood
 placement) makes multi-turn planning both possible and necessary: you're investing
 blood one turn at a time, and the ORDER you fill vampires in determines how many
 transfers are wasted and how fast you get minions online.
 
-## 1. The three axes (Johan's formulation)
+## 1. The three axes (the owner's formulation)
 
 1. **Tempo — how fast do I get a minion acting?**
    A vampire in ready can bleed, hunt, block. One in uncontrolled does nothing.

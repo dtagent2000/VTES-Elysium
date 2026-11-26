@@ -1,7 +1,7 @@
 # Handoff to main — bot v0.6.240 (25 Nov 2026): the chat round
 
 Built on bot v0.6.239 and your v2.6.188 / srv-2.6.53 (#104: no wire change, so nothing of ours waited on it; the read-only
-copies in `bot/` stay at v2.6.179 until the round that consumes v2.6.187). From Johan's D-137 (24 Nov): the bubbles stay and
+copies in `bot/` stay at v2.6.179 until the round that consumes v2.6.187). From the owner's D-137 (24 Nov): the bubbles stay and
 keep their content; one speaker at a time; no "(bot):" prefix; a bot's question to a bot without the human's instruction tail.
 No new verb or field: `chat`, `say`, `log`, `tally` as before. What changes is the bubbles' text and when they come. The bot
 ships first: nothing on your side reads what changed (section 3 says how we checked).
@@ -23,7 +23,7 @@ guide). Your embed test compares the whole guide: re-embed it (your suite beside
   180-character clamp included), a quick phrase or a verdict pulse 1.5 s; on a tie the seats speak in ring order from the turn
   seat (250 ms a step). A bot's acts and a window's opening line wait for the floor too, so a question never shows after its own
   answer. A spectator's chat holds no floor (your `chatBubble` wants a seat). At the fast paces of your LIVE tests nothing waits.
-- **Between bots at that pace, a round's combat summary is a log line**, not a bubble (Johan's ruling asked). As a bubble it
+- **Between bots at that pace, a round's combat summary is a log line**, not a bubble (the owner's ruling asked). As a bubble it
   would wait behind the other combatant's and the other bot's press step would miss it, so no switch brings it back under the
   floor; the bot's `chatFloor` 0 switches the floor off and with it this (v0.6.239's timing and tiers; the text stays as
   above). A thinking `Hold on…` that the floor held until the bot's own answer was queued is dropped.

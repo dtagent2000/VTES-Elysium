@@ -40,7 +40,7 @@ ceV: 24 matches  variant VP − table/4 = -0.11  (95 % ±0.49, [-0.60, +0.37])  
 
 ## Calibration: the narrowed wave and the block price (11 Oct 2026, bot v0.6.197)
 
-Johan's ruling of 28 Sep: the block doctrine and Malkavian's wave are not separate knowledge-layer bricks — both read the TWDA-fed `oppCombat`, so they are **calibration** (verify in traces; add a `press` share to the profile for the guide's narrowed wave).
+The owner's ruling of 28 Sep: the block doctrine and Malkavian's wave are not separate knowledge-layer bricks — both read the TWDA-fed `oppCombat`, so they are **calibration** (verify in traces; add a `press` share to the profile for the guide's narrowed wave).
 
 **What the traces said** (72 matches on v0.6.195–196: `negV`, `ceV`, `fix`, `fix2`; 1,842 blocks, 653 Malkavian combats):
 - **The wave.** Malkavian played Swallowed by the Night as a maneuver 50 times and as stealth 45 times. Two thirds of its waves were at 4+ blood against a hand strike for 1 — a stealth card for one blood. The guide's narrow use: 0 blood, or a Nosferatu that cannot press.

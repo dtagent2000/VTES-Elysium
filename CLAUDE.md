@@ -28,7 +28,8 @@ client, server and start scripts from `client/` to `/`. Nothing at the root is e
 ## Where to start
 - Bot work: `bot/CLAUDE.md` (the rules: bootstrap order, gates, the round), then `bot/docs/STATUS.md` (now) and
   `bot/docs/BOARD.md` (the asks); `bot/docs/RULINGS.md`, `LESSONS.md`, `ARCHITECTURE.md`, `HOWTO.md` and `HARNESS.md` when the
-  task touches them. The journal, the READ-ME-FIRSTs and the old bootstrap are in `bot/docs/history/` (20 Oct 2026).
+  task touches them. The bot's frozen records (the journal, the READ-ME-FIRSTs, the old bootstrap) are in the private data repo
+  (`bot/docs/history/README.md`, 26 Nov 2026).
 - Client work: `client/CLAUDE.md` and `client/docs/` (main's own bootstrap, journal, learnings, backlog).
 
 ## Gates (summary — the full lists live in each half's CLAUDE.md)

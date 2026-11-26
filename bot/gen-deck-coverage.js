@@ -9,7 +9,7 @@
    fas B/C sweep keys classified — cancelBlock/actStealth/stealthLater(gated)/
    bloodAfterCleanAction(attached), poolDmg re-classed play+threat; v1.1.1 grinder
    onboarding: bleed@mod-window contextual fix; v1.1.2 superior Govern: bloodAdd@unc-
-   stock contextual fix; v1.1.3 18-19 July, Johan's combat GO: stealBlood@strike
+   stock contextual fix; v1.1.3 18-19 July, the owner's combat go-ahead: stealBlood@strike
    contextual fix (mirrors _bestStealStrikeFor's combat-type + no-co-located-maneuver/
    press + no-unverifiable-req-flag gates exactly), maneuver/press labelled 'm2' —
    honestly unconsumed, not silently unknown)
@@ -99,18 +99,18 @@ const CLASS = {
   wake: 'play', prevent: 'play', cancelBlock: 'play', dodge: 'play',   // dodge: _bestDodgeFor (steg 6) -- the v1.0.0 report itself flagged it unclassified; a Strike:-choice pick, same family as strike/prevent
   handBonus: 'contextual',   // v1.1.37 (bot v0.6.202, cardfx v1.9.2, play-test point 18): 'hand strike at +N damage' / 'this strike is at +N damage' -- a bonus on the hand strike, consumed through the same strike@ special-case as strike (_modeStrikeDmg)
   strike: 'contextual',   // v1.1.3: consumed via the strike@ special-case above (combat-typed + no co-located maneuver/press + no unverifiable req flags) -- 'contextual' here only silences the unknown-key warning for the EQUIPMENT-typed instances (.44 Magnum-class: attached-weapon consumption is still a future board-scan, correctly NOT matching the special case's combat-type requirement)
-  gainOppLoss: 'contextual',   // v1.1.4 (Johan's combat GO, Taste of Vitae): consumed via the gainOppLoss@ special-case below (combat-typed only -- no req-flag/co-located guard needed, since Taste of Vitae's own restrictions -- end-of-round timing, not-if-torporing -- are STATE the combat-loop hook checks directly, not unverifiable preconditions like range/round-count)
-  envDmgPerRound: 'contextual',   // v1.1.7 (Johan's combat GO, Carrion Crows): consumed via the envDmgPerRound@ special-case below (combat-typed only -- "only usable before range is determined" is verifiable now that _resolveCombatRound has that exact play window, so no req-flag exclusion needed here either)
-  restrictHandStrike: 'contextual',   // v1.1.8 (Johan's combat GO, Immortal Grapple): consumed via the restrictHandStrike@ special-case below (combat-typed + rangeClose, both verifiable now that _resolveCombatRound has the Pre-Strike window and this._range tracked)
+  gainOppLoss: 'contextual',   // v1.1.4 (the owner's combat go-ahead, Taste of Vitae): consumed via the gainOppLoss@ special-case below (combat-typed only -- no req-flag/co-located guard needed, since Taste of Vitae's own restrictions -- end-of-round timing, not-if-torporing -- are STATE the combat-loop hook checks directly, not unverifiable preconditions like range/round-count)
+  envDmgPerRound: 'contextual',   // v1.1.7 (the owner's combat go-ahead, Carrion Crows): consumed via the envDmgPerRound@ special-case below (combat-typed only -- "only usable before range is determined" is verifiable now that _resolveCombatRound has that exact play window, so no req-flag exclusion needed here either)
+  restrictHandStrike: 'contextual',   // v1.1.8 (the owner's combat go-ahead, Immortal Grapple): consumed via the restrictHandStrike@ special-case below (combat-typed + rangeClose, both verifiable now that _resolveCombatRound has the Pre-Strike window and this._range tracked)
   handStrike: 'meta',   // v1.1.44 (11 Nov 2026, round C2): the one handStrike key -- a second one ('paired', beside fetchEquip) silently overrode this line; neither class is a play path, so no verdict changed. v1.1.8: not an independent ability -- metadata ATTACHED to strike/stealBlood modes (does this mode count as a hand strike for Immortal Grapple's restriction). Silences the unknown-key warning without claiming its own consumption path.
   poolGain: 'income', bloodToPool: 'income',
   poolToBlood: 'income',   // v1.1.34 (bot v0.6.125): the reverse direction of Blood Doll / Vessel -- decide('income-direction') in _applyPhaseIncome, same phase rule as bloodToPool
   handSizePerCounter: 'income', replaceBurnsCounter: 'paired',   // v1.1.34: Visit from the Capuchin
   bloodPerMargin: 'play', marginToPool: 'paired',   // v1.1.34: Voter Captivation -- _maybeMarginBlood after a passed referendum
-  handSize: 'income',   // v1.1.10 (Johan's ask, continuing Dreams of the Sphinx): consumed via the SAME generic income rule as poolGain (split on mo.lock) -- _considerLockIncome now handles handSize identically (draw-up-to via the ACTIVE hand-size-target rule, source-verified vekn.net), no separate special-case needed
+  handSize: 'income',   // v1.1.10 (the owner's ask, continuing Dreams of the Sphinx): consumed via the SAME generic income rule as poolGain (split on mo.lock) -- _considerLockIncome now handles handSize identically (draw-up-to via the ACTIVE hand-size-target rule, source-verified vekn.net), no separate special-case needed
   handSizePermanent: 'paired',   // v1.1.11: companion flag (does this handSize mode mean "passive, no lock" or "temporary, lock-based") -- consumed via the handSize@permanent special-case above, not independently
-  transferSwap: 'income', transferBurnPool: 'income', transferCost: 'paired',   // v1.1.12 (Johan's ask, Wider View -- the last Inside Dirt card): consumed via the transfer@influence-loop special-case below -- wired directly into _influenceLoop (elysium-bot.js), not a decide()/finder window, since transfers (this.inf) are already tracked there and neither ability is lock-gated
-  rescueTorpor: 'income',   // v1.1.13 (Johan's ask, Chantry -- the last card on phase-income-v2-plan.md): reuses the SAME generic mo.lock-aware income rule as poolGain/handSize -- _considerLockRescue (elysium-bot.js) is a master-typed, lock-gated consumer, so the existing lock-income@ special-case already covers it, no new rule needed
+  transferSwap: 'income', transferBurnPool: 'income', transferCost: 'paired',   // v1.1.12 (the owner's ask, Wider View -- the last Inside Dirt card): consumed via the transfer@influence-loop special-case below -- wired directly into _influenceLoop (elysium-bot.js), not a decide()/finder window, since transfers (this.inf) are already tracked there and neither ability is lock-gated
+  rescueTorpor: 'income',   // v1.1.13 (the owner's ask, Chantry -- the last card on phase-income-v2-plan.md): reuses the SAME generic mo.lock-aware income rule as poolGain/handSize -- _considerLockRescue (elysium-bot.js) is a master-typed, lock-gated consumer, so the existing lock-income@ special-case already covers it, no new rule needed
   handCycle: 'income',
   peekPreyDiscard: 'play', openHandPrey: 'play',
   lockMinion: 'play',
@@ -127,12 +127,12 @@ const CLASS = {
   strikeCE: 'play',   // v1.1.33 (18 Sep 2026, bot v0.6.123): Strike: combat ends, consumed by _bestCombatEndFor; an act-again `when` rider (actSuccess / actBlocked / actFailed) makes a modifier's fx.unlock consumed by _bestActAgainFor -- the v1.1.31 bare-unlock rule already lets a mode WITH a rider through
   votes: 'play',   // v1.1.32 (18 Sep 2026, bot v0.6.122): consumed by _voteBoosts -- a votes MODIFIER the acting vampire can play (Bewitching Oration) or a lockable in-play votes card (Ventrue Headquarters), spent during the caller's polling when the count needs it
   votesBonus: 'play',   // v1.1.30 (P0): District's against-votes land in the client's EXISTING vote-tally -- the politics engine's first brick
-  reduce: 'play',   // v1.1.27 (N4c): the react-window bleed reducer (District's live half; votesBonus stays honestly unread until politics)   // v1.1.25 (N4a): the 100% push -- Station's two consumers + Rebel's title-block trigger   // v1.1.24 (N3): the menace-master engines (both-sides)   // v1.1.23 (N2): the rush action class; lockTarget rides the through-branch   // v1.1.22 (N1): consumed via _bestUnlockReactFor -- the sleeper slot (bleedAtMe) and the post-block refresh (postBlock); the when mode-rider mirrors dir   // v1.1.20 (E1): MotS consumed via the fetch branch; handStrike is a rider on strike   // v1.1.18 (M2, Pentex): consumed via the master loop's noBlockMinion branch -- _bestNeutralizeTarget without needUnlocked; serves the 14-card put-on cannot-block family   // v1.1.17 (M1, Misdirection): consumed via the master loop's lockMinion branch -- _bestNeutralizeTarget picks the prey vampire (elysium-bot.js)   // v1.1.16 (R3, Revelations): consumed via decide('action')'s peek candidate -- _bestPeekFor + the act.kind==='peek' branch (elysium-bot.js, pool/stock templates); target-side compliance (revealHand/openHand/logTo) is wire-driven, not deck-consumption. dir stays a 'paired' rider.   // v1.1.15 (Johan's ask, The Barrens): same reuse -- _considerHandCycle (elysium-bot.js) is a master-typed, lock-gated consumer just like rescueTorpor, so the existing generic mo.lock-aware rule (line ~200) covers it once classified here, no new special-case needed
+  reduce: 'play',   // v1.1.27 (N4c): the react-window bleed reducer (District's live half; votesBonus stays honestly unread until politics)   // v1.1.25 (N4a): the 100% push -- Station's two consumers + Rebel's title-block trigger   // v1.1.24 (N3): the menace-master engines (both-sides)   // v1.1.23 (N2): the rush action class; lockTarget rides the through-branch   // v1.1.22 (N1): consumed via _bestUnlockReactFor -- the sleeper slot (bleedAtMe) and the post-block refresh (postBlock); the when mode-rider mirrors dir   // v1.1.20 (E1): MotS consumed via the fetch branch; handStrike is a rider on strike   // v1.1.18 (M2, Pentex): consumed via the master loop's noBlockMinion branch -- _bestNeutralizeTarget without needUnlocked; serves the 14-card put-on cannot-block family   // v1.1.17 (M1, Misdirection): consumed via the master loop's lockMinion branch -- _bestNeutralizeTarget picks the prey vampire (elysium-bot.js)   // v1.1.16 (R3, Revelations): consumed via decide('action')'s peek candidate -- _bestPeekFor + the act.kind==='peek' branch (elysium-bot.js, pool/stock templates); target-side compliance (revealHand/openHand/logTo) is wire-driven, not deck-consumption. dir stays a 'paired' rider.   // v1.1.15 (the owner's ask, The Barrens): same reuse -- _considerHandCycle (elysium-bot.js) is a master-typed, lock-gated consumer just like rescueTorpor, so the existing generic mo.lock-aware rule (line ~200) covers it once classified here, no new special-case needed
   poolDmg: 'play+threat', bloodBurn: 'threat', stealBlood: 'threat',
   bleed: 'paired', actStealth: 'paired',
   bloodAdd: 'paired', bloodAddTo: 'paired', bloodAddYounger: 'paired',   // v1.1.2: consumed via the unc-stock window special-case above; 'paired' here only silences the unknown-key warning
   stealthLater: 'gated', bloodAfterCleanAction: 'attached',
-  maneuver: 'contextual',   // v1.1.6 (Johan's combat GO, the range concept): consumed via the maneuver@ special-case below (combat-typed, clean standalone shape only -- Apportation [THA], Swallowed by the Night [OBF]) -- 'contextual' here only silences the unknown-key warning for the excluded bundled instances (Grasp of the Python, Slam's superior, etc.)
+  maneuver: 'contextual',   // v1.1.6 (the owner's combat go-ahead, the range concept): consumed via the maneuver@ special-case below (combat-typed, clean standalone shape only -- Apportation [THA], Swallowed by the Night [OBF]) -- 'contextual' here only silences the unknown-key warning for the excluded bundled instances (Grasp of the Python, Slam's superior, etc.)
   lockStealth: 'play', lockStealthClan: 'paired',   // v1.1.38 (bot v0.6.205, R4 / the play-test's F23): The Labyrinth -- _lockStealthFor, offered by _bestStealthFor from the board, locked by _spendStealthCard
   hostIntercept: 'play', hostInterceptOn: 'paired', hostPrevent: 'play',   // v1.1.38: Guardian Angel on its host -- _hostedIntercept (the block sites and forecasts), _hostedPrevent (the combat damage step)
   bankIn: 'income', bankOut: 'income', bankClan: 'paired',   // v1.1.38: Wasserschloss Anif -- _considerBankIn (master phase, no lock) and _considerLockIncome('influence') (the lock-gated payout)
@@ -265,7 +265,7 @@ function modeConsumed(mo, e){
     const others = Object.keys(mo.fx).filter(k => k !== 'unlock' && scanned.has(k) && cls(k).includes('play'));
     if(!others.length) return { ok: false, via: 'unlock: no `when` rider -- awaits an act-again consumer' };
   }
-  /* v1.1.19 (25 July, Johan's equipment question): EQUIP-typed entries grant their
+  /* v1.1.19 (25 July, the owner's equipment question): EQUIP-typed entries grant their
      keys PASSIVELY on a bearer -- the hand-finders that consume intercept/prevent/
      strike are type-filtered to react/mod/combat (bot v0.6.12+0.6.13, Bowl-class was
      the named exposure), so those consumers can NEVER touch an equipment card. Until
@@ -312,7 +312,7 @@ function modeConsumed(mo, e){
     if(pair) return { ok: true, via: 'actStealth@' + (pair.fx.rush ? 'rush' : pair.fx.attach !== undefined ? 'attach' : 'employ') };
   }
   const f = mo.fx || {};
-  /* v1.1.2 (Johan's grinder onboarding): bleed is CONTEXTUAL, not blanket-'paired'.
+  /* v1.1.2 (the owner's grinder onboarding): bleed is CONTEXTUAL, not blanket-'paired'.
      _bestBleedModifierFor (steg 2) consumes standalone fx.bleed on mod-typed cards --
      UNLESS the mode also grants stealth (the window skips those outright, Bonding's own
      ruling) or carries bleedAct (that flag marks the base-action domain). v1.1.0's
@@ -326,7 +326,7 @@ function modeConsumed(mo, e){
      keys, never play paths of their own.                                            */
   if (f.bloodAdd > 0 && f.bloodAddTo === 'unc'
       && (e && (e.t || []).includes('action')) && !(e && e.cost && e.cost.pool)) return { ok: true, via: 'bloodAdd@unc-stock' };
-  /* v1.1.9 (Johan's "push Inside Dirt to 100%" GO, Dreams of the Sphinx): a SECOND
+  /* v1.1.9 (the owner's go-ahead to push Inside Dirt to 100%, Dreams of the Sphinx): a SECOND
      bloodAdd+bloodAddTo:'unc' consumer, distinct from the action-typed one above --
      _considerLockIncome (elysium-bot.js) consumes it on a lock-gated MASTER-typed
      mode (Dreams of the Sphinx, and Arcane Library/Chantry once those are wired the
@@ -335,8 +335,8 @@ function modeConsumed(mo, e){
   if (f.bloodAdd > 0 && f.bloodAddTo === 'unc' && (mo.lock || (mo.once && mo.phase))   // v1.1.42: + a `once` mode (Powerbase: Montreal: no lock, once in the influence phase -- the same consumer)
       && (e && (e.t || []).includes('master'))) return { ok: true, via: 'bloodAdd@lock-income' };
   if (f.bloodAdd > 0 && f.bloodAddTo === 'own-ready' && !mo.lock && mo.phase === 'unlock'
-      && (e && (e.t || []).includes('master'))) return { ok: true, via: 'bloodAdd@hunting-ground' };   // v1.1.14 (Johan's "process the hunting ground family" GO): the THIRD bloodAdd shape -- freestanding, NOT lock-gated, unlock-phase -- consumed via _considerHuntingGround (elysium-bot.js), distinct from Life in the City's one-shot handler and Dreams of the Sphinx/Arcane Library's lock-gated _considerLockIncome
-  /* v1.1.3 (Johan's combat GO, steal-blood family): stealBlood is contextual, not
+      && (e && (e.t || []).includes('master'))) return { ok: true, via: 'bloodAdd@hunting-ground' };   // v1.1.14 (the owner's go-ahead to process the hunting ground family): the THIRD bloodAdd shape -- freestanding, NOT lock-gated, unlock-phase -- consumed via _considerHuntingGround (elysium-bot.js), distinct from Life in the City's one-shot handler and Dreams of the Sphinx/Arcane Library's lock-gated _considerLockIncome
+  /* v1.1.3 (the owner's combat go-ahead, steal-blood family): stealBlood is contextual, not
      blanket-'threat' -- _bestStealStrikeFor (elysium-bot.js) consumes it on a COMBAT-
      typed mode when: (a) the entry carries none of the four unverifiable timing req
      flags (beforeRangeDetermined/rangeClose/rangeLong/notFirstRound -- the v1 single-
@@ -350,7 +350,7 @@ function modeConsumed(mo, e){
       && (e && (e.t || []).includes('combat'))
       && !(e && e.req && e.req.beforeRangeDetermined))   // v1.1.41 (bot v0.6.214): 'not usable during the first round' is read (the round number) -- such a card plays from round 2
     return { ok: true, via: 'stealBlood@strike' };
-  /* v1.1.3 (Johan's combat GO, strike-bonus family): strike is contextual too, same
+  /* v1.1.3 (the owner's combat go-ahead, strike-bonus family): strike is contextual too, same
      shape as stealBlood exactly -- _bestStrikeFor gained the identical req-flag +
      co-located-maneuver/press guards. A blanket 'play' classification would have
      misreported Blood Fury/Cauldron of Blood/Loving Agony/Slam's superior as consumed
@@ -380,7 +380,7 @@ function modeConsumed(mo, e){
     return { ok: true, via: f.dodge ? 'addStrike@dodge' : 'addStrike@after-the-first-pair' };
   if (typeof f.envDmgPerRound === 'number' && (e && (e.t || []).includes('combat'))) return { ok: true, via: 'envDmgPerRound@beforeRange' };
   if (f.restrictHandStrike && (e && (e.t || []).includes('combat'))) return { ok: true, via: 'restrictHandStrike@preStrike' };
-  /* v1.1.5 (Johan's combat GO, the multi-round loop -- Press): press is contextual
+  /* v1.1.5 (the owner's combat go-ahead, the multi-round loop -- Press): press is contextual
      too, mirroring _bestPressFor exactly. Only the CLEAN, standalone shape
      (Apportation) is consumed -- a mode co-located with maneuver/strike/stealBlood
      is a bundled ability (Grasp of the Python, Slam's superior), documented in the
@@ -389,7 +389,7 @@ function modeConsumed(mo, e){
       && (e && (e.t || []).includes('combat'))
       && !(e && e.req && e.req.beforeRangeDetermined))   // v1.1.41: notFirstRound is read
     return { ok: true, via: 'press@resolveCombat' };
-  /* v1.1.6 (Johan's combat GO, the range concept): maneuver is contextual too, clean-
+  /* v1.1.6 (the owner's combat go-ahead, the range concept): maneuver is contextual too, clean-
      shape-only (Apportation/Swallowed by the Night), mirroring _bestManeuverFor. NOTE
      the CASH-IN, above: rangeClose/rangeLong no longer blanket-exclude stealBlood/
      strike/press -- the bot can now maneuver to the needed range when it holds one of
@@ -407,7 +407,7 @@ function modeConsumed(mo, e){
     if (!scanned.has(k)) continue;                       // the bot never reads it — cannot be consumed
     if (cls(k).includes('play')) return { ok: true, via: k };
     if (cls(k) === 'income' && mo.phase){
-      /* v1.1.9 (Johan's "push Inside Dirt to 100%" GO, Dreams of the Sphinx): this
+      /* v1.1.9 (the owner's go-ahead to push Inside Dirt to 100%, Dreams of the Sphinx): this
          generic rule used to fire for ANY phase-tagged income key regardless of
          mechanism -- correct for _applyPhaseIncome's host-attached automatic
          triggers (Vessel/Blood Doll, no `lock`), but it was ALSO blindly claiming
@@ -420,7 +420,7 @@ function modeConsumed(mo, e){
       if (mo.lock) { if (e && (e.t || []).includes('master')) return { ok: true, via: k + '@lock-income' }; }
       else return { ok: true, via: k + '@' + mo.phase };
     }
-    /* v1.1.11 (Johan's "sweep it while it's fresh" GO, hand-size family): the
+    /* v1.1.11 (the owner's go-ahead to sweep it while it's fresh, hand-size family): the
        passive-permanent shape needs its OWN rule -- unlike every other income key,
        handSizePermanent modes carry no `phase` at all (no lock needed either; the
        bonus is simply active for as long as the card is in play). Consumed via
@@ -636,7 +636,7 @@ P('Genererad av `gen-deck-coverage.js` v' + COV_VERSION + ' mot `elysium-cardfx.
   (fx.counts.alias || '?') + ' alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden ' +
   '(skannad vid körning, inte handunderhållen). Leken: ' + loaded.source + '.');
 P('');
-P('Syfte: göra "kan botten spela den här leken?" till en mekanisk kontroll — curated-djup och');
+P('Syfte: göra frågan om botten kan spela den här leken till en mekanisk kontroll — curated-djup och');
 P('handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPPORT, inte en gate.');
 P('');
 P('## Sammanfattning (qty-viktad, ' + totCopies + ' bibliotekskopior)');

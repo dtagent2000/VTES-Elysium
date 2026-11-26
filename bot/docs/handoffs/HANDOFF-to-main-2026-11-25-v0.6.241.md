@@ -1,7 +1,7 @@
 # Handoff to main — bot v0.6.241 (25 Nov 2026): the exactness round
 
 Stacked on v0.6.240 (#108): merge #108 first. Built on your v2.6.188 / srv-2.6.53 (no wire change of yours consumed; the read-only
-copies in `bot/` stay at v2.6.179). From Johan's D-138 (25 Nov 20:43): the table bugs Claude's two playtest games found, the base
+copies in `bot/` stay at v2.6.179). From the owner's D-138 (25 Nov 20:43): the table bugs Claude's two playtest games found, the base
 starters' card gaps, and a second number beside "playable" in `docs/CARDS.md` (text-checked and exact). No new verb or field. One
 new bot line (section 2), one changed play line (section 3), and Turn-based timers that now behave (section 4). The bot ships first:
 the new line is backward compatible (a human reads it as any log line).
@@ -15,7 +15,7 @@ unchanged. Deploy: purge `/elysium-bot.js` and `/elysium-cardfx.json` (what the 
 - **An 'if blocked' card that locks the blocker and ends the action** (Mirror Walk [THA]; the acting bot's line after a successful
   block of its acting vampire, before any other card, with no combat after it):
   `VAMP is blocked — CARD [LVL]: NAME's BLOCKER is locked; the action ends unsuccessfully.`
-  e.g. `Rosalina Cortez is blocked — Mirror Walk [THA]: Johan's The Dowager is locked; the action ends unsuccessfully.`
+  e.g. `Rosalina Cortez is blocked — Mirror Walk [THA]: Lisa's The Dowager is locked; the action ends unsuccessfully.`
   The acting bot's "Blocked. Combat begins." note comes before it, as for Change of Target's line (§12, bot v0.6.217): that combat
   never begins. A bot blocker reads it (its combat never begins, its vampire stays locked); a human blocker locks their own minion
   and plays no combat. The bot's grammar: `BLOCKED_LOCK` (`/^(.+?) is blocked — (.+?)(?: \[([A-Za-z]+)\])?: (?:(.+?)'s )?(.+?) is

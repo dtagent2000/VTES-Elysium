@@ -1,15 +1,20 @@
-# BOARD — the open asks (25 Nov 2026, v0.6.241). A line is deleted when done; found work is added as a line (a card
+# BOARD — the open asks (26 Nov 2026, v0.6.241). A line is deleted when done; found work is added as a line (a card
 problem the sweep finds: an entry in `SWEEP-REGISTER.md`, D-135).
 
-Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Johan orders the board; a round takes one line
-(or a few that belong together — the combining rule). Questions for Johan are not here: they are `RULINGS.md` O-lines.
+Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. The owner orders the board; a round takes one line
+(or a few that belong together — the combining rule). Questions for the owner are not here: they are `RULINGS.md` O-lines.
 
-## Product line (Johan's order, 19–20 Oct 2026; spec-cleanup §7)
+## Product line (the owner's order, 19–20 Oct 2026; spec-cleanup §7)
+- **The bundle's cleanup release** (D-141, D-142): the bundle still names the owner and quotes the owner's words in
+  `elysium-bot.js`'s comments (about 300 lines), the cardfx notes (`cardfx-curated.json`, compiled into `elysium-cardfx.json/.js`),
+  the guide's example line and the sewer deck's name (embedded too); by role or an invented name, in a small release of its own
+  before C1's (`tools/public-scan.py --tree` lists them as WAITING). *Done when* the scan waits on nothing, the 240 is IDENTICAL
+  with the version normalized, and main has the guide to re-embed. Docs: D-141, D-142; the CHANGELOG.
 - **The chat round's rulings** (D-137, O-51): v0.6.240 built the floor, dropped the `(bot):` prefix and the human's tail to a
-  bot, and brought the recorder (`tools/chat-record.js`, `tools/ana-chat.py`); Johan rules every line and the questions R1–R9
+  bot, and brought the recorder (`tools/chat-record.js`, `tools/ana-chat.py`); the owner rules every line and the questions R1–R9
   in the ruling doc (O-51), the silent bot-vs-bot verdict wait among them (O-36). *Done when* each line has his ruling and
   what he asks for is built, with a recording before and after. Docs: D-64, D-137, O-36, O-51.
-- **The knowledge layer's Kevlar**: Johan: armour is valuable against aggravated-damage decks, priced by what the table's decks
+- **The knowledge layer's Kevlar**: the owner: armour is valuable against aggravated-damage decks, priced by what the table's decks
   deal (the TWD profile). The bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the vest
   prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an
   expected-damage share for the table's decks and a pinned bench shows no loss. Docs: RULINGS D-52; `specs/spec-knowledge-layer.md`.
@@ -17,7 +22,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   the prober and woke for the punch. *Done when* `probeHold`'s out-number reads unlocked bodies + expected wakes (deck read +
   hypergeometric), measured in `lab-probe.js`. Docs: RULINGS O-7; `specs/spec-knowledge-layer.md`.
 - **The abstract model spec**: the first of the four checks (fast rollouts over card-class distributions, probabilities not
-  decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and Johan has said "kör".
+  decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and the owner has given the go-ahead.
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 sweep** (D-125, D-130, D-132: exactness first; `specs/spec-card-sweep-2026-11-18.md` §11): every printed effect first
   asked who else in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. **B**, the
@@ -32,12 +37,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   zero-vtes (D-128; main's, handoff). *Done when* C's horizon is reached, the 18 starters' rows are playable, every
   hand-only key has its sharing answer and C's riders are done or ruled out. Docs: RULINGS D-84, D-102, D-104, D-108,
   D-125 – D-127, D-130, D-132, D-134, D-135; `CARDS.md`; HOWTO.
-- **The official deck guides as each deck's strategy baseline** (Johan, 29 Oct; refined by the archetypes): D-112 checks each
-  strategy line against its guide; Toreador's is done (D-118). *Done when* each deck's proposals have Johan's "kör" or "no".
+- **The official deck guides as each deck's strategy baseline** (the owner, 29 Oct; refined by the archetypes): D-112 checks each
+  strategy line against its guide; Toreador's is done (D-118). *Done when* each deck's proposals have the owner's go-ahead or no.
   Docs: RULINGS D-43, O-33, D-112, D-118.
 - **Reads the bench round left** (D-118): my referendums' block rate at the table (proposal 2); a stealth bleeder read from
   its deck (proposal 7's loss); `keyLast`'s hold with two political cards; `engineW` only while no stock engine of mine is
-  ready; the Ball's wait by expected payoff against punishment and risk (Johan, 17 Nov). *Done when* built and benched, or
+  ready; the Ball's wait by expected payoff against punishment and risk (the owner, 17 Nov). *Done when* built and benched, or
   ruled out. Docs: RULINGS D-118, O-43; `specs/spec-bench-round-2026-11-15.md`.
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
   card only another seat held, a planted leak the positive control; `_twdExpect` agrees across observers), flip counts on `decide`
@@ -52,7 +57,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **The helper lock's release** (main's answers of 3 Nov): the client locks all helpers on while a bot is seated until the bot
   proves a whole combat on lines alone. *Done when* asked, when ready. Docs: RULINGS D-62, D-94.
 - **History comments in `elysium-bot.js`**: trap comments only where a round touches (O-28 Q6); first those saying the bridge
-  delivers inside the send (L-92). *Done when* Johan has chosen; then per round.
+  delivers inside the send (L-92). *Done when* the owner has chosen; then per round.
 - **Section 69b's decay check**: `o4.pick === ctxC.card ? true : o4.pick ===
   ctxC.plain` passes for either pick and reads no score, so the streak's −0.30 on the card line is untested. *Done when* 69b
   compares the card score with and without the streak.
@@ -81,7 +86,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **10. Unbuilt modes, targets and riders.**
 - **11. Windows: who is asked, and when.**
 - **12. Combat's steps** (C2's neighbours).
-- **13. Choices around a card**: Claude's priors, each a design to Johan first (D-87).
+- **13. Choices around a card**: Claude's priors, each a design to the owner first (D-87).
 - **14. Hand size and replacement** (14.4–14.7, all latent).
 
 ## Known, not built (bot side)
@@ -102,14 +107,14 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
 - **Taste of Vitae**: the 2+ gate is built (v0.6.156); not built: play at 1 when the vampire sits at 0–1 blood or two copies clog,
   and "with a Taste in hand, prefer the damage card this round". *Done when* both are section-tested. Docs: RULINGS D-23.
 - **Intercept banking** (B-55f-b: deck-axis, measure first) and **2 of 187 blocked rows still `by: null`** (B-55e-b). *Done when*
-  banking is measured on a sim series and no blocked row lacks `by`. Docs: `history/CLAUDE-v2-2026-10-20.md` 155–165, debt 68.
+  banking is measured on a sim series and no blocked row lacks `by`. Docs: the data repo's `bot-history/CLAUDE-v2-2026-10-20.md` 155–165, debt 68.
 - **The turn ledger's gaps** (26d): a barred bleed becomes an illegal marker that can still win the score contest (the vampire stays
   home); of the card-in-play actions only the rushes and the card burns are booked (v0.6.217; not Warsaw, Chantry). *Done when* the
   marker cannot win and every card-in-play action is booked.
 - **Home pricing's six soft spots** (42c, unfixed): `_keepBlocker` holds the last actors, not `_priceHome`'s bodies; `predHits`
   reads the announced bleed, `hitMax` the realised one; a bounce valued as pool saved only; the rate leans on `myFc`; wakes counted
   whoever could play them; 0.9 / pStop / 'a card + a blood = 1 pool' / fwd 0.5 unmeasured. *Done when* each is fixed or measured.
-  Docs: `history/specs/spec-home-pricing-2026-09-19.md`.
+  Docs: the data repo's `bot-history/specs/spec-home-pricing-2026-09-19.md`.
 - **The minion head reads last turn's `_turnActs`** (Change of Target's ledger): it is reset after `_strategize`, `_probeOrder` and
   `_minionKeyOrder` ask. *Done when* the reset comes first, footprint read.
 - **The locked routes' last rungs** (round F, D-116 (5)): the block decision counts the unlock reactions, not the Underbridge Stray
@@ -117,7 +122,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   vampire already attempting to block: `SWEEP-REGISTER.md` 10.12). *Done when* each reads the route, or is ruled out.
 - **The chump gate is not the commit** (round B): `bareBlock` 'chump' passes on any chump body, then `_commitBlock` picks
   its own (`_pickBlocker`); both paths. *Done when* the commit takes the gate's body, section-tested.
-- **Bot diablerie** (the fixed-vote-majority rule). *Done when* Johan schedules it. Docs: RULINGS O-15.
+- **Bot diablerie** (the fixed-vote-majority rule). *Done when* the owner schedules it. Docs: RULINGS O-15.
 - **Vote-count residue**: three channels at once (menu line, counter, both) under-count; Protected District's votes come from the
   counter only. *Done when* main ships the additive counter verb or the client writes both. Docs:
   `specs/spec-referendum-terms-2026-09-18.md`.
@@ -134,7 +139,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Jo
   keep-a-blocker / block-or-pass), from ONE shared seat valuation. *Done when* the meta layer's first consumer reads it there.
 - **Yewon's and Alexa's torpor use** (D-111): no vote from torpor, but a card cycled. *Done when* the meta layer prices a card
   against a random draw.
-- **The cancel cards** (Johan, 18 Nov: "a classic example" for the meta layer; D-122): Sudden Reversal decides on simple priors
+- **The cancel cards** (the owner, 18 Nov: a classic case for the meta layer; D-122): Sudden Reversal decides on simple priors
   (spec-v5-wave5 §12.2: a master's worth to me against my next master phase action); the meta layer should price a cancel from the
   table: the owner's threat, what the cancel denies, what my next action would buy. Eagle's Sight [AUS] (a block from a seat that
   may not block, D-123) waits for the same layer. *Done when* it does and a lasombra-pinned bench shows no loss.

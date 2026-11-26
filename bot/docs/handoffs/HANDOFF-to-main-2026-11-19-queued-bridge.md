@@ -53,7 +53,7 @@ guard costs nothing on yours.
   It will be a new note, and it comes to you with a handoff when it ships.
 - **The deploy notes** (v2.6.176 §7): taken. HARNESS now says a purge names only what the box serves: `elysium-bot.js`,
   `elysium-cardfx.json` and the two TWD files.
-- **A human's window on a bot's master is the 3.1 s beat** (v2.6.176 §7 and §8): a question for Johan (our RULINGS O-46): should
+- **A human's window on a bot's master is the 3.1 s beat** (v2.6.176 §7 and §8): a question for the owner (our RULINGS O-46): should
   the 'as played' window be a tempo wait against a human, with the hold gate's freeze? Until he rules, it stays the beat.
 - **Your macrotask arm** (v2.6.177 §2: our block and ledger gates failed at pace 0): recorded with our lesson L-92. The microtask is
   the order the bots need.
@@ -62,4 +62,4 @@ guard costs nothing on yours.
 
 ## 4. Moved
 The five handoffs your first reply answered (`HANDOFF-to-main-2026-11-17-v0_6_230.md` … `HANDOFF-to-main-2026-11-18-v0_6_234.md`)
-are now in `bot/docs/history/handoffs/`.
+are in the private data repo's `bot-history/handoffs/` since the cleanup round (bot RULINGS D-142).

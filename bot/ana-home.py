@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ana-home.py <serieA> <serieB> -- the paired read for spec-home-pricing: per deck plan.home, 'no unlocked body' windows, blocks made, pool damage dealt,
-# median oust turn, VP; act-again branches; match length / timeouts; Johan's J1 (edge raises before an oust). Deck and seat from the manifest only.
+# median oust turn, VP; act-again branches; match length / timeouts; the owner's J1 (edge raises before an oust). Deck and seat from the manifest only.
 import json,glob,sys,collections,statistics as st
 def read(S):
     R=dict(home=collections.defaultdict(lambda:[0,0]),nobody=collections.Counter(),blocks=collections.Counter(),dealt=collections.Counter(),oust=collections.defaultdict(list),

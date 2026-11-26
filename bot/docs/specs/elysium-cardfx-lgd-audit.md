@@ -1,6 +1,6 @@
 # Cardfx LGD Audit — the Nosferatu-campaign keys vs the whole database
 
-> **26 July 2026 (Johan's inventory ask).** For every fx key minted during the
+> **26 July 2026 (the owner's inventory ask).** For every fx key minted during the
 > Nosferatu push (N0→P0), measure the FAMILY SIZE across all of vtes.json and
 > judge the tagging level: GENERAL-CORRECT, CARD-SPECIFIC-OK (family ≤ 2, the
 > Chantry precedent), SIBLINGS-READY (the consumer already serves them —
@@ -26,7 +26,7 @@
 | `warsawRefresh` | member of a **15-card "unlock the acting" family** | **GENERAL-CORRECT for its sub-shape** | The family splits by trigger: at-end-of-TURN (Baseball Bat, Leather Jacket, Distant Friend), immediate (Claiming the Body, Gifts From Hereafter, Warsaw), and the acting-minion SWAP relative (Mask of a Thousand Faces — a future class of its own). The shared asset is the CONSUMER CORE: unlock-the-actor + the `_actorQueue` revisit. |
 | `recruitAlly` / `allyLife` | — | **GENERAL-CORRECT** | The [ani]/[ANI] richest-mode recruit generalizes to any discipline-gated ally. |
 
-## 2. The finds (Johan's "or can we find more?")
+## 2. The finds (the owner asked whether we can find more)
 
 ### 2.1 THE FREAK DRIVE FIND 🎯
 > *"Only usable after action resolution. [for] Only usable if the action was

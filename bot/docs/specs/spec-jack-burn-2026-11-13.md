@@ -1,8 +1,8 @@
 # Spec — burning a Smiling Jack (RULINGS D-114), 13 November 2026
 
-Johan's principle (D-114, answering O-39): a burn of Smiling Jack is weighed against the price it pays — what the acting vampire's
-best other action would gain or deal — and against how my pool stands under Jack and the table's expected pool damage to me. His
-"kör" (13 Nov 20:13) on Claude's proposal of the same day, and his "Yes kör" (21:45) on the six questions of the round proposal:
+The owner's principle (D-114, answering O-39): a burn of Smiling Jack is weighed against the price it pays — what the acting vampire's
+best other action would gain or deal — and against how my pool stands under Jack and the table's expected pool damage to me. The owner's
+go-ahead (13 Nov 20:13) on Claude's proposal of the same day, and the go-ahead (21:45) on the six questions of the round proposal:
 the order A (table runs) → B (this spec) → C (a human's Grand Ball); the block guard corrected for both directed windows as its own
 step; the owner's defence in the same PR behind the same knob; the knob to 1 in the same PR when the mirror bench shows no loss.
 Built as round B: its own PR, its own registered prediction, the mirror bench.
@@ -63,7 +63,7 @@ own footprint and prediction before the burn step, verified by a section that fa
 - Knob `jackBurn` — 0 is today (no Jack burn; T6 for a burn at my Jack). In the arena's and the sim's knob lists. Flipped to 1
   in the same PR when the mirror bench shows no loss (Q6); otherwise shipped at 0 with the reading.
 
-## 8. The prediction (Johan's three, made measurable; registered before any run)
+## 8. The prediction (the owner's three, made measurable; registered before any run)
 1. Nosferatu's +0.17 VP of v0.6.221 shrinks: on the 240-match design Nosferatu's paired VP, B against A's release, is below 0.
 2. Jack lives shorter where it is played: the median rounds from its play to its leaving play fall against A's release.
 3. The mirror bench (`jackBurn=1` in every seat against the negative control, the four starters, every seating): no loss — the

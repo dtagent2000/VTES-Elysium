@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /* gen-sweep-audit.js — one-off script (not part of the shipped pipeline) that
-   dumps the FULL persistent/lock sweep results to a markdown file so Johan can
+   dumps the FULL persistent/lock sweep results to a markdown file so the owner can
    eyeball every hit, not just the compiler's own --report samples. */
 
 const fs = require('fs');
@@ -141,7 +141,7 @@ const typeBreak = {};
 nonMasterPersist.forEach(([n, e]) => e.t.forEach(t => { typeBreak[t] = (typeBreak[t] || 0) + 1; }));
 P('## Persistent utanför Masters — typfördelning (' + nonMasterPersist.length + ' kort totalt)');
 P('');
-P('Equipment/Ally/Retainer/Event är redan väntat ~alltid persistenta per korttyp (Johans egen premiss) —');
+P('Equipment/Ally/Retainer/Event är redan väntat ~alltid persistenta per korttyp (ägarens egen premiss) —');
 P('den här tabellen är bara för att bekräfta att inget oväntat läckte in, inte en granskningskö.');
 P('');
 P('| Typ | Antal |');

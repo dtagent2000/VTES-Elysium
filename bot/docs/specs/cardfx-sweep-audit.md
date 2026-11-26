@@ -822,7 +822,7 @@ If/else-if-strukturen låter negationen vinna, så ally-låsningen missas helt (
 
 ## Persistent utanför Masters — typfördelning (775 kort totalt)
 
-Equipment/Ally/Retainer/Event är redan väntat ~alltid persistenta per korttyp (Johans egen premiss) —
+Equipment/Ally/Retainer/Event är redan väntat ~alltid persistenta per korttyp (ägarens egen premiss) —
 den här tabellen är bara för att bekräfta att inget oväntat läckte in, inte en granskningskö.
 
 | Typ | Antal |

@@ -1,6 +1,6 @@
 # Design of 25 Sep 2026: event log, shadow model, knowledge sources, bench (copied into git 20 Oct 2026)
 
-**Origin:** the Claude Doc "Elysium Bots — Design: event log, shadow model, knowledge sources, bench" (Johan's, 25 Sep 2026,
+**Origin:** the Claude Doc "Elysium Bots — Design: event log, shadow model, knowledge sources, bench" (the owner's, 25 Sep 2026,
 https://claude.ai/artifact/S5PiF7x5PhpU4JSSQgp9Dx), copied verbatim below (spec-cleanup-2026-10-20.md §5.4). The doc stays the
 original; this copy is the one sessions read.
 
@@ -19,7 +19,7 @@ original; this copy is the one sessions read.
 
 # Elysium Bots — Design: event log, shadow model, knowledge sources, bench
 
-2026-09-25 · @Johan Adamsson
+2026-09-25 · the owner
 
 ## Purpose and scope
 
@@ -131,7 +131,7 @@ The checks `ana-ledger.py` and `ana-block.py` run after a series run during play
 | Does a weapon reach at long range? | Card text + rulings | Cardfx sweep: a `ranged` flag per strike, the gap VTES-Player found on .44 Magnum |
 | Which way a political action moves pool, per seat | Card text + rulings | Knowledge layer: a polarity per political card, not a parse of the terms |
 | What an opponent's deck is | Archetype classification + TWDA (KRCG) | Knowledge layer: map shown cards to an archetype, then expect its combat, stealth and bounce |
-| How an archetype wants to play | Strategy method, modules catalogue | Knowledge layer and personas: posture per archetype (the block doctrine and Tremere's maneuver-vs-press choice Johan deferred to it) |
+| How an archetype wants to play | Strategy method, modules catalogue | Knowledge layer and personas: posture per archetype (the block doctrine and Tremere's maneuver-vs-press choice the owner deferred to it) |
 
 **Rules for using it.**
 
@@ -170,7 +170,7 @@ A table-level claim (“this change makes Tremere stronger”) needs 48+ matches
 | --- | --- | --- |
 | Bench with a negative and a positive control | Mirror bench with the same two controls | Part 5 |
 | Fuzz games checked by replaying the event log for pool and blood conservation | Conservation checked from the table's lines, per match | Part 3, below |
-| One design note per mechanic, citing the rulebook page | Design notes per bot mechanic, with rulebook pages and Johan's rulings | Below |
+| One design note per mechanic, citing the rulebook page | Design notes per bot mechanic, with rulebook pages and the owner's rulings | Below |
 | First opponent model: other seats modelled with the bot's own formula, from public information only | Knowledge layer: predict a seat from what it has shown, with our own decision helpers | Below |
 
 ### Measurement method
@@ -203,11 +203,11 @@ A table-level claim (“this change makes Tremere stronger”) needs 48+ matches
 
 **Ours today.** The knowledge is real but scattered: long comments in `elysium-bot.js`, a CHANGELOG entry per release, rulings in memory files, and a CLAUDE.md whose version handshake keeps growing.
 
-**Adaptation.** One short note per bot mechanic, each with the same five parts: the rule (rulebook page), Johan's rulings (dated), how the bot implements it (functions, knobs), the tests that pin it, and the known limits.
+**Adaptation.** One short note per bot mechanic, each with the same five parts: the rule (rulebook page), the owner's rulings (dated), how the bot implements it (functions, knobs), the tests that pin it, and the known limits.
 
 | First notes to write | Holds today's scattered knowledge on |
 | --- | --- |
-| combat-phases | The seven steps, Johan's phrases, the clock, the Damage step |
+| combat-phases | The seven steps, the owner's phrases, the clock, the Damage step |
 | block-exchange | Stealth / intercept only when needed, undirected +1, chat numbers, stale stealth |
 | combat-rules | Long-range fists, aggravated damage, dodge, combat ends, wounded ends combat |
 | steal | Both sides, the one-line shape, dodge undoes it |
@@ -225,7 +225,7 @@ CLAUDE.md then keeps the binding rules (the ledger gate, knob hygiene, lines as 
 1. **Evidence from public events only:** the event log's `card-played`, blocks attempted, combat cards shown, stealth and intercept used — never a seat's hidden hand.
 2. **A prior from the archetype:** shown cards and disciplines map to an archetype (vtes-skill's classification, TWDA via KRCG), which gives an expectation of combat, stealth, intercept and bounce for cards not yet seen.
 3. **Predict with our own helpers:** “would this seat press, maneuver, block?” is answered by running our `_want*` helpers from that seat's side, with its shown resources — their “same formula” idea.
-4. **Scope it small and measure:** start with the questions Johan deferred to this layer — expected combat from a seat (Tremere's maneuver vs press, Malkavian's wave, the block doctrine) — and bench each one (Part 5) before the next.
+4. **Scope it small and measure:** start with the questions the owner deferred to this layer — expected combat from a seat (Tremere's maneuver vs press, Malkavian's wave, the block doctrine) — and bench each one (Part 5) before the next.
 
 **Guard rail:** the model may make the bot cautious or bold; it never lets the bot act on information a human in that seat could not have.
 
@@ -235,22 +235,22 @@ The order follows what each piece unlocks: the knowledge sources and the event l
 
 | Step | Piece | Gate before the next step |
 | --- | --- | --- |
-| 1 | vtes-skill mapping note (Part 4) | Johan agrees which references answer which questions |
+| 1 | vtes-skill mapping note (Part 4) | the owner agrees which references answer which questions |
 | 2 | Cardfx sweep + inferior/superior, checked against vtes-skill | Suite, canary, a ledger series; the `actStealth` and `ranged` questions closed |
 | 3 | Event log (Part 1), with `card-played` feeding the knowledge layer | Loose combat/block fields gone; suite, canary, ledger green |
 | 4 | Mirror bench (Part 5): controls first | Negative control inside the margin, positive control clearly behind |
 | 5 | Episode models in shadow mode (Part 2) + real-time invariants (Part 3) | 0 unexplained shadow flags on a bot-only series |
-| 6 | Knowledge layer design, on steps 1–5 | Its own design doc and Johan's rulings |
+| 6 | Knowledge layer design, on steps 1–5 | Its own design doc and the owner's rulings |
 | 7 | Switch-over, combat first | Bench shows no loss; ledger and shadow flags stay at 0 |
 
 **Risks and what contains them.**
 
 - **A refactor that breaks what works.** Contained by shadow mode (no decisions change) and by switching one subsystem at a time.
 - **The event log grows into a second engine.** It records what the table said; it never enforces a rule on a human.
-- **vtes-skill drifts from KRCG or from our reading.** Card text always comes from KRCG; where a ruling and our cardfx disagree, the question goes to Johan.
+- **vtes-skill drifts from KRCG or from our reading.** Card text always comes from KRCG; where a ruling and our cardfx disagree, the question goes to the owner.
 - **Bench runs cost time and die at tool limits.** Split chains into short, resumable groups; report partial runs as partial.
 
-## Open questions for Johan
+## Open questions for the owner
 
 - [x] Is the build order right, or should the event log come before the cardfx sweep? Decided 25 Sep: the recommended order — vtes-skill mapping, cardfx sweep, event log, bench, knowledge layer.
 - [ ] When the bot and a human disagree on a number, should the bot ask in chat every time it matters (Part 3), or only log it during playtests?

@@ -3,7 +3,7 @@
 > **11 Sep 2026:** the block-priority design canon now lives in `elysium-bot-block-doctrine.md` (threat classes, per-deck playbooks from the BCP V5 sheets, the meta-game section from Loughman's *The Game of the Game*, the arena metrics of its §6). B1 (the undirected window) shipped as bot v0.6.107; B2/B3 items are listed in its §4.1/§5/§2.7. The deep-review ledger with the A/C/B track status is `elysium-bot-review-2026-09-11.md`.
 
 > **Created 16 July 2026** (bot v0.5.7 / cardfx v1.4.2 / client v2.6.41 / server v2.6.16). The training
-> track's OWN backlog, split out from `elysium-backlog.md` on Johan's call so parallel sessions can patch
+> track's OWN backlog, split out from `elysium-backlog.md` on the owner's call so parallel sessions can patch
 > documentation without colliding — the main backlog now only points here. Discussion layer:
 > `elysium-bot-strategy.md` (the L0–L4 ladder §4, metrics §5, deck-read §9). Same contract as the main
 > backlog: every item carries **What / Why / How / Why deferred / Test**, written to be executable without
@@ -11,26 +11,26 @@
 
 ---
 
-## Revised roadmap (24 July 2026 — Johan + Claude, the evaluation round; supersedes the 16 July block below where they differ)
+## Revised roadmap (24 July 2026 — the owner + Claude, the evaluation round; supersedes the 16 July block below where they differ)
 
 Agreed three-step sequence after the full-project evaluation (journal 24 July):
 
-**Steg 1 — five decks to 100%** (the five REGISTERED archetypes; hacking/wall/sewer are 100% already, Malkavian 95%, Tremere 94%): *(a)* **Equipment v1** — the attached-equipment board-scan + fetch-equipment action; clears Tremere's .44 Magnum + Magic of the Smith AND one of combat-plan §9's cross-cutting gaps in the same build; *(b)* Misdirection + Pentex™ Subversion handlers (the TABLED-ONLY pair); *(c)* **Revelations LAST** — needs opponent-hand visibility via the existing reveal/grant protocol mechanics (NOT a bot sense; the relay-is-the-fairness-boundary rule) — costliest item, least play value per hour; Malkavian is functionally complete at 95% meanwhile. Hygiene rider: **hunting-ground per-VAMPIRE ledger** (Johan confirmed 24 July: the rule reads per vampire — Papillon + a clan HG may feed two different vampires the same turn; today's global flag is conservative-only, zero impact on the tracked single-HG decks, but wrong-shaped for multi-HG decks and T9b-read opponents).
-**Order revised (Johan, 24 July, later the same day):** Revelations moves FIRST — the
+**Steg 1 — five decks to 100%** (the five REGISTERED archetypes; hacking/wall/sewer are 100% already, Malkavian 95%, Tremere 94%): *(a)* **Equipment v1** — the attached-equipment board-scan + fetch-equipment action; clears Tremere's .44 Magnum + Magic of the Smith AND one of combat-plan §9's cross-cutting gaps in the same build; *(b)* Misdirection + Pentex™ Subversion handlers (the TABLED-ONLY pair); *(c)* **Revelations LAST** — needs opponent-hand visibility via the existing reveal/grant protocol mechanics (NOT a bot sense; the relay-is-the-fairness-boundary rule) — costliest item, least play value per hour; Malkavian is functionally complete at 95% meanwhile. Hygiene rider: **hunting-ground per-VAMPIRE ledger** (the owner confirmed 24 July: the rule reads per vampire — Papillon + a clan HG may feed two different vampires the same turn; today's global flag is conservative-only, zero impact on the tracked single-HG decks, but wrong-shaped for multi-HG decks and T9b-read opponents).
+**Order revised (the owner, 24 July, later the same day):** Revelations moves FIRST — the
 Malkavian-100% push, with the three client features (mode chooser / chat bubbles / bot
 signalling) as enablers; see `elysium-bot-revelations-plan.md` (the R-track: R0 spike
 EXECUTED, R1 client -> R2 hand-intel -> R3 the card). Equipment v1 + the TABLED-ONLY
 pair follow after. The human-backup constant (humans can always run the bot's elements
 manually) is frozen as a stated principle in that plan's section 0.
 
-**Steg 2 — the arena as simulation + training-data machine:** T1 ✅ DONE (below) → T2 seeded deals → T3 harness (duplicate seating also SEPARATES persona from deck — the conflation arena v1.1.4 now warns about) → **T6 as the step's backbone** (Johan's context-schema requirement, see T6 — the decide traces ARE the training data; VP outcomes alone are too sparse) → T4 persona search → T9b priors. P1 "silent politics" (V(seat)-aware targeting, politics-theory doc) may slot at the END of this step as mechanical strength; deals/table-talk stay in step 3. The human-anchor rule stands: periodic Johan live sessions per T4.
+**Steg 2 — the arena as simulation + training-data machine:** T1 ✅ DONE (below) → T2 seeded deals → T3 harness (duplicate seating also SEPARATES persona from deck — the conflation arena v1.1.4 now warns about) → **T6 as the step's backbone** (the owner's context-schema requirement, see T6 — the decide traces ARE the training data; VP outcomes alone are too sparse) → T4 persona search → T9b priors. P1 "silent politics" (V(seat)-aware targeting, politics-theory doc) may slot at the END of this step as mechanical strength; deals/table-talk stay in step 3. The human-anchor rule stands: periodic the owner live sessions per T4.
 
-**Steg 3 — politics (P2+):** needs a VOTE deck (a new archetype — `votes` is tagged on 60 cards, zero consumed today) and the Ventrue-grinder deck file recovered into the project (`vtru-grinder-johan.json` is absent from the snapshot; 'grinder' is unregistered in ARCHETYPES — the superior-Govern path is rig-reachable only).
+**Steg 3 — politics (P2+):** needs a VOTE deck (a new archetype — `votes` is tagged on 60 cards, zero consumed today) and the Ventrue-grinder deck file recovered into the project (the owner's Ventrue grinder deck file is absent from the snapshot; 'grinder' is unregistered in ARCHETYPES — the superior-Govern path is rig-reachable only).
 
 ## Recommended priority (Claude's call, 16 July 2026)
 
 **NOW — small, pays immediately, independent of the 4-archetype milestone:**
-1. **T6 `--explain` decision traces** — the smallest build of the nine; upgrades every live test Johan
+1. **T6 `--explain` decision traces** — the smallest build of the nine; upgrades every live test the owner
    already runs; its trace format is the foundation for T8 AND the intent model (strategy doc §6:
    build once, render twice). Do first.
 2. **T1 arena benchmark spike** — an afternoon; produces the ONE number (games/hour) every L1/L2
@@ -62,7 +62,7 @@ resists the temptation to "also just add" V(seat) while T6 is open.
 
 ## T1 — Arena benchmark spike (games/hour) — ✅ DONE 24 July 2026 (arena v1.1.4)
 **What/Why:** unchanged — the ONE number every L1/L2 promise depends on.
-**EXECUTED** (sandbox hardware — Johan's machine will shift absolutes; magnitudes and knob
+**EXECUTED** (sandbox hardware — the owner's machine will shift absolutes; magnitudes and knob
 sensitivities transfer). Arena v1.1.4 added per-match wall-clock + event counts + a games/hour
 summary line (no separate `--benchmark` mode needed), and lifted `--bots` to 2–5 (server
 MAX_PLAYERS=6 source-verified). Matrix, deck `hacking` (100% coverage), pace 0:
@@ -123,7 +123,7 @@ per-archetype persona JSONs + a tuning journal.
 **Why:** "self-play light" — the highest lever-per-hour toward personas that FEEL distinct (strategy
 doc §4 L2); distinct local optima ARE the personalities.
 **How:** a driver script over T3; fitness per §5 (open question 3: pure VP vs a composite with style
-constraints). **Human-anchor rule:** every accepted profile gets at least one Johan live session before
+constraints). **Human-anchor rule:** every accepted profile gets at least one live session with the owner before
 it is called done — the Cicero lesson (§3.4) at hobby scale.
 **Why deferred:** strictly downstream of T3, and dramatically better with 4 real archetypes to tune.
 **Test:** tuned vs untuned profile over a fresh seed set shows a measurable, reproducible delta; plus
@@ -140,7 +140,7 @@ consumption code changes; the report's Kurationskö IS the curation queue.
 
 ## T6 — `--explain` decision traces — the step-2 BACKBONE
 **What:** every `decide()` emits a structured reason object on the existing JSONL/onEvent channel.
-**Schema requirement (Johan, 24 July 2026) — a decision is only evaluable in the context of what
+**Schema requirement (the owner, 24 July 2026) — a decision is only evaluable in the context of what
 the choices WERE:** `rv:1` objects carry *(1)* `ctx` — the bot's own **hand** (card names), a
 **board digest** (own ready/torpor vampires + blood, opponents' relayed pub: ready counts, visible
 permanents, pool, Edge holder), and **resources** (own pool, acting vampire's blood, transfers/
@@ -166,7 +166,7 @@ code.
 game reads correctly against its known trace.
 
 ## T7 — Ghost seat (observe-and-suggest at a human table)
-**What:** the bot joins as a non-acting observer bound to Johan's seat: the full decision loop runs but
+**What:** the bot joins as a non-acting observer bound to the owner's seat: the full decision loop runs but
 nothing is sent to the table; suggestions (+T6 reasons) stream to a side channel (console/file first;
 any client UI is a separate, later conversation).
 **Why:** inverts the arena — more signal per HUMAN game instead of more bot games; the bot's judgment
@@ -181,7 +181,7 @@ traffic from the ghost, proven from the server log.
 ## T8 — Live sessions as replay fixtures
 **What:** a record tap capturing a real session's inbound message stream. The bot is log-reactive, so
 replaying the stream through its handlers re-produces its decisions deterministically — **no server
-determinism needed**. Any "Johan saw something odd" freezes into a permanent regression fixture.
+determinism needed**. Anything odd the owner saw freezes into a permanent regression fixture.
 **Why:** extends the harness culture into the hardest domain — real human play; lekmannaobservationer
 become tests instead of one-time fixes.
 **How:** tap = serialize every inbound message (+timestamps) at the dispatch/onEvent layer; the

@@ -50,7 +50,7 @@ ok(fx.counts.alias >= 1500, 'alias map populated (' + fx.counts.alias + ')');
   ok(fx.lib['Computer Hacking'].modes[0].dir === true, 'Computer Hacking: Ⓓ marks a directed action (v1.3.0: per-MODE)');
   ok(fx.lib['Govern the Unaligned'].modes.find(m => m.at === 'dom').dir === true &&
      !fx.lib['Govern the Unaligned'].modes.find(m => m.at === 'DOM').dir,
-     'split-mode directedness (Johan, 13 July): Govern\'s inferior bleed is directed, its superior blood-add is NOT — one entry-level flag used to lie about half the card');
+     'split-mode directedness (the owner, 13 July): Govern\'s inferior bleed is directed, its superior blood-add is NOT — one entry-level flag used to lie about half the card');
 }
 
 /* 4) the "As above" idiom — inheritance (Deflection) and override (Lost in Crowds) */
@@ -63,7 +63,7 @@ ok(fx.counts.alias >= 1500, 'alias map populated (' + fx.counts.alias + ')');
      'Lost in Crowds: "As above, but for +2 stealth" — own extraction OVERRIDES the inherited value');
 }
 
-/* 5) Johan's motivating example: pool damage that is not a bleed */
+/* 5) the owner's motivating example: pool damage that is not a bleed */
 {
   const s1 = mode('Shroud of Decay', 'obl'), s2 = mode('Shroud of Decay', 'OBL');
   ok(s1 && s1.fx.bleedAct === true && s1.fx.bleed === 1, 'Shroud of Decay: [obl] is a bleed action at +1');
@@ -313,7 +313,7 @@ ok(fx.counts.libLock >= 140,
   const sk = mode('Soak', 'FOR'), hs = mode('Hidden Strength', 'for');
   ok(sk && sk.fx.prevent === 4 && hs && hs.fx.prevent === 1 && !(fx.lib['Soak'].modes || []).some(m => m.fx && m.fx.aggr), 'Grinder onboarding curations: Soak carries the printed prevents (the "NON-aggravated" middle word broke the regex and ghost-tagged aggr -- Wall of Filth pattern), Hidden Strength carries the conservative X=0 floor of "Prevent X+1"');
 
-  /* v1.5.8 (Johan's combat GO, steal-blood family): four new req flags for combat
+  /* v1.5.8 (the owner's combat go-ahead, steal-blood family): four new req flags for combat
      timing preconditions the bot's v1 architecture cannot verify — measured against
      the full 410-card Combat pool before tagging. */
   ok(fx.lib['Drain Essence'].req.notFirstRound === true, 'req.notFirstRound: Drain Essence ("Not usable on the first round of combat") tagged');
@@ -329,7 +329,7 @@ ok(fx.counts.libLock >= 140,
   ok(ctl.find(m => m.at === 'obt').fx.stealBlood === undefined && ctl.find(m => m.at === 'OBT').fx.stealBlood === 1,
      'Call the Lamprey curated: [obt] (ally-only, unverifiable) emptied, [OBT] (unrestricted "opposing minion") kept clean');
 
-  /* v1.5.9 (Johan's combat GO, strike-bonus family): 33-card measurement, two new
+  /* v1.5.9 (the owner's combat go-ahead, strike-bonus family): 33-card measurement, two new
      phrasings beyond the original "Strike: N damage" shape. */
   const rh = mode('Roundhouse', 'POT');
   /* v1.9.2 (bot v0.6.202, the 14 Oct play-test, point 18): the two bonus phrasings write handBonus, not strike -- "hand strike at
@@ -355,7 +355,7 @@ ok(fx.counts.libLock >= 140,
   ok(sVol >= 55, 'strike volume grew substantially with the two new patterns (' + sVol + ' numeric strike or hand-bonus modes, was ~30 pre-v1.5.9)');
   ok(hbVol >= 50 && hbVol < sVol, 'hand-bonus volume (v1.9.2): the two bonus patterns are a real subset of the strike modes (' + hbVol + ' of ' + sVol + ')');
 
-  /* v1.6.0 (Johan's standing question, round 4): a THIRD strike phrasing found while
+  /* v1.6.0 (the owner's standing question, round 4): a THIRD strike phrasing found while
      checking the v1.5.9 work for uncertainty -- "Strike: N aggravated damage" (6
      cards; Compress was the one that revealed it). */
   ok(mode('Compress', 'thn').fx.strike === 2 && mode('Compress', 'THN').fx.strike === 3,
@@ -364,7 +364,7 @@ ok(fx.counts.libLock >= 140,
   ok(!(fx.lib['Body of Sun'].modes || []).some(m => m.fx && typeof m.fx.strike === 'number'),
      'Body of Sun correctly EXCLUDED: "3 aggravated damage if at close range or 1R ...if at long range" is RANGE-CONDITIONAL -- a single number would be a guess, not a fact, with no range state tracked; the negative lookahead protects it');
 
-  /* v1.6.1 (Johan's combat GO, Carrion Crows -- the persistent-this-combat modifier
+  /* v1.6.1 (the owner's combat go-ahead, Carrion Crows -- the persistent-this-combat modifier
      concept): a narrow pattern for Carrion Crows' specific "This combat, the opposing
      minion takes NR environmental damage each round..." shape, plus its "As above,
      but for NR..." continuation form (the same per-segment re-extraction Theft of
@@ -380,7 +380,7 @@ ok(fx.counts.libLock >= 140,
     ok(!(fx.lib[n].modes || []).some(m => m.fx && m.fx.envDmgPerRound !== undefined),
        n + ': correctly NOT matched by the narrow Carrion Crows pattern (own distinct environmental-damage shape, undocumented on purpose)');
 
-  /* v1.6.2 (Johan's combat GO, Immortal Grapple -- the strike-type restriction
+  /* v1.6.2 (the owner's combat go-ahead, Immortal Grapple -- the strike-type restriction
      concept): source-verified vekn.net + official FAQ 3.16 first ("Immortal Grapple
      restricts both minions... to only using 'hand strikes'"). handStrike is a
      POSITIVE-evidence-only tag (explicit "hand strike" wording) -- measured that the
@@ -405,7 +405,7 @@ ok(fx.counts.libLock >= 140,
   for(const n in fx.lib) for(const mo of fx.lib[n].modes || []) if(typeof mo.fx.strike === 'number' || typeof mo.fx.handBonus === 'number' || typeof mo.fx.stealBlood === 'number'){ totalStrikeModes++; if(mo.fx.handStrike) hsVol++; }   // v1.9.2: + handBonus
   ok(hsVol >= 30 && hsVol < totalStrikeModes, 'handStrike volume is a real subset of the ' + totalStrikeModes + ' strike/stealBlood-carrying modes, not all of them and not none (' + hsVol + ')');
 
-  /* v1.6.3 (Johan's "push Inside Dirt to 100%" GO, Life in the City): a THIRD
+  /* v1.6.3 (the owner's go-ahead to push Inside Dirt to 100%, Life in the City): a THIRD
      bloodAddTo class, 'own-ready' -- measured 5 cards sharing "add N blood to a ready
      vampire" wording, only Life in the City is the clean one-shot shape. */
   ok(mode('Life in the City', null).fx.bloodAdd === 1 && mode('Life in the City', null).fx.bloodAddTo === 'own-ready',
@@ -414,7 +414,7 @@ ok(fx.counts.libLock >= 140,
   ok(!fx.lib['The Coven'].modes[0].fx.bloodAddTo,
      'The Coven correctly NOT given bloodAddTo:own-ready -- shares the same "add N blood to a ready vampire" phrase but as a LOCK-based recurring choice ("you can lock this card to add..."), a different mechanic the negative lookahead correctly excludes');
 
-  /* v1.6.4 (Johan's "push Inside Dirt to 100%" GO, continuing Life in the City):
+  /* v1.6.4 (the owner's go-ahead to push Inside Dirt to 100%, continuing Life in the City):
      Dreams of the Sphinx split into three modes so each lock-choice's own
      precondition (phase, costEdge) can live per-mode, not bundled into one. */
   {
@@ -464,7 +464,7 @@ ok(fx.counts.libLock >= 140,
        'The Barrens: lock:true + phase:master (this bot\'s own timing pick) + handCycle:true ("lock this card to discard a card, draw up afterward")');
   }
 
-  /* v1.6.6 (Johan's "sweep it while it's fresh" GO, hand-size family): measured 85
+  /* v1.6.6 (the owner's go-ahead to sweep it while it's fresh, hand-size family): measured 85
      cards mentioning "hand size" before tagging anything -- most are OUT of scope
      entirely (a discard-cycle mechanic, combat/vote/counter-scoped variants, a
      hostile reduction), not just unbuilt. Two shapes match this session's own
@@ -695,7 +695,7 @@ ok(fx.counts.libLock >= 140,
   ok(fx.lib['Visit from the Capuchin'].enterCounters === 4 && fx.lib['Visit from the Capuchin'].modes[0].fx.handSizePerCounter === 1 && fx.lib['Visit from the Capuchin'].modes[0].fx.replaceBurnsCounter === true, 'Visit from the Capuchin: enterCounters 4, handSizePerCounter, replaceBurnsCounter');
 }
 
-/* ---- v1.7.0: referendum terms -- the politics leg's first brick (Johan, 18 Sep 2026) ---- */
+/* ---- v1.7.0: referendum terms -- the politics leg's first brick (the owner, 18 Sep 2026) ---- */
 {
   console.log('\nreferendum terms (ref) -- v1.7.0');
   const L = res.out.lib;
@@ -708,7 +708,7 @@ ok(fx.counts.libLock >= 140,
   ok(JSON.stringify(ae.ref.pool) === JSON.stringify([{ sign: -1, scope: 'each', n: 1, per: 'minion' }]), 'Ancilla Empowerment: each Methuselah -1 per minion');
   ok(JSON.stringify(L['Anarchist Uprising'].ref.pool) === JSON.stringify(ae.ref.pool), 'Anarchist Uprising = Ancilla Empowerment (same text, same terms -- the sweep, not the card)');
   ok(JSON.stringify(ps.ref.pool) === JSON.stringify([{ sign: 0, scope: 'move', n: 3, from: 'richer', min: 1 }]), 'Parity Shift: move 3 from a richer Methuselah');
-  ok(ps.ref.tags.join() === 'poolDmg,poolGain', 'Parity Shift carries BOTH tags (Johan: a pool-damage card with an economy side)');
+  ok(ps.ref.tags.join() === 'poolDmg,poolGain', 'Parity Shift carries BOTH tags (the owner: a pool-damage card with an economy side)');
   ok(ps.req.title === true && ps.req.titles.join() === 'prince,justicar' && !ps.req.unmodelled, 'Parity Shift: req.titles = prince, justicar -- verifiable, so not unmodelled');
   ok(cb.ref.tags.join() === 'poolGain' && cb.ref.pool[0].per === 'clanVamp' && cb.ref.pool[0].sign === 1, 'Consanguineous Boon lands in the poolGain tag unasked (each +1 per clanVamp)');
   ok(L['Conservative Agitation'].ref.pool[0].n === 'players', "Conservative Agitation: n = 'players'");
@@ -724,7 +724,7 @@ ok(fx.counts.libLock >= 140,
   ok(refTerms('Successful referendum means each Methuselah burns 1 pool for each ghoul they control.') === null, 'unknown per-counter -> null (no guess)');
 }
 
-/* ---- v1.8.0: the act-again rider + strikeCE (Johan's sweep rule, 18 Sep 2026) ---- */
+/* ---- v1.8.0: the act-again rider + strikeCE (the owner's sweep rule, 18 Sep 2026) ---- */
 {
   console.log('\nact-again riders (when) + strikeCE -- v1.8.0');
   const L = res.out.lib;
@@ -746,7 +746,7 @@ ok(fx.counts.libLock >= 140,
   ok(nCE === 40 && nAll === 59, 'strikeCE is the PLAYABLE subset of combatEnds: ' + nCE + ' of ' + nAll + ' (45 of 64 until compiler v1.11.0: the four cards that print \u2018cannot strike: combat ends\u2019 -- Hunter\u2019s Mark, Sanguine Entrapment, Mind of the Wilds, Dog Pack -- are a ban on the opponent, ceBan, never the player\u2019s own strike; and Night Terrors\u2019 [OBF][PRE] is a strike its block grants, its curated ceGrant)');
 }
 
-/* ---- v1.9.0: the block bar + self damage sweep (Johan's sweep rule, 18 Sep 2026 late) ---- */
+/* ---- v1.9.0: the block bar + self damage sweep (the owner's sweep rule, 18 Sep 2026 late) ---- */
 {
   console.log('\nblockBar + selfDmg / selfTorpor -- v1.9.0');
   const L = res.out.lib, C = res.out.crypt;

@@ -61,7 +61,7 @@ const { Bot, ARCHETYPES, BOT_VERSION } = require('./elysium-bot.js');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const rotate = (arr, k) => arr.map((_, i) => arr[(i + k) % arr.length]);
-/* v1.3.0 (17 Sep 2026, Johan): RANDOM SEATING BY DEFAULT. The per-match rotation kept
+/* v1.3.0 (17 Sep 2026, the owner): RANDOM SEATING BY DEFAULT. The per-match rotation kept
    every persona/deck pair's NEIGHBOURS fixed -- hacking preyed on sewer, malkavian bled
    into the tremere wall, in every match of every series -- so per-deck rows measured
    table geometry as much as decks. Now each match seats the pairs in a random order
@@ -291,7 +291,7 @@ function finish(mi, state, end, o){
 /* ---------- the arena ---------- */
 async function runArena(opts){
   const o = Object.assign({
-    matches: 3, bots: 3, personas: ['expert'], decks: ['hacking'],   // v1.3.1 (18 Sep, Johan): SHARK for every seat by default -- the bots must play correctly from their knowledge before novice/grinder deviations are measured; --personas still overrides
+    matches: 3, bots: 3, personas: ['expert'], decks: ['hacking'],   // v1.3.1 (18 Sep, the owner): SHARK for every seat by default -- the bots must play correctly from their knowledge before novice/grinder deviations are measured; --personas still overrides
     startPool: 12, turnCap: 200, matchTimeoutMs: 600000,   // v1.3.3: was 120 s -- a 5p30 match runs 170-270 s, so the default silently voided it (reason 'timeout', winner by VP-so-far); pass --match-timeout for short probes
     pace: 0, askSecs: 3, asPlayedMs: 500, cardfx: null, trace: null, serverUrl: null, knobs: {}, seatKnobs: {},   // v1.4.15 (bot v0.6.232, D-122): the 'as played' window's grace at pace 0 -- a real server needs a round trip (the bot's default 0 is one macrotask, the hotseat bridge's)
       // v1.2.4 (#6): sweep knobs -- global + per-seat (treatment vs control in ONE match)
@@ -409,7 +409,7 @@ if(require.main === module){
     else if(a === '--turn-cap') o.turnCap = parseInt(next(), 10) || 200;
     else if(a === '--match-timeout') o.matchTimeoutMs = (parseInt(next(), 10) || 600) * 1000;
     else if(a === '--trace') o.trace = next();
-    else if(a === '--rig-file') o.rigFile = next();   // v1.1.3 (Johan's practical-testing GO): JSON array, index-aligned to bot seat order (0-based); an entry can be null/omitted for a normal random deal on that seat. Shape: {"hand":[...], "unc":[...], "ready":[{"name":..,"blood":..}], "pool":N} -- see elysium-bot.js's `dealt` handler, v0.6.17.
+    else if(a === '--rig-file') o.rigFile = next();   // v1.1.3 (the owner's practical-testing go-ahead): JSON array, index-aligned to bot seat order (0-based); an entry can be null/omitted for a normal random deal on that seat. Shape: {"hand":[...], "unc":[...], "ready":[{"name":..,"blood":..}], "pool":N} -- see elysium-bot.js's `dealt` handler, v0.6.17.
     else if(a === '--pace') o.pace = Math.max(0, parseInt(next(), 10) || 0);
     else if(a === '--ask-secs') o.askSecs = Math.max(2, parseInt(next(), 10) || 3);
     else if(a === '--as-played-ms') o.asPlayedMs = Math.max(0, parseInt(next(), 10) || 0);   // v1.4.15: the 'as played' window's grace at pace 0

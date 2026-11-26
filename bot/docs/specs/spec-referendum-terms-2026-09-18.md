@@ -17,7 +17,7 @@
 
 Grammar: `^Referendum terms — (.+?): (.+)\.$` and `^Referendum (passes|fails) — (.+?): (.+)\.$` (— is U+2014). Terms are `NAME SIGNn` joined by `, `; SIGN is `−` (U+2212), `-` or `+`; NAME is the roster name. Bots apply THEIR OWN delta from line 8, once. **Humans adjust their own pool by hand from line 8** — same convention as `the pool damage lands — NAME, −3 pool (adjust yours)`.
 
-## 2. How a human takes part (Johan, 18 Sep)
+## 2. How a human takes part (the owner, 18 Sep)
 - **Thinking time:** `Hold on…` stops the bot's vote clock until that player votes, passes or says `It resolves`.
 - **Voting:** the vampire menu's *Cast votes → For / Against* (the frozen line), OR the vote counter's +/−, OR the planned right-click *Votes* entry that adds to the counter. The bot reads all three: it sums the frozen lines per side and takes the larger of that sum and the counter.
 - **No votes:** `Pass` (quick phrase) or typing `No votes from me.` Once every other live seat has spoken the polls close without waiting out the clock. A human who only casts votes is NOT treated as finished (a second vampire may vote) — the clock (askSecs, restarted by every vote) closes it.

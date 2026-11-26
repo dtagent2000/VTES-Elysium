@@ -1,14 +1,15 @@
 # Elysium Card-Effect Library ("cardfx") — Design & Reference
 
-> **v1 (fxv 1), 12 July 2026 — Johan's decision:** the bot track gets a SHARED,
+> **v1 (fxv 1), 12 July 2026 — the owner's decision:** the bot track gets a SHARED,
 > machine-readable card-effect library compiled from KRCG's `vtes.json`, instead of
 > per-playbook effect tags only. One library of card FACTS feeds any number of bots;
 > per-bot decks and personalities stay in playbooks. This supersedes the
 > "own-deck-only" card-knowledge scope in `elysium-bot-spec.md` §5 (that section now
 > points here). Companion docs: `elysium-bot-spec.md` (the bot roadmap),
 > `ELYSIUM-PROTOCOL.md` §12 (the frozen wire lines the library complements),
-> `cardfx-persistent-lock-design-decisions.md` (14 July — the full back-and-forth
-> behind the persistent/lock tags below: Johan's original proposal, the revisions,
+> `cardfx-persistent-lock-design-decisions.md` (in the private data repo's `bot-history/specs/` since the cleanup round;
+> 14 July — the full back-and-forth
+> behind the persistent/lock tags below: the owner's original proposal, the revisions,
 > and where the first pass under-translated his own opening instruction — read that
 > before re-litigating any of §4's design calls from scratch).
 
@@ -23,7 +24,7 @@
 > invariant changed from "fx only" to "fx OR dir OR lock" (a lock-only segment like The
 > Parthenon's has no fx pattern in the v1 vocabulary at all). Equipment/Ally/Retainer/
 > Event are auto-tagged persistent from TYPE alone, not text — these stay in play by
-> rule and rarely restate it in prose (Johan's own opening framing, confirmed: only
+> rule and rarely restate it in prose (the owner's own opening framing, confirmed: only
 > 18/164, 0/119, 0/54, 1/40 respectively would have matched on text patterns). Power/
 > Conviction were considered and rejected (burn-for-effect, not stay-in-play). The 4
 > already-curated entries (Blood Doll/Vessel/Dreams of the Sphinx/Inside Dirt) did NOT
@@ -52,7 +53,7 @@
 > turns proving the full lock → +1 action → second master play chain end-to-end).
 
 > **`handler` field + CARD_HANDLERS registry, 14 July 2026 (same day) — Effective
-> Management's EFFECT is automated too, not just its placement.** Johan's framing:
+> Management's EFFECT is automated too, not just its placement.** the owner's framing:
 > bespoke, one-off effects that manipulate a player's OWN zones (crypt/hand/ash/library)
 > should read as instructions TO the bot, not as an attempt at generic `fx` vocabulary —
 > the same call already made for Ashur Tablets' threshold (§8 of the design-decisions
@@ -66,7 +67,7 @@
 > `ready` the SAME turn, draining `unc` before the poll could observe it. Fixed by
 > asserting on `cryptN` (a stable, monotonic signal) instead of the transient `unc`
 > array — see the learnings doc for the generalized lesson. Also naturally decoupled
-> from any future human-facing "auto-helper" button (Johan asked): the handler just
+> from any future human-facing "auto-helper" button (the owner asked): the handler just
 > sends the same wire verb a client-side helper would, so nothing here blocks or
 > complicates that later. Gate: cardfx 72/0 → 73/0, bot 154/0 → 159/0 (3× stable).
 
@@ -77,7 +78,7 @@
 > `'burned'` zone (a local mutation exactly like `_toAsh`'s pattern, just a different
 > destination), grants the +3 pool, and processes the ash heap. The 1-to-hand pick is
 > SCORED (new `_ashScoreFor`): Master bonus + decklist-scarcity + hand-type-mix — a
-> GENERAL v1 foundation Johan explicitly asked to land before any persona tuning
+> GENERAL v1 foundation the owner explicitly asked to land before any persona tuning
 > (theorize/playtest toward that later — see §11). Researched before building, not
 > guessed: VTES strategy literature calls Ashur Tablets "recursion", values it for
 > adapting to the table situation rather than a fixed priority, and names master-card
@@ -97,8 +98,8 @@
 
 > **Ashur Tablets' TABLE-WIDE collateral watch, 14 July 2026 (same day) — a human
 > (or another bot) crossing their OWN threshold now correctly sweeps this bot's
-> copies too, with no benefit.** Johan: "can we trigger the bot's cleanup when a
-> HUMAN plays their 3rd Ashur Tablets, too?" Scoped to bot-vs-bot detection today
+> copies too, with no benefit.** The owner asked whether the bot's cleanup can be triggered
+> when a HUMAN plays their 3rd Ashur Tablets, too. Scoped to bot-vs-bot detection today
 > (a full human-facing notification needs client work, parked separately). First
 > design (check whether ANY seat currently shows ≥3 copies in `ready`) was WRONG —
 > found by re-reasoning through the timing, not by testing: the triggering seat's
@@ -196,7 +197,7 @@ crypt stays whole. The compiled artifact is `elysium-cardfx.json`.
 - **`dir`** — PER-MODE (v1.3.0, 13 July 2026; was entry-level, proven wrong by split-effect
   cards): the mode's own text segment carries Ⓓ (a directed action — only its target(s)
   may block it, per the rulebook). Absent = undirected (blockable by the actor's prey AND
-  predator) — Johan's minimal-tagging call, and empirically correct: 180 directed vs 461
+  predator) — The owner's minimal-tagging call, and empirically correct: 180 directed vs 461
   undirected modes among action-typed entries (~28% directed — a real minority, not the
   ~53% an entry-level scan wrongly suggested by conflating split cards). Textbook case:
   Govern the Unaligned's inferior mode (bleed) is `dir:true`; its superior mode (add blood
@@ -336,7 +337,7 @@ to avoid 3 false positives where "location" describes a DIFFERENT card in the ru
 this card on" / "stays or remains in play" prose on a non-Location Master/Action/etc. Entry-
 level, not per-mode — a card either stays in play or it doesn't, regardless of which
 discipline level played it. Power/Conviction were read and explicitly excluded (burn-for-
-effect resources, one-shot like an Action despite the Imbued type family — Johan's original
+effect resources, one-shot like an Action despite the Imbued type family — the owner's original
 type list was exactly right, not extrapolated). Rulebook default for an untagged card is the
 OPPOSITE (resolve once, ash heap) — kept as an explicit tag rather than inverted to tag the
 minority, even though this sweep found persistent Masters to be the numeric majority (~80%
@@ -508,5 +509,5 @@ client-identical `DISC_ABBR` map, so `req.disc`/`disc.all` speak one vocabulary.
 The gate's v5 section compiles REAL v3 cards transformed per the verified field map and
 asserts entry-identical output, alias reconstruction, the mixed-list edge case, and the
 defensive cost path. Honest label: the fixtures are synthetic in SHAPE (real in
-content) — **a run against a real v5 FILE remains on Johan** the day KRCG flips; the
+content) — **a run against a real v5 FILE remains on the owner** the day KRCG flips; the
 format counter + defensive-read report line are built to make that run self-auditing.

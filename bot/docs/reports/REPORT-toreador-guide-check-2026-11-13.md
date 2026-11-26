@@ -1,6 +1,6 @@
 # REPORT — Toreador's strategy against its Black Chantry guide (RULINGS D-112), 13 November 2026
 
-Johan (D-112, 13 Nov): a deck's strategy line is checked against its Black Chantry guide whenever it is written or changed; the
+The owner (D-112, 13 Nov): a deck's strategy line is checked against its Black Chantry guide whenever it is written or changed; the
 guide is a check, not law (it is written for beginners), and where they disagree the bot keeps what its judgment and the sim say
 gives the deck the most VP, and says why. Toreador's check comes first (in the menu since v0.6.219).
 
@@ -47,7 +47,7 @@ control first, bleeds with Enchant Kindred and Aire of Elation, little defence.
   Both are BOARD lines (round A).
 - **B. A bot never defends its own card from a burn.** The block path for the threat classes refuses a block without an intercept
   card ("undirected actions carry +1 stealth"), but the burn and rush windows are directed (0 stealth: a bare body may block); and
-  with a card, T6's weight keeps the score under the bar. Johan's answers of 13 Nov put both in round B (D-114's spec, §5 and §6):
+  with a card, T6's weight keeps the score under the bar. The owner's answers of 13 Nov put both in round B (D-114's spec, §5 and §6):
   the guard corrected for both directed windows, and a burn at my card weighed by the card's worth to me — the Ball's worth comes
   from proposal 1's reading.
 - **C. The Ball's play does not ask the action scorer** (`_grandBallPlan` checks that a political action exists, not that the free
@@ -55,7 +55,7 @@ control first, bleeds with Enchant Kindred and Aire of Elation, little defence.
   a later decision is played only when that decision's scorer would take the set-up option now. It is listed as proposal 1, since
   it changes Toreador's play.
 
-## Proposals (each waits for Johan's "kör"; the sim decides the ones that are judgment)
+## Proposals (each waits for the owner's go-ahead; the sim decides the ones that are judgment)
 1. **The Ball on the turn it pays** (finding C, guide 11): `_grandBallPlan` asks `_decide` with the free Toreador's real context and
    the Ball's unblockability whether it would call the political action now; otherwise the Ball waits. A correction under the
    look-ahead rule (no knob); prediction: fewer Balls, more barred actions per Ball, Toreador's paired VP on the 600 not lower.
@@ -84,10 +84,10 @@ Finding A built (Perfect Paragon's [PRE]: 229 stealth plays on the 600, each aga
 titled Camarilla vampire, Scalpel Tongue's one requirement and a locked prince's Second Tradition (10 → 386 blocks through it);
 the ledger now asks a mode for every discipline line. Finding C built as proposal 1 — its play half failed its prediction: the Ball
 waits for a turn its free Toreador's scorer calls the referendum, but the minion phase lost 93 of its 308 turns to the order and the
-posture (RULINGS O-42, Johan's pick). Finding B was round B's (v0.6.224). Proposals 2–8 go to the bench round.
+posture (RULINGS O-42, the owner's pick). Finding B was round B's (v0.6.224). Proposals 2–8 go to the bench round.
 
 ## Status (15 Nov 2026, bot v0.6.229, the bench round — RULINGS D-117, D-118)
-Johan's "kör" on the recommendation (`specs/spec-bench-round-2026-11-15.md`): proposals 3, 4, 6 and 8 and D-117 built behind knobs
+the owner's go-ahead on the recommendation (`specs/spec-bench-round-2026-11-15.md`): proposals 3, 4, 6 and 8 and D-117 built behind knobs
 and benched on the 600, each paired against the knobs-at-0 control; proposal 7 too, and it lost; no to 2 and 5. On since v0.6.229:
 the Ball's turn (the free Toreador calls its referendum on 94 % of its Ball turns, 66 % before), the referendum after the cheap
 actions (with the five: first in 24 % of the turns with another act, last in 48 %; 46 % and 20 % before), the stock engine in the

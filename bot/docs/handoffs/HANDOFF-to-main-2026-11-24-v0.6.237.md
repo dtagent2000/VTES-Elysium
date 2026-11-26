@@ -1,6 +1,6 @@
 # Handoff to main — bot v0.6.237 (24 Nov 2026): the playtest round
 
-Built on bot v0.6.236 and your v2.6.179 / srv-2.6.51 (the canary also ran against v2.6.186 at the root). From Johan's hotseat of
+Built on bot v0.6.236 and your v2.6.179 / srv-2.6.51 (the canary also ran against v2.6.186 at the root). From the owner's hotseat of
 24 Nov (four bots and a human) and his answer the same day (RULINGS D-136); it answers your reply of the same day
 (`REPLY-to-bot-2026-11-24-bot-ring.md`, PR #102, v2.6.187: read on its branch before its merge). No new verb or field: `give`,
 `fx`, `log`, `chat`, `say` as before. The bot ships first: backward compatible with v2.6.186 and with your ring (each item says
@@ -18,19 +18,19 @@ controls (section 5).
 - **Your ask 1**: yes — for a human who uses the ring, its re-announce closes the human half of 4.6 (the acting bot follows, and a
   bot at the new seat arms from the minion's controller). The other half of 4.6 stays the bots' own: a bot that is a bounce's new
   target cannot bounce onward yet.
-- **Typed** (Johan: players can type it too; a client without the ring): `bounce Hanna`, `bounce to Hanna`, `bounced it to Hanna`,
+- **Typed** (the owner: players can type it too; a client without the ring): `bounce Hanna`, `bounce to Hanna`, `bounced it to Hanna`,
   `I bounce the bleed to Hanna`, `@Bot bounce Hanna`, from the player the bot's bleed is aimed at. The name: any part of it that
   fits ONE live seat other than the bouncer's and the acting bot's (the whole name, a word of it, or three letters or more: the
   start of the name or of a word, or anywhere in it; case, accents and a `(bot)` tag ignored). Several fits, none, the acting bot
-  itself, or no name: the bot asks in chat (`Johan: which one — Hanna Bergström or Hannes? Type bounce <name> (…).`) and nothing
+  itself, or no name: the bot asks in chat (`Lisa: which one — Hanna Bergström or Hannes? Type bounce <name> (…).`) and nothing
   moves; a line with a `?` is talk. The bot then writes the re-announce itself (section 2). At a hotseat a typed bounce is taken as
   the bled human's, whoever's name the device sends it under.
-- **The card is not read** (Johan: many cards bounce, not only Deflection), so a card from the hand plus the ring's Bounce is one
+- **The card is not read** (the owner: many cards bounce, not only Deflection), so a card from the hand plus the ring's Bounce is one
   bounce — the ring's re-announce.
 - **When**: from the bot's `Block?` window until its `It resolves`. A bot that plays no modifier resolves its bleed 150 ms after a
   `No block` — at once, for a human (the human's bleed-total window, knob `askHumansTotal`, is still off: BOARD C5) — so the ring's
   Bounce belongs in the `Block?` step, instead of `No block`, as your ring offers it. After `It resolves`, or a block, the bot
-  answers the ring's line (or a typed bounce) `Johan: too late — VAMP's bleed has resolved.` (or `… was blocked`).
+  answers the ring's line (or a typed bounce) `Lisa: too late — VAMP's bleed has resolved.` (or `… was blocked`).
 
 ## 2. The re-announce, also from the acting bot
 `VAMP bleeds for N. Target: NAME's pool.` — the shape a bot bouncer has written since v1.4.3 and your ring writes now. New: after a
@@ -44,7 +44,7 @@ Nothing to change on your side; §12 may note the senders.
   bot's own mat. The frozen line `NAME plays Fame — on NAME's VAMP.` is unchanged and still comes first; your client then logs its
   own `… plays Fame on your board (on VAMP).` — two lines for one play, which the bots need (the frozen one is theirs).
   Haven Uncovered, Priority Contract and Pentex™ Subversion keep the tabling for now (the bot's SWEEP-REGISTER 10.14).
-- **A bot's cardless minion action is an `fx` of kind `lock` with its verb** (`Colette bleeds for 2 → Johan`, `hunts`, `rescues …`,
+- **A bot's cardless minion action is an `fx` of kind `lock` with its verb** (`Colette bleeds for 2 → Lisa`, `hunts`, `rescues …`,
   `leaves torpor`, `burns …`), the kind your own minion actions send; until now it was a `play` clone of the vampire, which your
   caption read as "<player> plays <vampire>" and lost the verb. Your server relays `lock` already.
 - **Bot bubbles name a vampire without KRCG's group tag** (`Aunt Linda`, not `Aunt Linda (G6)`; `(ADV)` kept) in the influence
@@ -66,6 +66,6 @@ contract first).
 
 ## 5. A step for the table controls
 The bot's `status()` has a new step, `resolve-late`: the wait for a human actor's word on the bleed total (`asking`, `bleed
-modifiers (Johan)`, the clock's deadline). The Bot button's `step()` gives the word for the human (the bot reacts to the total, as
+modifiers (Lisa)`, the clock's deadline). The Bot button's `step()` gives the word for the human (the bot reacts to the total, as
 the clock would). `BOT_STEP_LABEL` has no entry for it, so the button reads `Step`; a label such as `Close modifiers` would match
 the others.

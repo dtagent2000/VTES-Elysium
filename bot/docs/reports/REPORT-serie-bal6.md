@@ -15,7 +15,7 @@ Recorded: malkavian **9 wins / 33 VP** (bal5: 7 / 30) · ventrue 2 / 12 · nosfe
 | L8 | clean | clean | HELD |
 
 ## Reading
-1. **The TIMING of Johan's doctrine is right and works:** the bounce now lands on the total (a pumped 4 caught four times), and block-then-bounce happens (8 times) — it never did before.
+1. **The TIMING of the owner's doctrine is right and works:** the bounce now lands on the total (a pumped 4 caught four times), and block-then-bounce happens (8 times) — it never did before.
 2. **'Never on a total of 1' was too hard for THESE decks.** Bounces played fell 53 → 18 (tremere 15 → 2, malkavian 25 → 5, ventrue 13 → 11); `bounce-kept` fired 25 times, 8 of them with two or more bounce cards in hand.
    At this table most damage arrives as small bleeds, the decks hold 8–10 bounce cards, and a small bleed sent on is free damage to my prey. A bounce kept for ever clogs the DEFENDER's hand — the mirror of the clog.
 3. malkavian dealt 218 pool of bleed (191). The defenders as a group got weaker; ventrue alone held (it kept bouncing: 11).

@@ -1,7 +1,7 @@
 # serie-bal1 — the BALANCED 4-starter baseline: report against the registered predictions (19 Sep 2026)
 
 Bot v0.6.133 · arena v1.3.5 · 12 matches, `--fixed-seats`, the 6 cyclic orders × 2, every predator → prey pairing 4 times, every deck starts 3
-times (`design.txt`), seeds 5001–5012 · all shark · permFirst ON (Johan: keep) · polOverBuild ON. Price referee MISMATCH 0 · 0 server-err · 0 timeouts.
+times (`design.txt`), seeds 5001–5012 · all shark · permFirst ON (the owner: keep) · polOverBuild ON. Price referee MISMATCH 0 · 0 server-err · 0 timeouts.
 **This replaces serie-null4 as the deck-level baseline.**
 
 ## Result

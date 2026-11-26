@@ -1,9 +1,9 @@
 # Elysium Arena Observability — the LLM-in-the-loop plan
-*Drafted 26 July 2026, from Johan's five points. Status: PROPOSAL (A2–A5 unbuilt).*
+*Drafted 26 July 2026, from the owner's five points. Status: PROPOSAL (A2–A5 unbuilt).*
 
 ## 1. The idea, elevated
 
-Johan's framing: log enough that a strong reviewer (Claude, Sonnet 5, or a
+The owner's framing: log enough that a strong reviewer (Claude, Sonnet 5, or a
 future model) can read a match **with full facit** — every hand, every board
 state, every decision *and its stated reason* — then compare the bots' play
 against what the deck's strategy *should* have done, and emit concrete
@@ -21,7 +21,7 @@ arena (traces) → dossier (one readable file per match) → LLM review
       └───────── knob sweep / persona PR / logic fix ────────┘
 ```
 
-## 2. Johan's five points, mapped against what exists TODAY
+## 2. The owner's five points, mapped against what exists TODAY
 
 | # | Point | Status | Gap |
 |---|-------|--------|-----|
@@ -60,7 +60,7 @@ deck. This is the reviewer's yardstick: decisions are judged *against intent*.
 ```
 Each bot logs **its own sanitized view** (the relay IS the fairness boundary).
 The omniscient facit = the UNION across 3–5 bots' snapshots + their private
-hands — exactly Johan's "fullt facit", assembled by the dossier tool, never
+hands — exactly the owner's full answer key, assembled by the dossier tool, never
 by any single bot.
 
 **`play`** (every commit that splices a card outside the action branch) — point 1's completion:
@@ -118,15 +118,15 @@ From the strategy literature's evaluation vocabulary, derivable once A2 lands:
 - **Torpor time** (turns famed/unfamed vampires sit in torpor — the yo-yo's KPI).
 - **Reaction efficiency** (bounces landed / bleeds received; reduce savings).
 
-## 7. Decisions (Johan, 26 July — all five locked)
+## 7. Decisions (the owner, 26 July — all five locked)
 
-1. **Snapshot frequency:** react windows INCLUDED (shipped in A2) — "hela bilden, det känns värt."
+1. **Snapshot frequency:** react windows INCLUDED (shipped in A2) — the whole picture is worth it.
 2. **Dossier budget:** 100k allowance for 5p epics (Max 20x) — tiers `--full`/`--compact` shipped in A3.
-3. **Strategy manifests:** Claude drafts, Johan reviews — six drafts live in DECK_STRATEGY (bot v0.6.73), open for his edits.
-4. **Review cadence:** EVERY arena match, at least initially — "mycket basstrategi och taktik vi vill fånga upp."
-5. **Format principle (Johan's refinement, now doctrine):** collected data is LLM-OPTIMAL (deterministic T-refs, one event per line, manifests first, per-turn FACIT hand union); the reviewer's OUTPUT is a frozen **battle-report template** (Summary / Strategy adherence / Top-3 misplays / Missed windows / Knob hypotheses / Logic hypotheses / Confidence notes) — drafts land for Johan's review, and reports stay comparable match-over-match.
+3. **Strategy manifests:** Claude drafts, the owner reviews — six drafts live in DECK_STRATEGY (bot v0.6.73), open for his edits.
+4. **Review cadence:** EVERY arena match, at least initially — there is much basic strategy and tactics to catch.
+5. **Format principle (the owner's refinement, now doctrine):** collected data is LLM-OPTIMAL (deterministic T-refs, one event per line, manifests first, per-turn FACIT hand union); the reviewer's OUTPUT is a frozen **battle-report template** (Summary / Strategy adherence / Top-3 misplays / Missed windows / Knob hypotheses / Logic hypotheses / Confidence notes) — drafts land for the owner's review, and reports stay comparable match-over-match.
 
-## 7b. Manifest drafts ×6 — FOR JOHAN'S REVIEW (live in DECK_STRATEGY, bot v0.6.73)
+## 7b. Manifest drafts ×6 — FOR THE OWNER'S REVIEW (live in DECK_STRATEGY, bot v0.6.73)
 
 - **hacking** — *Ashur-cycling swarm: cap-1/2 crypt floods the table fast, Leverage-class bleed pressure every turn, Ashur Tablets recycle the engine; win by tempo before the table organizes.* axes: swarm-bleed · cycling · tempo
 - **wall** — *Intercept fortress: block-first posture, equipment intercept (Bowl/Bike class), punish attempted actions and grind; win late by outlasting. Pairs with LOW-aggression personas (recipe-B find: unlocked minions ARE the wall).* axes: wall · intercept · attrition
@@ -137,11 +137,11 @@ From the strategy literature's evaluation vocabulary, derivable once A2 lands:
 
 *(Edit freely — these are drafts; the bot reads whatever the table says.)*
 
-## 9. The V-track — vampire special abilities (Johan's gap, 26 July: REAL)
+## 9. The V-track — vampire special abilities (the owner's gap, 26 July: REAL)
 
 Confirmed: the engine reads crypt **disc** (all/sup), **cap**, and **title** — but
 the vampires' CARD TEXTS (special abilities) are unmodeled. That is a large
-share of many decks' potential. Sequenced AFTER the A-steps per Johan:
+share of many decks' potential. Sequenced AFTER the A-steps per the owner:
 
 - **V1 — audit:** the six registered decks' ~54 crypt cards' texts classified
   into ability families (unlock/intercept auras, bleed modifiers, combat

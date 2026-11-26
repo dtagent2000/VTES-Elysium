@@ -9,7 +9,7 @@
    nothing left to do but wait, the clock jumps to the next timer. A match takes about a second instead of minutes, and the same spec gives
    the same trace byte for byte (fixed epoch, seeded deal), so a match can be replayed and two versions compared decision by decision.
 
-   Seating (Johan, 19 Oct: "we should test all possible seatings, since it affects tactical choices"):
+   Seating (the owner, 19 Oct: we should test all possible seatings, since seating affects the tactical choices):
      --seatings all     every permutation of the deck list (default): 4 decks = 24, 5 decks = 120 -- every cyclic order x every starting seat
      --seatings random  --matches N seeded random orders (from --seed)
      --seatings fixed   the deck list as given
@@ -192,7 +192,7 @@ function parseArgs(argv){
   if(o.bench != null){ o.benchArm = parseBench(o.bench); if(!o.benchArm){ console.error('sim: --bench is none, persona=NAME or knob=k=v[+k=v] (got ' + o.bench + ')'); process.exit(2); } }
   if(o.benchDeck && o.bench == null){ console.error('sim: --bench-deck needs --bench'); process.exit(2); }
   if(o.benchDeck && !o.decks.includes(o.benchDeck)){ console.error('sim: --bench-deck ' + o.benchDeck + ' is not in the design'); process.exit(2); }
-  const P = o.profile === 'client' ? { paceMs: 3100, askSecs: 20, deckname: true } : { paceMs: 0, askSecs: 3, deckname: false };   // client: the hotseat spawn in elysium-vtes-bord.html (v2.6.71 / Johan's live calibration); arena: elysium-bot-arena.js defaults
+  const P = o.profile === 'client' ? { paceMs: 3100, askSecs: 20, deckname: true } : { paceMs: 0, askSecs: 3, deckname: false };   // client: the hotseat spawn in elysium-vtes-bord.html (v2.6.71 / the owner's live calibration); arena: elysium-bot-arena.js defaults
   o.paceMs = o.pace != null ? o.pace : P.paceMs; o.askSecsEff = o.askSecs != null ? o.askSecs : P.askSecs; o.deckname = P.deckname;
   if(o.workers == null) o.workers = o.real ? 4 : Math.max(1, require('os').cpus().length);
   if(o.timeout == null) o.timeout = o.real ? 3600 : 180;

@@ -15,7 +15,7 @@
 #                 rule; the stray combat row -- BOARD, a rushed bot that meant to block -- is the known few that rounding absorbs)
 #     invariants  a flag kind outside INV_KNOWN, or more flags than 1 in 20 matches on the sim (its series since v0.6.213 measured 1 in
 #                 27 to 1 in 150) / 1 in 3 on the arena (v0.6.180's arena baseline, HOWTO) -- and never fewer than one: a series under
-#                 20 matches (the V5 smoke's 12) may carry one known flag (v1.1.0, Johan 12 Nov; v1.0.0 allowed none there, so a single
+#                 20 matches (the V5 smoke's 12) may carry one known flag (v1.1.0, the owner 12 Nov; v1.0.0 allowed none there, so a single
 #                 stray row failed a series). Wider View's burn-for-pool left INV_KNOWN with v1.1.0: bot v0.6.219's checker books the
 #                 blood a burn's note already shows (the pool-print + pool-drift +N pair was that double count), so such a flag is new.
 #     windows     the arena: an actor's window that ran out and went through (v0.6.206's gate of 0); the sim table: information only --

@@ -4,7 +4,7 @@
 # The arena smoke, a new section's destructive check and main's client suite stay by hand (CLAUDE.md "Gates"):
 #   always     node --check on every bot/ script · the correctness lint (as CI) · the canary twice (bot/'s copies; the root's release
 #              with client/ELYSIUM-PROTOCOL.md) · test-cardfx · gen-precon --check · the self-tests (card ledger, review sheet,
-#              ana-gates) · HB1 · doc-budget
+#              ana-gates, public-scan) · HB1 · doc-budget · public-scan (the name and quote scan on the lines the change adds, D-142)
 #   when hit   test-bot-hotseat.js (~1 min) when the bot, the hotseat tool or a read-only copy changed; test-doc-budget.sh when
 #              the doc check changed
 #   --sim      the footprint: the 240-match client design (the four starters, every seating x 10 deals) on the base's bundle and on
@@ -135,6 +135,8 @@ gate ana-gates-self 0 python3 ana-gates.py --self-test
 gate hb1 0 node diag-hb1-smoke.js
 hit '^bot/(elysium-bot\.js|elysium-bot-hotseat\.js|elysium-vtes-bord\.html|elysium-server\.js|ELYSIUM-PROTOCOL\.md|test-bot-hotseat\.js)$' && gate hotseat 1 node test-bot-hotseat.js
 gate doc-budget 0 g_docs
+gate public-scan-self 0 python3 tools/public-scan.py --self-test
+gate public-scan 0 python3 tools/public-scan.py --diff "$MB"
 hit '^bot/tools/(test-)?doc-budget\.sh$' && gate test-doc-budget 0 bash tools/test-doc-budget.sh
 [ "$sim" = 1 ] && gate sim-240 0 g_sim
 [ "$sim" = 0 ] && printf '%s\n' "$changed" | grep -qE '^bot/(elysium-bot\.js|elysium-cardfx\.json|cardfx-curated\.json|cardfx-compile\.js)$' && { printf '| sim-240 | NOT RUN | the bot or cardfx changed: a behaviour change needs --sim | - |\n' >> "$ROWS"; summary; }

@@ -1,6 +1,6 @@
 # serie-bal5 — the stealth bleeder + the second look (both sides) + Hidden Strength's X + Second Tradition as a wake (v0.6.143) — report (20 Sep 2026)
 
-Balanced design, seeds 9701–9712, all shark. Baseline serie-bal4 (v0.6.141). Measures v0.6.141 → 143 TOGETHER (Johan's choice). 12 of 12 last-standing, 0 timeouts, 0 server-err, rounds 5–14.
+Balanced design, seeds 9701–9712, all shark. Baseline serie-bal4 (v0.6.141). Measures v0.6.141 → 143 TOGETHER (the owner's choice). 12 of 12 last-standing, 0 timeouts, 0 server-err, rounds 5–14.
 Price referee: 77 cards, MISMATCH 0. Numbers: `cards.md` + the new rows.
 
 ## Result (recorded; see the last section)
@@ -35,4 +35,4 @@ Price referee: 77 cards, MISMATCH 0. Numbers: `cards.md` + the new rows.
    and ventrue's Second Tradition / Deflection use against a predator that stacks stealth deserves a read.
 
 ## Verdict
-Keep v0.6.143. Johan's doctrine, built on the real tally, does what he described. What it costs the other decks is the open question.
+Keep v0.6.143. The owner's doctrine, built on the real tally, does what he described. What it costs the other decks is the open question.

@@ -1,4 +1,4 @@
-# ARCHITECTURE — how the bot is built and where each decision lives (20 Oct 2026, bot v0.6.211)
+# ARCHITECTURE — how the bot is built, where each decision lives and the rules of each area (20 Oct 2026; the rules 26 Nov 2026)
 
 For people and agents. The bot is one file, `elysium-bot.js` (~9,600 lines, one IIFE), loaded by Node (the arena, the sim, the
 suites) and by the browser (hotseat; the export lands on `globalThis.ElysiumBot`). Everything the bot knows about the game it
@@ -28,6 +28,107 @@ trace       emit(kind, data) → the arena's / sim's match-NNNN.jsonl (manifest,
 ```
 The three rules that keep the layers apart: tactics READ the plan and never recompute it; every read about an opponent goes
 through `this.opp[seat]` (public evidence only); a decision knob gates decisions only (CLAUDE.md, binding rules).
+
+## Binding rules by area (moved from CLAUDE.md, D-142; they bind a change in their area)
+### Lines and speech
+- **The tier rule (v0.6.114).** [D-64, L-55] `note()` for events (log tier, no bubble), `chat()` ONLY for questions and instructions to a human
+  (D-137: the same question to a bot without the human's tail; one speaker at a time where `_floorOn`), `say()` for the quick phrases (the `SAY` table: Hold on, No block, Block! …). Before adding a `chat(...)`, ask whether an fx clone or a frozen log line already carries the
+  event; if so it is a note or nothing. `fxClone` takes `{ actor: vamp }` for every minion play. A new `note()` text is a LOG line
+  other bots' L12 parsers read: check it against `L12.actObs` (`^(.+?) (hunts|plays (.+?))[.!]`) and the frozen §12 shapes; never end
+  a note with `plays X.` or `hunts.`.
+- **The duplicate rule (v0.6.117).** [D-64] Online the server's ledger (`ledgerLive`; not a helper, and never offline) narrates every
+  pool / blood / zone / lock / face change — the bot
+  writes no note for an event the play line, the fx clone or the ledger already shows; a note survives only where it explains a
+  WHY the table cannot see (Jack ticks, does-not-unlock, Misdirection, an uncurated warning). What a human says aloud is one chat
+  bubble in table words (`_influenceSentence`, `I vote N against.`, `No votes from me.`, `I take N. Pool: X.`). A line another
+  bot must parse is never a duplicate (the combat handshake rule below: v0.6.114 deleted such lines and broke six days of series).
+- **A new bot line.** [L-55] The machine-readable line goes out BEFORE the line that opens a window (the terms line, the block-bar line
+  precedents), and a bot-emitted frozen line belongs in main's §12 with a canary case (a handoff when it is new).
+- **The event log (v0.6.176).** [L-56] A new frozen line gets its event kind in `_evClassify` in the same release as its parser. The
+  classifier reads the line as SENT (`NAME (bot)` on the log tier; a chat has no prefix since D-137), specific shapes first.
+- **The helper-gate rule (v0.6.113).** [D-63, L-11] Nothing in the bot decides on `caps.tally` or any helper state: game logic is weighed on
+  the merits; the structured narration (`Phase:` lines, own stealth / intercept on the shared tally, the §12 verdict at the clock)
+  is the bot's own protocol and unconditional. `caps.tally` is diagnostic only. Before re-adding any gate read
+  `docs/specs/elysium-bot-helper-gate-decision.md`.
+- **Lines are the contract, fields the accelerator (main, 23 Sep).** [D-27, D-94, L-57] Every combat decision taken from a tally field has a line
+  fallback (range from `maneuvers to` / `sets range to`, press from `presses to`, strikes from the strike lines, damage from
+  `takes N (…)`); prefer a HUMAN's field when it disagrees with the last line; never require the field. `combatPhases` is not
+  built on `ph`.
+### Combat
+- **The combat handshake rule (v0.6.156).** [R-28, R-29; L-34, L-35, L-55] Every combat EVENT the opposing bot must know (a maneuver, a press, Immortal Grapple,
+  Carrion Crows, my strike, my taken line) is a frozen LINE on the log tier (`note()`), and `_parseCombatNarration` reads it from
+  BOTH tiers. A new combat announcement gets its line, a parser in that one method and a section-125-style test through `_onLog`, or the
+  other bot never hears it. `ana-combat2.py`'s handshake-integrity line is the gate: under 100 % on a bot-only table = a broken
+  line. "Do I want to" lives in `_wantGrapple` / `_wantPress` / `_wantPressToEnd` / `_wantLong` reading `DECK_STRATEGY.combat`
+  (chase / snipe / wave), never as a threshold at the play site. Per-round state resets at the round's start, per-combat state in
+  `_resolveCombat`'s `finally`; a flag about a LATER step dies where its scope ends. Between bots the acting bot strikes first and
+  the answering bot PEEKS (`_awaitOppStrikePeek`) before it chooses; the acting minion is one rule, `_combatIActing()`. Every
+  await of a combat is followed by its token check (`stale()`, `sup(round)`, `ct !== this._combatTok`), and a new combat ends the
+  waits of one still in flight: a combat a later one superseded says, writes, spends and waits nothing more [L-89].
+### Cardfx
+- **The cardfx cost rule (compile v1.6.14).** [R-17, D-54; L-67] A curated entry without `cost` inherits the data's numeric cost; explicit curated
+  cost wins; X is never inherited; the compile report's inherited / mismatch / X lists are read at every recompile. Every restored
+  price is an unpaid cost until a finder reads `cost.blood` / `cost.pool` and its branch pays it. Costs are parked at announce and
+  returned on a block (`_park` / `_returnParked`). A curated entry keyed by a printed variant is mirrored onto the printed name;
+  never rename a key a bot list uses (`fxLookup(name).name` must equal the hand's own name). A new hand fx key on a library entry,
+  or a backlog key on one more card, is answered in `cardfx-sharing.json` first: who else prints it [D-125; HOWTO].
+- **`FX_NORM` is the client's `norm()`**, byte for byte (section 154f compares them over every cardfx name against the released
+  client one level up). When main changes `norm()`, copy the table.
+### Block
+- **The block gate (v0.6.170, the owner on the base rules).** [R-12, R-14, R-38] Stealth and intercept are spent only when needed: the actor plays stealth only
+  after a block attempt and only while intercept ≥ stealth; the blocker plays intercept only while stealth > intercept (a card that says otherwise is its own exception: Creepshow Casino at the announce, D-104). Directed
+  actions carry 0 stealth; the undirected +1 applies to BASIC actions only (hunt, equip, employ, recruit, political, rescue own
+  vampire, leave torpor); an action card is at 0 unless it prints stealth, and its printed "+N stealth action" is the total
+  (cardfx `actStealth`). Stealth and intercept can go below 0 (R-38). `ana-block.py` 0 violations.
+- **The ahead rule (v0.6.152).** [D-14, D-15, R-16] While the block counter reads a > b the actor plays NO stealth card; against a human it says
+  `<vamp> currently has N stealth — …` once per (blocker, a, b) and waits for the counter. The first look against a human runs
+  AFTER the reaction beat; second-look stealth, the blocker's intercept card and cancel-block land after the beat and are re-checked
+  against the counter. Intercept by chat (bare `N` = total, `+N` = added) only while my action is contested.
+### Timing
+- **The window rule (v0.6.206).** [L-25, L-26] A window opens in the SAME tick as the line it opens on — never an `await` between sending that
+  line and `_askBlock`. A guard about what the table has SEEN keys on the line the answer answers (`_openLine`), not on my queue.
+  A bot's answer that arrives while `_openLine` is still queued is a `stale-answer` row, never a human's; once the line has left the
+  queue it is on the wire (a hotseat bridge before client v2.6.177 delivers inside the send, L-92); `_drain` never sends inside a send.
+- **The beat rule (v0.6.152, v0.6.207).** [D-65, D-70; L-29, L-36] `_pace` waits paceMs from the LATEST visible event at the table (my own act or anybody
+  else's say / log / chat / tally / fx; boards never re-anchor); `_afterBeat(kind, guard, fn)` for a synchronous handler that wants
+  a visible act to follow; paceMs 0 runs everything at once (the suite; the arena adds the 'as played' grace, `asPlayedMs` 500, D-122). The chat beat separates
+  two CHAT bubbles and nothing else (`_lastChatWireAt`); a hold or resume line skips it.
+- **The tempo gate (v0.6.194, `docs/specs/spec-bot-tempo-2026-09-27.md`).** [D-66, D-68, D-69; L-27, L-28] A wait on a HUMAN never reads `askSecs` / `phaseSecs`
+  directly: it asks `_waitPlan(kind, who)` (block / react / pq / vote / phase / damage / verdict), writes a `wait` row, has its
+  `t0`, its Turn-based reminder text and a `status()` / `step()` rung. Bot-vs-bot windows never read the tempo (`mode: 'bots'`).
+  Adaptive's skip is RULES-strict (skipped only when the human has no legal answer; strike and press always asked). No botcfg = the
+  clocks of old, byte for byte. A wait's clock starts when its question is ON THE WIRE (`_afterWire`); time the whole flow, not the
+  wait you changed: a handshake wait after a tempo wait is `_lineGraceMs` against a human, and a shortened wait that was somebody's
+  only window becomes an asked step (`_phaseStep(5, 'reply')`). Measure with `ana-wait.py` before claiming a tempo is faster.
+- **The hold gate (v0.6.198, the owner's principle agreed with main).** [D-67, D-31; L-32] A Hold on stops EVERY clock that waits on a human and each
+  starts again from the beginning on the release. A new wait on a human: its arm checks `_held()` and freezes (`_freezeWait`),
+  `_holdFreeze` freezes it on a hold, `_holdThaw` re-arms it FRESH when `_holdBy` empties, `_holdAnnounce()` when nobody else can
+  announce; one-shot timers through `_heldTimeout`. An ANSWER still ends a wait at once. A vote, a Yes or a No is an answer, never a
+  release; only the flow phrases release (`_releasePauses` ends every holder's pause); completion (everyone has spoken) is
+  not a clock; a question asked under a hold must not promise a clock (`_waitTail`). The stopwatch invariants (v0.6.115): the ring
+  never re-stamps a PAUSED window (`pausedBy.size`), `_restartAskTimer` re-arms it, and a window ends ≤ reactClockMs + reactSecs +
+  grace after the last activity. Bots never operate the hold.
+### Decisions
+- **The look-ahead rule (v0.6.205).** [D-58; L-13] A card that sets up a later decision is played only when that decision's OWN scorer would
+  take the set-up option now: build the real ctx (`_actionCtxFor`), apply only the corrections that hold before the phase starts
+  (`_actionCtxAdjust(…, ahead)`), ask `_decide` (the bare scorer, no trace row). Test a phase effect THROUGH the phase: a hook a
+  unit test calls directly proves the hook, not that the turn calls it.
+- **The self-price rule (v0.6.127).** [R-19, D-37] A self-price mode (`selfDmg` / `selfAggr` / `selfTorpor`) is closed to every generic finder
+  (`_modeUsableBy(mo, vamp, { selfPrice: true })` opens it); a new consumer pays through `_actingVamp.selfPrice` +
+  `_settleSelfPrice`, which today runs at the end of the BLEED branch only.
+- **The knowledge-layer rule (v0.6.187+).** [D-78, D-81, D-82, D-68] Every expectation about a seat comes from PUBLIC evidence only (its crypt, the cards
+  it has shown, its lines); the TWD profile is a prior, observations take over. A knowledge knob ships at 0 and flips to 1 only
+  after the sim's mirror bench (all seats, paired against the negative control) shows no loss. A rule only one deck's cards can trigger is benched PINNED
+  to that deck against a pinned control on the same seeds; count the rule's own decisions per tag to prove it fired. An archetype
+  LABEL is explanation, not a decision: only a confident label (margin ≥ 2, coverage ≥ 0.85) may inform a decision, benched like
+  any knob. A new profile share is APPENDED (readers index `f[0..3]`); a rebuilt profile is first reproduced byte for byte by the
+  old script. Bots look away from a seat that announced DEBUG mode.
+- **The ledger gate (v0.6.163).** [R-23; L-33, L-39] An effect that moves something between two bots and shows on only one side is a bug until
+  explained. Resolve an effect at its RULES moment, not when its line arrives; pair the rows before accepting an explanation for a
+  total; a bleed `through` that no seat took is `VANISHED` (gate 0).
+- **Debug density (v0.6.112).** The weighting log is dense by default (every `decide` branch renders a `why` except `react-delay`
+  and hunt-or-bleed's empty return). If it looks sparse at the table, give the early return a `why`; never fabricate reasoning in
+  `_logWeight`.
 
 ## Where each decision lives
 | Decision | Scorer / site | Reads | Row |
@@ -111,9 +212,9 @@ node elysium-bot.js --server ws://HOST:8123 --room R --pass P [--persona expert]
 ```
 
 ## Words a new session meets
-**kör** — Johan's go-ahead. **§12** — the protocol's section of frozen bot lines (main's). **L12** — the bot's table of parsers
+**kör** — the owner's go-ahead word. **§12** — the protocol's section of frozen bot lines (main's). **L12** — the bot's table of parsers
 for those lines. **HB1** — the browser battery (`elysium-bot-diag.html`). **R1–R4** — the rounds of the 14 Oct play-test review.
-**CL n / 64a / 65f** — a debt number of the old bootstrap (`history/CLAUDE-v2-2026-10-20.md`). **The stable** — the four V5
+**CL n / 64a / 65f** — a debt number of the old bootstrap (the private data repo's `bot-history/CLAUDE-v2-2026-10-20.md`). **The stable** — the four V5
 starters. **240 last-standing** — the sim's 240-match client design (every seating × 10 deals) all played to one survivor.
 **Pinned** — a bench arm whose variant sits on one deck only. **Negative control** — A vs A, the bench's noise floor.
 **Egress review** — a fresh-context agent's review of a round's diff (HARNESS). **Footprint** — the matches a change DIVERGED.
@@ -123,12 +224,12 @@ starters. **240 last-standing** — the sim's 240-match client design (every sea
 `elysium-bot-block-doctrine.md` (B1–B3) · `elysium-bot-persona-spec.md` (four layers, the final filter) ·
 `elysium-bot-politics-theory.md` + `spec-referendum-terms-2026-09-18.md` · `elysium-bot-combat-v2-plan.md` +
 `spec-client-combat-controls-2026-09-23.md` · `spec-bot-tempo-2026-09-27.md` (the tempo) · `spec-hotseat-bridge-relays-2026-09-11.md`
-(parity) · `elysium-cardfx-design.md` + `cardfx-persistent-lock-design-decisions.md` + `cardfx-sweep-audit.md` (cardfx) ·
+(parity) · `elysium-cardfx-design.md` + `cardfx-sweep-audit.md` (cardfx; the 14 July design discussion is in the data repo's `bot-history/specs/`) ·
 `spec-knowledge-layer.md` (K0–K2, the TWD prior) · `elysium-bot-helper-gate-decision.md` · `elysium-bot-feedback-loop-spec.md` ·
 `elysium-arena-observability-plan.md` · `elysium-bot-influence-planner-spec.md` · `elysium-bot-phase-income-v2-plan.md` ·
 `spec-cleanup-2026-10-20.md` (the four projects' review, the clean-up, the abstract model's place) · `spec-v5-wave1-2026-10-29.md`
 (V5 wave 1: the additional-strike protocol, aggravated strikes, Villein) · `spec-block-bar-2026-09-18.md`
 (the block-bar line, still owed to main's §12) · `spec-event-log-design-2026-09-25.md` (the event log, episodes in shadow mode,
 real-time invariants, the bench; a status table on top) and `spec-cardfx-sweep-sources-2026-09-25.md` (KRCG, vtes-rulings and
-vtes-skill mapped onto the cardfx fields; the method for graded readings) — both copied from Johan's Claude Docs of 25 Sep
+vtes-skill mapped onto the cardfx fields; the method for graded readings) — both copied from the project's Claude Docs of 25 Sep
 ([event log design](https://claude.ai/artifact/S5PiF7x5PhpU4JSSQgp9Dx), [sweep mapping](https://claude.ai/artifact/AGzYhap2bMyc4vwhRFzUUj)).

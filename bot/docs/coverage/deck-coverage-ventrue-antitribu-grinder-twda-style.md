@@ -1,8 +1,8 @@
-# deck-coverage — Ventrue antitribu Grinder (Johan, TWDA-style) (2026-07-23)
+# deck-coverage — Ventrue antitribu Grinder (the owner, TWDA-style) (2026-07-23)
 
-Genererad av `gen-deck-coverage.js` v1.1.14 mot `elysium-cardfx.json` (fxv 1, 2364 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: vtru-grinder-johan.json.
+Genererad av `gen-deck-coverage.js` v1.1.14 mot `elysium-cardfx.json` (fxv 1, 2364 lib / 1785 crypt / 2422 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: the owner's Ventrue grinder deck file (not in the repository).
 
-Syfte: göra "kan botten spela den här leken?" till en mekanisk kontroll — curated-djup och
+Syfte: göra frågan om botten kan spela den här leken till en mekanisk kontroll — curated-djup och
 handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPPORT, inte en gate.
 
 ## Sammanfattning (qty-viktad, 90 bibliotekskopior)

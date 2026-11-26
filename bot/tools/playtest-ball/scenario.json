@@ -3,7 +3,7 @@
  "room": "ballc",
  "board": "structured",
  "human": {
-  "name": "Johan",
+  "name": "Jonna",
   "deck": "bot/tools/playtest-ball/deck-toreador-ball.txt",
   "seat": 1
  },

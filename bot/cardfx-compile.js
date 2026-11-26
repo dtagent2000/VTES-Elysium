@@ -116,8 +116,8 @@ const FXC_VERSION = '1.11.4';   // 20 Nov 2026 (the pilot's review, pass 3): 'As
 // const FXC_VERSION_193 = '1.9.3';   // 19 Oct 2026 (bot v0.6.211, the stable's cards): a curated entry keyed by a printed name VARIANT (Pentex(TM) Subversion) is written under the printed name too -- a list typed with the printed name (KRCG's precons, the V5 generator) got the empty auto entry; each spelling now resolves exactly to itself, so fxLookup(name).name keeps equalling the hand's own name (the master loop re-anchors by name)
 // const FXC_VERSION_192 = '1.9.2';   // 16 Oct 2026 (bot v0.6.202, the 14 Oct play-test's point 18): `handBonus` -- 'hand strike at +N damage' / 'this strike is at +N damage' are a bonus on the hand strike, no longer the absolute `strike` (35 cards; Roundhouse). v1.9.1 (25 Sep, the sweep's pass 2: curated entries inherit requirements and costs) never bumped this constant.
 // const FXC_VERSION_190 = '1.9.0';   // 18 Sep 2026 (late): THE BLOCK BAR + SELF DAMAGE sweep -- `blockBar` ('vampires'|'allies'|'all'|'chosen'|'titled'|'cond') on the 'cannot block THIS ACTION' / 'unblockable' family, `selfDmg` (+ `selfAggr`) on 'this vampire takes N unpreventable ... damage', `selfTorpor` on 'the acting vampire goes to torpor after'; the self-inflicted sentence no longer leaks `aggr` / `torpor` (Daring the Dawn read as an aggravated STRIKER, Day Operation as a torpor SENDER). Before it: 1.8.0 // 18 Sep 2026: the act-again rider (`when: actSuccess|actBlocked|actFailed`) on unlocking action modifiers + `oncePerTurn`. Before it:
-// const FXC_VERSION_170 = '1.7.0';   // 18 Sep 2026 (Johan, the politics leg's first brick): REFERENDUM TERMS -- `ref` on political entries; outcome fx keys leave modes[].fx (the structural gate for bot debt 14). Previous: 1.6.14 (16 Sep, inherited costs).
-// 1.6.14:   // 16 Sep 2026 (Johan's Academic Hunting Ground report): curated entries INHERIT the data's numeric cost when they do not restate it (see overlay); the report lists inherited / mismatched / X costs.
+// const FXC_VERSION_170 = '1.7.0';   // 18 Sep 2026 (the owner, the politics leg's first brick): REFERENDUM TERMS -- `ref` on political entries; outcome fx keys leave modes[].fx (the structural gate for bot debt 14). Previous: 1.6.14 (16 Sep, inherited costs).
+// 1.6.14:   // 16 Sep 2026 (the owner's Academic Hunting Ground report): curated entries INHERIT the data's numeric cost when they do not restate it (see overlay); the report lists inherited / mismatched / X costs.
 // FXC_VERSION history: '1.6.13';   // 8 Aug (HB2c-file): every compile now ALSO emits elysium-cardfx.js (globalThis.ELYSIUM_CARDFX = <same object>) beside the json -- the file:// vehicle for double-click hotseat bots; kept in lockstep by construction (one serialize, two writes).   // 17 July: fas B/C mechanism sweep -- OR-mode split (22 cards), As-[ref]-above resolution (89), attach-burn->stealthLater (5), action-type actStealth (176+), keyword-token trifle/archetype (Master:-colon + combination forms), imperative costEdge. v1.4.2 (16 July): wake-sweep.
 
 /* ---------------- vocabulary tables ---------------- */
@@ -193,7 +193,7 @@ function extractFx(t0){
     else if(typeof fx[k] === 'number' && typeof v === 'number' && v > fx[k]) fx[k] = v;
   };
   let m;
-  /* v1.9.0 -- THE BLOCK BAR + SELF DAMAGE (Johan's sweep rule: one tag per shared attribute, the differences are fields).
+  /* v1.9.0 -- THE BLOCK BAR + SELF DAMAGE (the owner's sweep rule: one tag per shared attribute, the differences are fields).
      Read FIRST and STRIPPED, so the self-inflicted sentence cannot leak into the offensive keys below
      ('aggravated' -> aggr, 'goes to torpor' -> torpor). Scope: THIS ACTION only -- a standing bar on a
      minion ('cannot block this minion', Pentex's noBlockMinion) is a different, persistent thing. */
@@ -227,14 +227,14 @@ function extractFx(t0){
     if((m = ts.match(/\+([0-9]+|X) stealth/i))) put('stealth', num(m[1])); }
   /* defense */
   if((m = t.match(/\+([0-9]+|X) intercept/i))) put('intercept', num(m[1]));
-  if(/\bwakes\b/i.test(t) || /attempt to block[^.]{0,40}\bas (?:if|though) unlocked/i.test(t)) put('wake', true);   // v1.4.1 (16 July, wake-sweep with Johan): the modern keyword form ("This vampire wakes (…)") AND the pre-keyword templating ("can play reaction cards and attempt to block as if/though unlocked" -- Fillip, Aye, No Secrets From the Magaji, all confirmed against the rulebook glossary's wake definition). The "attempt to" anchor is load-bearing: Burden the Mind's "to allow this minion to block as if unlocked costs an additional pool" REFERENCES wake effects (taxes them) without granting one -- it lacks "attempt", so it stays untagged, verified in the sweep. Rulebook (vekn.net glossary): wake ≠ unlock -- a woken minion STAYS locked, acts "as though unlocked" for the current action only; cards punishing unlock (Sleeping Mind) never touch wake, so the two tags must never blur.
+  if(/\bwakes\b/i.test(t) || /attempt to block[^.]{0,40}\bas (?:if|though) unlocked/i.test(t)) put('wake', true);   // v1.4.1 (16 July, wake-sweep with the owner): the modern keyword form ("This vampire wakes (…)") AND the pre-keyword templating ("can play reaction cards and attempt to block as if/though unlocked" -- Fillip, Aye, No Secrets From the Magaji, all confirmed against the rulebook glossary's wake definition). The "attempt to" anchor is load-bearing: Burden the Mind's "to allow this minion to block as if unlocked costs an additional pool" REFERENCES wake effects (taxes them) without granting one -- it lacks "attempt", so it stays untagged, verified in the sweep. Rulebook (vekn.net glossary): wake ≠ unlock -- a woken minion STAYS locked, acts "as though unlocked" for the current action only; cards punishing unlock (Sleeping Mind) never touch wake, so the two tags must never blur.
   if(/change the target of the bleed/i.test(t)) put('bounce', true);
   if((m = t.match(/reduce (?:a|the|that) bleed[^.]{0,30}? by ([0-9]+|X)/i))) put('reduce', num(m[1]));
   else if(/reduce (?:a|the|that) bleed[^.]{0,25} to 0/i.test(t)) put('reduce', 'all');
   if(/unlocks? (?!phase)(?:this|that|a |an |all |target|them|him|her)/i.test(t)) put('unlock', true);
   if(/\breduce the acting minion's stealth to 0\b/i.test(t)) put('stealthToZero', true);   // v1.9.11 (bot v0.6.233, V5 wave 6a, D-123): Night Terrors (its superior's 'As above' inherits it), Veiled Sight [chi], Draba [CHI] -- a blocking bot plays it when the actor's stealth beats its intercept (_nightTerrorsFor); 'Effectively gives a -X stealth modifier to the action' [RTR 20030519]
   /* threats (as seen by the card's target) */
-  /* v1.5.2 (18 July, Johan's sweep-uncertainty question): ONGOING pool drains ("During
+  /* v1.5.2 (18 July, the owner's sweep-uncertainty question): ONGOING pool drains ("During
      each other Methuselah's unlock phase, they burn 1 pool" -- Contagion, Fame, Smiling
      Jack, 7 cards measured) are NOT immediate pool damage: the bot's play path resolves
      poolDmg as an instant burn, and coverage v1.1 classes the key as playable -- so the
@@ -250,7 +250,7 @@ function extractFx(t0){
   if(/(?:send|sends|goes|put|puts)[^.]{0,50}(?:in)?to torpor/i.test(t)) put('torpor', true);
   /* economy */
   if((m = t.match(/gain ([0-9]+|X) pool/i))) put('poolGain', num(m[1]));
-  /* v1.6.6 (Johan's "sweep it while it's fresh" GO, hand size family): measured 85
+  /* v1.6.6 (the owner's go-ahead to sweep it while it's fresh, hand size family): measured 85
      cards mentioning "hand size" across 10 types before tagging anything. Most are
      OUT of scope for this fx key entirely, not just unconsumed:
        - "discard down to/draw up to your hand size" (Fortschritt Library, Secret
@@ -293,7 +293,7 @@ function extractFx(t0){
       && !/chosen Methuselah|successful referendum/i.test(t)){          // Year of Fortune / Hand Intervention-class: vote-scoped, needs the whole politics engine (Q1-Q6, elysium-bot-politics-theory.md) -- explicitly out of scope for this sweep
     put('handSize', num(m[1])); put('handSizePermanent', true);
   }
-  /* v1.5.6 (Johan's blood-placement family, superior-Govern pin): the TARGETED form.
+  /* v1.5.6 (the owner's blood-placement family, superior-Govern pin): the TARGETED form.
      "Add/Put/Move N blood (from the blood bank) on/to a (younger) vampire in your
      uncontrolled region" -- 38 cards measured; ONLY the clean phrase gets the target
      tag (clan/title/infernal/imbued/capacity-filtered targets stay bloodAdd-without-
@@ -306,7 +306,7 @@ function extractFx(t0){
     put('bloodAdd', num(m[1])); put('bloodAddTo', 'unc'); if(m[2]) put('bloodAddYounger', true);
   }
   if((m = t.match(/add ([0-9]+|X) blood/i))) put('bloodAdd', num(m[1]));
-  /* v1.6.3 (Johan's "push Inside Dirt to 100%" GO, Life in the City): a THIRD
+  /* v1.6.3 (the owner's go-ahead to push Inside Dirt to 100%, Life in the City): a THIRD
      bloodAddTo target class -- 'own-ready' (a ready vampire the CONTROLLING player
      owns), distinct from 'unc' (superior-Govern's uncontrolled-region target).
      Measured first: 5 cards share "add N blood to a ready vampire" wording, but only
@@ -377,7 +377,7 @@ function extractFx(t0){
      (m = t.match(/prevents? ([0-9]+|X|all|that)?\s*(?:of the )?damage/i)))
     put('prevent', m[1] ? (/^(all|that)$/i.test(m[1]) ? 'all' : num(m[1])) : 'all');
   if((m = t.match(/[Ss]trike:?\s*([0-9]+|X)R?\s*damage/))) put('strike', num(m[1]));
-  /* v1.5.9 (Johan's combat GO, Roundhouse quick-win that turned into a 33-card family):
+  /* v1.5.9 (the owner's combat go-ahead, Roundhouse quick-win that turned into a 33-card family):
      two more strike-damage-bonus phrasings the original pattern's tight "number right
      after Strike:" shape missed. Measured against the full Combat pool before writing:
      22 "hand strike at +N damage" (Roundhouse, Burning Wrath, Cauldron of Blood, ...),
@@ -402,7 +402,7 @@ function extractFx(t0){
      a handBonus); handStrike stays, as on Cobra Fangs and Dagon's Call. Today's library: Taming the Beast [abo] alone (Stutter-Step [CEL]
      prints 'this vampire cannot' and has no bonus). */
   if(fx.handBonus !== undefined && /\bthis (?:minion|vampire) cannot\b/i.test(t)) delete fx.handBonus;
-  /* v1.6.0 (Johan's standing question, checking the strike-bonus family for
+  /* v1.6.0 (the owner's standing question, checking the strike-bonus family for
      uncertainty): a THIRD phrasing found by chance while reading Compress -- "Strike:
      N aggravated damage" (aggravated sitting BETWEEN the number and "damage" breaks
      both the original tight pattern and the two v1.5.9 additions). 6 cards measured:
@@ -420,7 +420,7 @@ function extractFx(t0){
      like handStrike: a non-hand strike WITHOUT it is melee and cannot be used at long range (rulebook, combat range). The sweep pilot
      found the bot treating all 9 melee cards (Talbot's Chainsaw, Burning Touch, Putrefaction ...) as usable at long. */
   if(/strike[^.:]{0,20}\branged\b|\b[0-9X]+R\s*(?:aggravated\s+)?damage|\branged strike/i.test(t)) put('ranged', true);   // v1.8.0: the PLAYABLE shape of combatEnds -- a strike that ends combat (Majesty & 44 siblings). combatEnds alone also covers conditional and press-step endings the bot cannot play as a strike.
-  /* v1.6.2 (Johan's combat GO, Immortal Grapple -- the strike-type restriction
+  /* v1.6.2 (the owner's combat go-ahead, Immortal Grapple -- the strike-type restriction
      concept): source-verified vekn.net + official FAQ first -- "Immortal Grapple
      restricts both minions in the combat to only using 'hand strikes'" (3.16). This
      means retroactively classifying the 87 already-shipped strike/stealBlood cards:
@@ -434,7 +434,7 @@ function extractFx(t0){
      tag, so this fails closed: only explicit "hand strike" text counts. */
   if(/hand strike/i.test(t) && !/strikes that are not hand strikes/i.test(t)) put('handStrike', true);
   if(/strikes that are not hand strikes cannot be used this round/i.test(t)) put('restrictHandStrike', true);
-  /* v1.6.1 (Johan's combat GO, Carrion Crows -- the persistent-this-combat modifier
+  /* v1.6.1 (the owner's combat go-ahead, Carrion Crows -- the persistent-this-combat modifier
      concept): source-verified vekn.net first -- environmental damage is any damage
      NOT from a strike or an explicit "this minion inflicts" effect; it cannot be
      dodged (official 2024 rulebook clarification), and is skipped entirely for a
@@ -508,7 +508,7 @@ function segment(text){
 }
 
 /* ---------------- mode assembly (with "As above" resolution) ------------- */
-/* v1.8.0 (18 Sep 2026, the act-again family -- Johan's sweep rule again): an action modifier that UNLOCKS its
+/* v1.8.0 (18 Sep 2026, the act-again family -- the owner's sweep rule again): an action modifier that UNLOCKS its
    vampire after the action is over. The denominator across Freak Drive, Forced March, Instantaneous
    Transformation, Domain of Evernight, Truth of a Thousand Lies, Zephyr, As the Crow is WHEN it may be played:
    after a successful action, after a blocked one, after an unsuccessful one. That is a mode RIDER (`when`), the
@@ -645,7 +645,7 @@ function libModes(text){
        rules text ("you can lock this card to get +1 master phase action") has
        NO fx pattern in the v1 vocabulary (no key for phase-action grants yet),
        so under the old gate it compiled to zero modes, discarding the lock fact
-       Johan specifically wanted preserved. A segment now becomes a mode if it
+       the owner specifically wanted preserved. A segment now becomes a mode if it
        carries fx OR dir OR lock -- strictly more permissive, so no existing
        fx-bearing mode's output can change (this was already true before).    */
     if(!Object.keys(d.fx).length && !d.dir && !d.lock) return;
@@ -666,7 +666,7 @@ function libModes(text){
   const assembled = [...map.values()].map(mo => {
     const o = { at: mo.at };
     if(mo.use) o.use = mo.use;
-    if(mo.dir) o.dir = true;    // v1.3.0: PER-MODE now (absent = undirected default, Johan's minimal-tagging call)
+    if(mo.dir) o.dir = true;    // v1.3.0: PER-MODE now (absent = undirected default, the owner's minimal-tagging call)
     if(mo.lock) o.lock = true;  // v1.4.0: PER-MODE, not entry-level -- Enkil Cog carries a flat +1 bleed (no lock) AND a separate lockable action in the SAME entry; Dreams of the Sphinx bundles three differently-timed lock effects into one mode today (an existing, already-flagged curated limit -- see cardfx-design.md §4's actGrant note), which this auto tag does not attempt to resolve
     if(mo.mvFree) delete mo.fx.maneuverTo;   // v1.11.3 (F1): one direction only when no segment of the mode prints an unrestricted maneuver
     o.fx = mo.fx;
@@ -696,7 +696,7 @@ function libModes(text){
 
 /* ---------------- entry builders ---------------- */
 /* ---------------- referendum terms (v1.7.0) ----------------
-   Johan, 18 Sep 2026: look for the LEAST COMMON DENOMINATOR and tag in sweeps, not card by
+   the owner, 18 Sep 2026: look for the LEAST COMMON DENOMINATOR and tag in sweeps, not card by
    card. For political actions the denominator is: "a successful referendum changes each
    Methuselah's POOL by some amount" -- Kine Resources Contested, Parity Shift and Ancilla
    Empowerment differ only in HOW MUCH and BASED ON WHAT. So the outcome is data:
@@ -928,7 +928,7 @@ function libEntry(c, sink){
   if(c.disciplines && c.disciplines.length)
     req.disc = [...new Set(c.disciplines.map(d => discTri(d)))].sort();
   if(c.clans && c.clans.length) req.clan = c.clans;
-  /* v1.5.7 (Johan's blood-placement family, round 2): a card-level TITLE precondition
+  /* v1.5.7 (the owner's blood-placement family, round 2): a card-level TITLE precondition
      (Fourth Tradition: The Accounting -- "Requires a prince or justicar", the ONLY hit
      in the 38-card family + a full-db scan of common VTES title nouns) is tracked as
      req.title so a consumer can fail closed. The bot does not track vampire titles
@@ -937,7 +937,7 @@ function libEntry(c, sink){
   if(/requires? an? (?:prince|justicar|primogen|bishop|archbishop|cardinal|inner circle|regent|seneschal|baron|imperator|magaji|prime minister)\b/i.test(c.card_text || '')) req.title = true;
   { const tm = (c.card_text || '').match(/requires? an? ((?:(?:prince|justicar|primogen|bishop|archbishop|cardinal|inner circle member|regent|seneschal|baron|imperator|magaji|prime minister)(?:, | or )?)+)/i);   // v1.7.0: WHICH titles (Parity Shift: prince or justicar) -- additive beside the boolean, so every existing fail-closed reader is untouched
     if(tm) req.titles = tm[1].toLowerCase().split(/, | or /).map(x => x.trim()).filter(Boolean); }
-  /* v1.5.8 (Johan's combat GO, steal-blood family): four combat-timing preconditions
+  /* v1.5.8 (the owner's combat go-ahead, steal-blood family): four combat-timing preconditions
      the bot's v1 single-round, no-range architecture cannot verify -- fail closed,
      same shape as req.title. Measured against the full 410-card Combat pool before
      tagging (not guessed): beforeRangeDetermined 83, rangeClose 19, rangeLong 17,
@@ -988,14 +988,14 @@ function libEntry(c, sink){
   /* persistent (v1.4.0, 14 July 2026, rulebook-verified): this card STAYS IN PLAY after
      resolving, rather than going to the ash heap like an ordinary Master/Action. THREE
      signals, checked in order: (1) TYPE-implicit — Equipment/Ally/Retainer/Event stay in
-     play by RULE (Johan's own starting instruction), and typically never restate this in
+     play by RULE (the owner's own starting instruction), and typically never restate this in
      their own card_text at all (found via the sweep-audit's type breakdown: without this
      check, 119/119 Allies, 54/54 Retainers, 146/164 Equipment and 39/40 Events were ALL
      silently missed — a card being an Ally IS the persistence signal, no prose needed).
      Power/Conviction were considered and REJECTED after reading samples — both are burn-
      for-effect resources (Donate: "Burn this card to give..."; Second Sight: "Burn when
      a monster is acting to give..."), one-shot like an Action despite sitting in the
-     imbued type family; Johan's original list (Equipment/Ally/Retainer/Event) was exactly
+     imbued type family; the owner's original list (Equipment/Ally/Retainer/Event) was exactly
      right and is trusted as-is, not extrapolated to its Imbued-side siblings. (2) failing
      that, the "Location" keyword, templated into the LEADING line of card_text (before the
      first newline) alongside Unique/Master: — anchoring to the first line (not "anywhere
@@ -1046,7 +1046,7 @@ function libEntry(c, sink){
      entry -- except on an action card, whose sentence is a later ability of the card in play (Marked Territory), not a condition on the
      action. The reaction finders read it (bot: _dirOk). Found by the wave 6 analysis: Eyes of Argus and The Warrens spent their intercept at
      undirected actions 568 times in v0.6.232's 240. A curated entry carries its own (Underbridge Stray's burn: allyBurnUnlock 'directed'). */
-  /* v1.9.11 (18 Nov 2026, bot v0.6.233, V5 wave 6a, RULINGS D-123): THE LOCKED ROUTE as a sweep (Johan's sweep rule; D-116 (4)'s route). A
+  /* v1.9.11 (18 Nov 2026, bot v0.6.233, V5 wave 6a, RULINGS D-123): THE LOCKED ROUTE as a sweep (the owner's sweep rule; D-116 (4)'s route). A
      REACTION's line 'This vampire unlocks and attempts to block.' -- or 'This vampire burns N blood to unlock.' -- under 'Only usable by a
      locked vampire.' (on that line, or in the card's header) is Second Tradition's route: when 'lockedBlock', fx.unlock (+ payBlood N). The
      line may also carry 'Only usable during an action directed at you (or a card you control).' (the onlyDirected tag below) and one rider the
@@ -1438,7 +1438,7 @@ function compile(cards, curated){
      entry with "merge": true is laid over the compiled entry instead
      (v1.10.0, mergeHand above); every other entry as before, byte for byte. */
   const curApplied = [], curNew = [], curVariant = [], costInherited = [], costMismatch = [], costX = [], reqInherited = [];
-  /* v1.6.14 (16 Sep 2026, Johan's Academic Hunting Ground report -- THE INHERITED COST):
+  /* v1.6.14 (16 Sep 2026, the owner's Academic Hunting Ground report -- THE INHERITED COST):
      whole-entry replacement DROPPED the auto tier's `cost` on every curated entry that did
      not restate it. 23 hunting grounds (pool 2), Papillon (3), Meditative Grove (2),
      Revelations and Magic of the Smith (blood 1) had been free since their curation; the bot

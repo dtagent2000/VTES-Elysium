@@ -1,6 +1,6 @@
 # elysium-bot-feedback-loop-spec.md — the two opt-in reports from human tables
 
-*Drafted 18 September 2026 from Johan's ask: (1) a bot match log — the bot's data points, decisions, what it saw its opponents do, and the outcome — sent automatically after a bot game, opt-in, discarded after the match; (2) an opt-in post-match survey (fun, challenge, free text). Both posted as their own reports to the Discord channel, shaped to give Claude the best possible material for developing the bots. Status: DRAFT — most of the surface is the CLIENT's and the SERVER's (main project); the bot side is small.*
+*Drafted 18 September 2026 from the owner's ask: (1) a bot match log — the bot's data points, decisions, what it saw its opponents do, and the outcome — sent automatically after a bot game, opt-in, discarded after the match; (2) an opt-in post-match survey (fun, challenge, free text). Both posted as their own reports to the Discord channel, shaped to give Claude the best possible material for developing the bots. Status: DRAFT — most of the surface is the CLIENT's and the SERVER's (main project); the bot side is small.*
 
 ---
 
@@ -24,11 +24,11 @@ The arena tells us what bots do to bots. It cannot tell us whether a game agains
 
 ## 2. Report B — the post-match survey
 
-**Content.** Two ratings and a text: *Var det roligt?* 1–5, *Var det utmanande?* 1–5, *Något du vill säga om bottens spel?* (free text, optional). Optional: which bot (when several) the answer is about. Asked once, after the game ends, only to humans who played against a bot; skippable in one click; never shown twice for the same match.
+**Content.** Two ratings and a text: *Was it fun?* 1–5, *Was it challenging?* 1–5, *Anything you want to say about the bots' play?* (free text, optional). Optional: which bot (when several) the answer is about. Asked once, after the game ends, only to humans who played against a bot; skippable in one click; never shown twice for the same match.
 
-**Where.** Client (a small modal at game end) → server (relay) → Discord. The server attaches `matchId`, the bots' persona/deck/version, and the human's seat (not name). Opt-in is the same host setting as Report A, or its own — Johan's call (§5).
+**Where.** Client (a small modal at game end) → server (relay) → Discord. The server attaches `matchId`, the bots' persona/deck/version, and the human's seat (not name). Opt-in is the same host setting as Report A, or its own — the owner's call (§5).
 
-**Format for Claude.** One post per answer: `matchId · seat N · fun 4/5 · challenge 2/5 · "kändes passiv efter turn 6"` plus the header line from Report A so the two can be read together even when only one arrived.
+**Format for Claude.** One post per answer: `matchId · seat N · fun 4/5 · challenge 2/5 · "felt passive after turn 6"` plus the header line from Report A so the two can be read together even when only one arrived.
 
 ## 3. Bot-side work (small)
 
@@ -43,7 +43,7 @@ The arena tells us what bots do to bots. It cannot tell us whether a game agains
 - The survey modal; the `matchId` on the client's game-end event.
 - Rate/size limits (one trace per match per bot; survey once per human per match).
 
-## 5. Decisions for Johan
+## 5. Decisions for the owner
 
 1. One opt-in for both reports, or two? (One is simpler; two respects a table that wants to help with logs but not be asked questions.)
 2. Should the survey include *"which decision felt wrong?"* with the bot's last three `why` lines as options? It would give exact material — at the cost of exposing reasoning after the game (fine: the game is over).
