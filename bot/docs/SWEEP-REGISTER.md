@@ -143,7 +143,7 @@ is a handoff first. Bot-to-bot gaps are marked.
   Not 12.3 (the bot's own prevention against Crows). [Claude's playtest game 2, 25 Nov, 1474.3 and 2817; the 26 Nov handoff's
   check] · human · a reader of a human's Crows play line (its level) that adds the damage in each round's strike resolution.
 - **4.22 A human's The Dowager (+1 intercept during directed actions)** — at Claude's playtest table the printed +1 was not counted
-  on the block counter (the panel's point 4; game 1 had the human's Ventrue starter, game 2 a Ventrue bot holding The Dowager). The
+  on the block counter (game 2, the panel's point 4: Claude's own Dowager, in the human's Nosferatu starter, blocking). The
   bot blocker writes its own crypt intercept (`_cryptIntercept`); which side missed it at that table is not traced. [Claude's
   playtests, 25 Nov; D-111 (6), BOARD's measurement debt] · human · trace it at the next human table: a bot's Dowager blocking a
   human's directed action, and a human's Dowager blocking a bot's (the bot could seed a human blocker's printed intercept into an
