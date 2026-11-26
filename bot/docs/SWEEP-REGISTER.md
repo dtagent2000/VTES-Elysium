@@ -1,7 +1,7 @@
 # SWEEP-REGISTER — the problems the sweep finds, by class (20 Nov 2026, on bot v0.6.236; RULINGS D-135)
 
-Johan, 19:47 (the idea) and 19:48 (kör on Claude's shape; D-135): the sweep goes on, and what it finds is collected here and worked
-off one class at a time. A round takes one class: its design to Johan and his "kör", the build, review until clean (D-133), a
+The owner, 19:47 (the idea) and 19:48 (kör on Claude's shape; D-135): the sweep goes on, and what it finds is collected here and worked
+off one class at a time. A round takes one class: its design to the owner and the go-ahead, the build, review until clean (D-133), a
 release. **A problem that changes a finished deck's play** (seen in the 240 or the V5 smokes, as Aunt Linda's employs were) **is
 fixed in a release of its own**, ahead of its class's round (Claude orders those releases, D-137); the rest waits here. Not a
 standing page (outside `tools/doc-budget.sh`): BOARD keeps one line per class and points here.
@@ -33,17 +33,17 @@ read or played (its data, a finder's gate on it, a reader of its play, its recor
 stayed (O-12's steal pair, BOARD's locked routes but their Eyes of the Wild rider, 10.12). The specs keep their text as history.
 What those sources hold that is done, or is not a problem, is listed at the end.
 
-**The classes** (1–6: Claude's list of the evening, under Johan's kör, 4 and 5 broadened to another seat's play and a maneuver's
+**The classes** (1–6: Claude's list of the evening, under the owner's go-ahead, 4 and 5 broadened to another seat's play and a maneuver's
 source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's and v0.6.239's egress reviews; Claude orders the rounds, D-137).
 Active entries: 7.5, 8.3, 10.17, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 10.16, 12.2, 13.10.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
-[RTR 19941109] (R-46). R-47 (Johan's 19:45 answer to O-49, as Claude read it, with the rules directors' posts): the icon shows what
+[RTR 19941109] (R-46). R-47 (the owner's 19:45 answer to O-49, as Claude read it, with the rules directors' posts): the icon shows what
 it takes to employ the card; once in play the effect does not depend on the holder's disciplines (a temporary discipline lost
 later, a stolen retainer), unless the card restricts its own effect (Razor Bat: "The Gargoyle with this retainer") [ANK 20180612];
 a retainer brought in ignoring requirements comes in at its basic version [LSJ 20100302]. The round: the version stored at entry
-and read by every reader of an attached retainer. Its open design question (for Johan first): where the version of another seat's
+and read by every reader of an attached retainer. Its open design question (for the owner first): where the version of another seat's
 retainer comes from.
 - **1.1 Biothaumaturgic Experiment [tha]: the employ refused** — `_bestAnimalEmployFor` offers no retainer whose every mode needs a
   discipline the employer lacks (Raven Spy or Murder of Crows for a vampire without Animalism). R-47: it comes in at its basic
@@ -100,7 +100,7 @@ is a handoff first. Bot-to-bot gaps are marked.
   Sanguine Entrapment (the round): the banned side does not read it. [pilot] · latent (no deck holds them).
 - **4.6 The bounce's other halves** — a human's bounce of a bot's bleed is read since v0.6.237 (D-136): the client's bot ring
   (v2.6.187) writes the re-announce the acting bot follows and a bot at the new seat arms from (so a HUMAN's bleed bounced by a
-  human to a bot arms too), and a typed `bounce <name>` (the bot writes the re-announce); the card's play line is not read, Johan:
+  human to a bot arms too), and a typed `bounce <name>` (the bot writes the re-announce); the card's play line is not read, the owner:
   many cards bounce. Left: a bot that is a bounce's new target cannot bounce onward (that half is the bot's own play); a bounce
   card played from the hand with no ring and no typed line still moves nothing. [B; O-3; the playtest round] · **missed** (the
   onward bounce; v0.6.238's 240, a scratch count: of 597 bounces the new target held a usable bounce of its own in 146, and 62 of
@@ -384,7 +384,7 @@ Who may answer an action or a card, and in which window; a line read after its w
   receiving bot's `cardsShown` (its fx clone and its typed line, capped at 2). [w1] · debt.
 
 ## 13. Choices around a card (Claude's priors; not rules)
-Decisions on Claude's priors; each needs a design to Johan before it changes (D-87).
+Decisions on Claude's priors; each needs a design to the owner before it changes (D-87).
 - **13.1 Haven Uncovered's look-ahead** ignores the keep-home and hunt calls (Priority Contract's no longer does). [pilot] ·
   reachable (nosferatu ×1 in the 240).
 - **13.2 `_aheadNoAct`** follows the minion loop's actor order but not `_minionKeyOrder`, so the contract can misjudge which vampire

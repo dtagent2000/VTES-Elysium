@@ -2,7 +2,7 @@
 
 Genererad av `gen-deck-coverage.js` v1.1.47 mot `elysium-cardfx.json` (fxv 1, 2391 lib / 1822 crypt / 3347 alias) och den KONSUMTION `elysium-bot.js` faktiskt läser i källkoden (skannad vid körning, inte handunderhållen). Leken: deck-toreador.json.
 
-Syfte: göra "kan botten spela den här leken?" till en mekanisk kontroll — curated-djup och
+Syfte: göra frågan om botten kan spela den här leken till en mekanisk kontroll — curated-djup och
 handlers budgeteras per lek, aldrig som databas-completionism. Detta är en RAPPORT, inte en gate.
 
 ## Sammanfattning (qty-viktad, 77 bibliotekskopior)

@@ -1,7 +1,7 @@
 # REPORT — the sim table (19 October 2026, bot v0.6.209–v0.6.210, `elysium-bot-sim.js` v1.0.0–v1.0.1)
 
-Johan's "kör" on the sim table (19 Oct 19:17) and his seating question ("we should test all possible seatings, not just one,
-since it affects tactical choices"). This report is the evidence behind the tool: why it is fast, that it plays the same game as
+The owner's go-ahead on the sim table (19 Oct 19:17) and the owner's seating question: we should test all possible seatings, not
+just one, since seating affects the tactical choices. This report is the evidence behind the tool: why it is fast, that it plays the same game as
 the real clock, what its first baseline shows, and what it found.
 
 ## 1. Why: the arena waits, it does not compute
@@ -51,7 +51,7 @@ Design: every seating of malkavian / tremere / nosferatu / ventrue (24 = every c
 
 The two profiles agree on the deck order; the per-deck numbers are within their standard errors.
 
-**Seating matters (Johan's point), client profile.** VP/match by seat position (seat 1 takes the first turn; 60 matches per cell,
+**Seating matters (the owner's point), client profile.** VP/match by seat position (seat 1 takes the first turn; 60 matches per cell,
 SE ≈ 0.1–0.2 per cell):
 
 | deck | seat 1 | seat 2 | seat 3 | seat 4 |

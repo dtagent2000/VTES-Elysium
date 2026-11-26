@@ -2,7 +2,7 @@
 
 **Question:** before the bot gets archetype labels, how right are they, and how often would they be wrong in the open world?
 
-**Data.** vtes-skill's reviewed classification (120 named archetypes, TWDA 2021+) joined to KRCG's TWDA export by deck id; 42 archetypes have ≥ 10 decks (690 decks — 15 % of all TWDA decks). The larger VDB-style export Johan found holds the same decks plus 134 newer ones (82 from 2026); it is merged into the profile builder (`twd-profile.py`, now 4,672 decks) but the KRCG export stays the base because its ids are what the classification refers to.
+**Data.** vtes-skill's reviewed classification (120 named archetypes, TWDA 2021+) joined to KRCG's TWDA export by deck id; 42 archetypes have ≥ 10 decks (690 decks — 15 % of all TWDA decks). The larger VDB-style export the owner found holds the same decks plus 134 newer ones (82 from 2026); it is merged into the profile builder (`twd-profile.py`, now 4,672 decks) but the KRCG export stays the base because its ids are what the classification refers to.
 
 **Model.** A naive-Bayes signature per archetype (card frequencies over its decks, plus the crypt's clan). Test: 5-fold, k random "shown" library cards + the clan.
 

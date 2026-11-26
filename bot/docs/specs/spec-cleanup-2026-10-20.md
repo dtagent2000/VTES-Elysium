@@ -1,6 +1,6 @@
 # A clean-up and methods spec for `bot/` (20 Oct 2026)
 
-**Status:** a proposal. Nothing here is built. The work waits for Johan's choices in §8.
+**Status:** a proposal. Nothing here is built. The work waits for the owner's choices in §8.
 **Measured on:** `b009951` (bot v0.6.211, PR #37, now on main).
 **Credits:** the ideas this spec borrows from other open VTES projects are credited where they are used and
 listed in Appendix B. We take ideas and methods, not code.
@@ -26,15 +26,15 @@ second half and the abstract model.
 ## 1. The lens: what we build, and what makes it hard
 
 - **What we build.** Bots that fill seats at an Elysium table, online and offline. Offline means hotseat
-  inside one HTML file: no server, no GPU, no network. Johan's goal (CLAUDE.md debt 43a): "a competent threat
-  at the table that can fill a seat when players are short", not a chess engine. No deck is held back: Malkavian,
+  inside one HTML file: no server, no GPU, no network. The owner's goal (CLAUDE.md debt 43a): a competent threat
+  at the table that can fill a seat when players are short, not a chess engine. No deck is held back: Malkavian,
   the strongest starter, plays as well as it can even if it pulls away (64a). The immediate product goal
   (19 Oct): make the V5 preconstructed decks playable.
 - **What makes it hard.** Elysium is a free table, like Lackey, JOL or Cockatrice: the client moves cards and
   lets people talk, but it does not enforce the rules. The bot reads the table's lines and carries its own model
   of the rules (cardfx plus the table model), so our correctness risk sits in two places: the card data (cardfx)
   and line parsing.
-- **How we work.** Claude writes and maintains the code; Johan rules and merges. Johan (20 Oct): the repository
+- **How we work.** Claude writes and maintains the code; the owner rules and merges. The owner (20 Oct): the repository
   may be written for the agent that works in it, and the direction from now on is to save tokens: "least fluff"
   between a fresh session and the context it needs. So the measure of a file here is: what does it cost an agent
   arriving cold, and does it help that agent find the binding rule at the moment it changes the code.
@@ -55,7 +55,7 @@ second half and the abstract model.
 | P8 | Strength is measured paired, with controls | Sim footprint + the mirror bench (48, both controls) | **Paired reads on the sim** (T6) | VTES-Player (seat-rotated deals, paired per deal), zero-vtes |
 | P9 | Behaviour overlays change style, not strength | Novice inside the noise (`REPORT-bench-controls.md`) | Agreed; judge personas by feel | VTES-Player (playstyles) |
 | P10 | Test through the boundary, not the hook | Learned twice (16 Oct: "a hook called by a unit test proves the hook") | Keep | zero-vtes ("tests at the boundary, no mocks"), VTES-Player, tasha-morgan |
-| P11 | Fix what you meet, in the change at hand | Johan's combining rule (16 Oct) | Keep | zero-vtes ("scope grows in place") |
+| P11 | Fix what you meet, in the change at hand | the owner's combining rule (16 Oct) | Keep | zero-vtes ("scope grows in place") |
 
 **One method to name.** Our cardfx auto tier parses card text for behaviour: 1,670 library entries with effects,
 105 of them curated by hand. That is how we cover the whole pool without an engine, and it is also where our late
@@ -80,7 +80,7 @@ rules errors come from. The card ledger (T2) keeps it honest: it says which entr
   Kevlar never equipped, Second Tradition illegal for an untitled vampire (45b).
 - The information boundary is designed (`handIntel` is filled only by reveal messages; bots look away from a
   debug seat) and has targeted tests (41a, section 140), but no test walks whole games for a leak.
-- Johan's rulings have no single home.
+- the owner's rulings have no single home.
 - The docs (§5.2).
 - There is no CI for `bot/`: "never claim a gate passed without having run it" rests on the agent alone. Main has
   run its gates in CI since 17 Oct (`.github/workflows/client-gates.yml`), and that file says the bot project
@@ -102,7 +102,7 @@ readings during development (T3), never as something the bot calls.
 |---|---|---|---|---|---|
 | T1 | **The bootstrap diet.** Five standing pages (STATUS, BOARD, RULINGS, LESSONS, ARCHITECTURE), a CLAUDE.md that carries rules only, history moved out | zero-vtes (three lifespans, boards), VTES-Player (size rule) | `bot/docs/`, `bot/CLAUDE.md` | M | A session starts on ≤ 50 KB, every standing page together is ≤ 140 KB, and a budget check passes (§5) |
 | T2 | **Card ledger.** One generated row per card: tier (auto / curated), modes, rulings count, the suite section that tests it, plays in the latest sim, status (playable / partial / inert / unknown) | VTES-Player (no partial cards), zero-vtes (rulings ledger), tasha-morgan | `gen-card-ledger.js` → `docs/CARDS.md` | M | Generated from cardfx + the suite + a sim dir; each V5 wave's done-condition reads it |
-| T3 | **Graded rules readings for card waves.** Each curated reading graded green / amber / red against KRCG text and vtes-rulings by a fresh read-only agent; only red ones go to Johan. Where zero-vtes's engine covers a card, how it plays that card is a third check: a development check only, never called while a bot plays, run on Johan's machine or in CI (the engine is MIT licensed), and only after asking its maintainer | zero-vtes (`add-cards`, its engine), tasha-morgan (`rules-auditor`) | A charter in `docs/HARNESS.md` | S (the zero-vtes check: M) | A wave's PR lists the grades; Johan sees only the reds |
+| T3 | **Graded rules readings for card waves.** Each curated reading graded green / amber / red against KRCG text and vtes-rulings by a fresh read-only agent; only red ones go to the owner. Where zero-vtes's engine covers a card, how it plays that card is a third check: a development check only, never called while a bot plays, run on the owner's machine or in CI (the engine is MIT licensed), and only after asking its maintainer | zero-vtes (`add-cards`, its engine), tasha-morgan (`rules-auditor`) | A charter in `docs/HARNESS.md` | S (the zero-vtes check: M) | A wave's PR lists the grades; the owner sees only the reds |
 | T4 | **Egress review.** A fresh-context agent gets the diff, the board line and the pages the change named, never the conversation. Findings are classed (`stale-doc`, `half-done`, `test-weakened` …) and listed in the PR body; three of a class become a rule | zero-vtes (`egress-reviewer`, upkeep's ratchet) | `docs/HARNESS.md` | S | Every round's PR carries an `Egress:` line |
 | T5 | **Leak test and "every chair agrees".** A static half: the bot reads no global except its own export, which is true today (one `globalThis`, the export; `hotBridge`, `window`, `document` appear only in comments), so pin it with a test, as VTES-Player's AI imports no `GameState` on purpose. A dynamic half: after a sim match, walk each bot's stored state for card names only another seat's hand or library ever held (the sim knows the true hands), with a planted leak as the positive control. And `_twdExpect(seat)` must agree across observers, except where a card was shown to one of them | VTES-Player (`information-boundary.test.ts`; the 11 Oct notes, item 6) | `test-bot-sim-boundary.js` | M | Green on 24 matches; the planted leak goes red |
 | T6 | **Paired reads on the sim.** VP and win share per deck as per-match differences between two runs of the same design, with a paired SE | VTES-Player bench (11 Oct item 1) | `ana-sim-diff.py --vp` | S | v0.6.211's report would have printed paired SEs |
@@ -113,7 +113,7 @@ readings during development (T3), never as something the bot calls.
 
 **Still open from the 11 Oct notes**, kept as board lines: blood-hunt voting (item 8), the §8 law for the
 meta layer (item 3), decision-level meta metrics on padded decks (item 4), personas as tested overlays
-(item 9). Item 5 (one bot asks the pool question) is settled: Johan ruled on 16 Oct that every bot keeps
+(item 9). Item 5 (one bot asks the pool question) is settled: the owner ruled on 16 Oct that every bot keeps
 asking, because each needs its own stake to vote.
 
 ### 4.2 Ideas from jol-rebuild
@@ -154,14 +154,14 @@ practice. T11 and T12 belong to the V5 waves and the knowledge layer, not to the
 | Prescribed bootstrap (root + bot CLAUDE.md, newest READ-ME-FIRST, journal, context, learnings, SKILLS) | **700,636 bytes**, about 180–200k tokens at 3.5–4 bytes a token |
 | `bot/CLAUDE.md` | 201,158 bytes, 460 lines. Claude Code loads it into the context as soon as a session works inside `bot/`: this session received all of it, about 55k tokens, each time it entered a fresh clone's `bot/` (twice) |
 | — the version handshake (line 14) | One line of 45,340 bytes naming 86 version numbers, nearly all of them between v0.6.112 and v0.6.211. About nine binding rules are buried in it (the plan, table-model, duplicate, cardfx-cost, tier, timing, helper-gate and debug-density rules, and the sandbox's detached-series arena rule) |
-| — "Known debts" (lines 173–454) | 116,657 bytes: items 1–70, mostly closed (item 71 has a section of its own, lines 455–460). Johan's rulings and the knowledge-layer design (64–65) sit in it |
+| — "Known debts" (lines 173–454) | 116,657 bytes: items 1–70, mostly closed (item 71 has a section of its own, lines 455–460). The owner's rulings and the knowledge-layer design (64–65) sit in it |
 | — stale instructions | "expect 701/0 … bot v0.6.88"; "suite ×3 SPLIT (`timeout 210`)" (the gate is now `timeout 600`); "cp to `/mnt/user-data/outputs/`, `present_files`"; "`elysium-server.js` (srv-2.6.32)", where README says srv-2.6.46 and the root has srv-2.6.49 |
 | Journal | 264,422 bytes, 110 dated entries (~2.4 KB each), in Swedish |
 | Learnings | 103,459 bytes, about 300 lessons (354 bold or bulleted lines, 47 of them group headers); its header still says "reflects bot v0.6.117" |
 | Context | 76,978 bytes, 81 dated release blocks (a second changelog) |
 | One release (v0.6.211) | ~120 changed lines of bot and compiler code; **10 doc files** touched besides the round's own spec and the guide's version chip. The story is written ~8 times: handshake, `BOT_VERSION` comment (1,358 chars), CHANGELOG, journal, context, READ-ME-FIRST (8 KB), README, START-HERE-BOTS-CHAT |
 | `bot/docs/` | 152 files, 1.9 MB (55 READ-ME-FIRSTs, 29 handoffs, 27 specs, 18 reports) |
-| `elysium-bot.js` comments (approximate scan) | ~1,900 `//` comments = ~297 KB (29 % of the file); ~1,200 of them cite a version, a date or "Johan" = ~222 KB (22 %); 177 versions cited 1,487 times |
+| `elysium-bot.js` comments (approximate scan) | ~1,900 `//` comments = ~297 KB (29 % of the file); ~1,200 of them cite a version, a date or the owner = ~222 KB (22 %); 177 versions cited 1,487 times |
 | Dead code | One method with no caller (`_bumpTallyB`); five methods used only by the suite (`_beat`, `_chatSettleMs`, `cardsDiscarded`, `oppPosture`, and `_pickRaise`, "kept for test compat"). A correctness-only lint (ESLint 10, 26 rules, no style; 4 s over 28 files) finds no undefined name. It finds 8 unused assignments in the bot, all leftovers; two of them (`lastBlood`, `poolSafe` in `_applyPhaseIncome`) sit under a comment for the rule v0.6.134 replaced. In the tools, a duplicate key: `gen-deck-coverage.js`'s documented `handStrike: 'meta'` is silently overridden by a later `'paired'` (no effect on the output today). In the suite, two self-comparisons |
 | Dead tools | 10 legacy tests "kept for history … known stale reds" (README). 8 scripts `cd /home/claude/w` (the chat-era sandbox): `run-bal`, `run-m`, `run-t`, `run-cmb`, `run-ser`, `poll-bal`, `make-bench-report`, and **`bench.sh`, the bench gate**. `bench.sh` reads `serie-cmb1/design.txt`, a gitignored path; the design itself is in git as `design-balanced-serie-bal1.txt`. So from a clone the mirror bench runs only after the path is fixed and that file is copied into place by hand |
 | Suite runtime | ~300 s a run on the usual sandbox, ×3 per round. Measured here: 417 s wall, 55 s CPU (13 %), 2244/0 |
@@ -184,7 +184,7 @@ bot/docs/BOARD.md      ≤ 15 KB  a shrinking list of asks: "<ask>: <why>. Done 
 bot/docs/RULINGS.md    ≤ 25 KB  one line each, numbered (never renumbered), dated, by mechanism, in two kinds (tasha-morgan's
                                  split): R-n rules readings (what the game says, with its source) and D-n design decisions
                                  (what our bot does and why: probeHold 2, combining fixes, the stealth / intercept rule).
-                                 An "Open" section holds the questions waiting for Johan, with the sources consulted
+                                 An "Open" section holds the questions waiting for the owner, with the sources consulted
                                  (tasha-morgan's OPEN_QUESTIONS); an answer moves the line up with its date. First open
                                  lines: v0.6.211's Spying Mission vs Swallowed by the Night tie, the bank's +2 before a
                                  reactions window, Pentex's two spellings to `_uniqueInPlay`
@@ -216,15 +216,15 @@ exist, or a version number in STATUS disagrees with `BOT_VERSION`.
 | Rules embedded in the handshake (plan, table model, duplicate, cardfx cost, tier, timing invariants, helper gate, debug density, the detached-series arena rule) | CLAUDE.md rules (the arena rule rewritten for `run_in_background`, or retired with the sandbox it describes) |
 | Binding rules block (lines 15–49), the Gates paragraph's "an abort on the pre-change bot is not automatically the environment" included | CLAUDE.md rules, tightened; examples and history → LESSONS / history |
 | "(formerly) CLAUDE-arena" (HB track, expected state, the eight-step loop, CLI, emit vocabulary, deep review, open items) | the loop → HARNESS (git era: branch, PR, `run_in_background`); emit vocabulary + CLI → HOWTO; the evaluation doctrine and the "names rotate, read manifests" rules → CLAUDE.md rules; the rest → history |
-| Debts 1–70 | open asks → BOARD; Johan's rulings → RULINGS; the knowledge-layer design (64–65) → `specs/spec-knowledge-layer.md`; the goal (43a) and Johan's three layers (31) → CLAUDE.md; the rest → history |
+| Debts 1–70 | open asks → BOARD; the owner's rulings → RULINGS; the knowledge-layer design (64–65) → `specs/spec-knowledge-layer.md`; the goal (43a) and the owner's three layers (31) → CLAUDE.md; the rest → history |
 | Section 71 (the breath) | the beat, ahead and intercept-by-chat rules → CLAUDE.md |
 | Journal | history (frozen); see §8 Q2 for what replaces it |
 | Context | STATUS (the top block) + history (the rest) |
 | Learnings | LESSONS (distilled) + history (verbatim) |
 | READ-ME-FIRSTs | history; replaced by STATUS + the PR body (§8 Q3) |
 | `START-HERE-BOTS-CHAT.md` | stays; points at the new bootstrap (Appendix A) |
-| `REVIEW-vtes-player-2026-10-11.md` | its open items → BOARD, each credited; the text → Johan's private project notes |
-| Johan's rulings in memory and in the journal | RULINGS, checked against the memory notes (they are a dated record of the same decisions) |
+| `REVIEW-vtes-player-2026-10-11.md` | its open items → BOARD, each credited; the text → the owner's private project notes |
+| the owner's rulings in memory and in the journal | RULINGS, checked against the memory notes (they are a dated record of the same decisions) |
 | Two design documents outside git (Claude Docs of 25 Sep: "Design: event log, shadow model, knowledge sources, bench" and "Cardfx sweep — source mapping") | linked from ARCHITECTURE; their standing parts copied into `specs/` |
 
 ### 5.5 The release ritual after C1
@@ -235,7 +235,7 @@ exist, or a version number in STATUS disagrees with `BOT_VERSION`.
 | Handshake, context, journal, READ-ME-FIRST, README version line, START-HERE-BOTS-CHAT, learnings | STATUS (rewritten) |
 | CHANGELOG | CHANGELOG (unchanged) |
 | Next steps written in four places | BOARD: the done line deleted, found lines added |
-| — | RULINGS when Johan ruled; LESSONS only for a new *class* of lesson |
+| — | RULINGS when the owner ruled; LESSONS only for a new *class* of lesson |
 | Handoff | Handoff, only when main must act |
 | Gate numbers in five docs | In the PR body (and CI, T8) |
 
@@ -251,7 +251,7 @@ From 11 doc files to 3–5, and one write-up instead of eight.
 | Keep (the sim's input) | `design-balanced-serie-bal1.txt` | The only copy in git of the 12 balanced seat orders behind bal1, cmb1 / cmb2 and every mirror-bench arm (debt 33a: "reuse this design for every deck-level claim"). The sim's default, every seating, is a different design, so the port must be able to read this one, or old arms can no longer be re-read on the same seats | C3 |
 | Keep, mark one-off | `ana-combat-sum.py` (writes `REPORT-combat-series-table.txt`), `make-bench-report.sh` (writes `REPORT-bench-controls.md`, which the bench gate cites; fix its path or fold it into the port), `sweep-pilot.py`, `sweep-pass2.py`, `sweep-full.py`, `diag-give-probe.js`, `diag-a1-stash-probe.js`, `gen-plan-review.js`, `gen-sweep-audit.js` | Each reproduces a committed report or a debt measurement; listed as one-off tools in HOWTO | C1 |
 | Keep, revive | `gen-forecast-calibration.js` | Not re-run since 18 Sep (debts 5, 11), and the seed of the abstract model's calibration gate (§6.1) | §6.1 |
-| Retire or wire | Knobs that default off: `planFloor` (debt 9: computed, not consumed), `askHumansTotal` (57c: Johan wants it on; blocked by the suite's human harness), `crossRushWeight` 0 | Each gets a board line: wire it, or delete the dead branch | C5 |
+| Retire or wire | Knobs that default off: `planFloor` (debt 9: computed, not consumed), `askHumansTotal` (57c: the owner wants it on; blocked by the suite's human harness), `crossRushWeight` 0 | Each gets a board line: wire it, or delete the dead branch | C5 |
 | Decide | The read-only client copies in `bot/` (`elysium-vtes-bord.html` 1.6 MB, `elysium-server.js`, `ELYSIUM-PROTOCOL.md`, the hotseat plan) | They drift: v2.6.162 / srv-2.6.46 here, v2.6.167 / srv-2.6.49 at the root, while CLAUDE.md says srv-2.6.32 and README's line 36 says v2.6.158. In the monorepo the gates could read the root's release instead. This is a contract question for main (§8 Q4) | — |
 | Later, optional | History comments in `elysium-bot.js` (222 KB) | Rewrite to trap comments ("why" + a rule id) in functions a round touches. A one-off pass is safe only if a minifier's output is identical before and after (§8 Q6) | — |
 | Note for the V5 plan | Seven decks embedded in `elysium-bot.js`, six of them duplicated in `deck-*.json` (`WALL_DECK` has no file; debt 23e) | Before the V5 waves add ten or more decks, move decks and `DECK_STRATEGY` into a data file (§6.2) | V5 |
@@ -315,7 +315,7 @@ From 11 doc files to 3–5, and one write-up instead of eight.
   sim, rulings graded (T3).
 - **Decks and `DECK_STRATEGY` become data,** generated from KRCG's precon sets (the V5 plan's precon generator),
   before the deck count doubles.
-- **Johan's open question** (19 Oct: 5 new decks at a time, all played against each other, or 1 at a time against
+- **the owner's open question** (19 Oct: 5 new decks at a time, all played against each other, or 1 at a time against
   the established decks) gets a cheaper answer once the ledger exists. A
   wave is then a list of rows that must turn "playable", whatever the batch size.
 
@@ -328,17 +328,17 @@ From 11 doc files to 3–5, and one write-up instead of eight.
 | **C1** | The doc diet (§5.3–5.5), RULINGS extraction, ARCHITECTURE, HARNESS, the budget check, Appendix A | No (docs only) | One session |
 | **C2** | Delete the legacy tests, `_bumpTallyB` and the lint's leftovers (§5.6); `ana-gates.py` (T10) | No (sim IDENTICAL) | Small |
 | **C3** | The mirror bench on the sim with paired reads (T6); retire `bench.sh` and the chat-era scripts | No | Small–medium |
-| **C4** | CI (T8), if Johan says yes | No | Small |
+| **C4** | CI (T8), if the owner says yes | No | Small |
 | **C5** | Leak test (T5), flips (T7), knob registry (T9), the off-by-default knobs | No (trace only) | Medium |
 | **C6** | The faster suite: the no-server sections under the virtual clock (§5.7), piloted first | No (same assertions) | Medium; pays back every round, so it may move up |
 
-Then the product line resumes in Johan's order: the knowledge layer's Kevlar and wakes (65f) → the abstract
+Then the product line resumes in the owner's order: the knowledge layer's Kevlar and wakes (65f) → the abstract
 model spec → the V5 waves on the ledger. C2–C6 can interleave with product rounds. C1 should come first,
 because every later round pays the bootstrap.
 
 ---
 
-## 8. Decisions for Johan
+## 8. Decisions for the owner
 
 1. **Go on C1 as specified?** Recommended: yes.
 2. **The journal.** (a) Stop it: CHANGELOG + STATUS + the PR carry the record. (b) Keep a short Swedish
@@ -375,7 +375,7 @@ because every later round pays the bootstrap.
 - **The suite timing is one run on a 2-core sandbox,** with my other work beside it. The 13 % CPU share is the
   number to trust, not the 417 s. The remedy should be piloted, not assumed.
 - **Human readers.** ARCHITECTURE serves both, but `elysium-bot.js` stays a 1 MB file written for an agent. That
-  is the trade-off Johan chose, stated plainly.
+  is the trade-off the owner chose, stated plainly.
 
 ---
 
@@ -394,7 +394,7 @@ THE RULE: bot/ never edits client/ or the client/server files at the root. A nee
 
 THE ROUND (bot/docs/HARNESS.md): take a BOARD line → change → gates (bot/CLAUDE.md) → a fresh-context egress
 review → STATUS rewritten, CHANGELOG entry, BOARD line deleted (RULINGS / LESSONS when they changed) → PR with
-the gate numbers and the egress line. Commit and push as soon as a step is green. Johan merges.
+the gate numbers and the egress line. Commit and push as soon as a step is green. The owner merges.
 
 RELEASE: bump BOT_VERSION, copy the bundle from bot/ to the root (never edit the root in place).
 

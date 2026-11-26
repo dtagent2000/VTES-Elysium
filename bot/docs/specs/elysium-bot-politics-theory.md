@@ -98,7 +98,7 @@ distribution, Parity Shift-class transfers) let the table write side-payments in
 Deals about vote terms are therefore the closest thing to contracts in VTES and should be priced
 higher than pure promises. Hard rule from the tournament rules: **at two remaining players all
 deals are void** — every deal object carries a horizon, and the 2p boundary is an automatic expiry.
-**Ruling (Johan, 16 July): deals are PUBLIC, and the default policy is honor-the-letter.**
+**Ruling (the owner, 16 July): deals are PUBLIC, and the default policy is honor-the-letter.**
 Outright breaks poison the well — humans are emotion-driven and stop dealing with a known breaker,
 and against a standing playgroup the bot plays an *iterated* game where reputation persists across
 sessions (folk-theorem territory: cooperation equilibria dominate). But the letter is the whole
@@ -156,7 +156,7 @@ constraint: grudges must clear a deterrence-EV bar, kingmaking is bounded, and e
 choice stays explainable as expected VP. (It also keeps `--explain` honest.)
 
 **3.5 The Cicero split, restated for politics.** The strategy core PRICES (V, matrix, deal-EV); the
-dialogue layer RENDERS intents. Never let rendered text drive decisions. Johan's live sessions
+dialogue layer RENDERS intents. Never let rendered text drive decisions. The owner's live sessions
 remain the human anchor — tuned politics that only beats bots is alien politics.
 
 ## 4. Community wisdom digest (paraphrased; sources §7)
@@ -220,7 +220,7 @@ telemetry plus V(seat). The **arena politics lab** is the centerpiece: seeded ta
 exchange deal objects in JSON — measure deal frequency, keep-rate, realized deal-EV, and run the
 exploitation stress-test (always-honor vs opportunistic-defector populations; find where the
 persona knobs settle). Human validation gates every promotion: a politics feature ships to human
-tables only after a Johan session confirms it reads as politics, not noise.
+tables only after a session with the owner confirms it reads as politics, not noise.
 
 ## 7. Sources
 
@@ -236,13 +236,13 @@ tables only after a Johan session confirms it reads as politics, not noise.
 - https://codex-of-the-damned.org/en/strategy/index.html — the wider strategy library (advanced
   articles unread as of this doc; candidates for a later digest round)
 
-## 8. Open questions for Johan
+## 8. Open questions for the owner
 
 1. **V(seat) v1 weights:** hand-set start values — want to sketch them together, or should the
    first draft come from me and get corrected in review?
    *Recommendation:* I draft v1 — a concrete target beats a blank whiteboard: 5–6 normalized
    components, each explainable in one sentence, near-equal starting weights. Acceptance = the
-   ordering test: V's mid-game ranking matches Johan's gut ranking in live play AND correlates
+   ordering test: V's mid-game ranking matches the owner's gut ranking in live play AND correlates
    with final VP over arena batches. L2 tunes from there.
 2. **Grudge budget:** how much VP-EV may deterrence follow-through cost before it stops being
    Schelling and starts being spite?
@@ -252,7 +252,7 @@ tables only after a Johan session confirms it reads as politics, not noise.
    once the offender is neutralized (play-to-win). Persona-scaled via `grudgeBudget`; the
    iterated-game frame licenses slight per-game "irrationality" since follow-through pays across
    the season.
-3. **Private deals — ANSWERED (Johan, 16 July):** deals are PUBLIC; honor the letter by default
+3. **Private deals — ANSWERED (the owner, 16 July):** deals are PUBLIC; honor the letter by default
    (reputation in an iterated game against a standing playgroup); loopholes sanctioned — letter
    over spirit. Doctrine folded into §2 P3; canonical-serialization consequence in §5. Whisper
    channel: off the table for politics v1.
@@ -330,7 +330,7 @@ probably lacks bounce NOW, whatever the deck-read says they run in total. A hand
 the principled fix for 9.2's selection problem.
 
 **10.4 The three-tier prior: TWDA → local meta → individual.** The bot's own game history (the T8
-recordings!) as the second tier, and — Q7-adjacent — player-specific habits as the third ("Johan
+recordings!) as the second tier, and — Q7-adjacent — player-specific habits as the third ("the owner
 always runs eight Deflection"). No tracker literature we found does individual priors across
 sessions. Requires the Q7 ruling on cross-game memory, and the standing disclosure note applies.
 
@@ -351,13 +351,13 @@ vampires.
   play-to-win, the Cicero split); community literature digested into §4 (Codex table-talk page as
   primary source); deal-object schema sketched with the community's own verb catalog; P1
   ("silent politics") flagged as the highest value-per-hour rung.
-- **16 July 2026 (late)** — **Q3 RULED by Johan:** deals public, honor-the-letter default,
+- **16 July 2026 (late)** — **Q3 RULED by the owner:** deals public, honor-the-letter default,
   loopholes sanctioned (letter over spirit) — doctrine folded into §2 P3 and §5 (the object IS the
   contract; text = canonical serialization); `literalism` added as a persona-knob concept; Q7
   (cross-game ledger persistence) opened as a direct consequence of the iterated-game frame;
-  recommendations recorded inline for Q1/Q2/Q4/Q5/Q6, awaiting Johan's rulings.
+  recommendations recorded inline for Q1/Q2/Q4/Q5/Q6, awaiting the owner's rulings.
 - **16 July 2026 (closing the day)** — §9 Research uncertainties + §10 Open research threads
-  added on Johan's call: anchors declared as inspiration-not-derivation (Crawford–Sobel scope,
+  added on the owner's call: anchors declared as inspiration-not-derivation (Crawford–Sobel scope,
   folk-theorem finite-repetition caveat), the hypergeometric example marked as a naive lower model
   (selection effects → condition on behavior), the TWDA prior flagged as tournament-biased, V's
   linearity ceiling stated; five threads opened — mixed-table commitment games with inspectable

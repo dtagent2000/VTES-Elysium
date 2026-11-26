@@ -1,6 +1,6 @@
 # SPEC — bot tempo: the gear in the Bot button (27 Sep 2026)
 
-**From:** the bot project (Johan's design, 27 Sep). **To:** main. **Why:** "the timing when playing against bots is very frustrating" (player feedback). Every wait the bot makes on a human — block, reaction, vote, the seven combat steps — runs on fixed clocks today (`askSecs` 2–3 s, `phaseSecs` 6 s). The humans at the table should own those clocks and be able to change them mid-game.
+**From:** the bot project (the owner's design, 27 Sep). **To:** main. **Why:** players find the timing when playing against bots very frustrating (player feedback). Every wait the bot makes on a human — block, reaction, vote, the seven combat steps — runs on fixed clocks today (`askSecs` 2–3 s, `phaseSecs` 6 s). The humans at the table should own those clocks and be able to change them mid-game.
 
 ## 1. What the player sees
 
@@ -13,7 +13,7 @@ A **gear icon in the Bot button** opens *Bot settings*. Any human at the table c
 
 Optional later rows in the same panel: how talkative the bots are, whether they narrate their reasoning. The panel is the one place for bot preferences.
 
-A change writes one log line: `Johan set bot tempo: Adaptive, 3 s.`
+A change writes one log line: `Lisa set bot tempo: Adaptive, 3 s.`
 
 ## 2. The three modes (the bot's side)
 
@@ -28,7 +28,7 @@ A change writes one log line: `Johan set bot tempo: Adaptive, 3 s.`
 Client → server → every client and bot (the same relay shape as `tally`):
 
 ```json
-{ "t": "botcfg", "who": "Johan", "tempo": "adaptive", "waitSecs": 3.0 }
+{ "t": "botcfg", "who": "Lisa", "tempo": "adaptive", "waitSecs": 3.0 }
 ```
 
 - `tempo`: `"standard" | "adaptive" | "turn"`. `waitSecs`: number, 1.0–8.0.

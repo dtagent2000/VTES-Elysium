@@ -20,8 +20,9 @@ Then, when the task touches them: `bot/docs/RULINGS.md` (the owner's rulings, nu
 - `bot/` is flat on purpose: suites, arena, sim and tools expect `vtes.json`, the decks, the cardfx files and the read-only
   client/server copies beside them. Run everything from inside `bot/`.
 - `bot/docs/`: the standing pages at the top; `specs/` (design canon), `handoffs/` (open handoffs to main; main's replies in
-  `client/docs/handoffs/`), `reports/`, `reviews/`, `coverage/`, `archive/`, and `history/` (the journal, every READ-ME-FIRST, the
-  old CLAUDE.md with its handshake and debts, the dated learnings, consumed handoffs, delivered round specs).
+  `client/docs/handoffs/`), `reports/`, `reviews/`, `coverage/`, and `history/` (consumed handoffs; the frozen records — the journal,
+  every READ-ME-FIRST, the old CLAUDE.md with its handshake and debts, the dated learnings — are in the private data repo's
+  `bot-history/`, D-142).
 - `bot/tools/`: `setup.sh`, `gates.sh` (the local gates, the PR's table), `release.sh` (the release ritual's mechanics),
   `ci-status.sh` (CI's suite ×3, the release gate), `run-section.sh` (one suite section against any bot), `mutants/`,
   `doc-budget.sh` (the standing pages' budgets). The agents the round uses: `.claude/agents/bot-*.md` (HARNESS "Roles and tools").
@@ -31,8 +32,9 @@ Then, when the task touches them: `bot/docs/RULINGS.md` (the owner's rulings, nu
   Series traces (`serie-*/`, `bench-*/`, sim dirs) are generated and live in scratch.
 
 ## The loop
-BOARD line → analyse / propose / "kör" when it is a design question → branch → change → `tools/gates.sh` + a draft PR for CI's suite ×3 → egress review →
+BOARD line → analyse / propose / the go-ahead ("kör") when it is a design question → branch → change → `tools/gates.sh` + a draft PR for CI's suite ×3 → egress review →
 STATUS + CHANGELOG + BOARD (RULINGS / LESSONS when they changed; a HANDOFF when main must act) → commit + push often → PR against
 `main` with the gate numbers and the sim footprint → in a round with a bot change, ask the owner before the merge about a real
 match in the human seat (its report to `bot/docs/reports/`) → the owner merges. A release additionally bumps `BOT_VERSION` and copies the bundle
-to the repository root. No READ-ME-FIRST and no journal entry any more (20 Oct 2026): the PR body and STATUS are the record.
+to the repository root. No READ-ME-FIRST and no journal entry any more (20 Oct 2026): the CHANGELOG entry and the PR body are the record, STATUS holds the
+state and the project's handoff points to both (one place for each fact, HARNESS; D-142).

@@ -1,12 +1,12 @@
-> **NAMES (21 Sep 2026, bot v0.6.149, Johan): the levels are now Novice / Experienced / Expert — the toggle is simulated experience. Below, read `grinder` as EXPERIENCED and `shark` as EXPERT. Open for the persona pass: the knobs still mix temperament (`aggression`) into what is named experience.**
+> **NAMES (21 Sep 2026, bot v0.6.149, the owner): the levels are now Novice / Experienced / Expert — the toggle is simulated experience. Below, read `grinder` as EXPERIENCED and `shark` as EXPERT. Open for the persona pass: the knobs still mix temperament (`aggression`) into what is named experience.**
 
 # elysium-bot-persona-spec.md — four layers of knowledge, and the persona as which of them are switched on
 
-*Rewritten 18 September 2026 after Johan's four-layer model and his worked example. Status: DRAFT, agreed in conversation; no code. Companions: `elysium-bot-table-model-spec.md` (layer 2's data), `elysium-bot-block-doctrine.md` §4.1 (the B2 list this reorders). Supersedes the 17 Sep draft (information / bias / noise as three separate filters) — those three survive here as consequences of the layers, not as a mechanism of their own.*
+*Rewritten 18 September 2026 after the owner's four-layer model and his worked example. Status: DRAFT, agreed in conversation; no code. Companions: `elysium-bot-table-model-spec.md` (layer 2's data), `elysium-bot-block-doctrine.md` §4.1 (the B2 list this reorders). Supersedes the 17 Sep draft (information / bias / noise as three separate filters) — those three survive here as consequences of the layers, not as a mechanism of their own.*
 
 ---
 
-## 0. The example (Johan, 18 Sep) — read this first
+## 0. The example (the owner, 18 Sep) — read this first
 
 My prey has 6 pool and no vampires up. I have one vampire in play with superior Dominate, Govern the Unaligned and Conditioning in hand, a +2 stealth card, a Deflection and a Villein. My own pool is not great.
 
@@ -18,14 +18,14 @@ Govern at superior is a +1 stealth action: 3 stealth against intercept 2, likely
 
 Same cards, same table. "Bleed for 6 now" and "fix my blood economy because the lunge probably fails and failing gets me ousted" are two different players. This spec is about which player the bot is, and why.
 
-## 1. Four layers of knowledge (Johan's model)
+## 1. Four layers of knowledge (the owner's model)
 
 | # | layer | the sentence | knows | today | becomes |
 |---|---|---|---|---|---|
-| 1 | **own deck** | *"Såhär spelar jag min lek"* | what my cards do together, influence order, the deck's strategy, goals and lines | cardfx reads of own cards, the influence planner, `DECK_STRATEGY` texts (unread by code) | playbooks per deck: opening book, influence order, named LINES (§3), phase transitions |
-| 2 | **cards & archetypes** | *"Det här kan stå i vägen"* | what opponents' decks contain and do; the statistics of what they have shown | the table model `opp[seat]`, `readP`, `_oppPrior` | + the TWDA archetype baseline as prior; the per-minion / per-seat statistics |
-| 3 | **meta** | *"Det här behöver jag göra för att vinna"* | threat and board assessment, who is the problem, table politics — strictly apart from the mechanics | `_tableThreat`, lunge arithmetic, role weights, threat classes | the game-phase variable, target choice, the political forecast (§5), later deals and table talk in the chat tier |
-| 4 | **experience** | *"Hur ofta gör jag fel"* | which of the layers above I actually use, and how reliably I execute | the four multipliers (`aggression`, `blockShy`, `insight`, `bareBlock`) | the persona (§2) |
+| 1 | **own deck** | *"This is how I play my deck"* | what my cards do together, influence order, the deck's strategy, goals and lines | cardfx reads of own cards, the influence planner, `DECK_STRATEGY` texts (unread by code) | playbooks per deck: opening book, influence order, named LINES (§3), phase transitions |
+| 2 | **cards & archetypes** | *"This can stand in the way"* | what opponents' decks contain and do; the statistics of what they have shown | the table model `opp[seat]`, `readP`, `_oppPrior` | + the TWDA archetype baseline as prior; the per-minion / per-seat statistics |
+| 3 | **meta** | *"This is what I need to do to win"* | threat and board assessment, who is the problem, table politics — strictly apart from the mechanics | `_tableThreat`, lunge arithmetic, role weights, threat classes | the game-phase variable, target choice, the political forecast (§5), later deals and table talk in the chat tier |
+| 4 | **experience** | *"How often do I get it wrong"* | which of the layers above I actually use, and how reliably I execute | the four multipliers (`aggression`, `blockShy`, `insight`, `bareBlock`) | the persona (§2) |
 
 **Authority order when the layers disagree: 3 > 1 > 2.** The meta sets the goal ("survive the next round with the lunge threat intact"), the own-deck layer says how this deck reaches it (the Govern line), the archetype layer says what can go wrong (P(block) with 2 stealth ≈ high, bounce likely). Layer 2 never decides; it prices. In the example: L3's goal + L2's odds make the lunge's EV negative, and L1 has a line that meets L3's goal. Govern.
 
@@ -41,7 +41,7 @@ Same cards, same table. "Bleed for 6 now" and "fix my blood economy because the 
 | planning horizon (§3) | 1 turn — re-decides from scratch every turn | 2 turns — one line, own steps only; the predator's next turn as a forecast | 3+ turns — up to three candidate lines with EV, replanned every turn, the table's likely moves in between |
 | execution reliability | forgets: an ability on a vampire in play, a card's timing, a reaction it holds (§2.1) | rarely | never |
 
-That is Johan's description made mechanical: *novice is focused on itself and its own deck; grinder knows its deck well but has tunnel vision about the table; shark has full view including the meta.* The differences are what each persona can SEE and how far it PLANS — not multipliers on scores. Run the example through it:
+That is the owner's description made mechanical: *novice is focused on itself and its own deck; grinder knows its deck well but has tunnel vision about the table; shark has full view including the meta.* The differences are what each persona can SEE and how far it PLANS — not multipliers on scores. Run the example through it:
 
 - **novice** (L3 off, L2 prior only): sees 6 pool, a DOM vampire, Conditioning. *"Bleed for 6."* — the correct decision given what it sees, and exactly the mistake a beginner makes.
 - **grinder** (L2 on, L3 partial): sees the block rate; plays the stealth card and probably lunges anyway, or governs without knowing why — the *"my predator ousts me next round"* is L3 and mostly missing, so the choice is a card question, not a survival question.
@@ -56,7 +56,7 @@ Legality is never touched: novice plays badly, never illegally.
 
 ## 3. The plan memory — committed lines with replanning
 
-What Johan called "bottminnet för viktade planeringsscenarier": not a search, a **line the bot carries across turns and re-checks**.
+What the owner called the bot's memory of weighted planning scenarios: not a search, a **line the bot carries across turns and re-checks**.
 
 ```js
 this.plan = {
@@ -85,7 +85,7 @@ Shark = all four layers, horizon 3+, no slips. Therefore:
 
 ## 5. What has to exist before this ships (and in which order)
 
-1. **The strategy layer = L3 as code**: the game-phase variable (V5 ark: build → three vampires: bleed → three Methuselahs: lunge/oust order), posture, target — a `plan.goal` the tactics read. **Includes the political forecast now, from the ask ladder** (Johan, 18 Sep): the number answered to "how much pool?" on a political action is an observation, so `opp[seat].politics = {called, passed, dmgToMe[]}` feeds `oppForecast` a `passRate × avgDmgToMe` term for a voting seat. The politics system (after blocks and combat) later *adds predictions before the announce*; it replaces the source, not the reader.
+1. **The strategy layer = L3 as code**: the game-phase variable (V5 ark: build → three vampires: bleed → three Methuselahs: lunge/oust order), posture, target — a `plan.goal` the tactics read. **Includes the political forecast now, from the ask ladder** (the owner, 18 Sep): the number answered to "how much pool?" on a political action is an observation, so `opp[seat].politics = {called, passed, dmgToMe[]}` feeds `oppForecast` a `passRate × avgDmgToMe` term for a voting seat. The politics system (after blocks and combat) later *adds predictions before the announce*; it replaces the source, not the reader.
 2. **Lines in L1**: playbooks per deck as named multi-turn lines; the opening book as the first line. The tactics score a *step of a line*, not a lone action.
 3. **The plan memory (§3)** with horizon as a persona field. Shark-only first: behaviour must match today's where the four multipliers were 1.0 (suite proves it).
 4. **Layer switches for novice and grinder** (§2) + the `ref` emit. Arena: novice vs shark on identical seeds; the dossier's first per-layer Δ table.
@@ -93,13 +93,13 @@ Shark = all four layers, horizon 3+, no slips. Therefore:
 
 The four multipliers dissolve on the way: `aggression` → the phase sets pressure; `blockShy` → the persona's L2/L3 view (a novice that cannot see the forecast is cautious by ignorance, not by a divisor); `insight` → the layer switches; `bareBlock` → L2 (novice assumes 1 damage, so it bare-blocks *more* than today, and wrongly — which is right); `thinkMs` → removed.
 
-## 6. Decided with Johan (17–18 Sep)
+## 6. Decided with the owner (17–18 Sep)
 - Three personas are enough; variety comes from richer decks. Novice = self-focused, grinder = knows its deck but tunnel-visioned on the table, shark = full view including meta.
 - No MCTS / search. Explainability is the product.
 - The politics leg comes after blocks and combat; until then the ask ladder is L3's political source.
 - The planning horizon is part of the persona; the plan memory holds weighted candidate lines, re-checked each turn.
 
-## 8. Bluffing — a development point, not for now (Johan, 18 Sep)
+## 8. Bluffing — a development point, not for now (the owner, 18 Sep)
 
 A bluff is a behaviour that runs against the statistically or logically best action, taken so that the *opponent's* model draws the wrong conclusion: a wall deck leaves a vampire unlocked with no intercept and no combat card in hand, so that I fear the block and never take the action. Two sides for the bot, both later:
 

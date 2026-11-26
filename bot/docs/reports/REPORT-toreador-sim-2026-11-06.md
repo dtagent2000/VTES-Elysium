@@ -1,9 +1,9 @@
 # Toreador at the sim table — does it hold up? (6 Nov 2026, bot v0.6.217, sim v1.1.0)
 
-**Question** (STATUS Next 1, Johan's go of 6 Nov): does the Toreador precon hold up beside the four starters, i.e. does it sit
+**Question** (STATUS Next 1, the owner's go of 6 Nov): does the Toreador precon hold up beside the four starters, i.e. does it sit
 inside the starters' span on VP and win share, so that it can join the client's menu (D-98: "a deck joins the menu when its rows are
 playable and it holds up in the sim")? Every Toreador row is playable since v0.6.217 (`CARDS.md`; Creepshow Casino `unseen` in the
-12-match smoke). The menu decision is Johan's; this report only reads the table. No bot change.
+12-match smoke). The menu decision is the owner's; this report only reads the table. No bot change.
 
 **Design.** `elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue,toreador --seatings all --seeds 2`: every seating of the
 five decks (120 = every cyclic order × every starting seat) × deals 1–2 = **240 matches** at a five-seat table, the client profile
@@ -134,7 +134,7 @@ inside the span (0.60 VP, 11.2 % wins, above nosferatu and below ventrue on the 
 bar before a bleed, Change of Target, the title, Creepshow Casino); ana-block, ana-ledger and the handshake. Missed: "ana-inv no new
 flag kind" — one `strike-taken` flag, the known stray combat row. No falsifier fired. The fresh-deal series (not registered) agrees
 on every point and adds two: Toreador is level with tremere, and above nosferatu beyond the noise. Verdict on the question: **holds
-up** by the measure set for this round (inside the starters' span); the menu is Johan's call.
+up** by the measure set for this round (inside the starters' span); the menu is the owner's call.
 
 ## Found on the way
 
@@ -150,7 +150,7 @@ up** by the measure set for this round (inside the starters' span); the menu is 
   that is always held would read `playable` in `CARDS.md`. The fix fits inside the two tools (count a pick only when the card leaves
   the hand); the ledger is the V5 waves' done-condition: a BOARD line.
 
-## If Johan says yes
+## If the owner says yes
 
 A bot release: `deck-toreador.json` embedded in `ARCHETYPES`, a `DECK_STRATEGY` line (the manifest, `combat: 'wave'` from the file),
 `gen-precon.js --check` over the embedded decks. The client lists a new `ARCHETYPES` key by itself ("a new bot deck needs a bot release

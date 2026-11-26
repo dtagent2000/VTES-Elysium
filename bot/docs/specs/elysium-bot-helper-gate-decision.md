@@ -4,7 +4,7 @@
 
 ## The finding
 
-After the client's v2.6.111 fix (Create game's "All helpers on — locked" finally held), Johan's bots went quiet about their phases. Before the fix — helpers actually OFF — they had narrated `Phase: Unlock.` … `Phase: Discard.` every turn.
+After the client's v2.6.111 fix (Create game's "All helpers on — locked" finally held), the owner's bots went quiet about their phases. Before the fix — helpers actually OFF — they had narrated `Phase: Unlock.` … `Phase: Discard.` every turn.
 
 Root cause: five behaviours were gated on `caps.tally`, a flag the bot sets when it first OBSERVES a `tally` message on the wire:
 
@@ -24,7 +24,7 @@ Root cause: five behaviours were gated on `caps.tally`, a flag the bot sets when
 - **The first block of every online game was mishandled even with helpers on:** `avrOpen('block')` sends the `say 'Block!'` synchronously but debounces its tally 120 ms, so the shout always beat the counter that would have informed the bot.
 - **The arena hit exactly this on 16 July** and seeded a tally at match start rather than fixing the root (`elysium-bot-arena.js` v1.0.1: "12/12 block-as-target windows degraded to let-it-through").
 
-The v2.6.111 client bug had been supplying the seed by accident (Johan's local `conv.tournament` fell through, gave him the free counter, and his first ± click informed the bot). Fixing the client removed the accidental seed and exposed the design flaw.
+The v2.6.111 client bug had been supplying the seed by accident (the owner's local `conv.tournament` fell through, gave him the free counter, and his first ± click informed the bot). Fixing the client removed the accidental seed and exposed the design flaw.
 
 ## The decision: split the two questions, gate neither on helpers
 
@@ -34,7 +34,7 @@ The v2.6.111 client bug had been supplying the seed by accident (Johan's local `
 
 `caps.tally` survives as a diagnostic flag only. The arena seed is removed.
 
-Johan's framing (16 Sep): bots need not use ALL helpers — only where a helper frames structure that both humans and bots read. Phases and the three resolvers are exactly that set. Prompts with no bot analogue (`unlockPrompt`, `passConfirm`, `warn`, `hand*`) stay human-only; the bot just does the thing. Candidates for later, same test: `modeChoice` (announce the level a card is played at) and `counts` (a line when a phase gains extra actions).
+The owner's framing (16 Sep): bots need not use ALL helpers — only where a helper frames structure that both humans and bots read. Phases and the three resolvers are exactly that set. Prompts with no bot analogue (`unlockPrompt`, `passConfirm`, `warn`, `hand*`) stay human-only; the bot just does the thing. Candidates for later, same test: `modeChoice` (announce the level a card is played at) and `counts` (a line when a phase gains extra actions).
 
 ### Why this beats the alternative
 

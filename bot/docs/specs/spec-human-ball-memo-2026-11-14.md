@@ -2,7 +2,7 @@
 
 *Status: built in bot v0.6.225 (round C, 14 Nov 2026); three human tables in main's play-test rig held — the pair read, the question with its answer, and on the release bytes the reading on the board after the Phase line (CHANGELOG v0.6.225).*
 
-Johan, 13 Nov ("alla dina förslag ovan om Jack och Grand Ball låter jättebra", on Claude's proposal of that morning; the order of
+The owner, 13 Nov (all of Claude's proposals of that morning on Jack and the Grand Ball taken; the order of
 21:45: A → B → C, a human table after C). D-113 (3): "A human's Grand Ball: read the lock, the play line's acting minion and target, a
 token naming the Ball; if still open, the bot that speaks for the table asks once in chat after their master phase, naming the
 candidates; the public answer is every bot's memory, and unanswered, today's generous rule stays." (4): "A curated cardfx `memo`

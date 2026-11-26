@@ -4,7 +4,7 @@
 
 | | bytes | knob | what it isolates |
 |---|---|---|---|
-| **cmb1** | bot v0.6.155 | — | the state Johan's rulings were read on — handshake BROKEN (see below) |
+| **cmb1** | bot v0.6.155 | — | the state the owner's rulings were read on — handshake BROKEN (see below) |
 | **cmb1b** | bot v0.6.156 | `combatMind=0` | handshake fixed, v0.6.155 decisions — the real baseline |
 | **cmb2** | bot v0.6.156 (final bytes, `serie-cmb2b/`) | `combatMind=1` | handshake fixed + the combat mind |
 
@@ -39,7 +39,7 @@ Since 16 Sep the bot's combat EVENT lines (press / maneuver / Immortal Grapple /
 |---|---|---|---|
 | Grapple gating | bare-fist Grapples < 15 % (cmb1: 8 of 17 = 47 %) | **0 of 10**: 6 with Roundhouse, 2 with active Carrion Crows, 2 with a strength-boosted fist of 3 (checked per row: `strike`/`dealt`, Crows play in the same combat) | **keep** |
 | Taste of Vitae after a card round | after bare hands → 0 (cmb1: 8 of 12) | 12 of 14 after Roundhouse / Crows / Grapple rounds; 2 after a fist — both rounds where the opponent lost 2 (a strength fist) | **keep** |
-| Tremere maneuvers | > 0 (cmb1: 0 in 133 rounds) | 6 Apportation maneuvers, 9 % of rounds at long; Theft the strike in 23 of 82 rounds | **keep** — note the trade-off: the single Apportation goes to the maneuver first, so presses fell to 1 (+1 press-to-end); Johan's "Theft + press + Theft" needs a second copy in hand |
+| Tremere maneuvers | > 0 (cmb1: 0 in 133 rounds) | 6 Apportation maneuvers, 9 % of rounds at long; Theft the strike in 23 of 82 rounds | **keep** — note the trade-off: the single Apportation goes to the maneuver first, so presses fell to 1 (+1 press-to-end); the owner's Theft + press + Theft needs a second copy in hand |
 | Press worth | presses followed by a fist → < 20 % (cmb1: 6 of 14) | Nosferatu 8 presses: 6 torpor shots (their own `now M` line), 2 Crows; Tremere 1 card round; Ventrue 1 torpor shot; **0 followed by a fist**, **0 into an empty round** (cmb2-pre had 6 before the taken-line fix) | **keep** |
 | Hidden Strength as press | 0 (cmb1: 1, cmb1b: 2) | **0**; 1 bundled press used, Tremere pressed to END once with Apportation | **keep** |
 | Malkavian waves | Swallowed kept for combat | 11 maneuvers, 0 as stealth-glut; 10 % of rounds at long | **keep** |
@@ -47,9 +47,9 @@ Since 16 Sep the bot's combat EVENT lines (press / maneuver / Immortal Grapple /
 | Long fists deal 0 | Roundhouse never at long | Roundhouse only at close (23/23); fists announce `for 0` at long | **keep** |
 
 ## 4. What the numbers say beyond the predictions
-- **Nosferatu's dealt/round fell 1.61 → 1.39 and its Roundhouse count 26 → 23 with more combats.** Not the gating (all Grapples justified) — the opponents now wave or snipe to long, and the V5 Nosferatu starter has NO maneuver card (Guard Dogs / Instinctive Reaction superior grant one on a block; neither fired). At long its fists deal 0 and Roundhouse is off the table. This is the deck's weakness Johan named, now visible for the first time because the handshake works. **Follow-up (not built):** the rush priority in `decide('action')` — with Crows + Grapple / Roundhouse in hand, rush (Deep Song) and choose the fight; with the combat cards spent, bleed with Deep Song. cmb2: 2 Deep Song rushes in 12 matches, the rest as bleeds.
+- **Nosferatu's dealt/round fell 1.61 → 1.39 and its Roundhouse count 26 → 23 with more combats.** Not the gating (all Grapples justified) — the opponents now wave or snipe to long, and the V5 Nosferatu starter has NO maneuver card (Guard Dogs / Instinctive Reaction superior grant one on a block; neither fired). At long its fists deal 0 and Roundhouse is off the table. This is the deck's weakness the owner named, now visible for the first time because the handshake works. **Follow-up (not built):** the rush priority in `decide('action')` — with Crows + Grapple / Roundhouse in hand, rush (Deep Song) and choose the fight; with the combat cards spent, bleed with Deep Song. cmb2: 2 Deep Song rushes in 12 matches, the rest as bleeds.
 - **Malkavian's two strong series in a row** (cmb1 6 wins, cmb2 8) are consistent with what the wave buys a bleeder: 10 % of rounds at long, 0 combat cards spent, torpors 10 → 8. Still n = 12.
-- **Tremere presses less than Johan's picture** (1 + 1 end): the single Apportation in hand goes to the maneuver. Right by his main rule; the press variant needs the 2nd copy or the .44 Magnum (equipped once in 36 matches).
+- **Tremere presses less than the owner's picture** (1 + 1 end): the single Apportation in hand goes to the maneuver. Right by his main rule; the press variant needs the 2nd copy or the .44 Magnum (equipped once in 36 matches).
 - **Ventrue** is unchanged in shape (Majesty ends every fight it can); the bundled Hidden Strength press fired once. Its torpors (8) are hunger / Fame / bare-hand fights without Majesty, not a combat-mind matter.
 - **52 → ~40 rounds at blood ≤ 1** across the table (a block-decision matter, still not in scope).
 

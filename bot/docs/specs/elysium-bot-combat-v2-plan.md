@@ -1,7 +1,7 @@
 # Elysium bot combat v2 — handoff plan (18 July 2026)
 
 **Purpose:** a single, precise reference point for a FUTURE dedicated chat that tackles
-the combat module specifically — kept separate from deck-onboarding work (Johan's call,
+the combat module specifically — kept separate from deck-onboarding work (the owner's call,
 18 July) so that session can start reading here instead of re-deriving the state from
 scratch. Session ritual still applies there: read journal + context + learnings FIRST,
 then this document for the combat-specific detail.
@@ -125,7 +125,7 @@ Two pieces of already-existing infrastructure the design note points at:
   the Netherworld is NOT an outlier — `rangeLong` and `beforeRangeDetermined` both have
   a real, double-digit mode-specific tail. This reverses the note's own speculation:
   the structural (mode-scoped) fix is likely the RIGHT call once this plan reaches its
-  own implementation phase, not a curated one-off. Left un-built for now (Johan, 19
+  own implementation phase, not a curated one-off. Left un-built for now (the owner, 19
   July: "document it" specifically, not "build it") — but the future session should
   start from THIS number, not re-derive it.
 
@@ -179,7 +179,7 @@ fires — already correctly placed).
   mandatory exception, so it follows the default (optional), matching Grasp of the
   Python's explicit "1 optional press" phrasing for the same underlying ability shape.
 
-## 5.6. Documented but NOT built — the exotic press variants (Johan, 19 July)
+## 5.6. Documented but NOT built — the exotic press variants (the owner, 19 July)
 
 Measured while scoping the v1 slice: **104 of 410 combat cards mention "press"** (a
 quarter of the whole pool) — a much bigger, more varied family than steal-blood (10)
@@ -365,7 +365,7 @@ press/maneuver cards were being onboarded, which is exactly what surfaced now.
 
 ## 9. Full inventory, cross-checked against the 7-step round (19 July)
 
-Johan asked for a systematic audit: everything built this session, checked against the
+The owner asked for a systematic audit: everything built this session, checked against the
 actual VEKN rulebook structure, with genuine remaining gaps sized precisely (not
 guessed). Every number below was re-measured for this section, not recalled from
 earlier sessions — several didn't match memory (see the strength note below).

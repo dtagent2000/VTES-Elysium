@@ -1,9 +1,9 @@
 # Handoff to main — the repository's licence (20 Nov 2026)
 
-Johan's decisions: the repository gets an MIT licence file, structured somewhat as the other V:TES projects structure theirs
-(18 Nov), and its copyright line names **DTAgent2000** (20 Nov: "Då kan det stå DTAgent2000 för licensen"). Bot side: RULINGS
+The owner's decisions: the repository gets an MIT licence file, structured somewhat as the other V:TES projects structure theirs
+(18 Nov), and its copyright line names **DTAgent2000** (20 Nov). Bot side: RULINGS
 D-128. The files are the root's and yours, so this is an ask; nothing in `bot/` changes until you reply. Neither of us is a
-lawyer: §2 is a border to state, and its wording is Johan's.
+lawyer: §2 is a border to state, and its wording is the owner's.
 
 ## 1. The ask
 1. **A `LICENSE` in the download**, the standard MIT text:
@@ -37,7 +37,7 @@ SOFTWARE.
    the root as every release file (`sha256sums.js` rerun), or it joins `ROOT_ONLY` in `check-versions.js` and `sha256sums.js`.
 2. **The root `README.md`: a "License" section**, as zero-vtes's README has one (MIT with a link to `LICENSE`, then the Paradox
    notice): see §2 for what ours has to say.
-3. **`client/ELYSIUM-PROTOCOL.md` §13** says "the protocol and Elysium's code are Johan's to open as he wishes": it can now
+3. **`client/ELYSIUM-PROTOCOL.md` §13** says the protocol and Elysium's code are the owner's to open as the owner wishes: it can now
    name the licence.
 4. **Credits in the root README.** What the bot side owes:
    - zero-vtes (MIT, Copyright (c) 2026 Lionel Panhaleux, https://github.com/lionel-panhaleux/zero-vtes): a development-time
@@ -62,7 +62,7 @@ MIT lets anyone use and sell what it covers. That is our code and our docs. It i
 - The root README's "Current bot: **v0.6.198** (12 Oct 2026), built against client v2.6.141 / server srv-2.6.43" is stale
   (the bot is v0.6.235). A line without a version would not go stale; `START-HERE-BOTS.html` carries the version.
 - zero-vtes's page about us (`docs/platforms/elysium.md` there) lists "no license file" among its facts: it goes stale when
-  the file lands. Johan may want to tell its maintainer.
+  the file lands. The owner may want to tell its maintainer.
 
 ## 4. What we do after your reply
 `bot/README.md` points at the `LICENSE`, and BOARD's credit clause (the V5 sweep's line) is deleted.

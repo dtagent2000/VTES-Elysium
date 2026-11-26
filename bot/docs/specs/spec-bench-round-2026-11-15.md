@@ -1,10 +1,10 @@
 # Spec — the bench round: Toreador's guide proposals 2–8 and D-117 (15 November 2026)
 
-Johan (14 Nov, STATUS "Next" 1): the bench round takes the Toreador guide check's proposals 2–8
-(`reports/REPORT-toreador-guide-check-2026-11-13.md`) and D-117 (the Ball's turn), his "kör" on each. D-112: the guide is a check,
+The owner (14 Nov, STATUS "Next" 1): the bench round takes the Toreador guide check's proposals 2–8
+(`reports/REPORT-toreador-guide-check-2026-11-13.md`) and D-117 (the Ball's turn), the owner's go-ahead on each. D-112: the guide is a check,
 not law — where the line and the guide disagree, the line keeps what the bot's judgment and the sim say gives the deck the most VP,
-and says why. This spec is the proposal (analysis, design, registered predictions); nothing is built before his "kör".
-Status: **kör** — Johan, 15 Nov 01:16 ("Ja, kör :)"), on the recommendation of §11; recorded as RULINGS D-118.
+and says why. This spec is the proposal (analysis, design, registered predictions); nothing is built before the owner's go-ahead.
+Status: **the go-ahead** — the owner, 15 Nov 01:16, on the recommendation of §11; recorded as RULINGS D-118.
 
 ## 1. The baseline (v0.6.228, main `c5852bc`)
 The 600: `node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue,toreador --bench none` (every seating, a fresh deal
@@ -79,7 +79,7 @@ Toreador's first offensive action comes with one ready vampire in 480 of 600 mat
 referendum passes 98 % (1943 of 1974). Holding it trades a Kine Resources Contested (value × pass ≈ 2.7 a call) for a bleed
 of 1 (about 45 % of Toreador's bleeds are blocked) or a body at home; the build itself already comes first when a stock action
 is there (the structural pick under three ready, `grinderReadyTarget`). The guide writes for tables where a lone early caller is outvoted or
-blocked. The strategy line says so. If Johan prefers a measurement: a knob `buildTo` (the plan keeps every body home while fewer
+blocked. The strategy line says so. If the owner prefers a measurement: a knob `buildTo` (the plan keeps every body home while fewer
 than three are ready, a stock excepted), one arm pinned to Toreador; my expectation is a loss.
 
 ## 7. Proposal 6 — Scalpel Tongue's lock before my offence
@@ -92,7 +92,7 @@ Predictions: (S0) at 0 IDENTICAL; (S1) Scalpel Tongue ≥ 50 plays (10), each lo
 (S2) in those turns my later bleeds blocked ≤ 30 % (39 %); (S3) no loss (a small effect: about 0.1 pool a match).
 
 ## 8. Proposal 7 — leave a stealth bleeder's bleeds (amends D-2 for a deck without bounce)
-D-2 (Johan): no attempt on a stealth bleeder's bleed of 1 while the pool affords the pump; a front-heavy bleed gets an attempt so
+D-2 (the owner): no attempt on a stealth bleeder's bleed of 1 while the pool affords the pump; a front-heavy bleed gets an attempt so
 it must spend stealth, "better still with a bounce after". Toreador holds no bounce card, and its calm attempts at Malkavian's
 bleeds block a third (the rest cycle a stealth card). Knob `clogWide` (0 = D-2 as built): for a deck whose library holds no bounce,
 the clog covers a read stealth bleeder's bleed of any size while I stay off the edge after it (pool − bleed > the critical level +
@@ -120,8 +120,8 @@ moved per calm Villein falls by at most 0.5 (3.64), Villeins played within ±10 
   reader committed as a tool (`ana-guide-check.py`: the guide check's situations on a sim trace dir, so the next deck's check
   reproduces), RULINGS (each answer), the footprints (the 240, the V5 smoke, the 600), the gates, the egress review.
 
-## 11. For Johan
-"kör" or "nej" on each: D-117 (ruled: build), 2 (recommended no), 3, 4, 5 (recommended no), 6, 7 (amends D-2 for a deck without
+## 11. For the owner
+The go-ahead or a no on each: D-117 (ruled: build), 2 (recommended no), 3, 4, 5 (recommended no), 6, 7 (amends D-2 for a deck without
 bounce), 8. Recommended: kör D-117, 3, 4, 6, 7, 8; no 2 and 5 (the lines say why).
 
 ## 12. Amended before any arm (15 Nov, the build's mechanism smokes; the predictions above stand as registered)
@@ -159,4 +159,4 @@ lock-first forecast counts them the same way); the Ball's guard counted bodies a
 no body planned home and on a revisit. Inert at 0: with the five at 0 the release bytes play v0.6.228 (K0, rerun). The combined arm,
 rerun on the release bytes against the same control, moved 19 matches: Toreador +0.08 [−0.04, +0.19] (it was +0.09); the place
 figures in §13's last row are this run's. The guard and the keep skip read the whole posture, the plan's quota with the bleeding
-predator (RULINGS O-43, Johan's call); `engineW` weighs every influence plan of the game, as benched (BOARD has the narrower read).
+predator (RULINGS O-43, the owner's call); `engineW` weighs every influence plan of the game, as benched (BOARD has the narrower read).

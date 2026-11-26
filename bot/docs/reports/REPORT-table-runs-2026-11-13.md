@@ -1,6 +1,6 @@
 # REPORT — the table runs on the real clock (round A, 13–14 November 2026)
 
-Johan, 13 Nov: table runs with Toreador seated, and v0.6.222's unsure list counted at the real clock — superseded combats, held
+The owner, 13 Nov: table runs with Toreador seated, and v0.6.222's unsure list counted at the real clock — superseded combats, held
 turns, rush complies, fizzles, actions against an ousted seat (CHANGELOG v0.6.222, PR #67, the BOARD lines). Bot v0.6.222 (main
 `1e9f3fd`, `elysium-bot.js` `e595f4a5`) as released, before any change of round A. Two bot-only tables on the real clock, one at a time
 (two cores here, and the counts are timing-sensitive); the counts come from `ana-rare.py` v1.0.0 (new: read-only), the audits from

@@ -1,12 +1,12 @@
 # SPEC — client combat controls for bot tables (to main) — 23 Sep 2026
 
 **From:** the bot project (bot v0.6.162). **To:** main (client `elysium-vtes-bord.html` v2.6.125, server srv-2.6.38).
-**Why:** a human fighting a bot today must TYPE the bot's frozen combat grammar or the bot guesses (the rulebook fist of 1, 0 at long range) and ends with "tell me if your side differs". Johan wants the combat counter and the vampire menu to carry range, press and strike as data, the way Block / Vote already do (v2.6.106). Everything below is designed so that **the bot needs no new parser for §2** — the client emits the phrases the bot already reads (verified against `_parseCombatNarration` and `L12`, bot v0.6.162). §3 (tally fields) and §4 (Set range) need a small bot follow-up, listed in §6.
+**Why:** a human fighting a bot today must TYPE the bot's frozen combat grammar or the bot guesses (the rulebook fist of 1, 0 at long range) and ends with "tell me if your side differs". The owner wants the combat counter and the vampire menu to carry range, press and strike as data, the way Block / Vote already do (v2.6.106). Everything below is designed so that **the bot needs no new parser for §2** — the client emits the phrases the bot already reads (verified against `_parseCombatNarration` and `L12`, bot v0.6.162). §3 (tally fields) and §4 (Set range) need a small bot follow-up, listed in §6.
 
 ## 1. Principles
 1. **Menu = log line.** Every combat control writes ONE frozen line on the `log` relay (like `blocks.` / `casts N votes for.`), wording byte-exact as in §2. The bot parses the log tier since v0.6.156; other humans just read it.
 2. **Counter = state.** The combat tally carries the round's RANGE and PRESS state as fields (§3), so every screen — and the bot — sees the same thing without parsing prose.
-3. **Two entry points, one effect.** Johan's two surfaces — the combat counter and the vampire's right-click **Combat** submenu — call the same functions (write the line, update the tally).
+3. **Two entry points, one effect.** the owner's two surfaces — the combat counter and the vampire's right-click **Combat** submenu — call the same functions (write the line, update the tally).
 4. **No enforcement.** The client records what the players declare; it never blocks an illegal play (house style since v1).
 
 ## 2. Frozen lines (the bot already parses all of these)
@@ -55,7 +55,7 @@ Beside `Actions`, for a minion in the ready region **while a combat tally is ope
 2. Write `rng` after its own range step and `pr` at its press step (`_writeTally` partial writes, v2.6.17 rule).
 3. Parse `NAME sets range to close|long (CARD).` — new frozen line (Immortal Grapple's "range is close next round", Sniper Rifle).
 4. Canary: add the §2 lines + the two fields to `test-bot-canary.js` against the released client.
-5. Then the **combat phase routine** (`combatPhases`): the bot drives the seven steps against a human with Johan's phrases, reading these controls instead of waiting on typed grammar.
+5. Then the **combat phase routine** (`combatPhases`): the bot drives the seven steps against a human with the owner's phrases, reading these controls instead of waiting on typed grammar.
 
 ## 7. Acceptance (main)
 - Each §2 control produces its line byte-for-byte (a unit test per line, like v2.6.106's Block/Vote lines).

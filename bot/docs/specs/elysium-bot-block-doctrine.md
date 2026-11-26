@@ -11,7 +11,7 @@
 > hunt, equip, employ, recruit, blood-stock (superior Govern), Creeping Sabotage, Revelations [AUS] —
 > and every Deep Song rush is announced, waited out for the full `askSecs`, and resolved unopposed.
 > The walls cannot "punish attempted actions" (their own manifest), and 5p30 matches with rush/hunt-
-> heavy decks spend a large share of wall-clock in dead ask windows. Johan's framing (11 Sep):
+> heavy decks spend a large share of wall-clock in dead ask windows. The owner's framing (11 Sep):
 > directed actions are the easy call — they unambiguously hurt *me* — while undirected actions are a
 > **prioritisation** problem: what does the action give the opponent, and what does the block cost me?
 > This doctrine answers that question from published sources, then maps it onto our six registered
@@ -287,7 +287,7 @@ control must come from Deep Song-class rushes (the rush-theory track, weight 0 t
 
 Posture vocabulary from CotD Combat; class appetite: **always / often / rare / never** at grinder
 knobs. The V5 rows quote the publisher's own *What to block* paragraph; hacking / sewer / wall are
-Johan's own lists with doctrine derived from the same principles.
+The owner's own lists with doctrine derived from the same principles.
 
 | Deck (axes) | Posture | T1 pool | T2 intercept | T3 combat | T4 horde | T5 starve | T6 tempo | Notes |
 |---|---|---|---|---|---|---|---|---|
@@ -419,7 +419,7 @@ Registered predictions for the first post-build 5p30 series (verdict keep/tune/r
 
 ---
 
-## 7. Open questions for Johan
+## 7. Open questions for the owner
 
 1. Should the predator's block window at bot-only tables wait for the prey bot's explicit Pass (rules-
    exact, one extra beat) or open simultaneously with a prey-priority tiebreak (faster)?
@@ -438,7 +438,7 @@ Registered predictions for the first post-build 5p30 series (verdict keep/tune/r
   and the V5 reference guide with the course of an action and the default stealth values).
 - Black Chantry, *How to play the First Blood: Toreador deck* (`blackchantry.com/?p=1248`): block key
   actions only, keep a minion unlocked at end of turn.
-- Card texts for the §4.1 data corrections verified against KRCG `vtes.json` (uploaded by Johan,
+- Card texts for the §4.1 data corrections verified against KRCG `vtes.json` (uploaded by the owner,
   11 Sep 2026): Blood Doll, Vessel, Spying Mission, Foreshadowing Destruction, Haven Uncovered,
   Immortal Grapple, Smiling Jack, Protected District — the standing rule, real card text never memory.
   `test-cardfx.js` ran green (207/0) against it the same day: the curation baseline is measurable.
@@ -450,7 +450,7 @@ Registered predictions for the first post-build 5p30 series (verdict keep/tune/r
   article (rush vs block control geometry; the discipline → module map behind §3.6) —
   `codex-of-the-damned.org/en/strategy/`.
 - VEKN comprehensive rules (mirror: `github.com/lionel-panhaleux/vtes`, `vtes_comprehensive_rules.md`).
-- Mark Loughman, *The Game of the Game* (CotD advanced strategy, Nov 2020; text supplied by Johan
+- Mark Loughman, *The Game of the Game* (CotD advanced strategy, Nov 2020; text supplied by the owner
   11 Sep 2026 after automated fetches failed): the meta-game evolution ladder, the Legionnaire
   counter list, tournament-prep habits — behind §2.7, the T4b class, the v2 climate term and the
   meta-drift metric.

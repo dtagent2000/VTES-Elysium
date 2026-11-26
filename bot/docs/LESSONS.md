@@ -1,16 +1,16 @@
-# LESSONS — the ~300 learnings distilled (20 Oct 2026). Numbered L-n (never renumbered; a new line takes the next number). Each line names its dated story in `history/elysium-bot-learnings-2026-10-20.md` (the date is the key there). Read before building anything with timing, tests or measurements. A new line only for a new CLASS of lesson.
+# LESSONS — the ~300 learnings distilled (20 Oct 2026). Numbered L-n (never renumbered; a new line takes the next number). Each line names its dated story in the private data repo's `bot-history/elysium-bot-learnings-2026-10-20.md` (the date is the key there). Read before building anything with timing, tests or measurements. A new line only for a new CLASS of lesson.
 
 ## Before you build
 - L-1 **Find the general measure before writing the deck rule** (19 Sep): "two superior-Animalism vampires first" was a special case of "raise the vampire that can play your library" (`_deckFit`).
-- L-2 **Johan's three layers**: statistics → general handling → deck persona; put the change in the lowest layer it belongs to (19 Sep).
-- L-3 **When Johan states a doctrine, do not generalise it past his words** (20 Sep): probe-first became the default when he had reserved it for "no stealth in hand".
+- L-2 **the owner's three layers**: statistics → general handling → deck persona; put the change in the lowest layer it belongs to (19 Sep).
+- L-3 **When the owner states a doctrine, do not generalise it past his words** (20 Sep): probe-first became the default when he had reserved it for "no stealth in hand".
 - L-4 **A new general level gets ONE consumer first** (19 Sep, the critical pool); spend a paired control only where the knob has consumers.
 - L-5 **Before shipping a rule with a threshold, count how often the condition is TRUE in an existing series** (21 Sep): the pump rule and the rich-library rule never fired.
 - L-6 **Read the rulebook section before building on a rule from memory** (18 Sep): the cost-on-success reading overturned a day of design.
 - L-7 **When a mechanism already exists, the card is a term in it**; before inventing a decision, ask what existing object the answer could BECOME (15–18 Sep).
 - L-8 **Look for the field before designing the feature; check whether the neighbouring project already chose an architecture** (15–16 Sep).
 - L-9 **A pricing question comes before a bug**: "the card never shows up" (Kevlar, 429 offers, 0 taken) was a flat price, and the knob experiment should have waited for the doctrine question (19 Oct).
-- L-10 **A tie-break is where a card's second job lives**; when two keep-rules can meet on one tie, say which wins and tell Johan (19 Oct).
+- L-10 **A tie-break is where a card's second job lives**; when two keep-rules can meet on one tie, say which wins and tell the owner (19 Oct).
 - L-11 **Keep the rejected alternative as a document, not a code path** (16 Sep, the helper gate).
 - L-12 **Ask what the bot CANNOT do, not only which cards are inert** (18 Sep: a rule about a card's cost usually needs an action the bot lacks).
 - L-93 **A card that gets its consumer leaves the rules that held it** (18 Nov, 5b): Sudden Reversal got `_srFor`, but v0.6.215's dead-card rule (an out-of-turn master with no consumer is dead) still named only Archon Investigation's key, so the discard phase cycled it at once: the suite was green, the lasombra smoke showed no cancel. When a held card plays, grep every rule that names it or its class as held, dead or skipped (the finder, `_deadHandIndex`, the coverage verdict) and watch it fire in a sim.

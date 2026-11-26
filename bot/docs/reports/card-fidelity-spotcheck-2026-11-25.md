@@ -45,7 +45,7 @@ Only one of them was a wrong entry (Mirror Walk). The others are of different ki
 - the bot's reading of a human's cards: Carrion Crows' environmental damage, The Dowager's +1;
 - the table's flow: timers, the stall, ordering.
 
-## Proposal (waits for "kör")
+## Proposal (waits for the go-ahead)
 1. Report two numbers per deck: **playable 77/77** and **text-checked N/77**, with a fidelity column in `docs/CARDS.md`
    (complete / approximated / clause missing / wrong).
 2. A fidelity pass over the five base starters. All 37 auto entries come first, then a lighter pass over the 54 curated ones. Each

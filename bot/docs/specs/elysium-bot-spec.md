@@ -19,10 +19,10 @@
 | `test-bot-logic.js` | **186/0** | Spawns a REAL server on a random port; full lobby→game→oust flow over loopback. Includes 2-bot live tests (Ashur Tablets cross-table collateral). |
 | `cardfx-compile.js` + `elysium-cardfx.json` (+ `cardfx-curated.json`, `test-cardfx.js` **74/0**) | **v1.4.2** | The shared card-effect library: 2364 lib / 1785 crypt / 2422 aliases. v1.4.0: `persistent` (entry-level) + `lock` (per-mode) auto-tags. 8 curated entries (Blood Doll, Vessel, Dreams of the Sphinx, Inside Dirt, The Parthenon, Information Highway, Ashur Tablets, Effective Management). See `elysium-cardfx-design.md` + `cardfx-persistent-lock-design-decisions.md`. |
 | Client | **v2.6.39** | Untouched this session |
-| Server | **v2.6.16** | Untouched this session. **Johan's live server restart backlog remains.** |
+| Server | **v2.6.16** | Untouched this session. **the owner's live server restart backlog remains.** |
 | Wire constant | `WIRE_V='2.6.0'` | Sent as `v` in create/join; verMM(major.minor) match — SEPARATE from `BOT_VERSION` (learnings: never conflate) |
 
-Johan's outstanding live-test letters live in the journal: **a–f** (Trainbot basics) and
+The owner's outstanding live-test letters live in the journal: **a–f** (Trainbot basics) and
 **g–y** (the resolver/duel client features). The bot suite spawns its own server, so bot
 tests are independent of his restart backlog.
 
@@ -39,7 +39,7 @@ tests are independent of his restart backlog.
 | "(limited)": at most one bleed-increasing modifier per bleed; additional-strike sources capped | TAGGED in the library (75 lib + 9 crypt); the bot plays no +bleed modifiers yet, so the guard lands with that path |
 | The Edge: a successful bleed gives it to the acting Methuselah | ENFORCED — set on a through-bleed (pub push), yielded on a RISING opponent claim (a stale pub still carrying edge never strips a fresh win — v0.3.4), when a bleed lands on the bot, and on oust (the Edge leaves play with its holder) |
 
-**v0.3.9–0.3.10 (12 July, the second live-test batch — Johan):** the bot rings the table's
+**v0.3.9–0.3.10 (12 July, the second live-test batch — the owner):** the bot rings the table's
 EXISTING **Reaction timer** — `{t:'decide'}` — after 5 s of an unanswered ask; the server
 broadcasts who + the room's `reactSecs` (default 5 s) and every client shows the countdown
 with the caller's name above it. The bot's OWN patient window is untouched: askSecs (default
@@ -58,7 +58,7 @@ discards and resolved action cards land in pub zone 'ash', so the host's "View t
 heap" shows real history; the token bucket widens its margin (refill 150 ms: 74.7 of the
 server's 80/10 s worst-case incl. burst + the unqueued join handshake).
 
-**v0.3.7 (12 July, the LIVE-TEST round — Johan's table notes):** with resolvers live
+**v0.3.7 (12 July, the LIVE-TEST round — the owner's table notes):** with resolvers live
 (`caps.tally`), a spoken **'Block!' opens the REFERENDUM** — the bot awaits the §12 verdict
 line instead of assuming the block lands (ask-timeout while contested falls back to combat,
 the classic-table meaning); **fxClone emissions** — card plays and bleeds now ANIMATE for the
@@ -224,7 +224,7 @@ on a NEW "bleeds for" line from the same actor (same action) → SUPERSEDE pendi
 on tally res / batch-close signals without a landed bleed    → clear pending
 ```
 
-**Johan-confirmed semantics (11 July):** a bleed action is not done until both parties
+**Owner-confirmed semantics (11 July):** a bleed action is not done until both parties
 feel done — both have passed in sequence. So every `adds +X bleed (= T)` RE-OPENS the
 reaction window: the bot must reconsider (react / announce block / Pass) after each
 modifier, not just after the base announce. The ⇄ Pass phrase is the human's
@@ -235,14 +235,14 @@ survives sanitizePub's cleanCard+truthy check; card ids are `'c'+seq` so the sen
 can never collide). The bleed line's suffix then names the PLAYER. Bot arming rule
 becomes: `(target is my name via pool-target) OR (no target AND actor is my predator)`
 — default without target stays Prey. Client v2.6.23: a USED pool aim auto-clears when its
-action resolves (Johan's call), so stale-target mis-arms cannot happen across actions. Deflection flow: the defender's card is visible in
+action resolves (the owner's call), so stale-target mis-arms cannot happen across actions. Deflection flow: the defender's card is visible in
 the Played flow; the acting player re-announces `Bleed N` with a new target — ONE pending
 bleed per actor, the latest announce supersedes, so the bot un-arms the moment the
 re-target names someone else.
 
 The chat grammar (`bleed N`) stays as the manual fallback — it is the table's override.
 
-**Table configuration (Johan + assistant, 12 July 2026 — chain verified in source):** the bot
+**Table configuration (the owner + assistant, 12 July 2026 — chain verified in source):** the bot
 has NO eyes — L2/L3/L4 are per-client rendering and never touch the wire (humans at one table
 can sit in different views), so nothing view-specific exists to build. The real axis is
 **helpers on vs off**: `syncOffTournament()` defaults tournament by board style (Classic → ON,
@@ -272,7 +272,7 @@ above the globe, uncontrolled below). Implementation check before shipping: conf
 `buildMat` ignores `type:'pool'` tokens (the `TOKEN_DEFS` guard) so the unconditional export
 is a no-op on Structured mats.
 
-**The reaction-window grammar (Johan-confirmed, 11 July):** the ever-present quick phrases
+**The reaction-window grammar (owner-confirmed, 11 July):** the ever-present quick phrases
 'Hold on…' and 'Pass' (plus 'No block' / 'No reaction' / 'Block!' / 'It resolves') form a
 SYMMETRIC protocol over the existing `say` broadcasts — zero new wire, and the bot speaks
 the table's own language in both directions:
@@ -287,7 +287,7 @@ the table's own language in both directions:
   `adds +X bleed` REOPENS the window → a fresh 'Pass' is required. Apply on the actor's
   'It resolves'; a re-announce supersedes.
 
-**Division of labor (Johan-confirmed, matches the historical systems):** the bot READS
+**Division of labor (owner-confirmed, matches the historical systems):** the bot READS
 the tally and ANNOUNCES its own contributions in text; HUMANS are the hands on the shared
 counters. Paul Johnson's PLAY-TEST and the Succubus Club Trainbot both split work exactly
 this way — the system decides, the human executes the bookkeeping — modernised here by the
@@ -295,7 +295,7 @@ pub system (the bot does execute its OWN board). The bot never writes `tally` in
 letting it tick its own stealth contributions later is gated on the parked
 deltas-instead-of-whole-state fix (a writing bot would worsen last-write-wins collisions).
 
-**Card knowledge — the shared cardfx library (Johan's decision, 12 July 2026; supersedes
+**Card knowledge — the shared cardfx library (the owner's decision, 12 July 2026; supersedes
 the earlier own-deck-only scope):** card FACTS live in ONE compiled library,
 `elysium-cardfx.json` (from `cardfx-compile.js` over KRCG's vtes.json + the hand-verified
 `cardfx-curated.json` overlay — schema/tiers/limits in `elysium-cardfx-design.md`; gate
@@ -337,12 +337,12 @@ tally block-referendum answered. Suite must stay green on the 17 existing tests.
 
 ## 7. Plan forward (the ladder, updated)
 
-### The `insight` knob — hand READS, never hand KNOWLEDGE (Johan, 12 July 2026) — **SHIPPED in v0.3.0** (read model v1 as below; TWDA priors remain future)
+### The `insight` knob — hand READS, never hand KNOWLEDGE (the owner, 12 July 2026) — **SHIPPED in v0.3.0** (read model v1 as below; TWDA priors remain future)
 
 Hands never travel the wire: `sanitizePub` relays only `counts.hand` (a number) and even
 strips the deck NAME from opponents. Literal hand knowledge would need a privileged
 bot-only server channel — architectural cheating, and intermittently-psychic play is
-exactly what humans detect and resent in game AI. Johan's 0–100% difficulty dial is
+exactly what humans detect and resent in game AI. The owner's 0–100% difficulty dial is
 therefore reframed from *probability of using secret info* to **quality of an honest
 read** — which is also what human intuition actually is.
 
@@ -363,7 +363,7 @@ produces rubber-band AI. Long-horizon add-on: TWDA archetype priors sharpen the 
 is a SYMMETRIC opt-in room policy — "open hands" relayed to *everyone*, bot included —
 never a bot-only backdoor. Explicitly out of scope for normal play.
 
-### The authoring pipeline — Johan's end goal (12 July 2026)
+### The authoring pipeline — the owner's end goal (12 July 2026)
 
 **A future model session should be able to CREATE new bots, TEST and EVALUATE them, and
 maintain both the shared library (cardfx tagging + terminology) and each bot's own rules —
@@ -384,11 +384,11 @@ rotation, staggered joins, one process) into an existing lobby — the live-test
 the arena's seating half. `START-HERE-BOTS.html` is the player-facing guide (quick start,
 personas, table config, chat grammar, the live-test checklist).
 
-1. **Johan's live tests** (a–f bot, g–y client) — the proof that beats every gate.
+1. **the owner's live tests** (a–f bot, g–y client) — the proof that beats every gate.
 2. **Bot v0.2** (§6) — client v2.6.20 wire is sufficient; NO new verbs needed.
 3. **Cardfx curation passes** (alongside v0.2): TWDA-frequency top slice + every card in
    a shipped playbook gets hand-tier entries (`elysium-cardfx-design.md` §8).
-4. **Playbook pass (M1 completion) — split status.** **Johan's stated goal (12 July): FOUR
+4. **Playbook pass (M1 completion) — split status.** **the owner's stated goal (12 July): FOUR
    distinct, well-playing bots to fill a 5-seat table** — different decks AND temperaments;
    personality knobs (aggression, block willingness, bleed sizing — the PJ dials) live in
    playbooks and read library facts, never live in the library. **This was originally
@@ -400,7 +400,7 @@ personas, table config, chat grammar, the live-test checklist).
    discipline mismatch — its 12-vampire crypt carries zero Obfuscate, yet ~half the 60-card
    library (Cloak the Gathering/Lost in Crowds/Swallowed by the Night/Spying Mission, 28
    cards) is Obfuscate-gated and so permanently unplayable fodder for this specific crypt
-   (found while listing the deck for Johan, 13 July). A second stealth-weenie was
+   (found while listing the deck for the owner, 13 July). A second stealth-weenie was
    considered and rejected as too similar — the next archetypes should differ in
    temperament AND mechanical shape.
 
@@ -413,7 +413,7 @@ personas, table config, chat grammar, the live-test checklist).
    ledger, combat module v1 (data-driven, one round, announce-only). Rush responses and
    full multi-round combat/press remain out of scope (v1 cut lines, unchanged).
 6. **Parallel, client-side**: the tutorials/README sweep (discoverability is the top UX
-   risk — includes the "Bleed N then +X per modifier" idiom); Johan's open question on
+   risk — includes the "Bleed N then +X per modifier" idiom); the owner's open question on
    damage counters × rounds (cumulative vs auto-zero on round wrap — one-liner either way);
    the parked micro-fixes (tally deltas vs lost updates, Bleed X strict input, spectator
    button disable).
@@ -451,7 +451,7 @@ before the pause and the hand may shift under it; (4) bounce requires a ready UN
 minion (rulebook — the wake exception never routed to the bounce path); (5) the ousted
 stay quiet on vote-abstain.
 
-**v0.4.3 (13 July, the audit round on M2 itself — "är du osäker på något?"):** two real
+**v0.4.3 (13 July, the audit round on M2 itself — the owner asked whether anything was uncertain):** two real
 gaps found by auditing, both proven with isolated tests before fixing: (A) **RULEBOOK:
 "If a block attempt is successful, then the blocking minion LOCKS and enters combat"** —
 the target-side success path fought combat and left the blocker READY (a free block, turn
@@ -468,7 +468,7 @@ Gate 62/0 → **65/0** (lock-on-success assert + two _pickBlocker units).
 the react window reopens and may offer bounce — the real game's "after blocks are
 declined" timing nuance around failed attempts is deeper than v1 models (the sandbox
 table referees). (ii) CORRECTION (13 July, re-verified against the rulebook while answering
-Johan's follow-up): torpor-at-0-blood from NORMAL combat damage is actually RULES-CORRECT,
+The owner's follow-up): torpor-at-0-blood from NORMAL combat damage is actually RULES-CORRECT,
 not a simplification — a vampire burns blood 1-for-1 to heal normal damage and goes to
 torpor once it runs dry, exactly what M2 does. Burning outright is specifically an
 AGGRAVATED-damage mechanic against an ALREADY-WOUNDED vampire (a vampire mid-way to torpor
@@ -477,7 +477,7 @@ aggravated from normal strikes at all, so no vampire can ever burn under it. Tha
 genuinely MISSING mechanic (aggravated damage), not an approximation of an existing one —
 belongs with a future combat-v2 pass, not v0.5.
 
-**v0.4.1 (13 July, Johan's own catch): a THIRD correction, found by Johan testing the
+**v0.4.1 (13 July, the owner's own catch): a THIRD correction, found by the owner testing the
 first, not by me.** Bounce needs "another Methuselah OTHER THAN the acting minion's
 controller" — and the rulebook is explicit elsewhere too: **"You can never bleed
 yourself."** In a 2-LIVE-player table (or any time a Methuselah's own prey happens to BE
@@ -623,7 +623,7 @@ play line + blood cost + ledger blocks a same-name repeat; (4) wake-then-block f
 reactor; (5) Deflection line + pending cleared unapplied + blood paid; (6) verdict-succeeds
 → duel announce + a combat line + damage on the bot's side; (7) the canary passes.
 
-### Open questions for Johan (ask before/while building)
+### Open questions for the owner (ask before/while building)
 1. Should the bot ever STEP the shared combat phase counters, or announce-only (v1 = announce-only)?
 2. Bounce etiquette: aim the pool-sentinel at the new victim, or log-only?
 3. Post-M2 persona defaults: how block-happy should novice/grinder/shark feel at a human table?
@@ -631,11 +631,11 @@ reactor; (5) Deflection line + pending cleared unapplied + blood paid; (6) verdi
 ## 7.6 v0.5 — MASTERS, HUNT, POOL ECONOMY — SHIPPED 13 July 2026 (bot v0.4.6 → v0.5.0, gate 119/0 ×3)
 
 Implemented same-session as designed below (kept for the design rationale + what v1
-deliberately cuts). **Three decisions made by Johan during the build (not guessed),
+deliberately cuts). **Three decisions made by the owner during the build (not guessed),
 each reshaping scope beyond the original draft:**
 
 - **Passive income timing: PHASE-EXACT, not the v1 single-fixed-point simplification.**
-  Johan chose the harder path. This meant the timing itself had to become DATA, not bot
+  the owner chose the harder path. This meant the timing itself had to become DATA, not bot
   code: a new `phase` field on the mode (`{at:null, fx:{bloodToPool:1}, phase:'master'}`
   for Blood Doll, `phase:'unlock'` for Vessel) lives in `cardfx-curated.json` — verified
   that `cardfx-compile.js`'s curated overlay is a whole-entry `Object.assign` passthrough
@@ -643,7 +643,7 @@ each reshaping scope beyond the original draft:**
   anything. `elysium-cardfx.json` (the compiled artifact the bot actually loads) was
   hand-mirrored with the identical fields, since this environment has no `vtes.json` to
   re-run the real compiler — **`test-cardfx.js` could not be run here for that reason;
-  Johan should run it once locally to confirm the real recompile agrees** (it should:
+  the owner should run it once locally to confirm the real recompile agrees** (it should:
   the overlay mechanism guarantees it). `elysium-bot.js`'s `_applyPhaseIncome(phaseKey)`
   reads the field generically — no per-card-name branching, any future income asset only
   needs tagging in the library. **Dreams of the Sphinx deliberately did NOT get a `phase`
@@ -661,7 +661,7 @@ each reshaping scope beyond the original draft:**
   hunt always resolves before any other vampire's bleed that phase, matching the rulebook's
   "must be announced and resolved before any other actions may be taken."
 - **Hunt-blocking (the bot proactively blocking a prey's/predator's hunt): PARKED, not
-  built.** Johan's call, made explicit during design: the general CAPABILITY (can this
+  built.** the owner's call, made explicit during design: the general CAPABILITY (can this
   seat legally block THIS hunt — reusing the existing `_bestInterceptFor`) belongs in the
   bot's shared logic whenever it's eventually built, but whether a PERSONA actually spends
   a card on it is policy, same split as `blockShy` already is for bleeds. The shipped
@@ -670,7 +670,7 @@ each reshaping scope beyond the original draft:**
   oversight next session; nothing was built toward it.
 
 **What shipped, concretely (all four original modules, A–D, plus three items that
-surfaced organically while discussing scope with Johan):**
+surfaced organically while discussing scope with the owner):**
 
 - **A — Master-phase play.** The Master phase (previously a bare comment, v0.1 forever)
   now has real content: `_bestMasterFor()` finds affordable, phase-tagged income assets in
@@ -697,11 +697,11 @@ surfaced organically while discussing scope with Johan):**
   blood → pool), guarded on the host actually having blood — never manufactures pool from
   nothing. `bloodAdd` is read by nothing yet (needs uncontrolled-vampire blood tracking
   this bot doesn't have) — consistent with Dreams of the Sphinx staying untagged.
-- **D — Discard flip, plus a Johan-requested widening.** Masters are no longer
+- **D — Discard flip, plus an owner-requested widening.** Masters are no longer
   automatically dead weight (the old `t.includes('master')` unconditional check is gone) —
   judged by the same general "does any mode work" test as everything else, extracted into
   `_deadHandIndex(vamps)` for direct testability (mirrors `_unlockPhase`'s own v0.4.6
-  extraction). Separately, Johan noticed live that a Bounce-class card (Deflection, Bait
+  extraction). Separately, the owner noticed live that a Bounce-class card (Deflection, Bait
   and Switch) is functionally dead in a 2-live-player table — no legal destination ever
   exists once predator and prey collapse onto the same seat. Rather than a parallel
   special-case in discard, `_modeUsableBy` itself was widened: a bounce-tagged mode is
@@ -709,7 +709,7 @@ surfaced organically while discussing scope with Johan):**
   the existing `preySeat()` — was always inlined as `prevLive(this.seat)` before). This is
   the table-structural generalization of the exact per-actor check M2's `_reactWindow`
   already does for `bounceLegal`; every caller of `_modeUsable` gets it for free.
-- **E/F — Phase-bar + Pass parity (Johan's ask, discovered mid-session):** clicking a
+- **E/F — Phase-bar + Pass parity (the owner's ask, discovered mid-session):** clicking a
   human's Structured phase-bar button is nothing but `log('Phase: <b>X</b>.')` with no
   `localOnly` flag (confirmed in the client source — `activatePhase()` → `log()` →
   `mpRelay()`) — so the bot now sends the identical line at all five phase transitions via
@@ -718,11 +718,11 @@ surfaced organically while discussing scope with Johan):**
   that makes a phase bar exist for a human at all). Pass gained the matching
   `log('<b>Turn passed.</b>')` line too — UNCONDITIONALLY, since a human's own Pass isn't
   itself gated behind helpers being on, unlike the five phase buttons.
-- **G — The Edge cash-in (Johan's follow-up question, turned out to be a REAL gap, not
+- **G — The Edge cash-in (the owner's follow-up question, turned out to be a REAL gap, not
   cosmetic):** source-verified against vekn.net — holding the Edge lets you take 1 pool at
   your own unlock phase, optional and use-it-or-lose-it for a human. The bot tracked WHO
   holds the Edge perfectly (gain/loss) since M2, but never once cashed it in — free pool
-  left on the table every game. Johan's ruling: bots ALWAYS take it (no persona gate,
+  left on the table every game. The owner's ruling: bots ALWAYS take it (no persona gate,
   unlike a human who has to remember). Fixed in `_unlockPhase()`, three lines, exact
   client wording (`'Gained <b>1 pool</b> from the Edge.'`) for parity.
 
@@ -745,7 +745,7 @@ Pass, the mandatory hunt succeeding unopposed, master-play attaching correctly, 
 client-logic 29/0, dispatch 18/0, protocol-lint 6/0, check-versions agrees. `test-cardfx.js`
 NOT run at first pass (no `vtes.json` in this environment) — the `phase`-field addition was
 verified safe by reading `cardfx-compile.js`'s overlay mechanism directly instead. **Same-day
-follow-up:** Johan attached `vtes.json` (KRCG v3 format); ran the real compiler and the gate
+follow-up:** the owner attached `vtes.json` (KRCG v3 format); ran the real compiler and the gate
 for real — **46/0, drift check clean**, `elysium-cardfx.json` now a genuine fresh compile
 (replacing the earlier hand-mirrored file — identical content, byte-different formatting).
 Confirms the hand-mirror was correct in substance, as expected.
@@ -760,7 +760,7 @@ not built and not silently skipped either.
 
 ## 7.6-FOLLOWUP — 14 July 2026 (bot v0.5.0 → v0.5.1, gate 119/0 → 132/0 ×3)
 
-Johan brought a real playbook — "Leveraging my Hacking Skills," a simplified Weenie
+The owner brought a real playbook — "Leveraging my Hacking Skills," a simplified Weenie
 Computer Hacking archetype (12 crypt cap 1–2, 62 library: 20× Computer Hacking, 9×
 Leverage, 4× Deflection, 3× Wake with Evening's Freshness, 10× Dodge, 16 masters across
 Ashur Tablets/Effective Management/Information Highway/The Parthenon) — and asked for an
@@ -772,7 +772,7 @@ is for Deflection defense, not for boosting bleeds); Ashur Tablets is a THRESHOL
 recurring income; Effective Management moves the top crypt card to uncontrolled (zero fx
 today); Information Highway grants +2 transfers; The Parthenon lets you lock it for +1
 Master action; and the bot's combat module reads `fx.prevent` only — `fx.dodge` (this
-deck's entire combat suite) is completely unhandled. **Correction from Johan, mid-review:**
+deck's entire combat suite) is completely unhandled. **Correction from the owner, mid-review:**
 the Edge's unlock-phase pool bonus is PASSIVE (holding it a full round just also grants +1
 pool from the blood bank) — it is NOT an exchange, and does not consume the Edge; burning
 it is a SEPARATE active choice (Leverage's bleed-boost, or a base action for +1 Vote). The
@@ -782,13 +782,13 @@ prose describing it ("cash in") was imprecise, since corrected in-code and in th
 can be had the same game, since the pool bonus never spends the Edge.
 
 **Design conversation → three decisions, then built the same session:**
-1. **"Always play A master if you hold one"** (Johan) — the base rule, independent of
+1. **"Always play A master if you hold one"** (the owner) — the base rule, independent of
    whether the bot recognizes the specific card's effect. The library defines WHAT a card
    does; the persona/decide() picks WHICH one when there's a choice; an UNCURATED master
    still gets played (cost paid, placed as its own standalone permanent, no host — we don't
    know if it wants one) rather than held uselessly, on the same "a human corrects it" logic
    as the bot-elements exception already established for ctrl adjustments.
-2. **Generalized phase-action economy** (Johan, cross-checked against the client's own
+2. **Generalized phase-action economy** (the owner, cross-checked against the client's own
    `state.phaseActs`/`phaseUsed`/`masterBonus`, verified by reading `adjustPhaseAct`/
    `phaseActKey`/`resetPhaseAct` directly rather than assumed): `this.phaseActs` (permanent
    baseline, rebuilt each own turn by `_recomputePhaseActs()` from any in-play card with a
@@ -796,11 +796,11 @@ can be had the same game, since the pool bonus never spends the Edge.
    `this.phaseUsed` (consumed so far this turn) → `_phaseAvail(k) = max(0, acts+bonus-used)`,
    now shared by Master/Influence/Discard alike (Influence's hardcoded `4` and Discard's
    single-check both became phase-generic loops). Kept INLINE in the bot, not extracted to a
-   file the client could also import — Johan's call: the arithmetic is tiny enough that
+   file the client could also import — the owner's call: the arithmetic is tiny enough that
    duplication isn't a real maintenance burden, and literal sharing would only start to
    matter once cardfx is fully indexed AND the client grows its own auto-interpreting
    Helpers ("long into the future, if ever").
-3. **Trifle vs. bespoke bonus sources are independent, not competing** (Johan): Trifle is a
+3. **Trifle vs. bespoke bonus sources are independent, not competing** (the owner): Trifle is a
    UNIVERSAL keyword rule, capped at +1/turn no matter how many trifles are played
    (`_grantTrifleBonus()`, its own turn-scoped flag) — a bespoke card (Parthenon)
    contributes via the `actGrant` schema field instead, adding to the SAME
@@ -829,7 +829,7 @@ Tablets count for cross-table collateral removal (no new wire verb). `_commitBou
 sends a spec-correct L12.bleed re-announce with Target suffix + owner-vs-sender separation.
 Client/server untouched throughout.
 
-**Same-day continuation (bot v0.5.1 → v0.5.2, gate 132/0 → 135/0):** Johan confirmed the
+**Same-day continuation (bot v0.5.1 → v0.5.2, gate 132/0 → 135/0):** the owner confirmed the
 phaseActs plan and gave two more instructions. (1) "Every action treated fundamentally the
 same" — hunt never set `this._actingVamp`, the field `_onBlockAttempt` reads to find a
 usable stealth card, so its OWN Block? could never reach the reactive-stealth mechanism
@@ -837,7 +837,7 @@ bleed already has. Fixed with identical wiring, plus a new `stakes` weight in
 `decide('spend-stealth')`: a bleed's stakes scale with its amount (2 = today's unchanged
 baseline), hunt's fixed 1-blood prize is discounted (weight 0.5) — the mechanism is now
 universal, willingness is stakes-weighted per persona. (2) `DEFAULT_DECK` replaced with
-Johan's real "Leveraging my Hacking Skills" (12 crypt/62 library, every name verified
+the owner's real "Leveraging my Hacking Skills" (12 crypt/62 library, every name verified
 against cardfx). This surfaced a genuine test fragility: sections 1-9 (the foundational
 connection/turn/bleed/combat/discard flow) had silently ridden `DEFAULT_DECK` instead of
 their own explicit deck — including a discard-phase assertion needing a crypt with no
@@ -867,7 +867,7 @@ fx tags: `poolGain` 42, `bloodAdd` 58, `bloodBurn` 17, `poolDmg` 41, `bloodToPoo
 `handSize` 1 modes. Card counts: 525 `t:['master']` entries, 119 allies, 54 retainers,
 **164 `t:['equip']`** (CORRECTION 13 July: an earlier pass here checked the wrong string,
 `'equipment'` — the actual normalized tag is `'equip'`, per `elysium-cardfx-design.md` §4's
-own type list; caught only because Johan asked whether these notes were properly captured,
+own type list; caught only because the owner asked whether these notes were properly captured,
 prompting a re-check against the design doc instead of trusting the first grep).
 
 **The hand-curated tier already has a small, deliberate head start** (`cardfx-curated.json`,
@@ -937,7 +937,7 @@ at the chosen phase and only once per the relevant window; a bot with a 0-blood 
 assert a mandatory hunt fires before any other minion-phase action; assert the discard
 phase no longer bins a master once master-play is live.
 
-### Open questions for Johan (ask before/while building)
+### Open questions for the owner (ask before/while building)
 1. Is the v1 income-timing simplification (one fixed point, not the true master/unlock
    split) acceptable to ship first, or is phase-accurate timing a hard requirement?
 2. Voluntary persona-weighted hunting (topping up blood pre-emptively) vs. strictly

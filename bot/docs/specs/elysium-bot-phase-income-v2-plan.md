@@ -1,9 +1,9 @@
 # Elysium bot phase-income v2 — handoff plan (18 July 2026)
 
 **Purpose:** companion to `elysium-bot-combat-v2-plan.md`, same shape and rigor, kept as
-its OWN document (Johan's stated preference: separate concerns, separate reference
+its OWN document (the owner's stated preference: separate concerns, separate reference
 points). Origin: while confirming Tremere/Malkavian's remaining gaps, the "TABLED-ONLY"
-bucket turned out to be several distinct mechanics, not one — and Johan wants bots to
+bucket turned out to be several distinct mechanics, not one — and the owner wants bots to
 eventually run their own masters (hunting grounds etc.) rather than relying on the human
 table to track them. This is real, valuable, currently-untouched scope.
 
@@ -81,8 +81,8 @@ and catalogued, not guessed at — a future session's own pin if ever wanted.
 
 ## 4. Recommended order
 
-1. ~~**Hunting ground core pattern**~~ **SHIPPED 19 July** (Johan's "process the family,
-   gives many free to other decks" GO) — see §3's own updated writeup. Turned out
+1. ~~**Hunting ground core pattern**~~ **SHIPPED 19 July** (the owner's go-ahead to process the
+   family, as it gives many cards to other decks for free) — see §3's own updated writeup. Turned out
    NOT to need `_applyPhaseIncome`'s own scan extended after all; a new, separate
    `_considerHuntingGround` was cleaner once it became clear the mechanic is neither
    host-attached-automatic nor lock-gated.
@@ -90,7 +90,7 @@ and catalogued, not guessed at — a future session's own pin if ever wanted.
    directly (the reusable reader Dreams of the Sphinx built), not step 1's hunting-
    ground location-scan at all; the clan-aware target filter was the only genuinely
    new piece.
-3. ~~**Life in the City**~~ **SHIPPED 19 July** (Johan's "push Inside Dirt to 100%" GO)
+3. ~~**Life in the City**~~ **SHIPPED 19 July** (the owner's go-ahead to take Inside Dirt to 100 %)
    — turned out NOT to need step 1's location-scan path at all (it's a one-shot master
    play, not a phase-recurring permanent), so it was buildable standalone. See §2's row.
 4. ~~**Dreams of the Sphinx**~~ **SHIPPED 19 July** for 2 of its 3 lock-choices —
