@@ -4894,7 +4894,7 @@ test('v2.6.162 bot v0.6.204\'s new rung: resolve-verdict (a bot blocked YOUR act
     assert(/class="botPanelCd" data-i="0"[^>]*>\u2014<\/span>/.test(box.innerHTML), 'no clock yet: the dash (bot v0.6.204: the clock starts when the question is sent; until then until is null)');
     assert(!/class="botPanelStep" data-i="0" disabled/.test(box.innerHTML), 'and the button is live meanwhile -- an answer before the question is on the wire still counts');
     eq(hub.q['#botGiveWord'].hidden, false, 'Turn-based: the play button is on the hub');
-    assert(/id="botGiveWord" title="[^"]*a block verdict; never a hold"/.test(A.botGiveWordBtn()), 'and its title names the block verdict');
+    assert(/id="botGiveWord" title="[^"]*a block verdict[^"]*; never a hold"/.test(A.botGiveWordBtn()), 'and its title names the block verdict');   // v2.6.189: the title goes on to a call for bleed modifiers
     eq(A.botGiveWord(), 1, 'the play button steps it (a filter since v2.6.140, so no allow-list to grow)'); eq(stepped, 1);
   } finally { A.botPanelOpen = false; delete A.hotBots[2]; A.localTable = false; HB.reset([]); done(); }
 });
@@ -7700,6 +7700,79 @@ testA('v2.6.188 the tutorial plays on the full panel (Johan: with the discreet p
     CLS.delete('l4mode'); delete A.__doc._ids.l2dockMode;
     if (hadW){ globalThis.innerWidth = W0; globalThis.innerHeight = H0; } else { delete globalThis.innerWidth; delete globalThis.innerHeight; }
   }
+});
+
+test('v2.6.189 bot v0.6.237\'s new rung: resolve-late (a human bleeds a bot; after No block the bot asks for the bleed modifiers and waits for the actor\'s word on the total) reads "Close modifiers" -- v2.6.188 drew "Step"; the ring lights It resolves and No for the asked human on this screen; the Turn-based play button steps it and its title names it', () => {
+  const A = loadClient(CLIENT); const HB = A.hotBridge;
+  eq(A.BOT_STEP_LABEL['resolve-late'], 'Close modifiers', 'the label the bot project suggested (bot v0.6.237 section 5)');
+  ['release-hold', 'resolve-ask', 'resolve-pq', 'resolve-phase', 'resolve-vote', 'resolve-verdict'].forEach(k => assert(A.BOT_STEP_LABEL[k] && A.BOT_STEP_LABEL[k] !== 'Close modifiers', 'every older rung keeps its own label: ' + k));
+  const { hub, box, done } = fakeHubBox(A);
+  A.localTable = true; HB.reset([{ name: 'Lisa' }, { name: 'B2', bot: true }]); HB.seats[2] = { cb: { msg(){} }, name: 'B2' }; HB.botcfgIn('', A.BOTCFG0); HB.botcfgIn('Lisa', { tempo: 'turn' });
+  let stepped = 0;
+  const fake = { status: () => ({ name: 'B2', state: 'asking', waitingFor: 'bleed modifiers (Lisa)', until: null, step: 'resolve-late', canStep: true }),   // the released bot's own shape: status() -> mk('asking', 'bleed modifiers (' + p.who + ')', deadline, 'resolve-late')
+    step: () => { stepped++; return { did: 'resolve-late', why: 'closed the wait for bleed modifiers the way the clock would have' }; }, _handlers: { botcfg(){} } };
+  A.hotBots[2] = fake;
+  try {
+    A.botPanelOpen = true; A.botPanelRender();
+    assert(/▶ Close modifiers<\/button>/.test(box.innerHTML), 'the row says Close modifiers (v2.6.188: Step)');
+    assert(/bleed modifiers \(Lisa\)/.test(box.innerHTML), 'what it waits for, in the bot\'s own words');
+    eq(hub.q['#botGiveWord'].hidden, false, 'Turn-based: the play button is on the hub');
+    assert(/id="botGiveWord" title="[^"]*a call for bleed modifiers; never a hold"/.test(A.botGiveWordBtn()), 'its title names the call for bleed modifiers');
+    eq(A.botGiveWord(), 1, 'the play button gives the bot the word'); eq(stepped, 1);
+  } finally { A.botPanelOpen = false; delete A.hotBots[2]; A.localTable = false; HB.reset([]); done(); }
+  A.net.status = 'in'; A.net.room = 'R'; A.net.you = 'You'; A.localTable = false; A.net.spect = false; A.bleedIn = null;
+  A.net.roster = [{ seat: 1, name: 'You' }, { seat: 2, name: 'B2', bot: true }, { seat: 3, name: 'Anna' }];
+  const ctx = (step, wf) => A.botRingContext([{ key: 'B2', bot: {}, st: { name: 'B2', step, waitingFor: wf, canStep: true } }]);
+  let c = ctx('resolve-late', 'bleed modifiers (You)');
+  assert(c.hl.has('res') && c.hl.has('no'), 'It resolves and No light -- the word the bot asked for (v2.6.188: nothing lit)'); eq(c.wait, true, 'the hub glows');
+  assert(!c.hl.has('act') && !c.hl.has('blk') && !c.hl.has('yes'), 'and nothing a block window or a pool question would light');
+  c = ctx('resolve-late', 'bleed modifiers (Anna)'); eq(c.hl.size, 0, 'Anna answers on her own screen'); eq(c.wait, false);
+  A.net.roster = []; A.net.room = null; A.net.status = 'off';
+});
+testB('v2.6.189 LIVE: a REAL bot (v0.6.237+) bled by a human with a bounce card in hand and no block asks for the bleed modifiers -- its row reads "bleed modifiers (You)" and Close modifiers, the ring lights It resolves and No, and the play button gives the word: the bot says the modifiers closed from the table controls and leaves the rung', async () => {
+  const BOT = require('./elysium-bot.js'); const A = loadClient(CLIENT); const HB = A.hotBridge;
+  if (typeof BOT.Bot.prototype._lateWordWait !== 'function'){ const e = new Error('SKIP -- bot v' + BOT.BOT_VERSION + ' beside the suite has no late wait; this needs v0.6.237+'); e.skip = true; throw e; }
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const until = async (fn, ms) => { const t = Date.now(); let v = fn(); while (!v && Date.now() - t < (ms || 3000)){ await sleep(30); v = fn(); } return v; };
+  HB.reset([{ name: 'You' }, { name: 'Ringbot', bot: true }, { name: 'Anna' }]);
+  A.net.roster = [{ seat: 1, name: 'You', vp: 0 }, { seat: 2, name: 'Ringbot', bot: true, vp: 0 }, { seat: 3, name: 'Anna', vp: 0 }];
+  A.net.you = 'You'; A.net.boards = {}; A.net.hot = { boards: { 1: JSON.stringify({ pool: 30 }), 2: '{}', 3: JSON.stringify({ pool: 30 }) }, undo: {} }; A.localTable = true; A.conv.tournament = false;
+  HB.botcfgIn('', A.BOTCFG0); HB.botcfgIn('You', { tempo: 'turn' });
+  const b = new BOT.Bot({ room: 'hot', pass: '', name: 'Ringbot', paceMs: 0, askSecs: 20, transport: HB.dialFor(2, 'Ringbot'), deck: BOT.ARCHETYPES.ventrue, deckName: 'ventrue', persona: 'expert', log: () => {} });
+  const dec0 = b.decide.bind(b);
+  b.decide = (k, ctx) => { const d = dec0(k, ctx); return k === 'block-as-target' ? Object.assign({}, d, { block: false, bounce: false, why: 'the test: no block, no bounce at once' }) : d; };   // the flow under test is the WAIT for the actor's word, not the bot's choice
+  const logs = [], chats = []; const log0 = A.MP_HANDLERS.log, chat0 = A.MP_HANDLERS.chat;
+  A.MP_HANDLERS.log = m => { logs.push({ who: m.who, txt: String(m.html || '').replace(/<[^>]*>/g, '') }); return log0(m); };
+  A.MP_HANDLERS.chat = m => { chats.push({ who: m.who, msg: String(m.msg || '') }); return chat0(m); };
+  let fk = null;
+  try {
+    await b.connect(); await until(() => HB.seats[2] && HB.seats[2].deck, 6000);
+    assert(HB.startFor(2), 'dealt'); await sleep(300);
+    const dom = b.unc.find(u => { const h = b.fxLookup(u.name); return !!(h && h.disc && (h.disc.all || []).includes('dom')); }) || b.unc[0];   // Deflection wants Dominate (every Ventrue starter vampire but Brock Sterling)
+    b.unc = b.unc.filter(u => u !== dom);
+    b.board.push({ id: dom.id, name: dom.name, kind: 'crypt', zone: 'ready', x: 0, y: 0, locked: false, faceDown: false, blood: dom.cap || 5, cap: dom.cap || 5 });
+    b.hand.length = 0; b.hand.push('Deflection'); b.push();   // a bounce card and no reduction: no block, no bounce at once -- the bot asks for the total
+    A.hotBots[2] = b;
+    A.clearTable({}); const v = A.makeCard('Lisa', 'crypt'); A.move(v, 'ready', { x: 100, y: 60, faceDown: false }); v.blood = 3;
+    HB.turn(1); await sleep(150);
+    let shown = null; A.showMenu = items => { shown = items; };
+    A.cardMenu(v, 0, 0); shown.find(x => x.label === 'Actions').sub.find(x => x.label === 'Bleed').sub.find(x => x && x.label === 'Bleed 2').fn();
+    const st = await until(() => { const s = A.botPanelRead(b); return s.step === 'resolve-late' ? s : null; }, 10000);
+    assert(st, 'the bot asked for the total and waits on the actor: ' + JSON.stringify(A.botPanelRead(b)) + ' chats ' + JSON.stringify(chats.map(c => c.msg)));
+    eq(st.waitingFor, 'bleed modifiers (You)'); eq(st.state, 'asking'); assert(st.canStep, 'steppable');
+    assert(chats.some(c => c.who === 'Ringbot' && /Any bleed modifiers\?/.test(c.msg)), 'its question asked for the modifiers: ' + JSON.stringify(chats.map(c => c.msg)));
+    fk = fakeHubBox(A); A.botPanelOpen = true; A.botPanelRender();
+    assert(/▶ Close modifiers<\/button>/.test(fk.box.innerHTML), 'the real bot\'s rung reads Close modifiers (v2.6.188: Step)');
+    const c = A.botRingContext();
+    assert(c.hl.has('res') && c.hl.has('no') && c.wait, 'the ring lights It resolves and No, and the hub glows: ' + JSON.stringify([...c.hl]));
+    assert(A.botGiveWordWanted(), 'Turn-based: the play button is offered');
+    const n0 = logs.length;
+    eq(A.botGiveWord(), 1, 'the play button gives the bot the word');
+    const said = await until(() => logs.slice(n0).find(l => l.who === 'Ringbot' && /bleed modifiers closed from the table controls\.$/.test(l.txt)), 5000);
+    assert(said, 'the bot says the modifiers were closed from the table controls: ' + JSON.stringify(logs.slice(n0)));
+    const after = await until(() => { const s = A.botPanelRead(b); return s.step !== 'resolve-late' ? s : null; }, 5000);
+    assert(after, 'and it leaves the rung');
+  } finally { A.botPanelOpen = false; delete A.hotBots[2]; b.close(); A.localTable = false; HB.reset([]); A.MP_HANDLERS.log = log0; A.MP_HANDLERS.chat = chat0; A.net.roster = []; A.net.hot = null; if (fk) fk.done(); }
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */

@@ -1,3 +1,62 @@
+## [SVAREN IKAPP] (26 november 2026, kväll, klient v2.6.189 / srv-2.6.53 oförändrad)
+
+Ägaren bad om en inventering av bottsidans handoffs. Nio låg obesvarade i `bot/docs/handoffs/`, och klienten hade inte
+konsumerat något sedan bot v0.6.236 (inbäddad i v2.6.180), medan boten hade hunnit till v0.6.241. Med rotens bundle
+bredvid gav klientsviten 430/1, och det enda röda var guidens embed. Jag delade upp dem i fyra högar:
+- Två behövde bara kvitteras: v0.6.235 och guiden för v2.6.179, som båda täcks av v2.6.180:s embed.
+- Licensen byggde vi redan i PR #99, men bottsidan har inte konsumerat vårt svar.
+- Resten passade i en mekanisk runda.
+- Handoffen om det publika repot (26 nov) kräver ägarens beslut.
+
+Jag föreslog den mekaniska rundan först, och ägaren godkände förslaget.
+
+Help ▸ Bots bäddar nu in v0.6.241:s guide. Bot v0.6.237 har ett nytt steg, `resolve-late`. När en människa bleedar en
+bott som inte blockar frågar botten efter bleed-modifierare och väntar på aktörens ord om totalen. Raden i bottlådan
+sa Step och säger nu Close modifiers, som bottsidan föreslog. Ringen tänder It resolves och No för steget, eftersom
+botten frågar med just de orden. Play-knappens tooltip nämner steget. Själva knappen gav redan ordet, eftersom den
+filtrerar på steg som går att stega.
+
+PROTOCOL §12 har fått de rader vi har varit skyldiga sedan 20 november:
+- v0.6.236: den öppnade rush-raden med kort och nivå, Priority Contract (placerad, rushad genom och bränd för sin
+  pool), ett kort som läggs på en minion, Biothaumaturgic Experiments employ, och manöver och press som namnger sitt
+  kort;
+- v0.6.241: raden för ett 'if blocked'-kort som låser blockaren och avslutar handlingen, och nivån i stealth-raden
+  för en rider-mod;
+- v0.6.237: den agerande botten skriver själv om-annonseringen efter en skriven bounce.
+
+§8 noterar vad v0.6.237 skickar på `fx` och `given`. Canaryn v1.7.0 har en ny sektion 12 med 36 kontroller:
+- att §12 dokumenterar varje form;
+- att `L12` läser en rad byggd på den;
+- för de tre modulkonstanterna utanför `L12` (`CONTRACT_BURN`, `BLOCKED_LOCK`, `RIDER_STEALTH`): en levande botts
+  `_onLog` och det tillstånd som handoffen nämner.
+
+Jag provade varje rad mot den släppta botten innan jag skrev kontrollerna, och då syntes det också vilka som behöver
+kortbiblioteket.
+
+Bottsidans önskemål från 19 november är också byggt. Utan `elysium-cardfx.json` bredvid canaryn hoppar de kontroller
+som behöver bottarnas kortbibliotek över högljutt, med SKIPPED på varje rad, i stället för att bli röda. Det gäller sju
+kontroller, fem gamla och två nya. Deras CI faller på ordet, så en saknad fil blir fortfarande röd där.
+
+Svaret till bottsidan ligger i `docs/handoffs/REPLY-to-bot-2026-11-26-v0.6.241.md` och besvarar alla åtta handoffs.
+Det redovisar också ägarens beslut om det publika repot för vår halva. Ägarens namn får stå kvar i det som redan finns.
+Andra personers namn och privata konversationer ska bort, även där de ligger till grund för ett beslut, och beslutet
+skrivs då med egna ord. Den städningen blir en egen runda. Från och med den här rundan skriver jag allt nytt i repot
+utan chattcitat och utan namn på privatpersoner, och ägaren omnämns efter roll.
+
+Siffrorna, med bot v0.6.241 bredvid:
+- Klientsviten ger 433/0 utan överhoppade tester. v2.6.188 ger 430/3 mot den nya sviten: embeden och de två nya
+  testerna. Alla sju mutanterna i klienten fångades.
+- Canaryn ger 283/0. Utan kortbiblioteket blir det 276/0 med sju SKIPPED, mot v2.6.188:s protokoll 268/15 (de femton
+  dokumentationskontrollerna) och bredvid bot v0.6.236 279/4, med röda rader och ingen krasch.
+- Dispatch 103/0, protokoll 6/0 och endpoint 40/0. Soak `--control` slog till, och batteriet gav 7 bord, 111 drag och
+  0 fastnade.
+- Bottsidans hotseat-grind i en kopia av `bot/` ger 12/0. Båda embed-kontrollerna är gröna, B1 är byte-identisk och
+  check-versions är grön.
+
+Osäkert och otestat: ingen webbläsare har körts i den här rundan. Etiketten och ringens lampor är provade i sviten och
+mot en riktig bott i Node, inte på en skärm. Bottsidan skrev att *de* lägger till canary-fallen för v0.6.241 när §12
+har raderna. Canaryn är vår fil, så vi lade till dem, och det står i svaret.
+
 ## [RINGEN VID PEKAREN] (24 november 2026, kväll, klient v2.6.188 / srv-2.6.53 oförändrad)
 
 Johan, medan v2.6.187 väntade på merge: "visst använder vi inte långklick med höger musknapp till någonting? Skulle
