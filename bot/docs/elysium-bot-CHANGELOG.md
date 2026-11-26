@@ -3,6 +3,27 @@
 *Convention: `BOT_VERSION` carries only the current release note; at each bump the outgoing note is appended here. History before this file: `elysium-history-2026-09-09.md` (main project's archive zip).*
 
 ## Rounds without a release
+- **W1b — the workflow's follow-ups (26 Nov 2026, bot v0.6.241, no bot change)** — D-140 (the owner's follow-ups to W1 at 14:48,
+  and the recommended option on Claude's question card) and D-141 (16:04, and the recommended options on the next card). The review
+  of a round without a bot change (Claude's reading: no file of the bundle touched) runs on Fable from the first pass, and a clean
+  pass ends it (HARNESS, CLAUDE.md, the reviewer's agent file; D-139's reading replaced). O-48 answered: the cross-check's pairing
+  is committed with its development tool (spec-card-sweep §11.6; #112 commits it). HARNESS's steps 9 and 10: in a round with a bot
+  change, the lead asks the owner before the merge whether to play a real match in the human seat; the merge is step 10. Claude's
+  notes as a player: `.claude/skills/bot-play-notes/SKILL.md` (how to play a match for an evaluation, strategy, tactics, the bots
+  as opponents, open questions for the knowledge and meta layers; from the playtests of 25 Nov; each note keeps what was seen apart
+  from what is reasoned). The public repository carries no chat quotes and no names of private persons (D-141): this branch was
+  rewritten before its merge so that it adds none, and the owner's verbatim words behind D-140 and D-141, two chat handoffs of 20
+  Nov and the 24 Nov playtest feedback went to the private data repo (its #3); main's existing names and quotes are the next chat's
+  cleanup round. Every unsure item gets a verdict when it shows up: checked now, carried to the handoff or dropped with a reason
+  (D-141, HARNESS). The claude.ai project's dated docs: Claude's two playtest reports and the card-fidelity spot check copied to
+  `docs/reports/`; three superseded docs deleted without a copy (the 26 Nov handoff: STATUS; the 25 Nov chat round's handoff: its
+  baseline in v0.6.240's entry, its scripts the chat recorder and `tools/ana-chat.py`; the 18 Nov sweep plan:
+  `specs/spec-card-sweep-2026-11-18.md` grew from it); the project keeps its instruction, START-HERE-BOTS-CHAT.md, the handoff and
+  the owner's reviews of other projects. O-53 and the open handoff to main for v0.6.241 point to `docs/reports/`; v0.6.241's entry
+  below keeps the project's paths of that day. PROJECT-INSTRUCTIONS (the block to paste), START-HERE-BOTS-CHAT, README, STATUS.
+  Budgets by D-101: HARNESS 11 KB, RULINGS 79.5 KB, the total 197.5 KB (cut first: the handshake's copy list, a repeated ci-status
+  note, the upkeep's docs-change line, D-139's reading, O-48's line, CLAUDE.md's repeated design-question sentence).
+  *Gates:* GATES_TBD *Egress:* EGRESS_TBD
 - **W1 — the workflow round (26 Nov 2026, bot v0.6.241, no bot change)** — Johan's D-139 on Claude's workflow proposal (the
   question card: "Kör, W1 först", "Ja, CI ×3", "Ja, sista passet", each the recommended option). The chat leads and agents take the
   big reads and the reviews; the mechanical steps are scripts; CI carries the suite ×3. Scripts (`tools/`): `setup.sh` (KRCG's v5
@@ -350,7 +371,7 @@
 - **v0.6.241 (25 Nov 2026; PR #109)** — The exactness round (RULINGS D-138; Johan, 20:43: "Superbra, ja vi kör!" on Claude's proposal after his
   question at 20:38 whether 77/77 really means every card works): Claude's two playtest games against the bots on main's rig and a
   spot check of the base starters' auto entries (the project's docs of 25 Nov: claude/playtest-claude-game1, -game2 and
-  claude/card-fidelity-spotcheck). Stacked on v0.6.240 (#108). Under D-92 the playtests' table bugs, the register's two active
+  claude/card-fidelity-spotcheck; in `docs/reports/` since W1b). Stacked on v0.6.240 (#108). Under D-92 the playtests' table bugs, the register's two active
   class-7 entries and what the fidelity pass found ride together.
   - *The table bugs (A1–A4)* — A1: `_askTimeout` clears the timer it was called by, and each of its three timers fires only for
     the ask that armed it (under Turn-based a contest a human's Pass ended left its 4-min net armed: "no answer in 4 min" 70 s into

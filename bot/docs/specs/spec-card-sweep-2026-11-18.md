@@ -391,7 +391,8 @@ pattern or a card list holds only cards each checked against KRCG's text, and no
 Not used: at runtime, as copied code, or as files in git.
 
 Since 20 Nov zero-vtes is also the map of the sweep's order: its definitions say which cards print an effect (§11.2). The pairing
-of its effect types with our keys is not committed (§11.2 (4), §11.6).
+of its effect types with our keys is committed with C1's cross-check tool, as development material (§11.2 (4), §11.6; D-140), on
+`main` when C1 merges.
 
 The maintainer and the credit. The clean-up spec allowed zero-vtes as a third check "only after asking its maintainer"
 (`specs/spec-cleanup-2026-10-20.md`, T3), and the repository does not show that this was done. Johan, 19 Nov: "Vi kan släppa nog
@@ -498,11 +499,11 @@ readings, D-104's release rule, §4.2's guard on the finished decks. This round 
    and a condition tag; a concept they model that we lack and the bot needs gets a key of ours, named by us and read from KRCG's
    text; what the bot does not need is not translated.
 4. **Where their names may stand.** In no card data, not in the bot, not in the bundle, not in a pattern or a card list (§5). They
-   stand in two places today, both development material: the tool that reads their file (`gen-review-sheet.js`: its parser, and
-   a few of their identifiers in its comments; its self-test invents its cards and effect names and keeps their structural
-   words), and appendix B of this page, which names the enum their effects belong to. A family's pairing, which of their effect
-   types answer our key, will be given to the family's tool when it runs and printed on its scratch sheet (no tool takes one
-   yet: the first family's round builds it); the round's report says it in our words. Whether a pairing table may be committed inside a development tool is open (§11.6).
+   stand in development material only: the tool that reads their file (`gen-review-sheet.js`: its parser, and a few of their
+   identifiers in its comments; its self-test invents its cards and effect names and keeps their structural words), appendix B
+   of this page, which names the enum their effects belong to, and a family's pairing (which of their effect types answer our
+   key), committed with the family's tool and printed on its scratch sheet (§11.6; D-140, 26 Nov: O-48's answer; C1's tool is
+   the first). The round's report says the pairing in our words.
 5. **Exact.** An effect on a card at a level is *exact* when two independent readings agree on it: ours, read from KRCG's text by
    a pattern or by hand, and zero-vtes's definition. Or, (C), when a graded read says green (HARNESS's charter: KRCG's text and
    the rulings, a fresh read-only agent). A disagreement is settled by neither side's data: the card is read against KRCG's text and
@@ -561,8 +562,8 @@ distance from 980 to 1,543, and two days of new definitions the rest.
 ### 11.6 Open
 - **The pairing table** (RULINGS O-48): may a development tool commit a table that pairs their effect
   types with our keys? Without one a fresh session rebuilds the pairing every round and two runs need not agree. Claude's
-  answer: yes, in a development tool only, never in the bundle or in the card data. Until Johan says so the pairing will be a
-  run-time argument of the family's tool.
+  answer: yes, in a development tool only, never in the bundle or in the card data. Answered 26 Nov (D-140): yes, as Claude
+  recommended; C1 commits the pairing with its cross-check tool.
 - **D-126 under the new order.** It put the finished decks first in the harvest; §11.3 reads that as first within a family.
   Claude's reading, for Johan to confirm.
 - **How the bundle tells the bot that an effect is exact** (a field of the entry, or a list beside the library): the first
@@ -614,7 +615,7 @@ each round is a release with a sim footprint. Point 1 would amend D-127, point 4
 
 **How C runs** (C: Claude's setup, which Johan left to him, D-132; the rest of §11 stands):
 1. **Rounds by families.** C1: the cross-check tool (a family's keys against zero-vtes's effect types over the whole library, the
-   disagreements listed per card, the pairing a run-time argument until O-48 is answered) and `stealth` / `actStealth`,
+   disagreements listed per card, the pairing committed with the tool since O-48's answer, D-140) and `stealth` / `actStealth`,
    `intercept`, `bleed`. C2: combat. C3 (and C4): the rest of §11.4's horizon. Then the numbers are measured again and Johan says
    whether the sweep goes on by effect or turns to D (§11.4).
 2. **Inside a round.** The tool lists the disagreements; agents read them in parallel batches against KRCG's text and the

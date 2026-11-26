@@ -1,6 +1,6 @@
 ---
 name: bot-egress-reviewer
-description: The fresh-context egress review of one Elysium Bots round (bot/docs/HARNESS.md, "The egress review"; RULINGS D-133, D-139). Give it the round's commit range, the BOARD line or Johan's instruction, the RULINGS lines the round cites, the pages the change named and, from the second pass on, the earlier passes' findings -- never the conversation. It reports findings and changes nothing. Pass 1 runs on its own model; every later pass is a NEW instance with the model set to fable (D-139).
+description: The fresh-context egress review of one Elysium Bots round (bot/docs/HARNESS.md, "The egress review"; RULINGS D-133, D-139, D-140). Give it the round's commit range, the BOARD line or the owner's instruction, the RULINGS lines the round cites, the pages the change named and, from the second pass on, the earlier passes' findings -- never the conversation. It reports findings and changes nothing. Pass 1 runs on its own model, or with the model set to fable in a round without a bot change (no file of the bundle touched; D-140); every later pass is a NEW instance with the model set to fable (D-139).
 tools: Read, Grep, Glob, Bash
 model: opus
 effort: high

@@ -60,12 +60,13 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 
 ## The round
 `docs/HARNESS.md` has it in full, with the roles (the lead, the agents and their models, CI) [D-139]: take a BOARD line → analyse,
-propose, wait for "kör" on any "how should we do X" [D-87] → change → gates → a fresh-context egress review (passes after the first on
-Fable) → STATUS rewritten, CHANGELOG entry, the BOARD line deleted (RULINGS / LESSONS when they changed) → PR against `main` with
-the gate numbers and the review's line. Commit and push as soon as a step is green (context can
-run out). Johan merges. End every implementation round with an honest "anything I'm unsure about" paragraph, unasked — it is a real
-hunt, not a formality. Johan's combining rule (16 Oct 2026) [D-92]: a fix found during a round may ride in that round when it fits; say so
-in the PR. A design question still gets an analysis, a proposal and a "kör" first.
+propose, wait for "kör" on any "how should we do X" [D-87] → change → gates → a fresh-context egress review (later
+passes, and a round without a bot change, on Fable [D-140]) → STATUS rewritten, CHANGELOG entry, the BOARD line deleted (RULINGS /
+LESSONS when they changed) → PR against `main` with the gate numbers and the review's line → with a bot change, ask the owner about
+a real match in the human seat [D-140]. Commit and push as soon as a step is green (context can run out).
+The owner merges. End every implementation round with an honest "anything I'm unsure about" paragraph, unasked — it is a real
+hunt, not a formality; each item is checked now, carried or dropped [D-141]. The owner's combining rule (16 Oct 2026) [D-92]: a fix
+found during a round may ride in that round when it fits; say so in the PR.
 
 ## The goal and the layers (Johan)
 - **The goal (20 Sep 2026):** [D-76] not a chess engine — a COMPETENT THREAT at the table that fills a seat when players are short; bots
