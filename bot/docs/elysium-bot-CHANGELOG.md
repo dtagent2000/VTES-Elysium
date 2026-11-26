@@ -24,7 +24,12 @@
   PROJECT-INSTRUCTIONS (the block to paste), START-HERE-BOTS-CHAT, README, STATUS. Budgets by D-101: HARNESS 11 KB, RULINGS 79.5
   KB, the total 198 KB (cut first: the handshake's copy list, a repeated ci-status note, the upkeep's docs-change line, D-139's
   reading, O-48's line, CLAUDE.md's repeated design-question sentence).
-  *Gates:* GATES_TBD *Egress:* EGRESS_TBD
+  *Gates:* `tools/gates.sh` PASS 12/12 on v0.6.241's release bytes (`d797e1fd`, test `a8557422`, cardfx `4627ff1c`; test-doc-budget
+  every case red, the baseline green) on every commit of the round; CI's suite 2841/0 ×3 with `bot-gates` green on every commit
+  before the squash, on 579fda1 and on b8a1cb5. *Egress:* 39 findings (unproven 16, stale-doc 16, half-done 6, rule-missed 1) in
+  five passes, all on Fable: three before the rewrite (12, 9, 6) and two on it (9 with one unconfirmed, then 3); every one fixed or
+  put to the owner. Pass 2's three on the rewrite (this line's placeholders, the private record's card text, the data repo's PR
+  title) are fixed and not re-reviewed.
 - **W1 — the workflow round (26 Nov 2026, bot v0.6.241, no bot change)** — Johan's D-139 on Claude's workflow proposal (the
   question card: "Kör, W1 först", "Ja, CI ×3", "Ja, sista passet", each the recommended option). The chat leads and agents take the
   big reads and the reviews; the mechanical steps are scripts; CI carries the suite ×3. Scripts (`tools/`): `setup.sh` (KRCG's v5

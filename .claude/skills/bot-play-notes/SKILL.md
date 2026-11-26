@@ -60,8 +60,8 @@ later game contradicts a note, change it and say so; never delete it silently.
 
 ## The bots as opponents (what to expect, what to test)
 - **Bounces.**
-  - Seen, bots only (the 24 Nov counts, CHANGELOG v0.6.238 and register 4.6: the release bytes' 240 and a five-starter run): Malkavian, Tremere and
-    Ventrue hold bounces; Nosferatu and Toreador hold none.
+  - Seen, bots only (the 24 Nov counts, CHANGELOG v0.6.238 and register 4.6: the release bytes' 240 and a five-starter run):
+    Malkavian, Tremere and Ventrue hold bounces; Nosferatu and Toreador hold none (the deck lists).
   - Seen: a first target with a usable bounce bounced every bleed of 2 or more (345 of 345) and took most bleeds of 1. A bot that
     is a bounce's new target does not bounce onward (register 4.6).
   - Reasoned, not tried: a human can bleed for 1 into a bot that keeps its bounce.
