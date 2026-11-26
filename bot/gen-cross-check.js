@@ -13,14 +13,15 @@
       counterpart for, by the pairing's flag rules -- where the fidelity pass reads by hand (D-138). A flag is a place to look, not
       a verdict: KRCG's text and the rulings decide, zero-vtes proposes, our compiler is the second opinion (spec §5).
 
-   THE PAIRING is a run-time argument (`--pairing FILE`, outside the repository; RULINGS O-48 asks whether it may live here): which
-   of their tokens answer which of our keys. This file holds no zero-vtes identifier but the parser's structural words; its
-   self-test invents its effect names. The pairing's shape:
+   THE PAIRING is `cross-check-pairing.json` beside the tool, committed with it (RULINGS D-140: in a development tool only, never in
+   the bundle or the card data; `--pairing FILE` reads another): which of their tokens answer which of our keys. The pairing names
+   their effect types; this file holds no zero-vtes identifier but the parser's structural words, and its self-test invents its
+   effect names. The pairing's shape (the self-test checks the committed file against it):
      { "family": { "<ours>": { "ours": ["<our fx key>", ...], "theirs": ["<their token>", ...] }, ... },
-       "formula": ["<their token whose value is computed>", ...],
+       "formula": ["<their token whose value is computed>", ...], "formulaOf": { "<formula token>": "<ours>", ... },
        "conditional": ["<their wrapper token whose inner values apply only if ...>"],
        "flags": [ { "name": "...", "what": "...", "theirs": ["<token>", "Req:<token>", "Actor:<token>"], "ours": ["<key>", ...],
-                    "unless": ["<their token that makes the flag moot>"] }, ... ] }
+                    "unless": ["<their token that makes the flag moot>"], "exceptTypes": ["<our card type the rule skips>"] }, ... ] }
    A token is matched as a call (`Name(3)`, `Name(3, true)`), a struct (`Name { n: 3, ...}`), a stat layer (`Stat:Name` for
    `stat: Stat::Name, n: 3`), or a bare word; `Req:` and `Actor:` prefixes match the mode's requirements and actor. "ours" keys are
    looked for in the mode's `fx`, the mode itself and the entry (`cost`, `req`, `t` ...).
@@ -28,13 +29,14 @@
    Levels: their modes follow the order of the discipline lines in KRCG's text; ours carry `at` (`obf` inferior, `OBF` superior,
    `cel+pre` a combined line). A mode pairs with the text's line its `at` names; with no discipline lines, or no `at`, by order.
 
-   Usage (from inside bot/): node gen-cross-check.js --zero DIR --pairing FILE [--out FILE.md] [--json FILE] [--decks k1,k2] [--card NAME]
+   Usage (from inside bot/): node gen-cross-check.js --zero DIR [--pairing FILE] [--out FILE.md] [--json FILE] [--decks k1,k2] [--card NAME]
                              node gen-cross-check.js --self-test       (fixed inputs: no zero-vtes, no vtes.json) */
 
 const fs = require('fs'), path = require('path'), cp = require('child_process');
 const RS = require('./gen-review-sheet.js');
 const VERSION = '1.0.0';
 const here = f => path.join(__dirname, f);
+const PAIRING = 'cross-check-pairing.json';   // the committed pairing (D-140)
 
 /* ---- their side: a mode's text with its shared items expanded, then the tokens the pairing names, with their numbers ---- */
 function expand(text, ctx, depth, seen){   // the shared statics / consts a mode names, inlined (four levels); helpers keep their call text
@@ -280,6 +282,16 @@ function selfTest(quiet){
   const md = report(r, { commit: 'test', defs: defs.size, lib: 6, pairing: 'test', P });
   ok(/\| Ward C \| `-` \| guard \| 1 \| 2 \| differ \| deckx \|/.test(md) && /### deckx: /.test(md), 'the report renders a differing row with its deck, and the flags by deck');
   ok(!/Veil|Guard|Gate|EndIfCaught|PayRed/.test(fs.readFileSync(__filename, 'utf8').split('/* ---- the self-test')[0]), 'the tool\'s code above the self-test names none of the self-test\'s invented tokens');
+  // the committed pairing (D-140): it parses and has the header's shape, so a broken edit fails the self-test and CI
+  let CP = null; try { CP = JSON.parse(fs.readFileSync(here(PAIRING), 'utf8')); } catch (e){ CP = null; }
+  const strs = x => Array.isArray(x) && x.length > 0 && x.every(t => typeof t === 'string' && t.length > 0);
+  const fam = CP && CP.family && typeof CP.family === 'object' ? CP.family : {}, fOf = CP && CP.formulaOf && typeof CP.formulaOf === 'object' ? CP.formulaOf : null;
+  ok(CP && Object.keys(fam).length > 0 && Object.values(fam).every(v => v && strs(v.ours) && strs(v.theirs))
+     && strs(CP.formula) && fOf && CP.formula.every(t => fOf[t] in fam) && Object.keys(fOf).every(t => CP.formula.includes(t))
+     && strs(CP.conditional) && Array.isArray(CP.flags) && CP.flags.length > 0
+     && CP.flags.every(g => g && typeof g.name === 'string' && g.name && typeof g.what === 'string' && g.what && strs(g.theirs) && strs(g.ours)
+       && (g.unless === undefined || strs(g.unless)) && (g.exceptTypes === undefined || strs(g.exceptTypes))),
+     'the committed pairing (' + PAIRING + ', D-140) parses and has the header\'s shape');
   console.log('gen-cross-check --self-test: ' + (n - f) + ' of ' + n + ' checks passed');
   return f === 0;
 }
@@ -287,10 +299,10 @@ function selfTest(quiet){
 if (require.main === module){
   const a = process.argv.slice(2), opt = k => { const i = a.indexOf(k); return i >= 0 ? a[i + 1] : null; };
   if (a.includes('--self-test')) process.exit(selfTest(false) ? 0 : 1);
-  const zero = opt('--zero'), pairing = opt('--pairing'), out = opt('--out'), js = opt('--json'), only = opt('--card');
-  if (!zero || !pairing){ console.error('usage: node gen-cross-check.js --zero DIR --pairing FILE [--out FILE.md] [--json FILE] [--decks k1,k2] [--card NAME] [--all] | --self-test'); process.exit(2); }
+  const zero = opt('--zero'), pairing = opt('--pairing') || here(PAIRING), out = opt('--out'), js = opt('--json'), only = opt('--card');
+  if (!zero){ console.error('usage: node gen-cross-check.js --zero DIR [--pairing FILE] [--out FILE.md] [--json FILE] [--decks k1,k2] [--card NAME] [--all] | --self-test'); process.exit(2); }
   const repo = path.resolve(__dirname, '..');
-  for (const [what, p] of [['--zero', zero], ['--pairing', pairing], ['--out', out], ['--json', js]]) if (p && RS.insideRepo(p, repo)){ console.error('gen-cross-check: ' + what + ' must be outside the repository (spec-card-sweep §5): ' + p); process.exit(2); }
+  for (const [what, p] of [['--zero', zero], ['--out', out], ['--json', js]]) if (p && RS.insideRepo(p, repo)){ console.error('gen-cross-check: ' + what + ' must be outside the repository (spec-card-sweep §5): ' + p); process.exit(2); }
   if (!fs.existsSync(here('vtes.json'))){ console.error('gen-cross-check: vtes.json is missing beside the tool (bash tools/setup.sh)'); process.exit(2); }
   const P = JSON.parse(fs.readFileSync(pairing, 'utf8'));
   const cards = JSON.parse(fs.readFileSync(here('vtes.json'), 'utf8')), lib = JSON.parse(fs.readFileSync(here('elysium-cardfx.json'), 'utf8')).lib;
