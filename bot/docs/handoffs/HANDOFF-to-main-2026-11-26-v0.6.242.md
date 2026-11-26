@@ -9,7 +9,7 @@ by one token on both sides.
 ## 1. The bundle
 - `elysium-bot.js` (v0.6.242): its comments name the owner by role and say in our own words what the owner's words said; example
   table lines in the comments use invented names. Four strings in the code changed: the sewer deck's name (section 2) and the
-  attribution inside three decide-row explanations (the bounce on a total, and the master pick with no known income asset, in
+  attribution inside three of the bot's decision explanations (the bounce on a total, and the master pick with no known income asset, in
   its two forms), which show only in a debug table's ⚙ lines and in traces.
 - `elysium-cardfx.json` / `.js`: the curated notes likewise; every effect is the same (221 curated, 1,696 modelled library effects).
 - `START-HERE-BOTS.html`: the archetype paragraph's example line names an invented player (Hanna); the version chip and the
