@@ -5,15 +5,15 @@
 <!-- /round.py:versions -->
 
 <!-- round.py:deploy -->
-**Deploy state** (read at the round's end, 27 Nov): `main` `8271308` carries bot v0.6.243 at the root, with client v2.6.192 / srv-2.6.54. Open pull requests: #121 `c1b`; the private data repo: #10 `words-d148-2026-11-27`.
+**Deploy state** (read at the round's end, 27 Nov): `main` `60c59e8` carries bot v0.6.244 at the root, with client v2.6.192 / srv-2.6.54. Open pull requests: #122 `r11-11` (draft); the private data repo: #11 `words-11-11-order-2026-11-27`.
 <!-- /round.py:deploy -->
 
 <!-- round.py:gates -->
 ## Last gates (`docs/round-record.json`)
-`tools/gates.sh --sim --smokes` on `c1b` `6ebc0e8` + the working tree (27 Nov; bytes `41d04006` / `f67335d4` / cardfx `21ef103f`): PASS 20 · FAIL 1 · SKIPPED 0 — check 38 of 38 scripts parse · lint clean · canary 235/0 · canary-root 235/0 · cardfx 524/0 · precon 18 precons, no problems · ledger-self 81/0 · sheet-self 23/0 · cross-self 19/0 · table-self abstract table 1.0.0: 6/0 (550 ms) · reader 871 rows, 363 gated, 286 read, 65 unread (65 listed, 0 new), 0 stale, 12 no value · self-test 8/0 · bench 821 kept rows, 235 with a scenario, 306 scenarios, 306 played right, 0 rows wrong (0 listed, 0 new), 0 stale · self-test 5/0 · ana-gates-self 35/0 · hb1 11/0 (0 skip) · hotseat 12/0 · doc-budget bootstrap 39221 / 50000 · standing pages 186443 / 187000 · public-scan-self 35/0 · round-self 24/0 · public-scan 0 hits in 0 files · sim-240 240 matches: DIVERGED 115, SAME-PLAY 125 · 0.6.243 -> 0.6.244, with the version put back: 240 matches: DIVERGED 115, SAME-PLAY 125 · ana-gates PASS (6 of 6) · bytes 41d04006 f67335d4 21ef103f · v5-smokes FAIL 13 of 14 smokes PASS · banuhaqim:FAIL (5 of 6). CI's suite 2854/0 ×3, `bot-gates` success on `71d4cf1`. v5-smokes: banuhaqim's steal pair is on v0.6.243's bytes too, the same seed (re-run)
+`tools/gates.sh --sim` on `r11-11` `28a0158` + the working tree (27 Nov; bytes `73e5440d` / `bc5ff9d5` / cardfx `21ef103f`): PASS 20 · FAIL 0 · SKIPPED 0 — check 38 of 38 scripts parse · lint clean · canary 235/0 · canary-root 235/0 · cardfx 524/0 · precon 18 precons, no problems · ledger-self 81/0 · sheet-self 23/0 · cross-self 19/0 · table-self abstract table 1.0.0: 6/0 (390 ms) · reader 871 rows, 363 gated, 286 read, 65 unread (65 listed, 0 new), 0 stale, 12 no value · self-test 8/0 · bench 821 kept rows, 235 with a scenario, 306 scenarios, 306 played right, 0 rows wrong (0 listed, 0 new), 0 stale · self-test 5/0 · ana-gates-self 35/0 · hb1 11/0 (0 skip) · hotseat 12/0 · doc-budget bootstrap 39318 / 50000 · standing pages 186879 / 187000 · public-scan-self 35/0 · round-self 24/0 · public-scan 0 hits in 0 files · sim-240 240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 73e5440d bc5ff9d5 21ef103f. CI's suite ×3: not read.
 <!-- /round.py:gates -->
 
-## Next (the owner's order of 26–27 Nov: D-144, D-145, D-147, D-148)
+## Next (the owner's order of 26–27 Nov: D-144, D-145, D-147, D-148; 11.11 done first, D-149)
 1. **C1c** (D-148 (2)): the cross-check compares the price and the condition beside the number; a second sample of the agreeing
    rows is read (`reports/REPORT-c1b-2026-11-27.md`).
 2. **Main's replies** (D-148 (3)), a round of their own: "Not yet consumed" below.
@@ -22,9 +22,8 @@
 4. The register's 8.3 and 11.1: a small release each (D-135).
 5. The owner's answers, then a PR each: O-53 (the playtests' table questions; the resolution panel is main's, a handoff) and O-52
    (the pool floor); Cloak the Gathering (8.7) and Raven Spy (1.3). Then the owner playtests the combined version.
-6. Faceless Night [OBF] (10.1) waits for its design. Still open: O-51; asked 20 Nov, no go-ahead: the pilot's flow proposals,
-   BOARD's read-through, class 1's design question (R-47); C's riders; the fizzle misread; Q4; C5; C6; the abstract table's later
-   layers (O-32); class 14; `ana-windows.py` and the floor; the steal-pair debt.
+6. Faceless Night [OBF] (10.1) waits for its design; O-51, and the 20 Nov proposals with no go-ahead (the pilot's flow, BOARD's
+   read-through, class 1's design question, R-47); the rest of BOARD in its order.
 
 ## Not yet consumed from main
 Client v2.6.187 (#102), v2.6.188 (#104), v2.6.189 (#115), v2.6.190 (#116, comments only), v2.6.191 (#117: a human's blood and pool

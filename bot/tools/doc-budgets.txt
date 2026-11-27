@@ -5,9 +5,9 @@
 total      187000  D-147
 bootstrap   50000
 bot/CLAUDE.md             13900
-bot/docs/STATUS.md         4800
+bot/docs/STATUS.md         4400
 bot/docs/BOARD.md         18000
-bot/docs/RULINGS.md       70500
+bot/docs/RULINGS.md       70900
 bot/docs/LESSONS.md       19000
 bot/docs/ARCHITECTURE.md  25500
 bot/docs/HARNESS.md       14800
