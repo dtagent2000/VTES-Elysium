@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-cross-check.js v1.0.0 (26 Nov 2026; the V5 sweep's C1: RULINGS D-130, D-132, D-138; docs/specs/spec-card-sweep-2026-11-18.md
+/* gen-cross-check.js v1.1.0 (27 Nov 2026, C1's second part: the first full run's noise -- a level-free mode of ours is read at
+   every level, a card in play's uses are compared one by one and not summed, a use of theirs that ours lacks is flagged; v1.0.0
+   26 Nov 2026; the V5 sweep's C1: RULINGS D-130, D-132, D-138; docs/specs/spec-card-sweep-2026-11-18.md
    §11.2, §11.7, §11.8) -- THE CROSS-CHECK: our cardfx library against zero-vtes's card definitions (a development-time witness, read
    from a checkout OUTSIDE the repository), card by card and level by level. Generated and never committed: write it to scratch.
 
@@ -28,13 +30,18 @@
 
    Levels: their modes follow the order of the discipline lines in KRCG's text; ours carry `at` (`obf` inferior, `OBF` superior,
    `cel+pre` a combined line). A mode pairs with the text's line its `at` names; with no discipline lines, or no `at`, by order.
+   An entry's only mode, with no `at`, applies at every level and is read against each of their modes; a level-free mode beside
+   leveled ones ("+1 stealth action." before the discipline lines) is read at a line no leveled mode names (v1.1.0).
+   A card in play (IN_PLAY): its play mode and each of its abilities are read one by one, and a key's value is the largest of them
+   (two uses of +1 are two uses, not +2); when their uses that carry a key outnumber our modes that carry it, the flag "another
+   use" says so (v1.1.0).
 
    Usage (from inside bot/): node gen-cross-check.js --zero DIR [--pairing FILE] [--out FILE.md] [--json FILE] [--decks k1,k2] [--card NAME]
                              node gen-cross-check.js --self-test       (fixed inputs: no zero-vtes, no vtes.json) */
 
 const fs = require('fs'), path = require('path'), cp = require('child_process');
 const RS = require('./gen-review-sheet.js');
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 const here = f => path.join(__dirname, f);
 const PAIRING = 'cross-check-pairing.json';   // the committed pairing (D-140)
 
@@ -126,17 +133,19 @@ function textLines(text){   // the discipline lines' tags, normalized like our `
 function pairModes(e, def, text){   // [{ i, ours, theirs, level }] ; i is the text's line (or the order); null when the levels cannot be paired
   const ours = (e && e.modes) || [], theirs = def ? (def.modes.length ? def.modes : def.abilities) : [], lines = textLines(text), out = [];
   if (!def) return ours.map((mo, i) => ({ i, ours: mo, theirs: null, level: mo.at || '-' }));
-  const leveled = ours.filter(mo => mo !== headOf(e));
+  if (ours.length === 1 && !ours[0].at && theirs.length > 1)   // v1.1.0: our only mode, level-free, applies at every level of theirs
+    return theirs.map((t, i) => ({ i, ours: ours[0], theirs: t, level: lines.length === theirs.length ? lines[i] : '#' + (i + 1) }));
+  const head = headOf(e), leveled = ours.filter(mo => mo !== head);
   if (lines.length ? theirs.length !== lines.length : theirs.length !== leveled.length) return null;   // their modes do not follow the text's lines: by card
   if (lines.length && ours.some(mo => mo.at)){
-    const used = new Set(), head = headOf(e);
+    const used = new Set();
     for (const mo of ours){
       if (mo === head) continue;   // read into every level (ourFamily), not a level of its own
       let i = lines.indexOf(mo.at); if (i < 0) i = lines.findIndex(l => l.split(/[|+]/).includes(mo.at));
       if (i < 0 || used.has(i)) { out.push({ i: null, ours: mo, theirs: null, level: mo.at || '-' }); continue; }
       used.add(i); out.push({ i, ours: mo, theirs: theirs[i] || null, level: lines[i] });
     }
-    lines.forEach((l, i) => { if (!used.has(i) && theirs[i]) out.push({ i, ours: null, theirs: theirs[i], level: l }); });
+    lines.forEach((l, i) => { if (!used.has(i) && theirs[i]) out.push({ i, ours: head, theirs: theirs[i], level: l }); });   // v1.1.0: a line no leveled mode names reads the level-free mode (none: "no mode of ours")
   } else {
     const n = Math.max(ours.length, theirs.length);
     for (let i = 0; i < n; i++) out.push({ i, ours: ours[i] || null, theirs: theirs[i] || null, level: (ours[i] && ours[i].at) || lines[i] || (n > 1 ? '#' + (i + 1) : '-') });
@@ -145,6 +154,17 @@ function pairModes(e, def, text){   // [{ i, ours, theirs, level }] ; i is the t
 }
 
 /* ---- the cross-check ---- */
+function largest(fams){   // v1.1.0: per key, the largest value of several uses (base and condition apart), a formula when any use computes it,
+  // and how many uses carry the key: a card in play that gives +1 two ways gives +1, not +2
+  const r = {};
+  for (const f of fams) for (const [k, v] of Object.entries(f)){
+    const x = r[k] || (r[k] = { base: null, cond: null, formula: false, uses: 0 });
+    x.uses++; x.formula = x.formula || v.formula;
+    if (v.base !== null) x.base = x.base === null ? v.base : Math.max(x.base, v.base);
+    if (v.cond !== null) x.cond = x.cond === null ? v.cond : Math.max(x.cond, v.cond);
+  }
+  return r;
+}
 const IN_PLAY = new Set(['equip', 'ally', 'retainer', 'master', 'event', 'power', 'location', 'conviction']);   // our types a card stays in play as
 function crossCheck(o){   // o: { lib, cards (vtes.json), defs, ctx, P, decks: { key: Set(names) } }
   const byNorm = new Map(); for (const c of o.cards) for (const n of [c.name, c.printed_name, c._name].concat(c.name_variants || [])) if (n && !byNorm.has(RS.normName(n))) byNorm.set(RS.normName(n), c);
@@ -154,7 +174,10 @@ function crossCheck(o){   // o: { lib, cards (vtes.json), defs, ctx, P, decks: {
     if (def) seenDefs.add(k);
     const decks = Object.keys(o.decks || {}).filter(d => o.decks[d].has(name)), t = e.t || [];
     const head = headOf(e), inPlay = t.some(x => IN_PLAY.has(x)), stats = inPlay;   // a card in play: its abilities and its bearer's stats are its effect
-    const theirOf = m => theirFamily({ text: [m.text].concat(inPlay && def ? def.abilities.map(a => a.text) : [], def && def.macro ? [def.args || ''] : []).join('\n,') }, o.ctx, o.P, stats);   // a macro-built card: its own arguments carry its numbers
+    const own = m => theirFamily({ text: [m.text].concat(def && def.macro ? [def.args || ''] : []).join('\n,') }, o.ctx, o.P, stats);   // a macro-built card: its own arguments carry its numbers
+    const uses = inPlay && def ? def.abilities.map(a => theirFamily({ text: a.text }, o.ctx, o.P, stats)) : [];   // v1.1.0: each ability of a card in play is a use of its own
+    const args = def && def.macro ? theirFamily({ text: def.args || '' }, o.ctx, o.P, stats) : {};
+    const theirOf = m => largest((uses.length && !def.modes.length ? [args] : [own(m)]).concat(uses));   // no modes: their abilities stand in for them (pairModes), each counted once
     let pms = pairModes(e, def, text), byCard = false;
     if (!pms){   // the levels cannot be paired: the card's values, all levels together (ours from every mode, theirs from every mode)
       byCard = true;
@@ -195,6 +218,11 @@ function crossCheck(o){   // o: { lib, cards (vtes.json), defs, ctx, P, decks: {
       if ((e.modes || []).some(mo => oursHas(e, mo, rule.ours || [])) || oursHas(e, null, rule.ours || [])) continue;
       flags.push({ card: name, t, level: 'all', flag: rule.name, what: rule.what || '', tokens: hit, ours: null, decks, src: e.src || '' });
     }
+    if (def && inPlay) for (const key of Object.keys(o.P.family || {})){   // v1.1.0: their uses that carry a key outnumber our modes that carry it
+      const tu = (def.modes.length ? def.modes.map(own) : []).concat(uses).filter(f => f[key]).length;
+      const ou = (e.modes || []).filter(mo => ourFamily(mo, o.P, null)[key]).length;
+      if (ou >= 1 && tu > ou) flags.push({ card: name, t, level: '-', flag: 'another use', what: 'a card in play: ' + tu + ' uses of theirs carry ' + key + ', ' + ou + ' mode' + (ou > 1 ? 's' : '') + ' of ours', tokens: [], ours: null, decks, src: e.src || '' });
+    }
     const lines = textLines(text), ats = new Set((e.modes || []).map(mo => mo.at).filter(Boolean)), lost = lines.filter(l => !ats.has(l) && !l.split(/[|+]/).some(x => ats.has(x)));
     if (lines.length && lost.length && (e.modes || []).length) flags.push({ card: name, t, level: lost.join(', '), flag: 'level with no mode', what: 'a discipline line of KRCG\'s text that no mode of ours names (' + lines.length + ' lines, ' + ats.size + ' levels of ours)', tokens: [], ours: null, decks, src: e.src || '' });   // KRCG against ours: no definition needed
   }
@@ -202,7 +230,7 @@ function crossCheck(o){   // o: { lib, cards (vtes.json), defs, ctx, P, decks: {
 }
 
 /* ---- the report ---- */
-const fmtV = v => !v ? '—' : v.formula ? 'X' : (v.base === null ? '' : String(v.base)) + (v.cond !== null ? (v.base === null ? '' : ' ') + '(+' + v.cond + ' if)' : '');
+const fmtV = v => !v ? '—' : (v.formula ? 'X' : (v.base === null ? '' : String(v.base)) + (v.cond !== null ? (v.base === null ? '' : ' ') + '(+' + v.cond + ' if)' : '')) + (v.uses > 1 ? ' (' + v.uses + ' uses)' : '');
 function report(r, meta){
   const L = [], P = s => L.push(s), tally = {};
   for (const x of r.fam) tally[x.verdict] = (tally[x.verdict] || 0) + 1;
@@ -247,7 +275,10 @@ function selfTest(quiet){
     'pub static CLOAK_B: CardDef = CardDef { name: "Cloak B", modes: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[PLUS_ONE_VEIL, Effect::Gate { on: On::Actor, requires: &[Requirement::Clan("X")], then: &Effect::Veil(1) }]) ], ..CARD };',
     'pub static WARD_C: CardDef = CardDef { name: "Ward C", modes: &[ mode_of(&[Window::W], Actor::OtherReady, &[], &[Effect::Layer(Modifier::Bearer { stat: Stat::Guard, n: 2, during: &[], who: Bearer::Any })]) ], ..CARD };',
     'pub static SCRY_D: CardDef = CardDef { name: "Scry D", modes: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::VeilX, Effect::PayRed(2)]) ], ..CARD };',
-    'pub static ONLY_E: CardDef = CardDef { name: "Only E", modes: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Veil(1)]) ], ..CARD };'
+    'pub static ONLY_E: CardDef = CardDef { name: "Only E", modes: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Veil(1)]) ], ..CARD };',
+    'pub static VEIL_H: CardDef = CardDef { name: "Veil H", modes: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Veil(1)]), mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Veil(1), Effect::EndIfCaught]) ], ..CARD };',
+    'pub static HEAD_I: CardDef = CardDef { name: "Head I", modes: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Veil(1)]), mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Veil(1)]) ], ..CARD };',
+    'pub static POST_J: CardDef = CardDef { name: "Post J", abilities: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Layer(Modifier::Bearer { stat: Stat::Guard, n: 1, during: &[], who: Bearer::Any })]), mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Layer(Modifier::Bearer { stat: Stat::Guard, n: 1, during: &[], who: Bearer::Any })]) ], ..CARD };'
   ].join('\n');
   const { defs, ctx } = RS.parseDefs(src, '');
   const P = { family: { veil: { ours: ['stealth', 'actStealth'], theirs: ['Veil', 'Stat:Veil'] }, guard: { ours: ['intercept'], theirs: ['Stat:Guard'] } },
@@ -256,7 +287,8 @@ function selfTest(quiet){
              { name: 'cost', theirs: ['PayRed'], ours: ['selfPay'] } ] };
   const cards = [ { name: 'Cloak A', card_text: '[obf] +1 veil.\n[OBF] +2 veil, and end if caught.' }, { name: 'Cloak B', card_text: '+1 veil, +1 more if X.' },
     { name: 'Ward C', card_text: '+2 guard.' }, { name: 'Scry D', card_text: 'X veil; pay 2.' }, { name: 'Only E', card_text: '[dom] +1 veil.' }, { name: 'Ours F', card_text: '+1 veil.' },
-    { name: 'Lines G', card_text: '[ani] +1 veil.\n[ANI] +2 veil.' } ];
+    { name: 'Lines G', card_text: '[ani] +1 veil.\n[ANI] +2 veil.' }, { name: 'Veil H', card_text: '+1 veil.\n[obf] Hide.\n[OBF] Hide, and end if caught.' },
+    { name: 'Head I', card_text: '+1 veil action.\n[dom] Look.\n[DOM] Look twice.' }, { name: 'Post J', card_text: 'Lock: +1 guard to yours. Lock and pay: +1 guard to another.' } ];
   const lib = {
     'Cloak A': { t: ['mod'], modes: [ { at: 'OBF', fx: { stealth: 2 } }, { at: 'obf', fx: { stealth: 1 } } ] },     // our modes out of order: paired by `at`
     'Cloak B': { t: ['mod'], modes: [ { at: null, fx: { stealth: 1 } } ] },                                         // the condition missing
@@ -264,10 +296,13 @@ function selfTest(quiet){
     'Scry D': { t: ['mod'], modes: [ { at: null, fx: { stealth: 'X' } } ] },                                         // formula; cost flagged
     'Only E': { t: ['action'], modes: [ { at: 'dom', fx: { actStealth: 1 } } ] },                                    // agree through actStealth
     'Ours F': { t: ['mod'], modes: [ { at: null, fx: { stealth: 1 } } ] },                                          // no definition
-    'Lines G': { t: ['mod'], modes: [ { at: 'ani', fx: { stealth: 1 } } ] } };                                       // [ANI] has no mode of ours                                         // no definition
+    'Lines G': { t: ['mod'], modes: [ { at: 'ani', fx: { stealth: 1 } } ] },                                        // [ANI] has no mode of ours
+    'Veil H': { t: ['mod'], modes: [ { at: null, fx: { stealth: 1 } } ] },                                         // our only mode, level-free (v1.1.0)
+    'Head I': { t: ['action'], modes: [ { at: null, fx: { actStealth: 1 } }, { at: 'DOM', fx: {} } ] },            // the level-free mode at [dom] (v1.1.0)
+    'Post J': { t: ['master'], modes: [ { at: null, lock: true, fx: { intercept: 1 } } ] } };                       // two uses of +1 in play (v1.1.0)
   const r = crossCheck({ lib, cards, defs, ctx, P, decks: { deckx: new Set(['Cloak A', 'Ward C']) } });
   const row = (c, lv, k) => r.fam.find(x => x.card === c && x.level === lv && x.key === k);
-  ok(defs.size === 5 && ctx && ctx.statics.has('PLUS_ONE_VEIL'), 'the parser reads five invented definitions and keeps the shared const');
+  ok(defs.size === 8 && ctx && ctx.statics.has('PLUS_ONE_VEIL'), 'the parser reads eight invented definitions and keeps the shared const');
   ok(row('Cloak A', 'obf', 'veil') && row('Cloak A', 'obf', 'veil').verdict === 'agree' && row('Cloak A', 'OBF', 'veil').verdict === 'agree', 'levels pair by `at` against the text\'s lines, whatever our modes\' order');
   ok(r.flags.some(x => x.card === 'Cloak A' && x.level === 'OBF' && x.flag === 'end-if-caught') && !r.flags.some(x => x.card === 'Cloak A' && x.level === 'obf' && x.flag === 'end-if-caught'), 'a rider on the superior mode only is flagged there only');
   const b = r.fam.find(x => x.card === 'Cloak B');
@@ -279,7 +314,14 @@ function selfTest(quiet){
   ok(r.fam.some(x => x.card === 'Only E' && x.verdict === 'agree' && x.ours.base === 1), 'an action\'s own stealth (actStealth) answers the same token');
   ok(r.fam.some(x => x.card === 'Ours F' && x.verdict === 'no definition'), 'a card with no definition is single-witness');
   ok(!r.flags.some(x => x.flag === 'level with no mode' && x.card === 'Cloak A') && r.flags.some(x => x.flag === 'level with no mode' && x.card === 'Lines G' && x.level === 'ANI'), 'a discipline line no mode of ours names is flagged (Lines G\'s [ANI]), none where every line has its mode');
-  const md = report(r, { commit: 'test', defs: defs.size, lib: 6, pairing: 'test', P });
+  // v1.1.0: the first full run's noise (each check fails on v1.0.0's code)
+  const vh = l => row('Veil H', l, 'veil'), hi = l => row('Head I', l, 'veil'), pj = r.fam.filter(x => x.card === 'Post J');
+  ok(vh('obf') && vh('obf').verdict === 'agree' && vh('OBF') && vh('OBF').verdict === 'agree', 'our only mode, level-free, is read at every level of theirs (v1.0.0: no mode of ours at the second)');
+  ok(r.flags.some(x => x.card === 'Veil H' && x.level === 'OBF' && x.flag === 'end-if-caught') && !r.flags.some(x => x.card === 'Veil H' && x.level === 'obf' && x.flag === 'end-if-caught'), 'a rider at one of their levels is flagged at that level when our only mode is level-free');
+  ok(hi('dom') && hi('dom').verdict === 'agree' && hi('DOM') && hi('DOM').verdict === 'agree', 'a level-free mode beside a leveled one is read at a line no leveled mode names (v1.0.0: no mode of ours)');
+  ok(pj.length === 2 && pj.every(x => x.verdict === 'agree' && x.theirs.base === 1 && x.theirs.uses === 2), 'a card in play: two uses of +1 read as +1, not +2 (v1.0.0: 2, differ; got ' + JSON.stringify(pj.map(x => [x.verdict, x.theirs])) + ')');
+  ok(r.flags.some(x => x.card === 'Post J' && x.flag === 'another use') && !r.flags.some(x => x.card === 'Ward C' && x.flag === 'another use'), 'their uses outnumbering our modes are flagged ("another use"), one use against one mode is not');
+  const md = report(r, { commit: 'test', defs: defs.size, lib: Object.keys(lib).length, pairing: 'test', P });
   ok(/\| Ward C \| `-` \| guard \| 1 \| 2 \| differ \| deckx \|/.test(md) && /### deckx: /.test(md), 'the report renders a differing row with its deck, and the flags by deck');
   ok(!/Veil|Guard|Gate|EndIfCaught|PayRed/.test(fs.readFileSync(__filename, 'utf8').split('/* ---- the self-test')[0]), 'the tool\'s code above the self-test names none of the self-test\'s invented tokens');
   // the committed pairing (D-140): it parses and has the header's shape, so a broken edit fails the self-test and CI
