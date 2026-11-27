@@ -13,20 +13,18 @@
 `tools/gates.sh` on `card-chain` `27c5f5d` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 18 · FAIL 0 · SKIPPED 0 — check 38 of 38 scripts parse · lint clean · canary 235/0 · canary-root 235/0 · cardfx 518/0 · precon 18 precons, no problems · ledger-self 81/0 · sheet-self 23/0 · cross-self 19/0 · table-self abstract table 1.0.0: 6/0 (536 ms) · reader 871 rows, 360 gated, 257 read, 92 unread (92 listed, 0 new), 0 stale, 11 no value · self-test 7/0 · bench 821 kept rows, 230 with a scenario, 297 scenarios, 296 played right, 1 rows wrong (1 listed, 0 new), 0 stale · self-test 5/0 · ana-gates-self 35/0 · hb1 11/0 (0 skip) · doc-budget bootstrap 40148 / 50000 · standing pages 186627 / 187000 · public-scan-self 35/0 · round-self 24/0 · public-scan 0 hits in 0 files. CI's suite 2841/0 ×3, `bot-gates` success on `2e8abaa`.
 <!-- /round.py:gates -->
 
-## Next (the owner's order of 26–27 Nov: D-144, D-145, D-147)
-1. **C1b**, using the card chain (D-147): the fidelity pass of the other 13 V5 decks reads their flagged cards (D-138, D-144 (1)),
-   with the family's second pass on the 29 "extra cost" flags (spec §11.7) and the agreeing rows' sample drawn for it
-   (`reports/readers-card-chain-2026-11-27.json`, its prediction); the readers write a readers v1 file; the gaps the reader gate and
-   the bench list (`cardfx-exact.json` `gaps`: 7.5, 7.6, 7.7, 9.13, 10.17, 10.23) are fixed, a bot release, or kept with a reason.
-2. **The first readers' round** (D-132): its design to the owner first (spec §11.6: who moves the counter when a human plays a
+## Next (the owner's order of 26–27 Nov: D-144, D-145, D-147, D-148)
+1. **C1c** (D-148 (2)): the cross-check compares each side's price and condition, not only the number (the agreeing rows' sample:
+   6 of 60 wrong on our side, `reports/REPORT-c1b-2026-11-27.md`), and reads a second sample of the agreeing rows.
+2. **Main's replies** (D-148 (3)), a round of their own: "Not yet consumed" below.
+3. **The first readers' round** (D-132): its design to the owner first (spec §11.6: who moves the counter when a human plays a
    stealth card, a number entered both ways counted once) and the bundle's exactness field (D-144 (2)). Then C2, combat.
-3. The register's Bonding [DOM] (10.17) and Protection Racket (7.5, its reader: 7.6), then 8.3 and 11.1: a small release each (D-135).
-4. The owner's answers, then a PR each: O-53 (the playtests' table questions; the resolution panel is main's, a handoff) and O-52
+4. The register's 8.3 and 11.1: a small release each (D-135).
+5. The owner's answers, then a PR each: O-53 (the playtests' table questions; the resolution panel is main's, a handoff) and O-52
    (the pool floor); Cloak the Gathering (8.7) and Raven Spy (1.3). Then the owner playtests the combined version.
-5. Faceless Night [OBF] (10.1) waits for its design. Still open: O-51; main's v2.6.187–188 (the guide, the copies, the canary
-   cases for `BLOCKED_LOCK` and `RIDER_STEALTH`); asked 20 Nov, no go-ahead: the pilot's flow proposals, BOARD's read-through,
-   class 1's design question (R-47); C's riders; the fizzle misread; Q4; C5; C6; the abstract table's later layers (O-32); class 14; `ana-windows.py` and
-   the floor; the steal-pair debt.
+6. Faceless Night [OBF] (10.1) waits for its design. Still open: O-51; asked 20 Nov, no go-ahead: the pilot's flow proposals,
+   BOARD's read-through, class 1's design question (R-47); C's riders; the fizzle misread; Q4; C5; C6; the abstract table's later
+   layers (O-32); class 14; `ana-windows.py` and the floor; the steal-pair debt; 7.7 and 10.23 (D-148 (1)).
 
 ## Not yet consumed from main
 Client v2.6.187 (#102), v2.6.188 (#104), v2.6.189 (#115), v2.6.190 (#116, comments only), v2.6.191 (#117: a human's blood and pool
