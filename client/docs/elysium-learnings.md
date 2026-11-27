@@ -1,8 +1,28 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.190 / server v2.6.54 / bot v0.6.241 tested beside the suite, last updated 27 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.191 / server v2.6.54 / bot v0.6.242 tested beside the suite, last updated 27 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**27 Nov 2026, later (BLOOD ON THE WHEEL — v2.6.191):**
+- **Shift turns a mouse wheel horizontal in Chrome and on macOS.** The event arrives with `deltaY` 0 and the step in `deltaX`, so
+  a handler that reads `deltaY < 0` counts every Shift notch down (the card's wheel did) and the felt's zoom zoomed out on every one.
+  Read the step as `deltaY || deltaX` (`wheelStep`). Headless Chrome's synthetic Shift + wheel stays vertical, so a browser test
+  sends the horizontal shape itself.
+- **Decide what the rest of the table does with the modifier held.** A gesture aimed at a card meets the felt the moment the pointer
+  slips off it. Here the felt and the pool globes ignore the wheel while the key is held, except Ctrl, which a touchpad's pinch sends.
+- **The board's publish rode on the coalesced log line.** `log()` → `scheduleSave()` → `schedulePush()`: a counter changed by the
+  wheel left this client only when its line was written. A line that waits longer than the push has to save on each tick itself.
+- **A static test that reads a listener's body breaks when the body moves.** v2.6.103 scans every wheel listener for
+  `stopPropagation()`. Keep the refusals inline and hand the rest to a named function the suite can drive (`cardWheel`).
+- **A new gesture can turn an old test's sequence into itself.** The v2.6.181 pan test's two quick presses at one spot are now a
+  double-click. A test about something else clears the gesture's memory (`A._mclick = null`) and says why.
+- **A press that changes the view must still own its release.** The double-click's second press starts a pan object that pans nothing,
+  so its moves and its release stay the table's, as a pan's do, and nothing under the pointer sees them.
+- **Mutate the new code to test the new tests.** Twelve one-line mutations, each caught; the twelfth needed both guards on the second
+  press removed, and the test a check after the release, because `requestAnimationFrame` never runs under the harness.
+- **Let a card settle before a browser test points at it.** The first headless run measured the card mid-transition and scrolled the
+  felt. Wait out the transition after `layout()` and after a view reset, then measure.
 
 **27 Nov 2026 (THE PUBLIC REPOSITORY — v2.6.190):**
 - **A nested CLAUDE.md is loaded whole when a session starts work in its folder.** `client/CLAUDE.md` had grown to 463 KB
