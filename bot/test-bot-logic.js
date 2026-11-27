@@ -17013,7 +17013,9 @@ async function connectWithRetry(client, tries = 30){
        the Hare [pro] likewise on the intercept side; (h) 7.6: Mirror's Visage [CHI] +2 on an undirected action (the announce's form,
        _myActDirected), +1 on a bleed; (i) 7.6: Corpse Balloon [VIC]'s +1 intercept for its employer during a directed action only;
        (j) the agreeing rows' sample: Rooftop Shadow is not usable when the acting minion has Celerity (notActorDisc); (k) the round's
-       240: a target's reduction before the stealth card's add line is read off my own total, and the add line says what its total lacks.
+       240: a target's reduction before the stealth card's add line is read off my own total, and the add line says what its total lacks;
+       (l) the egress review: the same-stealth pick across cards (a stealth card's bleed, the slot) and the spend's stakes; (m) the
+       block decision reads Corpse Balloon's +1 as the pick does.
        LAST LINE OF 188 is the closing brace below. */
     {
       console.log('\n[188] v0.6.244 -- C1b: the card chain’s gaps (a bleed card’s header, a stealth mode’s bleed, the or-option, prices, the actor and the action’s form)');
@@ -17128,6 +17130,25 @@ async function connectWithRetry(client, tries = 30){
         ok(got.vn && got.bot.n === 1 && got.bot.k === 1 && one(got.bot, 'adds +1 bleed (= 1).') && got.ate.n === 0 && got.ate.k === 0 && got.ate.adds.length === 0 &&
            got.human.n === 1 && got.human.k === 1 && one(got.human, 'adds +1 bleed (= 1).') && got.late.n === 1 && got.late.k === 1,
            '188k a bleed of 3 with Bonding’s +1, reduced by 3 before the add line: my total is 1 (not the target’s "now 0") and "adds +1 bleed (= 1)." is said; a bleed of 1 reduced by 3 lands 0 and says nothing; a human’s "reduces the bleed by 3." the same; a reduction heard after the add line leaves 1 (got ' + JSON.stringify(got) + '; v0.6.244’s first build took the target’s 0: the 240’s 9 ledger faults, the Edge not taken)'); }
+
+      // l) the egress review: at the same stealth Bonding [DOM]'s +1 bleed wins across cards, unless Conditioning would use the slot for more; the spend's stakes count what the pick leaves playable
+      { const vn = pick8(c => sup8(c.disc, 'dom') && has8(c.disc, 'obf') && !sup8(c.disc, 'obf') && !has8(c.disc, 'cel') && !has8(c.disc, 'pre'));
+        const mkA = (hand, id) => { const u = mk8(), v = V8(id, vn, 4); u.board = [v]; u.hand = hand.slice();
+          const av = { v, n: 1, played: new Set(), target: 2, limitedUsed: false, kind: 'bleed' }; u._actingVamp = av; u._cryptStealthMod(v, 'bleed'); return { u, v, av }; };
+        const pickOf = hand => { const { u, v, av } = mkA(hand, 'l1'); const st = u._bestStealthFor(v, av.played, 2); return st ? st.name : null; };
+        const stakes = hand => { const { u, v, av } = mkA(hand, 'l2'); u.tally = { mode: 'block', a: 0, b: 1 }; let ctx = null; const dec = u.decide.bind(u);
+          u.decide = (q, c) => { if(q === 'spend-stealth'){ ctx = c; return { spend: false, tag: 'probe' }; } return dec(q, c); };
+          const st = u._bestStealthFor(v, av.played, 2); u._stealthFirstLook('Viktor', av, { contested: true }, st); return ctx ? ctx.stakes : null; };
+        const got = { vn: !!vn, withCond: pickOf(['Bonding', 'Lost in Crowds', 'Conditioning']), withCond2: pickOf(['Lost in Crowds', 'Bonding', 'Conditioning']),
+                      noCond: pickOf(['Lost in Crowds', 'Bonding']), noCond2: pickOf(['Bonding', 'Lost in Crowds']), stakesBond: stakes(['Bonding', 'Conditioning']), stakesLic: stakes(['Lost in Crowds', 'Conditioning']) };
+        ok(got.vn && got.withCond === 'Lost in Crowds' && got.withCond2 === 'Lost in Crowds' && got.noCond === 'Bonding' && got.noCond2 === 'Bonding' && got.stakesBond === 2 && got.stakesLic === 4,
+           '188l at +1 stealth Lost in Crowds leaves the slot to Conditioning (+3), and Bonding [DOM] wins without it, in either hand order; the spend’s stakes: Bonding with Conditioning 1 + 1 (Conditioning refused), Lost in Crowds with it 1 + 3 (got ' + JSON.stringify(got) + '; the round’s first builds took the first card in hand and counted Conditioning after Bonding)'); }
+
+      // m) the egress review: the block decision counts Corpse Balloon [VIC]'s +1 during a directed action, as the pick does
+      { const vn = pick8(c => sup8(c.disc, 'vic') && !has8(c.disc, 'aus')), u = mk8(), v = V8('m1', vn, 4); const cb = { id: 'cb2', name: 'Corpse Balloon', kind: 'lib', zone: 'ready', host: 'm1' };
+        v.attached = ['cb2']; u.board = [v, cb]; u.hand = [];
+        const got = { vn: !!vn, dir: u.interceptPotential(null, { kind: 'bleed', who: 'Viktor', actingVampName: 'Someone' }), und: u.interceptPotential(null, { kind: 'undirected', who: 'Viktor', actingVampName: 'Someone' }) };
+        ok(got.vn && got.dir === 1 && got.und === 0, '188m the block decision reads Corpse Balloon’s +1 intercept during a directed action and none during an undirected one, as the pick and the tally do (got ' + JSON.stringify(got) + '; the first build read 0: _equipIntercept without the action)'); }
     }
 
 

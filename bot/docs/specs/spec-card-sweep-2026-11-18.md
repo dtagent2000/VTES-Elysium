@@ -628,7 +628,7 @@ each round is a release with a sim footprint. Point 1 would amend D-127, point 4
 **How C runs** (C: Claude's setup, which the owner left to Claude, D-132; the rest of §11 stands):
 1. **Rounds by families.** C1: the cross-check tool (a family's keys against zero-vtes's effect types over the whole library, the
    disagreements listed per card, the pairing committed with the tool since O-48's answer, D-140) and `stealth` / `actStealth`,
-   `intercept`, `bleed` (built: v0.6.243, D-144; C1b, next, reads the 13 other V5 decks' flagged cards and the family's second pass). C2: combat. C3 (and C4): the rest of §11.4's horizon. Then the numbers are measured again and the owner says
+   `intercept`, `bleed` (built: v0.6.243, D-144; C1b built: v0.6.244, D-148, the 13 other V5 decks' flagged cards and the family's second pass; C1c next: the cross-check reads the price and the condition beside the number, D-148 (2)). C2: combat. C3 (and C4): the rest of §11.4's horizon. Then the numbers are measured again and the owner says
    whether the sweep goes on by effect or turns to D (§11.4).
 2. **Inside a round.** The tool lists the disagreements; agents read them in parallel batches against KRCG's text and the
    rulings, each from a written brief; each card is corrected, noted or explained (§11.2 (5)); a separate agent reviews, until

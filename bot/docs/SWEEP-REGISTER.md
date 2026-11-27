@@ -186,7 +186,9 @@ A card in play is known by its name where its record should follow the card (its
 A value the text conditions or caps, compiled as a plain number.
 - **7.3 Kevlar Vest** — 2 only against guns; `_equipPrevent` prevents 1 against everything (sweep §4.3 calls it a red). [w1; sweep
   §4.3] · latent (tremere holds the vest and the only gun).
-- **7.4 Night Moves** — the bleed is capped at 1 pool. [sweep §4.3: red] · latent (nothing in the sewer deck bleeds for more).
+- **7.4 Night Moves** — the bleed is capped at 1 pool; so is Cat Burglary's ("If more than 1 pool is bled with this action, ignore the
+  excess", KRCG; its [CEL] bleeds any Methuselah). [sweep §4.3: red; C1b's egress review] · latent (nothing in the sewer deck bleeds
+  for more; no deck holds Cat Burglary).
 - **7.5 The `plusIf` row's other cards** — since C1b (v0.6.244) `_plusIf` reads the acting minion's title (Protection Racket: "with an
   additional +1 intercept if the acting minion is titled", KRCG) and its sect (Ministry's +1 against a Sabbat acting vampire); left: Sense
   the Sin [dai]'s additional +1 intercept "if the acting minion has any corruption counters" (the bots count no corruption counters) and
