@@ -89,11 +89,11 @@ async function runWindow(spec){
     const HB = ctx.hotBridge, orig = HB._fromBot.bind(HB);
     HB._fromBot = function(seat, rec, m){
       if(m && typeof m.t === 'string'){
-        const ms = Date.now() - t0, who = rec && rec.name, row = { ms, seat, who, m: JSON.parse(JSON.stringify(m)) };
-        wire.push(row);
-        if(m.t === 'log') lines.push({ ms, seat, who, tier: 'log', txt: strip(m.html) });
-        else if(m.t === 'chat') lines.push({ ms, seat, who, tier: 'chat', txt: String(m.msg || '') });
-        else if(m.t === 'say') lines.push({ ms, seat, who, tier: 'say', txt: SAY()[m.i] || ('say#' + m.i) });
+        const ms = Date.now() - t0, who = rec && rec.name, row = { ms, seat, who, m: JSON.parse(JSON.stringify(m)) }, i = wire.length;
+        wire.push(row);   // i: the line's place on the wire (several messages share a virtual ms)
+        if(m.t === 'log') lines.push({ ms, i, seat, who, tier: 'log', txt: strip(m.html) });
+        else if(m.t === 'chat') lines.push({ ms, i, seat, who, tier: 'chat', txt: String(m.msg || '') });
+        else if(m.t === 'say') lines.push({ ms, i, seat, who, tier: 'say', txt: SAY()[m.i] || ('say#' + m.i) });
         else if(m.t === 'tally') tallies.push({ ms, seat, who, mode: m.mode, a: m.a, b: m.b });
       }
       return orig(seat, rec, m);
@@ -139,7 +139,7 @@ async function runWindow(spec){
 
 /* A window's reading helpers, for the tests built on the table. */
 const linesOf = (r, seat, re) => r.lines.filter(l => (!seat || l.seat === seat) && (!re || re.test(l.txt)));
-const bloodAt = (r, seat, name, ms) => { const w = r.wire.find(x => x.seat === seat && x.ms >= ms && x.m.t === 'board' && x.m.pub && (x.m.pub.cards || []).some(c => c && c.name === name));   // the seat's first board push at or after ms: a cost paid shows there, before any combat
+const bloodAt = (r, seat, name, line) => { const w = r.wire.find((x, k) => k > line.i && x.seat === seat && x.m.t === 'board' && x.m.pub && (x.m.pub.cards || []).some(c => c && c.name === name));   // the seat's first board push after the line on the wire: a cost paid shows there, before any combat
   const c = w && w.m.pub.cards.find(c => c && c.name === name); return c ? (c.blood | 0) : null; };   // a pub card at 0 blood carries none
 const tallyOf = (r, seat, mode) => r.tallies.filter(t => (!seat || t.seat === seat) && (!mode || t.mode === mode));
 

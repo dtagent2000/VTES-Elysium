@@ -2574,7 +2574,10 @@
     "stealth": "9.13"
    },
    "Fata Morgana": {
-    "bleed": "10.17"
+    "bleed": "10.25"
+   },
+   "Fleetness": {
+    "stealth": "9.13"
    },
    "Form of Mist": {
     "stealth": "7.6"
@@ -2659,7 +2662,7 @@
     }
    },
    "Power of One": {
-    "bleed": "10.17"
+    "bleed": "10.25"
    },
    "Priestess of Sekhmet": {
     "bleed": "7.6"
@@ -2677,7 +2680,7 @@
     "stealth": "9.13"
    },
    "Revelation of the Serpent": {
-    "bleed": "10.17"
+    "bleed": "10.25"
    },
    "Samuel Haight": {
     "bleed": "7.6"
@@ -2721,7 +2724,7 @@
     }
    },
    "Subversion": {
-    "bleed": "10.17"
+    "bleed": "10.25"
    },
    "Sunset Strip, Hollywood": {
     "stealth": "7.6"
@@ -2765,7 +2768,7 @@
     "stealth": "7.6"
    },
    "Virtuosa": {
-    "bleed": "10.17"
+    "bleed": "10.25"
    },
    "Voices of the Castle": {
     "intercept": "7.6"
@@ -2774,6 +2777,10 @@
     "stealth": "7.6"
    }
   },
-  "bench": {}
+  "bench": {
+   "The Eternal Mask": {
+    "stealth": "9.13"
+   }
+  }
  }
 }

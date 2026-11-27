@@ -1,8 +1,8 @@
 # CLAUDE.md — Elysium Bots (`bot/`): the session bootstrap (v3.3, 27 November 2026)
 
 Automated V:TES opponents for the Elysium client — a free table that does not enforce the rules, so the bot carries its own
-model of them (cardfx + the table model) and reads the table's lines. Claude writes and maintains the code; the owner rules and
-merges. Chat in Swedish; code, commits and docs in English. This file carries the rules that bind every change; the rules of one
+model of them (cardfx + the table model) and reads the table's lines. Claude writes and maintains the code; the owner rules, and
+Claude merges on his yes (D-146). Chat in Swedish; code, commits and docs in English. This file carries the rules that bind every change; the rules of one
 area of the code are in `docs/ARCHITECTURE.md` "Binding rules by area" and the measurement rules in `docs/HARNESS.md`
 "Measurements" (D-142). Ids in brackets point to `docs/RULINGS.md` (R-, D-, O-) and `docs/LESSONS.md` (L-). History lives in git, the frozen
 records of `docs/history/` and the private data repo's `bot-history/` (`docs/history/README.md` says what is where).
@@ -46,8 +46,8 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
   (HOWTO: "the canary against main's release").
 - `node test-cardfx.js` when cardfx changed (needs `vtes.json` beside it: `tools/setup.sh`).
 - The card chain's (D-147; `tools/gates.sh` and CI): `node elysium-bot-abstract.js --self-test` (the table's own rules),
-  `node gen-reader-gate.js` (a corrected or played value no code reads) and `node test-card-scenarios.js` (each card played on the
-  table at its level, its numbers right); a gap is fixed or listed in `cardfx-exact.json` `gaps` by register entry.
+  `node gen-reader-gate.js` (a corrected or played value no code reads) and `node test-card-scenarios.js` (each row its windows
+  take played on the table: level, numbers, cost); a gap is fixed or listed in `cardfx-exact.json` `gaps` by register entry.
 - `node diag-hb1-smoke.js` when the bot's browser surface changed (needs `elysium-bot-diag.html` beside it).
 - `node test-bot-hotseat.js` when anything near the hotseat bridge changed.
 - When the wire or the timing changed: main's client suite beside the release bytes (its LIVE tests drive the real bot; HOWTO

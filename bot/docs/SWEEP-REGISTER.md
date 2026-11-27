@@ -223,6 +223,11 @@ A value the text conditions or caps, compiled as a plain number.
   Shell Game's stealth X is the same shape (not gated: the bot plays no mode of it). [the card chain's reader gate] · latent (no
   deck) · a count the reader computes from the table where the text names it, the mode skipped where it cannot.
 
+- **7.8 Conditional pool damage read as a plain number** — Choir [MEL] ("Your prey burns 2 pool for each copy of this card you
+  control (not counting this one)", KRCG) and Precision [CEL] (1 pool only if the prey discards the named card, the vampire paying 1
+  blood) carry a flat `poolDmg`. [the card chain's egress review, pass 1] · latent (no deck) · a count and a condition the
+  pool-damage finder reads, or the mode skipped.
+
 ## 8. Requirements, conditions and gates
 A requirement or a condition the text prints and a finder does not ask (the five playability layers' second and third, HARNESS), or
 a legal play the bot refuses.
@@ -299,7 +304,8 @@ A key the compiler writes and a reader reads in another shape, or a sentence sha
 - **9.13 A bleed card's stealth or bleed outside the mode it plays** — Cat Burglary ("+1 stealth action. [cel] Ⓓ Bleed", KRCG), Concordance,
   Greater Curse, Soul Decoration, Songs of the Distant Vitae, The Eternal Mask and Undue Influence print the action's stealth on the
   header: `_bestBleedCardFor` books the played mode's `actStealth` (or `stealth`) only, where `_cardActStealth` (the rush, the attach,
-  the employ) reads the level-free header too, so the bleed is announced at 0 stealth. A level's stealth or bleed in a mode of its
+  the employ) reads the level-free header too, so the bleed is announced at 0 stealth (the bench plays it: The Eternal Mask [ser]
+  bleeds for 2 at a counter of 0); Fleetness ("+1 stealth action. [cel] Ⓓ Bleed") likewise, whose [CEL] rush books it. A level's stealth or bleed in a mode of its
   own beside the bleed (Brutal Influence [POT], Dream World [PRE], Entrancement [PRE], Gremlins [myt], Illegalism [chi] and [pre],
   Rayzeel's Song [VAL], Smash and Grab [ani] and [pot], Spirit Marionette [OBE], The Ailing Spirit [OBE], Steely Tenacity [qui], The
   Platinum Protocol [obf] and [pre], Break the Bonds [ani], Keystone Kine [nec]) is never played by the bleed finder: an add-on to the
@@ -308,6 +314,11 @@ A key the compiler writes and a reader reads in another shape, or a sentence sha
   Clio's Kiss, Edge Vitiation, Precision, Harmony and Rise of the Fallen carry a header `actStealth`). [the card chain's reader gate]
   · reachable (Entrancement: ravnos, pathcathari, ministry; The Platinum Protocol: ministry; Break the Bonds: ravnos) / latent (the
   rest) · the bleed and pool-damage finders book `_cardActStealth(e, mo)`.
+
+- **9.14 Two shapes the card chain's review saw** — Rise of the Fallen's `poolDmg: 1` reads as a pool-damage action, where the text puts
+  the card in play with a trigger ("Your prey burns 1 pool after resolution of each action during which you have burned corruption
+  counters", KRCG); Power of One carries `limited` on the entry, though its [pot] "+1 bleed ... does not count against the limit".
+  [the card chain's egress review, pass 1] · latent (no deck) · the trigger a key of its own; `limited` on the modes that print it.
 
 ## 10. Unbuilt modes, targets and riders
 A printed mode, target or rider the bots do not play on their own cards, or do not read when they meet it.
@@ -379,8 +390,7 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   · missed (Vessel; v0.6.241's 240: 366 of the 570 Vessels placed came after another seat had placed a Blood Doll in the same
   match, 156 matches; no bot burns one) / reachable (ventrue ×1: Anarch Troublemaker, against tremere's equipment) · the burn of
   an opponent's Blood Doll when Vessel is played; the equipment burn as the giver's choice when it is worth more than two locks.
-- **10.17 Bonding [DOM] spent for its stealth** (and the same mode on Confusion [DEM], "+1 stealth and +1 bleed (limited)", Fata Morgana
-  [CHI], Power of One [pre], Revelation of the Serpent, Subversion [CEL] and [PRE], Virtuosa [mel]: the card chain's reader gate) —
+- **10.17 Bonding [DOM] spent for its stealth** (and Confusion [DEM], the same mode: the card chain's reader gate) —
   "+1 stealth and +1 bleed (limited)" (KRCG): `_spendStealthCard` adds the stealth
   only, never the +1 bleed, and takes no limited slot, so Conditioning (limited) can follow in the same action ("one limited action
   modifier may increase the bleed amount per action", the advanced rules 3.7.1). [the exactness round's egress review, pass 2]
@@ -412,6 +422,12 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
 - **10.22 Punish [COMBAT]** — the entry models the [ACTION] half (a +1 stealth action); "As [ACTION] above, but put this card on the
   opposing vampire as a hand strike" is a combat use the entry's mode does not split out. [C1's readers] · latent (no deck).
 
+- **10.25 A modifier's "or" option** — Fata Morgana [CHI], Power of One [pre], Revelation of the Serpent, Subversion [CEL] and [PRE] print
+  "+1 bleed (limited), or +1 stealth and +1 bleed (limited)" (KRCG), Virtuosa [mel] "+1 stealth and +2 bleed (limited), or +2 bleed
+  (limited)": our entries carry only the combined mode, `_bestBleedModifierFor` skips a mode with stealth, so the plain bleed is never
+  played after the block window (Subversion and Virtuosa have no other bleed mode) and the combined one adds no bleed (10.17). [the card
+  chain's egress review, pass 1] · reachable (Revelation of the Serpent: ministry; Subversion: pathcathari) / latent (the rest) · a
+  second, stealth-free mode for the option, and 10.17's fix for the combined one.
 - **10.23 Family values no reader takes on a card in play, an ally or a reaction** — Blessings of the Loa's bleed (a master),
   Cãoera's (an ally: allies do not act in the bot), Charigger, The Axe's and Shaman's (a retainer's bleed and stealth for its bearer;
   `_equipIntercept` reads a retainer's intercept only), Melange [AUS]'s bleed (a reaction). [the card chain's reader gate] · latent

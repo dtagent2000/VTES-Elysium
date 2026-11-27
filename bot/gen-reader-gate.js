@@ -51,12 +51,14 @@ const has = (e, ...ts) => T(e).some(t => ts.includes(t));
    must contain (the source check); take(e, mo) is the shape, mirrored from the method (its type filter, its mode filter). */
 const READERS = {
   stealth: [
-    { fn: '_bestStealthFor', reads: ['mod'], take: (e, mo) => has(e, 'mod') && typeof mo.fx.stealth === 'number',
-      why: 'a hand action modifier (type-filtered to mod)' }],
+    { fn: '_bestStealthFor', reads: ['mod', '_modeStealth'], take: (e, mo) => has(e, 'mod') && typeof mo.fx.stealth === 'number',
+      why: 'a hand action modifier (type-filtered to mod)' },
+    { fn: '_modeStealth', reads: ['stealth'], take: (e, mo) => has(e, 'mod') && typeof mo.fx.stealth === 'number', why: 'its stealth value' }],
   actStealth: [
     { fn: '_bestBleedCardFor', reads: ['actStealth', 'bleedAct'], take: (e, mo) => has(e, 'action') && !!mo.fx.bleedAct,
       why: 'a bleed action card: the announce books it' },
-    { fn: '_cardActStealth', reads: ['actStealth'], take: (e, mo) => has(e, 'action') && !mo.fx.bleedAct && (e.modes || []).some(m2 => { const v = COV.modeConsumed(m2, e); return v && v.ok && /^actStealth@|^rush$|^attach|^employ|^maneuverEach$/.test(v.via || ''); }),
+    { fn: '_cardActStealth', reads: ['actStealth'], take: (e, mo) => has(e, 'action') && !mo.fx.bleedAct && !(!mo.at && (e.modes || []).some(m2 => m2.fx && m2.fx.bleedAct))   // a header on a card with a bleed mode is unread: _bestBleedCardFor announces the bleed without it (Fleetness, 9.13)
+        && (e.modes || []).some(m2 => { const v = COV.modeConsumed(m2, e); return v && v.ok && /^actStealth@|^rush$|^attach|^employ|^maneuverEach$/.test(v.via || ''); }),
       why: 'a card action whose finder books the header (the rush, the attach, the employ: the coverage tool\'s pairing)' },
     { fn: '_bestBloodStockFor', reads: ['actStealth', 'bloodAdd'], take: (e, mo) => has(e, 'action') && mo.fx.bloodAdd > 0 && mo.fx.bloodAddTo === 'unc',
       why: 'the blood stock action' },
@@ -202,8 +204,8 @@ function runGate(ex, lib, pairing, opts){
 function load(){
   const ex = JSON.parse(fs.readFileSync(here('cardfx-exact.json'), 'utf8'));
   const pairing = JSON.parse(fs.readFileSync(here('cross-check-pairing.json'), 'utf8'));
-  let regIds = null; try { regIds = require(here('gen-card-ledger.js')).registerEntries(fs.readFileSync(here('docs/SWEEP-REGISTER.md'), 'utf8')); } catch(e){ regIds = null; }
-  return { ex, pairing, lib: COV.fx.lib, regIds };
+  let regIds = null, regErr = null; try { regIds = require(here('gen-card-ledger.js')).registerEntries(fs.readFileSync(here('docs/SWEEP-REGISTER.md'), 'utf8')); } catch(e){ regErr = 'the register could not be read (' + e.message + '): no listed id is checked'; }
+  return { ex, pairing, lib: COV.fx.lib, regIds, regErr };
 }
 
 function selfTest(){
@@ -241,9 +243,9 @@ function main(){
   const a = process.argv.slice(2), arg = k => { const i = a.indexOf(k); return i >= 0 ? a[i + 1] : null; };
   if(a.includes('--self-test')) process.exit(selfTest() ? 1 : 0);
   const sp = sourceProblems(READERS, PLUSIF_CALLERS, BODIES);
-  const { ex, pairing, lib, regIds } = load();
+  const { ex, pairing, lib, regIds, regErr } = load();
   const r = runGate(ex, lib, pairing, { registerIds: regIds });
-  r.problems.unshift(...sp);
+  r.problems.unshift(...sp); if(regErr) r.problems.push(regErr);
   if(arg('--json')) fs.writeFileSync(arg('--json'), JSON.stringify(Object.assign({ tool: 'gen-reader-gate ' + GATE_VERSION, bot: require(here('elysium-bot.js')).BOT_VERSION }, r), null, 1) + '\n');
   if(a.includes('--list')) r.unread.forEach(x => console.log((x.id ? 'listed ' + x.id : 'NEW    ') + ' | ' + x.card + ' | ' + x.fam + ' ' + x.lvl + ' (' + x.st + ', ' + x.type + (x.played ? ', played' : '') + ') | ' + x.unreadVals.join('; ')));
   r.newGaps.forEach(x => console.log('FAIL half-done: ' + x.card + ' ' + x.fam + ' ' + x.lvl + ' (' + x.st + ') -- ' + x.unreadVals.join('; ') + ' -- build its reader, or register the gap and list it in cardfx-exact.json gaps.reader'));

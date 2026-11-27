@@ -69,8 +69,8 @@ of other projects.
    commit in the PR, listed in its body. A fix to the round's own change goes back to step 3 and a new review pass.
 10. **The merge, on the owner's yes** (D-146): the round's last question card asks to merge, naming what merges and in which order
    (the data repo's words PR first, then the main PR). No merge without that yes, never with a red CI or an open review finding. On
-   the yes: the data repo's PR merged (`gh api -X PUT repos/<owner>/<data repo>/pulls/<n>/merge`), then the main PR's auto-merge,
-   which merges it when `bot-gates` is green (`gh api -X PUT repos/<owner>/<repo>/pulls/<n>/ccr/auto_merge`); the branch goes on merge.
+   the yes: `gh api -X PUT repos/<owner>/<repo>/pulls/<n>/merge` for the data repo's PR, then the main PR's once `bot-gates` is green
+   (an auto-merge route the session offers is used only once proven); the branch goes on merge.
 
 **Unsure items** get a verdict when they show up (D-141 (2)): **checked now**, **carried** to claude/HANDOFF.md's "Check first"
 with what would settle it, or **dropped** with one line on why; the PR's "anything I'm unsure about" shows all three.
