@@ -21,7 +21,7 @@ The entries of 9 Sep – 27 Nov 2026 (bot v0.1 to v0.6.243 and the rounds withou
   row listed), all three in `tools/gates.sh` and CI; the readers' data file (readers v1) with C1's side notes read (15 hold: 9.12,
   10.24) and the agreeing rows' sample drawn for C1b; new register entries 7.7, 7.8, 9.13, 9.14, 10.23, 10.25. D-146: Claude
   merges on the owner's yes. The ceiling 187 KB. STATUS Next 1.
-  *Gates:* `tools/gates.sh` on `card-chain` `27c5f5d` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 18 · FAIL 0 · SKIPPED 0. CI's suite ×3: not read.
+  *Gates:* `tools/gates.sh` on `card-chain` `27c5f5d` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 18 · FAIL 0 · SKIPPED 0. CI's suite 2841/0 ×3, `bot-gates` success on `2e8abaa`.
   *Egress:* 10 findings (stale-doc 6, test-weakened 2, half-done 1, unproven 1) in 3 passes (Fable 7, Fable 3, Fable clean), 10 fixed, 0 listed
   *Report:* `reports/REPORT-card-chain-2026-11-27.md`.
 

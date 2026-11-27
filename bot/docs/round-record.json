@@ -134,5 +134,14 @@
   "NOT RUN": 0
  },
  "seconds": 38,
+ "ci": {
+  "head": "2e8abaa",
+  "runs": [
+   "2841/0",
+   "2841/0",
+   "2841/0"
+  ],
+  "gates": "success"
+ },
  "egress": "10 findings (stale-doc 6, test-weakened 2, half-done 1, unproven 1) in 3 passes (Fable 7, Fable 3, Fable clean), 10 fixed, 0 listed"
 }
