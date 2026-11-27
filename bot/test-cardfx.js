@@ -1663,6 +1663,42 @@ ok(fx.counts.libLock >= 140,
     bad.gaps = { reader: { 'Abbot': { intercept: '99.98' }, 'Zip Line': { bleed: '7.6' } } };
     ok(exProblems(bad, regE2, has).length === 5, 'planted: an open gap naming no register entry, an unknown state, an unknown card, a known gap naming no register entry and a known gap on no row of the record are each reported');
   }
+  /* the readers' data files (docs/reports/readers-*.json, format readers v1; RULINGS D-147): the form, the dispositions' register entries,
+     and every sample re-derived from its seed (a sample is drawn, never picked) */
+  const drawSample = (X, fam, exclude, n, seed) => { const rows = [];
+    for (const card of Object.keys(X.cards).sort()) { if (exclude.includes(card)) continue; const v = X.cards[card][fam]; if (v == null) continue;
+      for (const [lvl, st] of Object.entries(typeof v === 'string' ? { all: v } : v).sort()) if (String(st) === 'agree') rows.push({ card, fam, lvl }); }
+    let z = seed >>> 0 || 1; const rnd = () => { z ^= z << 13; z >>>= 0; z ^= z >>> 17; z ^= z << 5; z >>>= 0; return z / 4294967296; };
+    const pool = rows.slice(), out = []; while (out.length < n && pool.length) { const i = Math.floor(rnd() * pool.length); out.push(pool.splice(i, 1)[0]); }
+    return out; };
+  const VERD = new Set(['agree', 'ours-wrong', 'theirs-wrong', 'modelled-differently', 'unsure']);
+  const readersProblems = (D, X, regE, has) => { const P = [];
+    if (!D || D.format !== 'readers v1') return ['the format is not readers v1'];
+    const ids = new Set((D.batches || []).map(b => b.id));
+    for (const v of D.verdicts || []) { const w = v.card + ' (' + v.batch + ')';
+      if (!ids.has(v.batch)) P.push(w + ': no such batch');
+      if (!has(v.card)) P.push(w + ': no library entry');
+      if (!VERD.has(v.verdict)) P.push(w + ': verdict ' + v.verdict);
+      const m = /^(registered: SWEEP-REGISTER (\S+)|corrected: .+|dropped: .+)$/.exec(String(v.lead || ''));
+      if (!m) P.push(w + ': the lead\'s disposition is missing or malformed');
+      else if (m[2] && !regE.has(m[2])) P.push(w + ': ' + m[2] + ' is no register entry'); }
+    for (const sm of D.samples || []) { const fams = Object.keys(sm.strata || {}), ex = (sm.exclude && sm.exclude.cards) || [];
+      const again = [].concat(...fams.map((f, i) => drawSample(X, f, ex, sm.strata[f], (sm.seed | 0) + i)));
+      if (JSON.stringify(again) !== JSON.stringify(sm.rows)) P.push('sample ' + sm.id + ': its rows are not the draw of its seed');
+      if (sm.read != null && !(Array.isArray(sm.read) && sm.read.length === (sm.rows || []).length)) P.push('sample ' + sm.id + ': read holds no verdict per row');
+      if (!sm.prediction) P.push('sample ' + sm.id + ': no prediction registered'); }
+    return P; };
+  if (ex && regT2) {
+    const regE3 = require('./gen-card-ledger.js').registerEntries(regT2), has3 = n => Object.prototype.hasOwnProperty.call(fx.lib, n);
+    const rdir = path.join(__dirname, 'docs', 'reports'), rfiles = fs.readdirSync(rdir).filter(f => /^readers-.+\.json$/.test(f));
+    const RP = []; let nv = 0, ns = 0;
+    for (const f of rfiles) { let D = null; try { D = JSON.parse(fs.readFileSync(path.join(rdir, f), 'utf8')); } catch (e) { RP.push(f + ': ' + e.message); continue; }
+      nv += (D.verdicts || []).length; ns += (D.samples || []).length; readersProblems(D, ex, regE3, has3).forEach(q => RP.push(f + ': ' + q)); }
+    ok(rfiles.length >= 1 && RP.length === 0, 'the readers\' data files: ' + rfiles.length + ' file(s), ' + nv + ' verdicts, ' + ns + ' sample(s); every disposition a register entry, every sample the draw of its seed' + (RP.length ? ': ' + RP.slice(0, 4).join('; ') : ''));
+    const D0 = JSON.parse(fs.readFileSync(path.join(rdir, rfiles[0]), 'utf8')), B0 = JSON.parse(JSON.stringify(D0));
+    B0.verdicts[0].verdict = 'maybe'; B0.verdicts[1].lead = 'registered: SWEEP-REGISTER 99.97'; if (B0.samples[0]) B0.samples[0].rows[0] = { card: 'Abbot', fam: 'stealth', lvl: 'all' };
+    ok(readersProblems(B0, ex, regE3, has3).length === 3, 'planted: an unknown verdict, a disposition naming no register entry and a hand-picked sample row are each reported');
+  }
   const IFK = new Set(['selfClan', 'selfTitled', 'unread']), badIf = [];
   for (const n in fx.lib) for (const m of fx.lib[n].modes || []) if (m.fx && m.fx.plusIf){ const pi = m.fx.plusIf;
     if (!pi.add || typeof pi.add !== 'object' || !Object.keys(pi.add).length || !pi.if || !Object.keys(pi.if).length || Object.keys(pi.if).some(k => !IFK.has(k)) || (pi.if.unread !== undefined && !(typeof pi.if.unread === 'string' && pi.if.unread.length > 8))) badIf.push(n); }
