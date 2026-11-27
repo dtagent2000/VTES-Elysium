@@ -52,8 +52,9 @@ const strip = h => String(h == null ? '' : h).replace(/<[^>]*>/g, '').replace(/&
 const SAY = () => bot().SAY || [];
 
 /* A vampire for a seat: the crypt entries of cardfx, filtered by what a card asks. want = { disc: 'obf' (inferior or better) | 'OBF'
-   (superior), exact: true (the level and no higher: a mode at inferior is tested on a vampire without the superior), clan, sect, titled,
-   notName: [names] }. The first match in name order (a stable pick); null when none fits. */
+   (superior), exact: true (the level and no higher: a mode at inferior is tested on a vampire without the superior), clan (or a list:
+   any of them), sect, titled, titles: [the printed titles, any of them], minCap, without: [disciplines it must not have], noText (no crypt text the bot
+   reads), notName: [names] }. The first match in name order (a stable pick); null when none fits. */
 function pickVampire(want){
   const cr = fxData().crypt || {}, w = want || {}, not = new Set(w.notName || []);
   const lvls = String(w.disc || '').split('+').filter(Boolean);
@@ -64,9 +65,11 @@ function pickVampire(want){
     if(!lvls.every(t => { const lo = t.toLowerCase(), sup = t !== lo;
       if(sup) return (d.sup || []).includes(lo);
       return (d.all || []).includes(lo) && !(w.exact && (d.sup || []).includes(lo)); })) continue;
-    if(w.clan && !String(e.clan || '').split('/').includes(w.clan)) continue;
+    if(w.without && w.without.some(x => (d.all || []).includes(String(x).toLowerCase()))) continue;   // none of these disciplines at any level
+    if(w.clan && ![].concat(w.clan).some(c => String(e.clan || '').split('/').includes(c))) continue;   // a clan, or any of a list
     if(w.sect && e.sect !== w.sect) continue;
     if(w.titled === true && !e.title) continue;
+    if(w.titles && !w.titles.some(t => { const a = String(e.title || '').toLowerCase(), b = String(t).toLowerCase(); return !!a && (a === b || (b === 'inner circle member' && a === 'inner circle')); })) continue;
     if(w.titled === false && e.title) continue;
     if(w.minCap && !((e.cap | 0) >= w.minCap)) continue;
     if(w.noText && e.fx && Object.keys(e.fx).length) continue;   // a vampire whose own text the bot reads (crypt fx) would add to the counts
@@ -136,6 +139,8 @@ async function runWindow(spec){
 
 /* A window's reading helpers, for the tests built on the table. */
 const linesOf = (r, seat, re) => r.lines.filter(l => (!seat || l.seat === seat) && (!re || re.test(l.txt)));
+const bloodAt = (r, seat, name, ms) => { const w = r.wire.find(x => x.seat === seat && x.ms >= ms && x.m.t === 'board' && x.m.pub && (x.m.pub.cards || []).some(c => c && c.name === name));   // the seat's first board push at or after ms: a cost paid shows there, before any combat
+  const c = w && w.m.pub.cards.find(c => c && c.name === name); return c ? (c.blood | 0) : null; };   // a pub card at 0 blood carries none
 const tallyOf = (r, seat, mode) => r.tallies.filter(t => (!seat || t.seat === seat) && (!mode || t.mode === mode));
 
 /* ---------------- the table's own rules (--self-test) ----------------
@@ -197,7 +202,7 @@ async function selfTest(){
   return fail;
 }
 
-module.exports = { runWindow, pickVampire, linesOf, tallyOf, install, useBot, strip, SELF, selfTest, ABSTRACT_VERSION };
+module.exports = { runWindow, pickVampire, linesOf, tallyOf, bloodAt, install, useBot, strip, SELF, selfTest, ABSTRACT_VERSION };
 if(require.main === module){
   const a = process.argv.slice(2), bi = a.indexOf('--bot');
   if(bi >= 0 && a[bi + 1]) useBot(a[bi + 1]);
