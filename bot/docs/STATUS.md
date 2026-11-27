@@ -9,8 +9,8 @@
 <!-- /round.py:deploy -->
 
 <!-- round.py:gates -->
-## Last gates
-(generated from `docs/round-record.json` at the round's save)
+## Last gates (`docs/round-record.json`)
+`tools/gates.sh` on `docs-diet` `2320b70` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 14 · FAIL 2 · SKIPPED 0 — check 35 of 35 scripts parse · lint clean · canary 235/0 · canary-root 235/0 · cardfx 516/0 · precon 18 precons, no problems · ledger-self 81/0 · sheet-self 23/0 · cross-self 19/0 · ana-gates-self 35/0 · hb1 11/0 (0 skip) · doc-budget FAIL · public-scan-self 35/0 · round-self 17/0 · public-scan 0 hits in 0 files · test-doc-budget FAIL. CI's suite ×3: not read.
 <!-- /round.py:gates -->
 
 ## Next (the owner's order of 26–27 Nov: D-144, D-145)

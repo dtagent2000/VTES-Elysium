@@ -117,7 +117,12 @@ def _totals(rec):
 
 
 def _row(g):
-    return '%s %s%s' % (g['gate'], '' if g['result'] == 'PASS' else g['result'] + ' ', g['count'])
+    """'gate [RESULT] count', the count without its tool's own name ('lint: clean' -> 'lint clean') or a repeat of the result."""
+    c = str(g.get('count', ''))
+    if c.lower().startswith(g['gate'].lower()):
+        c = c[len(g['gate']):].lstrip(': ').strip()
+    res = '' if g['result'] == 'PASS' else g['result']
+    return ' '.join(x for x in (g['gate'], res, '' if c == res else c) if x)
 
 
 def _ci(rec):
@@ -420,15 +425,18 @@ def self_test():
         out = os.path.join(tmp, 'out')
         os.makedirs(out)
         write(os.path.join(out, '.rows.tsv'), 'check\tPASS\t35 of 35 scripts parse\t1\nsim-240\tPASS\tSAME-PLAY 240\t300\n'
-                                               'v5-smokes\tFAIL\t13 of 14 smokes PASS\t90\n')
+                                               'v5-smokes\tFAIL\t13 of 14 smokes PASS\t90\nlint\tPASS\tlint: clean\t5\n'
+                                               'doc-budget\tFAIL\tdoc-budget: FAIL\t1\n')
         rec = build_record(out, {'branch': 'topic', 'head': 'abc1234', 'dirty': '0', 'base': 'origin/main', 'merge_base': 'def5678',
                                  'seconds': '400', 'flags': 'sim smokes', 'changed': '3', 'changed_bot': '3', 'date': '2026-01-02'}, P)
-        ok(rec['totals'] == {'PASS': 2, 'FAIL': 1, 'SKIPPED': 0, 'NOT RUN': 0}, 'the totals count the rows')
+        ok(rec['totals'] == {'PASS': 3, 'FAIL': 2, 'SKIPPED': 0, 'NOT RUN': 0}, 'the totals count the rows')
+        ok(_row(rec['gates'][3]) == 'lint clean' and _row(rec['gates'][4]) == 'doc-budget FAIL',
+           "a row drops its tool's own name and a repeated result")
         ok(rec['bytes']['elysium-bot.js'] != '?' and rec['bytes']['test-bot-logic.js'] == '?', 'the bytes: a file present, a file missing')
         write(os.path.join(out, 'record.json'), json.dumps(rec))
         line = render_line(rec)
-        ok('PASS 2 · FAIL 1 · SKIPPED 0' in line and 'sim-240 SAME-PLAY 240' in line and 'v5-smokes FAIL 13 of 14' in line
-           and 'check' not in line.split(':', 1)[1].split('.')[0], 'the gate line: totals, the footprint, the failed row, no passed row')
+        ok('PASS 3 · FAIL 2 · SKIPPED 0' in line and 'sim-240 SAME-PLAY 240' in line and 'v5-smokes FAIL 13 of 14' in line
+           and 'check' not in line and 'lint' not in line, 'the gate line: totals, the footprint, the failed rows, no passed row')
         ok('--sim --smokes' in line and '2 Jan' in line, 'the gate line: the flags and the date')
         status_t = '# STATUS\n\n<!-- round.py:versions -->\nx\n<!-- /round.py:versions -->\n\n<!-- round.py:deploy -->\nx\n' \
                    '<!-- /round.py:deploy -->\n\n<!-- round.py:gates -->\nold\n<!-- /round.py:gates -->\n\n## Next\nhand\n'
@@ -448,7 +456,7 @@ def self_test():
         ok('**Bot v9.8.7**' in st and '#1 `topic` (draft)' in st and 'hand' in st, 'status: versions, deploy and the hand part')
         ok("CI's suite 2841/0 ×3, `bot-gates` success" in read(P.changelog), 'save: CI read into the gate line')
         # drift: STATUS's block edited by hand
-        write(P.status, st.replace('PASS 2 · FAIL 1', 'PASS 3 · FAIL 0'))
+        write(P.status, st.replace('PASS 3 · FAIL 2', 'PASS 5 · FAIL 0'))
         ok(any(not o and 'differs' in m for o, m in check(P)), 'check: a hand-edited STATUS block fails')
         write(P.status, st)
         # drift: the entry's gate line edited by hand

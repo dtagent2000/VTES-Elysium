@@ -1,0 +1,125 @@
+{
+ "schema": 1,
+ "tool": "tools/gates.sh",
+ "date": "2026-11-27",
+ "branch": "docs-diet",
+ "head": "2320b70",
+ "dirty": false,
+ "base": "origin/main",
+ "merge_base": "77c5ded",
+ "flags": [],
+ "changed": {
+  "all": 33,
+  "bot": 31
+ },
+ "bytes": {
+  "elysium-bot.js": "14d48ac8",
+  "test-bot-logic.js": "bae2970e",
+  "elysium-cardfx.json": "c4b9545e"
+ },
+ "gates": [
+  {
+   "gate": "check",
+   "result": "PASS",
+   "count": "35 of 35 scripts parse",
+   "seconds": 2
+  },
+  {
+   "gate": "lint",
+   "result": "PASS",
+   "count": "lint: clean",
+   "seconds": 6
+  },
+  {
+   "gate": "canary",
+   "result": "PASS",
+   "count": "235/0",
+   "seconds": 2
+  },
+  {
+   "gate": "canary-root",
+   "result": "PASS",
+   "count": "235/0",
+   "seconds": 2
+  },
+  {
+   "gate": "cardfx",
+   "result": "PASS",
+   "count": "516/0",
+   "seconds": 3
+  },
+  {
+   "gate": "precon",
+   "result": "PASS",
+   "count": "18 precons, no problems",
+   "seconds": 0
+  },
+  {
+   "gate": "ledger-self",
+   "result": "PASS",
+   "count": "81/0",
+   "seconds": 0
+  },
+  {
+   "gate": "sheet-self",
+   "result": "PASS",
+   "count": "23/0",
+   "seconds": 0
+  },
+  {
+   "gate": "cross-self",
+   "result": "PASS",
+   "count": "19/0",
+   "seconds": 0
+  },
+  {
+   "gate": "ana-gates-self",
+   "result": "PASS",
+   "count": "35/0",
+   "seconds": 0
+  },
+  {
+   "gate": "hb1",
+   "result": "PASS",
+   "count": "11/0 (0 skip)",
+   "seconds": 1
+  },
+  {
+   "gate": "doc-budget",
+   "result": "FAIL",
+   "count": "doc-budget: FAIL",
+   "seconds": 1
+  },
+  {
+   "gate": "public-scan-self",
+   "result": "PASS",
+   "count": "35/0",
+   "seconds": 0
+  },
+  {
+   "gate": "round-self",
+   "result": "PASS",
+   "count": "17/0",
+   "seconds": 0
+  },
+  {
+   "gate": "public-scan",
+   "result": "PASS",
+   "count": "0 hits in 0 files",
+   "seconds": 1
+  },
+  {
+   "gate": "test-doc-budget",
+   "result": "FAIL",
+   "count": "test-doc-budget: FAIL",
+   "seconds": 10
+  }
+ ],
+ "totals": {
+  "PASS": 14,
+  "FAIL": 2,
+  "SKIPPED": 0,
+  "NOT RUN": 0
+ },
+ "seconds": 31
+}
