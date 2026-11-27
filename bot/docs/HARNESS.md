@@ -1,4 +1,4 @@
-# HARNESS — the roles, the round, the reviews, the measurements, the release ritual (D-139, D-140, D-142, D-145)
+# HARNESS — the roles, the round, the reviews, the measurements, the release ritual (D-139, D-140, D-142, D-145, D-146)
 
 ## Roles and tools (D-131, D-139, D-140)
 | who | does | model |
@@ -12,7 +12,8 @@
 Scripts: `tools/setup.sh` (KRCG's data, zero-vtes at its pin), `tools/gates.sh` (the local gates, `--sim` the footprint,
 `--smokes` the V5 smokes; the PR's table and the round record), `tools/round.py` (the round record's copies and their check),
 `tools/release.sh` (the ritual's mechanics), `tools/ci-status.sh` (CI's checks and each suite run's count and sha256),
-`tools/public-scan.py` (the name and quote scan, D-141). An agent costs more of the owner's usage than the lead's own work: use
+`tools/public-scan.py` (the name and quote scan, D-141); the card chain's (D-147): `elysium-bot-abstract.js` (the abstract table:
+a state built directly, the real bots), `gen-reader-gate.js`, `test-card-scenarios.js`. An agent costs more of the owner's usage than the lead's own work: use
 one where it keeps a big read out of the lead's context or where independent eyes are the point (the review).
 
 ## One place for each fact (D-142, D-145)
@@ -61,12 +62,15 @@ of other projects.
    (it reads CI on HEAD and keeps the egress line and the run's note), commit and push again.
 8. **PR against `main`**: at the top what the round needs from the owner, then what changed and why in a few lines, the gate
    section (`python3 tools/round.py render pr DIR`), the sim footprint when it ran, and "anything I'm unsure about". CI must be
-   green before the owner merges (a flake, or a red the PR did not cause: re-run once and say so, HOWTO "CI").
+   green before the merge (a flake, or a red the PR did not cause: re-run once and say so, HOWTO "CI").
 9. **A match, in a round with a bot change** (D-140): before the merge, ask the owner whether to play a real match in the human seat
    (main's rig, `client/playtest/`); it finds what the 240 cannot. Its report goes to `docs/reports/`, its bugs to the register or
    BOARD, its questions for the owner to RULINGS, what it teaches about play to `.claude/skills/bot-play-notes/SKILL.md`: a docs
    commit in the PR, listed in its body. A fix to the round's own change goes back to step 3 and a new review pass.
-10. The owner merges and deletes the branch.
+10. **The merge, on the owner's yes** (D-146): the round's last question card asks to merge, naming what merges and in which order
+   (the data repo's words PR first, then the main PR). No merge without that yes, never with a red CI or an open review finding. On
+   the yes: `gh api -X PUT repos/<owner>/<repo>/pulls/<n>/merge` for the data repo's PR, then the main PR's once `bot-gates` is green
+   (an auto-merge route the session offers is used only once proven); the branch goes on merge.
 
 **Unsure items** get a verdict when they show up (D-141 (2)): **checked now**, **carried** to claude/HANDOFF.md's "Check first"
 with what would settle it, or **dropped** with one line on why; the PR's "anything I'm unsure about" shows all three.

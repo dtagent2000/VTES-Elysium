@@ -14,6 +14,17 @@ The two pending lines are `tools/round.py save`'s to render, from `docs/round-re
 The entries of 9 Sep – 27 Nov 2026 (bot v0.1 to v0.6.243 and the rounds without a release to C1) are frozen in
 `history/elysium-bot-CHANGELOG-to-v0.6.243.md`.
 
+- **The card chain (27 Nov 2026, bot v0.6.243, no bot change; PR #120)** — D-147, each the recommended option on the owner's
+  card, after his yes to the proposal: the abstract table's first layer (`elysium-bot-abstract.js`: a state built directly, real
+  bots on the client's bridge, the virtual clock; its own rules rulebook-cited), the reader gate (`gen-reader-gate.js`: 360 gated
+  rows, 92 unread, listed by register entry) and the scenario bench (`test-card-scenarios.js`: 297 scenarios in four windows, one
+  row listed), all three in `tools/gates.sh` and CI; the readers' data file (readers v1) with C1's side notes read (15 hold: 9.12,
+  10.24) and the agreeing rows' sample drawn for C1b; new register entries 7.7, 7.8, 9.13, 9.14, 10.23, 10.25. D-146: Claude
+  merges on the owner's yes. The ceiling 187 KB. STATUS Next 1.
+  *Gates:* `tools/gates.sh` on `card-chain` `27c5f5d` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 18 · FAIL 0 · SKIPPED 0. CI's suite 2841/0 ×3, `bot-gates` success on `2e8abaa`.
+  *Egress:* 10 findings (stale-doc 6, test-weakened 2, half-done 1, unproven 1) in 3 passes (Fable 7, Fable 3, Fable clean), 10 fixed, 0 listed
+  *Report:* `reports/REPORT-card-chain-2026-11-27.md`.
+
 - **The documentation diet (27 Nov 2026, bot v0.6.243, no bot change; PR #119)** — D-145: the owner's go-ahead on Claude's six
   steps after C1, and the recommended options on the round's card. A round's figures are written once, in the round record
   (`tools/gates.sh` writes it; `tools/round.py` saves it, renders STATUS's gates block, this entry's two lines and the PR's

@@ -1,4 +1,4 @@
-# BOARD — the open asks (27 Nov 2026). A line is deleted when done; found work is added as a line (a card
+# BOARD — the open asks (27 Nov 2026, the card chain). A line is deleted when done; found work is added as a line (a card
 problem the sweep finds: an entry in `SWEEP-REGISTER.md`, D-135).
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. The owner orders the board; a round takes one line
@@ -15,9 +15,9 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
 - **The prey's wakes as blockers** (65f): the probe lab lost on five tables of 91 where a prey with one body and a wake blocked
   the prober and woke for the punch. *Done when* `probeHold`'s out-number reads unlocked bodies + expected wakes (deck read +
   hypergeometric), measured in `lab-probe.js`. Docs: RULINGS O-7; `specs/spec-knowledge-layer.md`.
-- **The abstract model spec**: the first of the four checks (fast rollouts over card-class distributions, probabilities not
-  decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and the owner has given the go-ahead.
-  Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
+- **The abstract table's later layers** (D-147; layer 1, the scenarios, is built): random games from generated states (which cards
+  reach play, in which windows), then the probabilities over card classes (D-83's model), calibrated against the sim before any
+  consumer. *Done when* their spec is in `specs/` and the owner has given the go-ahead. Docs: RULINGS D-83, D-147, O-32.
 - **The V5 sweep** (D-125, D-130, D-132: exactness first; `specs/spec-card-sweep-2026-11-18.md` §11): every printed effect first
   asked who else in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. C goes
   concentrated (§11.8): C1 is built (D-144); next C1b (below), the bots' first readers of a human's play (rounds of their own,
@@ -62,7 +62,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
   Precognition and Spirit's Touch [AUS], 13.10 a host's income picked with no host) wait in their classes until their class's
   round.
 - **The fidelity pass** (D-138): `cardfx-fidelity.json` and CARDS.md's `text-checked` / `exact` per deck; the five base starters
-  were read in v0.6.241. Next the other 13 V5 decks' flagged cards (C1b, D-144 (1)), with the family's second pass (§11.7). *Done when* every
+  were read in v0.6.241. Next the other 13 V5 decks' flagged cards (C1b, D-144 (1)), with the family's second pass (§11.7), the
+  agreeing rows' sample and the gaps the reader gate and the bench list (D-147: `cardfx-exact.json` `gaps`). *Done when* every
   deck's text-checked is N/N and each gap it finds is in the register.
 - **1. Retainers: version and holder** (R-47): next; its design question first (where another seat's retainer's version comes from).
 - **2. `aggr` misreads.**

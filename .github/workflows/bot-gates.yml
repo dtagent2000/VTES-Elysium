@@ -146,6 +146,15 @@ jobs:
       - name: The cross-check's self-test (gen-cross-check --self-test; invented cards and effect names, no zero-vtes checkout)
         if: ${{ !cancelled() }}
         run: node gen-cross-check.js --self-test
+      - name: "The abstract table's own rules (elysium-bot-abstract.js --self-test: real bots on the client's bridge, the virtual clock; D-147)"
+        if: ${{ !cancelled() }}
+        run: node elysium-bot-abstract.js --self-test
+      - name: "The reader gate (gen-reader-gate.js: its self-test, then every gated row of cardfx-exact.json against the bot's readers; D-147)"
+        if: ${{ !cancelled() }}
+        run: node gen-reader-gate.js --self-test && node gen-reader-gate.js
+      - name: "The scenario bench (test-card-scenarios.js: its self-test, then the family card by card on the abstract table; D-147)"
+        if: ${{ !cancelled() }}
+        run: node test-card-scenarios.js --self-test && node test-card-scenarios.js
       - name: The TWDA reader's self-test (twda.py --self-test)
         if: ${{ !cancelled() }}
         run: python3 twda.py --self-test

@@ -99,6 +99,14 @@ g_lint(){ npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-loc
 g_canary_root(){ local d; d=$(mktemp -d); cp test-bot-canary.js elysium-bot.js elysium-cardfx.json "$d/" && cp "$R/elysium-vtes-bord.html" "$R/client/ELYSIUM-PROTOCOL.md" "$d/" && (cd "$d" && node test-bot-canary.js); local rc=$?; rm -rf "$d"; return $rc; }
 g_vtes(){ [ -s vtes.json ] || { echo "vtes.json missing: bash tools/setup.sh"; return 1; }; "$@"; }
 g_docs(){ bash tools/doc-budget.sh --base "$MB"; }
+g_selfrun(){   # g_selfrun TOOL PREFIX -- the tool's --self-test, then the tool itself; one RESULT line (D-147: the card chain's gates)
+  local tool=$1 pre=$2 st out rc
+  st=$(node "$tool" --self-test 2>&1 | tail -1); out=$(node "$tool" 2>&1); rc=$?
+  printf '%s\n' "$out"; printf '%s\n' "$st"
+  case "$st" in *": "*"/0") ;; *) rc=1 ;; esac
+  echo "RESULT: $(printf '%s\n' "$out" | tail -1 | sed -E "s/^$pre[^:]*: //; s/; (not gated|no window):.*//; s/ -- (PASS|FAIL)\$//") · self-test ${st##*: }"
+  return $rc
+}
 g_suite(){   # one frozen snapshot: bot/ copied, the root's client one level up (154f), the sha that ran beside the log
   local d="$OUT/snap-$1"; rm -rf "$d"; mkdir -p "$d/bot"; cp "$R/elysium-vtes-bord.html" "$d/"
   (tar --exclude='./serie-*' --exclude='./bench-*' -cf - .) | tar -xf - -C "$d/bot"
@@ -144,6 +152,9 @@ gate precon 0 g_vtes node gen-precon.js --check
 gate ledger-self 0 node gen-card-ledger.js --self-test
 gate sheet-self 1 node gen-review-sheet.js --self-test
 gate cross-self 0 node gen-cross-check.js --self-test
+gate table-self 0 node elysium-bot-abstract.js --self-test
+gate reader 0 g_selfrun gen-reader-gate.js 'reader gate'
+gate bench 0 g_selfrun test-card-scenarios.js 'scenario bench'
 gate ana-gates-self 0 python3 ana-gates.py --self-test
 gate hb1 0 node diag-hb1-smoke.js
 hit '^bot/(elysium-bot\.js|elysium-bot-hotseat\.js|elysium-vtes-bord\.html|elysium-server\.js|ELYSIUM-PROTOCOL\.md|test-bot-hotseat\.js)$' && gate hotseat 1 node test-bot-hotseat.js

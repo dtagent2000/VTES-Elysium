@@ -148,6 +148,9 @@ it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo
   scratch only. The pairing (their tokens for our keys) is `cross-check-pairing.json` (D-140). The readers (`bot-card-reader`,
   HARNESS) settle each row that does not agree against KRCG's text, from a brief per card (its rows, the text and rulings, our entry,
   their definition); the lead corrects, and `cardfx-exact.json` records each row's state (D-144; test-cardfx checks it).
+- **The card chain** (D-147) — `node gen-reader-gate.js --list` and `node test-card-scenarios.js [--card NAME] [--list] [--bot F]`
+  (on `elysium-bot-abstract.js`: `runWindow(spec)` plays one turn on a built state); a new family adds its READERS and its windows
+  (`windowFor` / `scenarioFor`). A readers' batch: `docs/reports/readers-<round>-<date>.json` (readers v1, test-cardfx checks it).
 - **The TWD profile** — `python3 twd-profile.py` / `twd-archetypes.py` (need `vtes.json`, `twda.json`; the archetypes also vtes-skill:
   README). Both overwrite the shipped files: run them in a scratch copy until a release; a rebuilt profile is first reproduced
   byte for byte by the old script (O-37); a new share is APPENDED.

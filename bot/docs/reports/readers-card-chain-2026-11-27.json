@@ -1,0 +1,643 @@
+{
+ "format": "readers v1",
+ "_comment": [
+  "readers-<round>-<date>.json -- a round's readers' verdicts and the samples they read, a data file beside the round's report (RULINGS",
+  "D-145, D-147: the card chain's point 4). Written by the lead from the readers' scratch verdicts (bot-card-reader: .claude/agents/",
+  "bot-card-reader.md); test-cardfx.js checks its form and re-derives every sample from its seed. No card text here: a verdict names",
+  "the card, the level and the ruling ids; KRCG's text is at its source. verdicts[]: { batch, card, level, question, ours, theirs (zero-vtes's",
+  "reading in our words), verdict (agree | ours-wrong | theirs-wrong | modelled-differently | unsure), fix (in our keys, or null),",
+  "needsReader (the fix needs a reader the bot has none of), rulings, why, lead (the lead's disposition: registered: SWEEP-REGISTER <id>,",
+  "corrected: <what>, or dropped: <why>) }. samples[]: { id, family, seed, strata, exclude (cards left out, with why), drawnFrom, rows",
+  "[{ card, fam, lvl }], prediction (registered before the read, D-93), read (null until a round reads it: then one verdict per row) }."
+ ],
+ "round": "the card chain (27 Nov 2026, no bot change)",
+ "sources": "KRCG's text and rulings (static.krcg.org 2026-11-27; KRCG's MCP); zero-vtes f9f227f (2026-11-25) a witness",
+ "batches": [
+  {
+   "id": "c1-side-notes",
+   "reader": "bot-card-reader on Sonnet, by its charter",
+   "question": "C1's readers' side notes outside the family (the handoff's Check first 3): does each suspected gap or misreading hold?",
+   "cards": 17
+  }
+ ],
+ "verdicts": [
+  {
+   "batch": "c1-side-notes",
+   "card": "Enthrall",
+   "level": "superior",
+   "question": "Is the superior rider (draw from crypt) in our entry?",
+   "ours": "OBF and PRE modes are identical to the inferior ones: bleedAct + bleed 1, dir. No crypt draw.",
+   "theirs": "Second mode adds a crypt draw for 1 blood after a successful bleed (for 1 or more).",
+   "verdict": "ours-wrong",
+   "fix": "On the OBF and PRE modes add the rider: a draw of 1 crypt card (drawCrypt:1) after a bleed of 1+ that went through, paying 1 blood (payBlood:1), optional.",
+   "needsReader": true,
+   "rulings": [
+    "r-LUXPSG54"
+   ],
+   "why": "The note holds: the superior text has the rider and our entry has none. The ruling only says the draw works from an empty crypt. The bot has drawCrypt only as enterPlay/influence use, no post-bleed-success reader with a blood cost, so the fix needs a reader.",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Forced Confessional",
+   "level": "-",
+   "question": "Which clan requirement does the card print?",
+   "ours": "lib entry req {disc:[dom], clan:[Salubri]}; the curated source has only disc:[dom].",
+   "theirs": "Definition quotes the text and notes (Salubri, 1 blood).",
+   "verdict": "agree",
+   "fix": null,
+   "needsReader": false,
+   "rulings": [],
+   "why": "The card prints a Salubri requirement, so the lib entry is right. The curated source omits clan because the compiler inherits the data clan requirement into curated entries (cardfx-compile.js v1.9.6 / line 942), which is why lib has it and curated does not. The note does not hold.",
+   "lead": "dropped: the card prints the Salubri requirement our library entry carries (the curated source inherits it from the compiler)"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Foreshadowing Destruction",
+   "level": "superior",
+   "question": "Does our entry carry \"not counted against the limit when played against 10+\"?",
+   "ours": "DOM mode bleed 3 with mode req.targetPoolMax 9; entry-level limited; the bot reader fails closed when the target pool is above 9 or unknown, and onlyBleed is set.",
+   "theirs": "Reads the condition live on the current target; vs 10+ it lingers and is outside the limit; lost to a change of target it stops counting.",
+   "verdict": "modelled-differently",
+   "fix": null,
+   "needsReader": false,
+   "rulings": [
+    "r-4BC3FFKE",
+    "r-AESARPPM"
+   ],
+   "why": "Our entry has no no-count clause, but the bot never plays DOM at 10+ pool (fails closed), so the lingering play never arises and omitting it costs nothing for the bot as player. It would matter only as a reader of an opponent's play, which the entry does not serve. The note does not hold as a defect.",
+   "lead": "dropped: modelled differently; the bot never plays [DOM] above 9 pool (req.targetPoolMax), so the uncounted limit costs no play"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Gifts From Hereafter",
+   "level": "both",
+   "question": "Is it restricted to an acting wraith or zombie ally, played by another ready unlocked vampire?",
+   "ours": "req.disc dom/obl, limited, four modes of bleed 1 each (inferior and superior identical); no actor/ally restriction, no unlock.",
+   "theirs": "Requires an acting ally of wraith or zombie type, bleed action, the player a different unlocked vampire; superior adds the unlock for 1 blood.",
+   "verdict": "ours-wrong",
+   "fix": "Mark req.unmodelled:true (fail closed) until a reader exists for \"the acting minion is a wraith/zombie ALLY and the player is another ready unlocked vampire\"; then the superior modes add unlock of the acting ally for 1 blood after resolution.",
+   "needsReader": true,
+   "rulings": [
+    "r-RPLDBUKK"
+   ],
+   "why": "The note holds and it is a real misplay: as it stands the bot may play it on its own vampire's bleed, where it is not usable at all. The +1 bleed goes to the acting ALLY only. Needs an actor-is-ally reader (the bot has employAnimal/allyBurnUnlock but no such gate).",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Atonement",
+   "level": "-",
+   "question": "Is dir:true right on the mode that puts the card on the acting minion?",
+   "ours": "one mode at:null, dir:true, intercept 1, actStealth 1.",
+   "theirs": "The playing action is a plain card action (no Ⓓ); only the burn ability is directed.",
+   "verdict": "ours-wrong",
+   "fix": "Remove dir:true from the mode. (Also noted: the requirement \"a vampire with capacity 5 or less\" is not in req; there is only capMin as a key, a max would need a new one.)",
+   "needsReader": false,
+   "rulings": [],
+   "why": "The only Ⓓ on the card is on the burn action of the attached card; the action that puts it on this vampire is undirected, so dir is wrong. dir is not read by the bot yet (design doc), so no live harm today.",
+   "lead": "registered: SWEEP-REGISTER 9.12"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Dive into Madness",
+   "level": "superior",
+   "question": "Is dir:true right on the DEM mode?",
+   "ours": "DEM mode: dir:true, bleed 1; base mode actStealth 1.",
+   "theirs": "Plain card action putting it on the actor; only the burn by an older vampire is Ⓓ.",
+   "verdict": "ours-wrong",
+   "fix": "Remove dir:true from the DEM mode. (Also: the [dem] mode, \"gets superior Dementation until end of turn and unlocks\", is absent: at:null has only actStealth; and the limit of two copies per vampire is not carried.)",
+   "needsReader": false,
+   "rulings": [
+    "r-25HF4XFD"
+   ],
+   "why": "The Ⓓ in the text belongs to the burn action, not to the put-on action. The ruling also lets a [DEM] vampire play the [dem] mode, which the entry does not model either.",
+   "lead": "registered: SWEEP-REGISTER 9.12"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Drink the Blood of Ahriman",
+   "level": "-",
+   "question": "Does the text support aggr:true on the obt mode?",
+   "ours": "modes: at:null actStealth 1; at:obt fx aggr:true.",
+   "theirs": "(not read)",
+   "verdict": "ours-wrong",
+   "fix": "Delete the at:obt mode. If wanted, carry +1 strength as a bearer stat (strBonus/bearerStat 1) and the 1-blood-fewer discount for [obt] cards on the host; both optional.",
+   "needsReader": false,
+   "rulings": [
+    "r-FXZM6IH2"
+   ],
+   "why": "Nothing in the text deals or grants aggravated damage: the word appears only in the burn trigger for ranged aggravated damage inflicted ON the vampire. The obt mode misreads the cost-reduction clause as a combat effect.",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Khabar: Glory",
+   "level": "-",
+   "question": "Is the \"no non-mandatory action this turn\" condition and the 4 pool when the prey is ousted in our entry?",
+   "ours": "req.clan Banu Haqim, persistent, one mode: bleed 1, unlock, actStealth 1. No condition, no pool gain, no unique, no unlock-phase burn.",
+   "theirs": "Requirement of no optional action this turn, rider GainPool 4 on prey ousted, and a self-burn at the unlock phase.",
+   "verdict": "ours-wrong",
+   "fix": "Add unique:true; a req that the action is the first non-mandatory action of the turn; a rider of 4 pool (poolGain:4) when the prey is ousted while it is on the vampire; and note the burn at the unlock phase (the bot should not value the +1 bleed beyond this turn).",
+   "needsReader": true,
+   "rulings": [],
+   "why": "Both parts of the note hold, and so do two more gaps: the card is Unique (the text does not lead with it, so the auto tier missed it) and it burns itself at the unlock phase. As it stands the bot sees a permanent +1 bleed with unlock, playable at any time of the turn. Needs a \"no optional action yet this turn\" reader and a prey-ousted rider.",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Pulse of the Canaille",
+   "level": "superior",
+   "question": "Is the one-per-vampire limit in our entry?",
+   "ours": "AUS mode bleed 2, persistent, cost 3 blood; no limit.",
+   "theirs": "The put-on mode requires an actor without a Pulse.",
+   "verdict": "ours-wrong",
+   "fix": "On the AUS mode add the condition that the acting vampire carries no Pulse of the Canaille already (a per-bearer one-copy cap).",
+   "needsReader": true,
+   "rulings": [],
+   "why": "The limit is in the text and not in our entry, so the bot may stack a second +2 bleed Pulse on the same vampire (a wasted 3 blood). The card history (RTR 19960531) says the superior is not cumulative. Needs a per-vampire \"has copy\" check; the bot has oncePerTurn but no such gate.",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Brutal Influence",
+   "level": "inferior",
+   "question": "Is the optional extra from locking Orun in our entry?",
+   "ours": "POT-inferior mode: bleedAct, bleed 1, dir; no Orun clause. POT superior: actStealth 1 only (the move of X blood is also not carried).",
+   "theirs": "First mode takes X as the number of unlocked Orun locked, adding +X bleed (not limited).",
+   "verdict": "ours-wrong",
+   "fix": "On the pot mode add an optional extra +X bleed where X is the vampire's unlocked Orun (bleed:\"X\" with a lock-held cost); X is 0 if there is no Orun.",
+   "needsReader": true,
+   "rulings": [
+    "r-NSV7FPYI"
+   ],
+   "why": "The note holds: the optional +X is missing. It only understates the bleed (conservative), and the ruling says a non-Laibon may lock its Orun too. The reader needs lock-X-held-card terms, which the bot does not have.",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Soul Painting",
+   "level": "both",
+   "question": "Is there a stray mode the bot could never play?",
+   "ours": "modes: at:null actStealth 1; at:aus+pre dir, fx {}; at:AUS+PRE dir, fx {}.",
+   "theirs": "Two modes only (inferior and superior), each carrying stealth 1, put on a target ready vampire; no bare stealth mode.",
+   "verdict": "ours-wrong",
+   "fix": "Remove the at:null mode and move actStealth:1 into the aus+pre and AUS+PRE modes. (The modes' empty fx is deliberate per the C1 note; the intercept goes to blockers, a cost to the bearer.)",
+   "needsReader": false,
+   "rulings": [],
+   "why": "The \"+1 stealth action\" line is the header of the whole card, not a third play: there is no way to play it with no target, so the at:null mode is the stray, an artefact of the auto tier. I read the stray as at:null; the empty-fx level modes are the real plays, so I could not confirm that the lead meant this one.",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Abandoning the Flesh",
+   "level": "-",
+   "question": "Is the removal from the game in our entry?",
+   "ours": "req.disc dem, persistent, types combat+react; one mode at:dem lock:true bleed 1 (the lock-for-bleed). No removal.",
+   "theirs": "Two parts: the replacement of a burn by removal from the game, and the lock for +1 bleed to an acting vampire with Dementation.",
+   "verdict": "ours-wrong",
+   "fix": "Add a mode for the save (removeFromGame on a would-be-burned vampire, diablerie canceled, one per Methuselah) -- or mark req.unmodelled for that mode; keep the lock mode as is but required acting vampire with dem.",
+   "needsReader": true,
+   "rulings": [
+    "r-S2KMEEEY",
+    "r-P7PNGGWD",
+    "r-UTNUMLWQ"
+   ],
+   "why": "The removal, the card's main effect, is missing; ours models only the permanent's bleed bonus. The bot has no \"would be burned\" window, so the save needs a new reader; the rulings say not usable against a Blood Hunt burn, and the removal triggers no Soul Gem.",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Draught of the Soul",
+   "level": "both",
+   "question": "Is \"only usable after burning a vampire\" in our entry?",
+   "ours": "req.disc aus+qui; modes aus+qui intercept 1, AUS+QUI intercept 1 + bleed 1; persistent; no usage gate, no blood gain, no [qui]-only mode.",
+   "theirs": "Six modes: each usable after the actor's diablerie (action modifier) or after burning the opponent in combat; blood gain 1 on all.",
+   "verdict": "ours-wrong",
+   "fix": "Mark the entry req.unmodelled:true (fail closed), or gate every mode on \"the actor burned a vampire in this action or combat\"; add bloodAdd:1 to all modes and the qui-only mode.",
+   "needsReader": true,
+   "rulings": [
+    "r-4ZQENUGZ",
+    "r-67M6BOGK",
+    "r-NLQQXCHJ"
+   ],
+   "why": "The gate is the card's first line and is not carried, so the bot can play it for +1 intercept at any time. A referendum or side-effect burn does not count (r-67M6BOGK), a combat burn does (r-4ZQENUGZ). Needs a \"just burned a vampire\" event the bot does not track.",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Shell Game",
+   "level": "both",
+   "question": "Does [san] also unlock a Blood Brother, and which level prints it?",
+   "ours": "san mode stealth X; SAN mode stealth X + unlock:true.",
+   "theirs": "Inferior unlocks 1 pick if successful; superior 2.",
+   "verdict": "ours-wrong",
+   "fix": "Add the unlock of one of the locked Blood Brothers (on success) to the san mode, and make the SAN mode unlock two (a count of 2; a bare unlock:true cannot say 2).",
+   "needsReader": true,
+   "rulings": [
+    "r-P3G3BIN2"
+   ],
+   "why": "Both levels print an unlock: [san] one, [SAN] one additional (two in all). Ours gives it at SAN only and as a bare flag; the unlock is of the locked Brothers, conditional on success, not the actor.",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "The Guruhi Are the Land",
+   "level": "-",
+   "question": "Are the hunt and equip uses in our entry?",
+   "ours": "req.clan Guruhi, limited, one mode at:null bleed 1. No hunt, no equip.",
+   "theirs": "Three modes: bleed +1 (limited), hunt bonus 1 blood, equip unlock if successful.",
+   "verdict": "ours-wrong",
+   "fix": "Add two modes: on a hunt action +1 blood if successful (hunt bonus), and on an equip action unlock the actor if successful.",
+   "needsReader": true,
+   "rulings": [
+    "r-VUELZ3CU"
+   ],
+   "why": "The note holds. Only the bleed use is carried, so the bot never plays it on its own hunts or equips. The hunt bonus works on non-standard hunts too, with blood from the hunt target. Needs a hunt/equip modifier reader (huntBonusSabbat is Sabbat-only).",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Walk of Caine",
+   "level": "both",
+   "question": "Blood burned per pick and the circle limit in our entry?",
+   "ours": "req.disc san, limited, modes san and SAN: bleed \"X\"; no cost, no cap, no timing difference.",
+   "theirs": "Pick set from the same circle (ready, with blood), each burning 1 blood; X is the number picked.",
+   "verdict": "ours-wrong",
+   "fix": "Cap X at the count of the acting Brother's same-circle ready Blood Brothers with blood (itself included), charge 1 blood to each pick (X blood in all), mark onlyBleed:true, and on the san mode require the window \"as the action is announced\".",
+   "needsReader": true,
+   "rulings": [
+    "r-P3G3BIN2",
+    "r-WTVFIYWX"
+   ],
+   "why": "Neither the cost nor the cap is in the entry, so the bot may pay for X it cannot choose, and the san timing limit is lost. Needs a circle reader on the board and the cost spread over other minions, not payBlood on the actor.",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  },
+  {
+   "batch": "c1-side-notes",
+   "card": "Madman's Quill",
+   "level": "superior",
+   "question": "Is the attached card's +1 bleed passive in our entry?",
+   "ours": "AUS+DEM mode: dir:true, fx {} (the passive was dropped on 25 Sep by the sweep, documented in the note as unmodelled).",
+   "theirs": "Not read for this card.",
+   "verdict": "ours-wrong",
+   "fix": "Add a persistent bleed bonus: Dementation vampires get +1 bleed against the Methuselah whose minion carries the Quill (a per-target bleed passive for all Methuselahs' vampires with dem).",
+   "needsReader": true,
+   "rulings": [],
+   "why": "The gap is real but known: the superior mode is a play with no modelled value, so the bot sees it as a do-nothing action. The reader needed (a persistent bleed bonus against one Methuselah) does not exist. The mode also needs a one-per-prey Quill limit.",
+   "lead": "registered: SWEEP-REGISTER 10.24"
+  }
+ ],
+ "samples": [
+  {
+   "id": "c1-agree-1",
+   "family": "C1",
+   "seed": 20261127,
+   "strata": {
+    "stealth": 41,
+    "intercept": 9,
+    "bleed": 10
+   },
+   "procedure": "per family key (stealth, intercept, bleed, each with seed + its index): the agreeing rows (state agree) of cardfx-exact.json in card-then-level order, the excluded cards left out, drawn without replacement by xorshift32; each stratum's size proportional to its rows, 60 in all",
+   "exclude": {
+    "why": "the cross-check v1.2.0's 29 'extra cost' flags (zero-vtes f9f227f): C1b's second pass reads them, so the sample measures what agrees beyond them",
+    "cards": [
+     "Anticipation",
+     "Army of Apparitions",
+     "Aura Absorption",
+     "Call of the Hungry Dead",
+     "Charismatic Aura",
+     "Chiropteran Marauder",
+     "Disengage",
+     "Falcon's Eye",
+     "Folderol",
+     "Go-getter",
+     "Groundfighting",
+     "Hall of Mirrors",
+     "Hunting the Quarry",
+     "Ignore the Searing Flames",
+     "Mole's Tunneling",
+     "Panacea",
+     "Pocket Out of Time",
+     "Preternatural Evasion",
+     "Rayzeel's Song",
+     "Recurring Contemplation",
+     "Reformation",
+     "Relentless Reaper",
+     "Rolling with the Punches",
+     "Savannah Runner",
+     "Shadow Boxing",
+     "Siren's Lure",
+     "Stone Travel",
+     "Stygian Shroud",
+     "Terra Incognita"
+    ]
+   },
+   "drawnFrom": 641,
+   "rows": [
+    {
+     "card": "Children of Stone",
+     "fam": "stealth",
+     "lvl": "tha"
+    },
+    {
+     "card": "Shattering",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Khazar's Diary (Endless Night)",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Earth-Feeder",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Augury of Doom",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Redistribution",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Lifeless Tongues",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Travelers Obey the Tenets",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Blood Tempering",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Clan Impersonation",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Movement of the Slow Body",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Swift Cover",
+     "fam": "stealth",
+     "lvl": "CEL|OBF"
+    },
+    {
+     "card": "Rastacourere",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Renewed Vigor",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Purification",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Swiftness of the Stag",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Sense Vitality",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Mind of a Killer",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "False Resonance",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Frozen Object",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Phobia",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Border Skirmish",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Vaticination",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Hag's Wrinkles",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Anonymous Freight",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Biothaumaturgic Experiment",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Consecration Rites",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Hatchling",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Unwholesome Bond",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Psychophagia",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Occlusion",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Grasp the Ghostly",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Belonging Grants Protection",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Sires Command, Childer Inherit",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Retain the Quick Blood",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Chair of Hades",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Martial Ritus",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Polaris Coach",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "No Secrets From the Magaji",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Soul of the Earth",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Plasmic Form",
+     "fam": "stealth",
+     "lvl": "all"
+    },
+    {
+     "card": "Eagle's Sight",
+     "fam": "intercept",
+     "lvl": "all"
+    },
+    {
+     "card": "WMRH Talk Radio",
+     "fam": "intercept",
+     "lvl": "all"
+    },
+    {
+     "card": "Eyes of Argus",
+     "fam": "intercept",
+     "lvl": "all"
+    },
+    {
+     "card": "Mr. Winthrop",
+     "fam": "intercept",
+     "lvl": "all"
+    },
+    {
+     "card": "Rooftop Shadow",
+     "fam": "intercept",
+     "lvl": "all"
+    },
+    {
+     "card": "Protection Racket",
+     "fam": "intercept",
+     "lvl": "all"
+    },
+    {
+     "card": "Party Out Of Bounds",
+     "fam": "intercept",
+     "lvl": "all"
+    },
+    {
+     "card": "Changeling Skin Mask",
+     "fam": "intercept",
+     "lvl": "all"
+    },
+    {
+     "card": "Patrol",
+     "fam": "intercept",
+     "lvl": "all"
+    },
+    {
+     "card": "Conditioning",
+     "fam": "bleed",
+     "lvl": "all"
+    },
+    {
+     "card": "Weigh the Heart",
+     "fam": "bleed",
+     "lvl": "all"
+    },
+    {
+     "card": "Puppet Master",
+     "fam": "bleed",
+     "lvl": "all"
+    },
+    {
+     "card": "Gifts From Hereafter",
+     "fam": "bleed",
+     "lvl": "DOM|OBL"
+    },
+    {
+     "card": "Childling Muse",
+     "fam": "bleed",
+     "lvl": "all"
+    },
+    {
+     "card": "Shroud of Decay",
+     "fam": "bleed",
+     "lvl": "all"
+    },
+    {
+     "card": "Revelation of Desire",
+     "fam": "bleed",
+     "lvl": "all"
+    },
+    {
+     "card": "Ancestor Spirit",
+     "fam": "bleed",
+     "lvl": "all"
+    },
+    {
+     "card": "Visions of Gehenna",
+     "fam": "bleed",
+     "lvl": "all"
+    },
+    {
+     "card": "The Guruhi Are the Land",
+     "fam": "bleed",
+     "lvl": "#1"
+    }
+   ],
+   "prediction": "Of the 60 rows, at most 2 are wrong on both sides (3.3 %; C1 found 7 of 144 agreeing modifier and reaction rows wrong, all a value sold for blood or pool, and those cards' flags are left out here). 3 or more: the two witnesses share a blind spot beyond costs, and C1b reads a second sample of 60.",
+   "read": null
+  }
+ ]
+}

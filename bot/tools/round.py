@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""tools/round.py v1.0.0 -- the round record (RULINGS D-145, 27 Nov 2026; HARNESS "The round", "One place for each fact").
+"""tools/round.py v1.0.1 -- the round record (RULINGS D-145, 27 Nov 2026; v1.0.1, D-147: the card chain's three tools in the versions block; HARNESS "The round", "One place for each fact").
 
 A round's figures are written once. tools/gates.sh writes OUT/record.json beside OUT/summary.md (`record`, after every gate);
 `save` writes it as docs/round-record.json, the round's one source (the lead commits it), and renders its copies from it:
@@ -25,7 +25,7 @@ import subprocess
 import sys
 import tempfile
 
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 CAP = 1500                       # bytes per CHANGELOG entry, its continuation lines included (D-145)
 BYTES = ('elysium-bot.js', 'test-bot-logic.js', 'elysium-cardfx.json')
 PENDING = '(pending)'
@@ -189,6 +189,9 @@ TOOLS = (   # (the label STATUS prints, the file under bot/ or the root, the pat
     ('precon generator v%s', 'bot/gen-precon.js', r'gen-precon\.js v[0-9.]+'),
     ('`krcg-v5.js` v%s', 'bot/krcg-v5.js', r"const VERSION = '[0-9.]+'"),
     ('`ana-gates.py` v%s', 'bot/ana-gates.py', r"VERSION = '[0-9.]+'"),
+    ('abstract table v%s', 'bot/elysium-bot-abstract.js', r"ABSTRACT_VERSION = '[0-9.]+'"),
+    ('reader gate v%s', 'bot/gen-reader-gate.js', r"GATE_VERSION = '[0-9.]+'"),
+    ('scenario bench v%s', 'bot/test-card-scenarios.js', r"BENCH_VERSION = '[0-9.]+'"),
     ('the chat tools v%s', 'bot/tools/ana-chat.py', r'ana-chat\.py v[0-9.]+'),
     ('`tools/public-scan.py` v%s', 'bot/tools/public-scan.py', r'Review until clean"\)\. v[0-9.]+'),
     ('`tools/round.py` v%s', 'bot/tools/round.py', r"VERSION = '[0-9.]+'"),

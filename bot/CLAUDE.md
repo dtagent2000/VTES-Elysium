@@ -1,8 +1,8 @@
-# CLAUDE.md — Elysium Bots (`bot/`): the session bootstrap (v3.2, 27 November 2026)
+# CLAUDE.md — Elysium Bots (`bot/`): the session bootstrap (v3.3, 27 November 2026)
 
 Automated V:TES opponents for the Elysium client — a free table that does not enforce the rules, so the bot carries its own
-model of them (cardfx + the table model) and reads the table's lines. Claude writes and maintains the code; the owner rules and
-merges. Chat in Swedish; code, commits and docs in English. This file carries the rules that bind every change; the rules of one
+model of them (cardfx + the table model) and reads the table's lines. Claude writes and maintains the code; the owner rules, and
+Claude merges on his yes (D-146). Chat in Swedish; code, commits and docs in English. This file carries the rules that bind every change; the rules of one
 area of the code are in `docs/ARCHITECTURE.md` "Binding rules by area" and the measurement rules in `docs/HARNESS.md`
 "Measurements" (D-142). Ids in brackets point to `docs/RULINGS.md` (R-, D-, O-) and `docs/LESSONS.md` (L-). History lives in git, the frozen
 records of `docs/history/` and the private data repo's `bot-history/` (`docs/history/README.md` says what is where).
@@ -45,6 +45,9 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
   read-only copies); without them it skips loudly, never fakes a pass. Run it a second time against main's current release
   (HOWTO: "the canary against main's release").
 - `node test-cardfx.js` when cardfx changed (needs `vtes.json` beside it: `tools/setup.sh`).
+- The card chain's (D-147; `tools/gates.sh` and CI): `node elysium-bot-abstract.js --self-test` (the table's own rules),
+  `node gen-reader-gate.js` (a corrected or played value no code reads) and `node test-card-scenarios.js` (each row its windows
+  take played on the table: level, numbers, cost); a gap is fixed or listed in `cardfx-exact.json` `gaps` by register entry.
 - `node diag-hb1-smoke.js` when the bot's browser surface changed (needs `elysium-bot-diag.html` beside it).
 - `node test-bot-hotseat.js` when anything near the hotseat bridge changed.
 - When the wire or the timing changed: main's client suite beside the release bytes (its LIVE tests drive the real bot; HOWTO
@@ -67,7 +70,7 @@ propose, wait for "kör" on any "how should we do X" [D-87] → change → gates
 passes, and a round without a bot change, on Fable [D-140]) → the docs (the CHANGELOG entry on its template, the round's report,
 STATUS's Next, the BOARD line deleted; RULINGS / LESSONS when they changed) and `tools/round.py save` [D-145] → PR against `main`
 → with a bot change, ask the owner about a real match in the human seat [D-140]. Commit and push as soon as a step is green.
-The owner merges. End every implementation round with an honest "anything I'm unsure about" paragraph, unasked — it is a real
+The merge: on the owner's yes in the round's last card, Claude merges (D-146). End every implementation round with an honest "anything I'm unsure about" paragraph, unasked — it is a real
 hunt, not a formality; each item is checked now, carried or dropped [D-141]. The combining rule [D-92]: a fix
 found during a round may ride in that round when it fits; say so in the PR.
 
@@ -77,7 +80,7 @@ found during a round may ride in that round when it fits; say so in the PR.
   with large effects over VP differences. No deck is held back: Malkavian plays as well as it can [D-77].
 - **Three layers:** [D-19, L-2] (1) STATISTICS, serving every bot's thinking; (2) GENERAL handling, serving every deck of that
   kind; (3) the DECK PERSONA, informing one list. Put a change in the lowest layer it belongs to.
-- **Four checks:** [D-83] the abstract model (not built) → the sim table and the server arena → a bots-only browser
+- **Four checks:** [D-83, D-147] the abstract table (layer 1 built: the scenarios) → the sim table and the server arena → a bots-only browser
   table (HB1, main's playtest rig) → humans. One metric list across all four.
 
 ## Binding rules for every change (one paragraph each; the stories are in LESSONS and the CHANGELOG)

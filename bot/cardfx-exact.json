@@ -6,7 +6,10 @@
   "until then). Written by the family's round from its cross-check (gen-cross-check.js against zero-vtes at the commit below), its",
   "readers' verdicts against KRCG's text and the rulings, and the lead's corrections; test-cardfx.js checks its form against the",
   "library and docs/SWEEP-REGISTER.md. cards: card -> family key -> a state, or level -> state (the cross-check's level: `obf`, `OBF`,",
-  "`-` for a level-free mode, `#n` their n-th mode, `all` when the levels could not be paired)."
+  "`-` for a level-free mode, `#n` their n-th mode, `all` when the levels could not be paired).",
+  "gaps.reader: the gated rows no code reads that way (gen-reader-gate.js, the card chain, RULINGS D-147), each with its register entry;",
+  "gaps.bench: the rows the scenario bench plays wrong or cannot play (test-card-scenarios.js), each with its register entry. A gate fails on",
+  "a gap with no line here and on a line whose row is read or played right now (stale)."
  ],
  "families": {
   "C1": {
@@ -2485,6 +2488,299 @@
   },
   "Zip Line": {
    "stealth": "agree"
+  }
+ },
+ "gaps": {
+  "reader": {
+   "Abbot": {
+    "intercept": "7.6"
+   },
+   "Achilles' Heel": {
+    "bleed": "7.6"
+   },
+   "Anarch Manifesto, An": {
+    "stealth": "7.6"
+   },
+   "Asanbonsam Ghoul": {
+    "intercept": "7.6"
+   },
+   "Baltimore Purge": {
+    "stealth": "7.6"
+   },
+   "Bear-Baiting": {
+    "bleed": "7.6"
+   },
+   "Blessings of the Loa": {
+    "bleed": "10.23"
+   },
+   "Bloodstone": {
+    "stealth": "7.6"
+   },
+   "Bloodwork": {
+    "stealth": "7.6"
+   },
+   "Bonding": {
+    "bleed": {
+     "DOM": "10.17"
+    }
+   },
+   "Break the Bonds": {
+    "bleed": "9.13"
+   },
+   "Brutal Influence": {
+    "stealth": "9.13"
+   },
+   "Canopic Jar": {
+    "intercept": "7.6"
+   },
+   "Carlton Van Wyk": {
+    "intercept": "7.6"
+   },
+   "Cat Burglary": {
+    "stealth": "9.13"
+   },
+   "Charigger, The Axe": {
+    "bleed": "10.23",
+    "stealth": "7.6"
+   },
+   "Charnas the Imp": {
+    "stealth": "7.6"
+   },
+   "Communal Haven: Temple": {
+    "intercept": "7.6"
+   },
+   "Concordance": {
+    "stealth": "9.13"
+   },
+   "Confusion": {
+    "bleed": "10.17"
+   },
+   "Corpse Balloon": {
+    "intercept": "7.6"
+   },
+   "Cãoera": {
+    "bleed": "10.23"
+   },
+   "Divine Sign": {
+    "intercept": "7.6"
+   },
+   "Dream World": {
+    "stealth": "9.13"
+   },
+   "Ears of the Hare": {
+    "intercept": "7.6"
+   },
+   "Entrancement": {
+    "stealth": "9.13"
+   },
+   "Fata Morgana": {
+    "bleed": "10.25"
+   },
+   "Fleetness": {
+    "stealth": "9.13"
+   },
+   "Form of Mist": {
+    "stealth": "7.6"
+   },
+   "Giuseppe, Gravedigger": {
+    "stealth": "7.6"
+   },
+   "Gravebound Drone": {
+    "bleed": {
+     "OBL": "7.6"
+    }
+   },
+   "Greater Curse": {
+    "stealth": "9.13"
+   },
+   "Gremlins": {
+    "stealth": "9.13"
+   },
+   "Hexaped": {
+    "bleed": "7.6",
+    "stealth": "7.6"
+   },
+   "High Aye": {
+    "stealth": "7.6"
+   },
+   "Illegalism": {
+    "bleed": "9.13",
+    "stealth": "9.13"
+   },
+   "Illuminate": {
+    "intercept": "7.6"
+   },
+   "Ilomba": {
+    "stealth": "7.6"
+   },
+   "Inevitability of the Void": {
+    "bleed": {
+     "AUS+NEC": "7.7"
+    }
+   },
+   "Keystone Kine": {
+    "bleed": "9.13"
+   },
+   "Lock": {
+    "stealth": "7.6"
+   },
+   "Marijava Ghoul": {
+    "stealth": "7.6"
+   },
+   "Melange": {
+    "bleed": "10.23"
+   },
+   "Ministry": {
+    "intercept": "7.5"
+   },
+   "Mirror's Visage": {
+    "stealth": "7.6"
+   },
+   "Mithraic Cultist": {
+    "intercept": "7.6"
+   },
+   "Mole's Tunneling": {
+    "stealth": {
+     "SPI": "7.6"
+    }
+   },
+   "No Secrets From the Magaji": {
+    "intercept": "7.6"
+   },
+   "Pallid": {
+    "intercept": "7.6"
+   },
+   "Pentex™ Loves You!": {
+    "bleed": "7.6"
+   },
+   "Phased Motion Detector": {
+    "intercept": "7.6"
+   },
+   "Pocket Out of Time": {
+    "stealth": {
+     "obt": "7.6"
+    }
+   },
+   "Power of One": {
+    "bleed": "10.25"
+   },
+   "Priestess of Sekhmet": {
+    "bleed": "7.6"
+   },
+   "Protection Racket": {
+    "intercept": "7.5"
+   },
+   "Psalm of the Damned": {
+    "bleed": "7.6"
+   },
+   "Rampage": {
+    "stealth": "7.6"
+   },
+   "Rayzeel's Song": {
+    "stealth": "9.13"
+   },
+   "Revelation of the Serpent": {
+    "bleed": "10.25"
+   },
+   "Samuel Haight": {
+    "bleed": "7.6"
+   },
+   "Sense the Sin": {
+    "intercept": "7.5"
+   },
+   "Shaman": {
+    "stealth": "10.23"
+   },
+   "Siren's Lure": {
+    "stealth": "7.6"
+   },
+   "Smash and Grab": {
+    "stealth": "9.13"
+   },
+   "Songs of the Distant Vitae": {
+    "bleed": "7.6",
+    "stealth": "9.13"
+   },
+   "Soul Decoration": {
+    "stealth": "9.13"
+   },
+   "Speak with Spirits": {
+    "intercept": {
+     "SPI": "7.6"
+    }
+   },
+   "Special Report": {
+    "intercept": "7.6"
+   },
+   "Spirit Marionette": {
+    "stealth": "9.13"
+   },
+   "Steely Tenacity": {
+    "stealth": "9.13"
+   },
+   "Stone Travel": {
+    "stealth": {
+     "obt": "7.6"
+    }
+   },
+   "Subversion": {
+    "bleed": "10.25"
+   },
+   "Sunset Strip, Hollywood": {
+    "stealth": "7.6"
+   },
+   "Swarm": {
+    "stealth": "7.6"
+   },
+   "The Ailing Spirit": {
+    "stealth": "9.13"
+   },
+   "The Ancestor's Talisman": {
+    "intercept": "7.6"
+   },
+   "The Eternal Mask": {
+    "stealth": "9.13"
+   },
+   "The Platinum Protocol": {
+    "bleed": "9.13",
+    "stealth": "9.13"
+   },
+   "The Rumor Mill, Tabloid Newspaper": {
+    "intercept": "7.6"
+   },
+   "The Unmasking": {
+    "intercept": "7.6"
+   },
+   "Tremere Convocation": {
+    "stealth": {
+     "#1": "7.6"
+    }
+   },
+   "Undue Influence": {
+    "stealth": "9.13"
+   },
+   "Unleash the Hounds": {
+    "bleed": {
+     "VIS": "7.7"
+    }
+   },
+   "Unlicensed Taxicab": {
+    "stealth": "7.6"
+   },
+   "Virtuosa": {
+    "bleed": "10.25"
+   },
+   "Voices of the Castle": {
+    "intercept": "7.6"
+   },
+   "Watchtower: The Wolves Feed": {
+    "stealth": "7.6"
+   }
+  },
+  "bench": {
+   "The Eternal Mask": {
+    "stealth": "9.13"
+   }
   }
  }
 }
