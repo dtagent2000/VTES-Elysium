@@ -402,6 +402,52 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.243 (27 Nov 2026; PR #112)** — C1, the V5 sweep's first family (RULINGS D-132, D-144; `specs/spec-card-sweep-2026-11-18.md`
+  §11.8): the stealth (and an action's own `actStealth`), intercept and bleed values of the whole library, cross-checked card by card
+  and level by level against zero-vtes's definitions (`f9f227f`) and read by hand against KRCG's text where they differed. D-144 is
+  the owner's four answers on the round's card: the family over the whole library, the other V5 decks' fidelity flags in C1b; the
+  exactness record outside the bundle; a report per round for zero-vtes; KRCG's MCP a rulings source. **The tool**,
+  `gen-cross-check.js` with its pairing `cross-check-pairing.json` (#112's first part, rebased on main; two STATUS-only commits fell
+  away): v1.0.0 gave 1,260 rows, 874 agree, on main's bytes; v1.1.0 fixed the first run's noise (a level-free mode of ours read at
+  every level, a card in play's uses compared one by one, the deferred stealth not added to an action's own, the paid intercept
+  added): 1,290 rows, 976 agree, the readers' list; v1.2.0 sets a granted action apart on both sides and flags it (the pairing's
+  `granted`), reads the pairing's blood token for an extra cost and a scratch compile (`--cardfx`): 1,282 rows, 898 agree, on
+  main's bytes and 1,143 rows on 760 cards, 896 agree, on v0.6.243. Its self-test (19 checks on invented cards) runs in
+  `tools/gates.sh` and CI; `gen-review-sheet.js` v1.1.0 gives it each mode's source text. **The readers** (eight Sonnet batches, a
+  brief per card): 215 cards, 263 rows — agree 105, modelled differently 30, ours wrong 128 (107 corrected, 21 left open:
+  SWEEP-REGISTER 10.20–10.22), theirs wrong 0. **The corrections:** compiler v1.12.0's GRANTED_STEALTH, an action a card grants is
+  not the card's own stealth (112 entries: Archon, Kuta, War of Ages …; commit ac6244a's message says 109, the count measured
+  afterwards is 112); 80 merge entries in `cardfx-curated.json`: a value the text conditions as `fx.plusIf` with an `unread`
+  condition, which `_plusIf` fails closed (SWEEP-REGISTER 7.6); a count as X; a value the card does not give this play dropped;
+  Scarlet Lore [MYT] 2; Warning Sirens' two uses split; Blithe Acceptance's stealth its bearer's (`bearerStat`); Unlicensed
+  Taxicab's equip action at `actStealth` 2 (R-14, the review's); eight values sold for blood or pool, found by the lead after the
+  readers, now paid or unread (Ears of the Hare [pro], Voices of the Castle [tha], Mole's Tunneling [SPI], Pocket Out of Time
+  [obt], Stone Travel [obt], Siren's Lure [cel], Psalm of the Damned [pre], Pentex™ Loves You!). 188 library entries changed (301
+  curated, 1,654 modelled; was 221 / 1,696); 10 sit in a deck the sims play, none in the four starters. **The record**,
+  `cardfx-exact.json` (D-144 (2), a development file): 1,143 rows — exact 1,079 (agree 896, graded 103, corrected 55, explained
+  25), open 22, single-witness 42. `test-cardfx.js` 503 → 516: the record's form, the C1 entries, `plusIf`'s vocabulary, the
+  curated count and the actStealth band 385–400 (430 → 393; ac6244a's message says 429, main's bytes count 430). The register: 7.6,
+  9.12, 10.19–10.22 new; 7.5, 8.5, 9.8 updated. `cardfx-sharing.json`: `plusIf`'s row (55 cards: 54 entries and The Mausoleum,
+  Venice, owed); `interceptPaid`, `interceptPaidBlood` and `bearerStat` shared. The ledger (`docs/CARDS.md`, the round's sims):
+  the starters' playable copies 1,126 → 1,124, the library's static playable 603 → 576. `elysium-bot.js`: `BOT_VERSION` only; the
+  guide's chip and footer. Reports: `reports/REPORT-c1-2026-11-27.md` and, for zero-vtes, `reports/zero-vtes-readings-c1-2026-11-27.md`
+  (none of their readings contradicted). A handoff to main (`handoffs/HANDOFF-to-main-2026-11-27-v0.6.243.md`: re-embed the guide;
+  the two additive shapes in a mode's `fx`). Riding: main's client v2.6.191 (#117) merged into the branch; budgets by D-101,
+  HOWTO 24 → 25 KB, RULINGS 82 → 84 KB, the total 205 → 207 KB. The owner's words behind D-144: the data repo's RULINGS-WORDS.md
+  (its #7). *Predictions* (§11.7, registered 20 Nov): (1) held, 144 of 201 modifier and reaction cards agree level by level (71.6 %,
+  the floor 71.4 %), seven of them wrongly (a value sold for blood or pool, read as free by both: a limit of the measure); (2) held,
+  14 of ours contradicted by KRCG's text among the 57 that differ, inside 5 to 15; the family's second pass in C1b rests on the 29
+  extra-cost flags.
+  *Gates:* `tools/gates.sh --sim --smokes` on 86d02f6, the release bytes (`14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 17 ·
+  FAIL 1 (check 35/35, lint clean, canary 235/0 ×2 with the root's v2.6.191, cardfx 516/0, precon 18, the self-tests, HB1 11/0,
+  hotseat 12/0, doc-budget, public-scan 0 hits, test-doc-budget; the 240 against v0.6.242 SAME-PLAY 240, IDENTICAL 240 with the
+  version put back, `ana-gates.py` PASS 6/6); the FAIL is the V5 smokes, 13 of 14: banuhaqim's ledger fault, which main's bytes give
+  on the same seed. The smokes against main's bytes in the nine decks with a changed card: SAME-PLAY in seven, salubri DIVERGED 3 of
+  12 and pathpower 1 of 12, each first at a starter bot's block-as-target (the actor's corrected stealth). The first bytes (cardfx
+  `f509d7bf`, 7039850) gave the same play numbers. CI's suite 2841/0 ×3 with `bot-gates` green on 86d02f6; the commits
+  after it are docs only (doc-budget and public-scan again). *Egress:* 10 findings (stale-doc 6, half-done 2, unproven 1,
+  rule-missed 1) in 3 passes (Opus 6, Fable 4, Fable clean), 10 fixed, 0 listed; pass 3's note on Mole's Tunneling's card cost
+  dropped (KRCG: Cost: 1 blood). No match in the human seat: the owner's choice on the round's second card (D-144 (5); D-140 (3)).
 - **v0.6.242 (26 Nov 2026; PR #114)** — The bundle's cleanup release (BOARD's first Product line; RULINGS D-141, D-142 (4),
   D-143): the bundle names nobody and quotes nobody. `elysium-bot.js`: of its 311 mentions of the owner, 304 by role, "the project
   owner" (in this file "the owner" is a card's owner), six in example table lines by invented names (Hanna, Lisa) and one in the
