@@ -1,0 +1,2572 @@
+{
+ "format": "readers v1",
+ "_comment": [
+  "readers-c1b-2026-11-27.json -- C1b's readers' verdicts (RULINGS D-145, D-147 (4)), format readers v1 (readers-card-chain-2026-11-27.json's comment",
+  "says the fields). Five batches read by bot-card-reader on Sonnet by its charter, each from a written brief (the card's rows and flags,",
+  "KRCG's text and rulings, our entry, zero-vtes's definition); the lead spot-checked the sample and the corrections against KRCG's text.",
+  "No card text here: the readers' quoted clause is left out. The sample's per-row result is also the card chain file's samples[0].read."
+ ],
+ "round": "C1b (27 Nov 2026, bot v0.6.244)",
+ "sources": "KRCG's text and rulings (static.krcg.org 2026-11-27); zero-vtes f9f227f (2026-11-25) a witness",
+ "batches": [
+  {
+   "id": "c1b-extra-cost",
+   "reader": "bot-card-reader on Sonnet, by its charter",
+   "question": "the family's second pass on the cross-check's 29 \"extra cost\" flags (26 here, 3 in the fidelity briefs): does the text sell a value our entry reads free?",
+   "cards": 26
+  },
+  {
+   "id": "c1b-fidelity-1",
+   "reader": "bot-card-reader on Sonnet, by its charter",
+   "question": "the fidelity pass (D-138) of the 13 other V5 decks' flagged cards, part 1: every clause at every level, each flag held or not",
+   "cards": 17
+  },
+  {
+   "id": "c1b-fidelity-2",
+   "reader": "bot-card-reader on Sonnet, by its charter",
+   "question": "the fidelity pass, part 2",
+   "cards": 17
+  },
+  {
+   "id": "c1b-sample-1",
+   "reader": "bot-card-reader on Sonnet, by its charter",
+   "question": "the agreeing rows' sample c1-agree-1, rows 1-30: is the shared value right by KRCG's text alone?",
+   "cards": 30
+  },
+  {
+   "id": "c1b-sample-2",
+   "reader": "bot-card-reader on Sonnet, by its charter",
+   "question": "the agreeing rows' sample c1-agree-1, rows 31-60",
+   "cards": 30
+  }
+ ],
+ "verdicts": [
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Anticipation",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "[aus] handStrike +2 only; no AUS mode.",
+   "theirs": "[AUS] cancel of a played strike, burning 1 blood, as an effect (needed to play).",
+   "verdict": "agree",
+   "fix": "Optional, not a pricing fix: a mode at AUS for the cancel, priced payBlood 1 (no stealth/intercept/bleed involved); the bot does not model cancels yet.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The blood buys a cancel our entry does not model at all; nothing of the level is given free and no stealth/intercept/bleed is sold, so the cost question is agree (the missing mode is the AUS-no-mode flag).",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Army of Apparitions",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "[chi] votes 3 only; no CHI mode.",
+   "theirs": "CHI: action fails, burning 2 blood (effect, needed to play; not once a block is attempted).",
+   "verdict": "agree",
+   "fix": "Optional: a CHI mode 'action fails' priced payBlood 2 (not modelled today).",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The 2 blood buys an action-fail our entry does not model; no value is read free, so agree on the cost.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Aura Absorption",
+   "level": "inferior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:aus, use:react, fx:{intercept:1}} -- the +1 intercept is free.",
+   "theirs": "[aus] +1 intercept with a 1-blood burn as an effect, only playable if affordable.",
+   "verdict": "ours-wrong",
+   "fix": "At aus replace fx {intercept:1} by fx {interceptPaid:1, interceptPaidBlood:1} (keep use:react), as Voices of the Castle's [tha] does; [myt] +1 intercept and [MYT] +1 stealth stay free.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The text sells the +1 intercept for 1 blood at [aus] only; [myt] is the free +1. Our entry gives the aus intercept as free, which the cost question calls ours-wrong.",
+   "needsReader": false,
+   "lead": "corrected: [aus]'s +1 intercept costs 1 blood (payBlood, compiler v1.13.0)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Call of the Hungry Dead",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "No modes at all (type mod, req nec).",
+   "theirs": "[nec] blocker -1 intercept free; [NEC] attempt fails for 1 blood burned.",
+   "verdict": "agree",
+   "fix": "Optional: nec mode (blocker -1 intercept, free) and NEC mode (attempt fails) priced payBlood 1; none modelled today.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The blood buys a block-attempt failure we do not model; the entry gives nothing free, so no price is missing from a value.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Charismatic Aura",
+   "level": "both",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "Only AUS+PRE: combatEnds + strikeCE (free, correctly: the superior strike costs no blood); no aus+pre mode.",
+   "theirs": "aus+pre: cancel of an opposing strike or grapple for 1 blood (effect), once per round.",
+   "verdict": "agree",
+   "fix": "Optional: an aus+pre mode for the cancel priced payBlood 1, once per round; not modelled.",
+   "rulings": [
+    "ANK 20210226",
+    "LSJ 20061207",
+    "LSJ 20080630",
+    "ANK 20190104"
+   ],
+   "why": "The blood sits on the basic cancel, which our entry omits; the superior strike-combat-ends it gives is not sold for blood. Agree on the price.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Chiropteran Marauder",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:VIC, fx:{aggr:true, handStrike:true}} -- read as a hand-strike card that is aggravated, no price.",
+   "theirs": "VIC: burn 1 blood (effect, needed), then this vampire's hand strikes are aggravated this round.",
+   "verdict": "ours-wrong",
+   "fix": "At VIC replace fx {aggr:true, handStrike:true} by fx {aggrHands:'round', payBlood:1} (Claws of the Dead's shape, whose [pro] reads the same text; the entry has no whole-card cost, so the 1 blood is the mode's payBlood and [vic] maneuver stays free).",
+   "rulings": [
+    "ANK 20210226",
+    "RTR 19960112"
+   ],
+   "why": "The VIC effect is sold for 1 blood and our entry gives it free; it is also the strike-card shape (handStrike) for what is a modifier of the round, as the Claws of the Dead note already corrected.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 7.9"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Disengage",
+   "level": "both",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:null, fx:{press:true}}, pressDir end, noReplace combat -- the press is free.",
+   "theirs": "Two plays: press to end combat (free), or a grapple cancel for 1 blood.",
+   "verdict": "agree",
+   "fix": "Optional: a second mode for the grapple cancel priced payBlood 1; not modelled.",
+   "rulings": [
+    "ANK 20210226",
+    "LSJ 20061207"
+   ],
+   "why": "The press is the free alternative, not sold; the blood buys only the cancel, which we do not model. Agree.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Falcon's Eye",
+   "level": "inferior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:ani, fx:{intercept:1}} -- free.",
+   "theirs": "[ani] +1 intercept for 1 blood burned; [spi] +1 intercept free.",
+   "verdict": "ours-wrong",
+   "fix": "At ani replace fx {intercept:1} by fx {interceptPaid:1, interceptPaidBlood:1}; [spi] intercept:1 stays free. (The [SPI] block-anyone line is a separate missing mode.)",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The +1 intercept at [ani] costs 1 blood and our entry reads it as free.",
+   "needsReader": false,
+   "lead": "corrected: [ani]'s +1 intercept costs 1 blood (payBlood, compiler v1.13.0)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Folderol",
+   "level": "inferior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:aus, fx:{reduce:1}} -- free (same as [myt] and [MYT]).",
+   "theirs": "[aus] reduce 1 for 1 blood burned (effect, needed); [myt] and [MYT] free.",
+   "verdict": "ours-wrong",
+   "fix": "At aus: fx {reduce:1, payBlood:1} (the mode's price, v0.6.139 shape); lead to check that the reduce reaction path reads payBlood, else raise the mode's blood in the way the reader prefers. [myt] and [MYT] reduce:1 stay free.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The bleed reduction at [aus] is sold for 1 blood and our entry gives it free, indistinguishable from the free [myt] line.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 7.9"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Go-getter",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "[obf] stealth 1 only (free, right); no OBF mode.",
+   "theirs": "OBF: continue as if unblocked for 1 blood (effect, needed).",
+   "verdict": "agree",
+   "fix": "Optional: an OBF mode (continue after block) priced payBlood 1; not modelled.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The blood buys a continue-as-unblocked we do not model; [obf] +1 stealth is free in the text and in ours.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Groundfighting",
+   "level": "both",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:null, fx:{maneuver:true, press:true}}, anarchReq, noReplace combat -- maneuver and press free.",
+   "theirs": "Three plays: maneuver, press (free), or a restriction-cancel for 1 blood.",
+   "verdict": "agree",
+   "fix": "Optional: a mode for the cancel priced payBlood 1; not modelled.",
+   "rulings": [
+    "ANK 20210226",
+    "LSJ 20050221"
+   ],
+   "why": "Maneuver and press are not sold; only the cancel costs blood and is unmodelled. Agree.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Hall of Mirrors",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "[chi] maneuver only; no CHI mode.",
+   "theirs": "CHI: strike cancel for 1 blood, once per combat, first round only.",
+   "verdict": "agree",
+   "fix": "Optional: a CHI mode for the cancel priced payBlood 1, once per combat; not modelled.",
+   "rulings": [
+    "ANK 20210226",
+    "LSJ 20061207"
+   ],
+   "why": "The blood buys a cancel we do not model; the [chi] maneuver is free in text and ours. Agree.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Ignore the Searing Flames",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:DAI, fx:{aggr:true}} -- read as an aggravated strike, no price (same fx at ser and dai).",
+   "theirs": "DAI: burn 1 blood, then immune to aggravated damage this round (defence); dai prevents aggravated damage from one strike; ser treats it as normal.",
+   "verdict": "ours-wrong",
+   "fix": "At DAI replace fx {aggr:true} by fx {payBlood:1} with no offensive key (immunity to aggravated damage is not modelled; leave it inert) -- aggr:true says this card deals aggravated damage, which is the opposite of the text. The same applies to the ser and dai modes (defensive, no aggr).",
+   "rulings": [
+    "ANK 20210226",
+    "LSJ 20010627"
+   ],
+   "why": "The DAI effect is sold for 1 blood and ours gives a free, offensive effect the text never gives; the bot would play this as an aggravated strike.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 2.1"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Mole's Tunneling",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:SPI, fx:{plusIf:{add:{stealth:2}, if:{unread:'paid with 1 blood'}}}} on a card with cost blood 1; [spi] stealth 1 free.",
+   "theirs": "SPI: +2 stealth for a 1-blood burn beside the card's own cost; [spi] +1 stealth free.",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "Our entry carries the price on plusIf for the +2 and the free [spi] +1 is right; the [ani] blocker malus is the separate missing mode.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Panacea",
+   "level": "inferior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:aus, fx:{unlock:true}} -- the unlock is free (the +1 stealth action is at null, free in the text).",
+   "theirs": "[aus] unlock a younger vampire for 1 blood burned (effect, needed); [obe] and [OBE] ally life, free.",
+   "verdict": "ours-wrong",
+   "fix": "At aus: fx {unlock:true, payBlood:1}, and the target is a younger vampire (not any minion); the null actStealth stays free. Also the OBE mode's unlock:true is not the OBE text (life to an ally, unlock at the next discard phase) -- lead to look when it touches that level.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The unlock at [aus] is sold for 1 blood and our entry gives it free; the stealth is the action's own and unconditional.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 7.9"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Pocket Out of Time",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:obt, fx:{plusIf:{add:{stealth:1}, if:{unread:'paid with 1 blood'}}}}; [tem] stealth 1 free.",
+   "theirs": "obt: +1 stealth for 1 blood burned; tem: +1 free.",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The obt price is on plusIf and the tem value is free as the text says; the [TEM] new-combat line is a missing mode, not a price.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Preternatural Evasion",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "[cel] dodge only (free, right); no CEL mode.",
+   "theirs": "CEL: strike that ends combat, burning 1 blood when played (effect).",
+   "verdict": "agree",
+   "fix": "Optional: a CEL mode {combatEnds:true, strikeCE:true, payBlood:1}; not modelled.",
+   "rulings": [
+    "ANK 20210226",
+    "ANK 20200703-2"
+   ],
+   "why": "The blood buys a combat-ending strike we do not model; the [cel] dodge is free in the text. Agree.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Rayzeel's Song",
+   "level": "inferior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:ani, fx:{unlock:true}} -- free.",
+   "theirs": "[ani] unlock an ally for 1 blood burned (effect); [val] bleed 1 and [VAL] stealth action free.",
+   "verdict": "ours-wrong",
+   "fix": "At ani: fx {unlock:true, payBlood:1}, target an ally; [val] bleed and [VAL] actStealth stay as they are.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The unlock at [ani] is sold for 1 blood and our entry reads it as free.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 7.9"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Recurring Contemplation",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:TEM, fx:{blockBar:'chosen'}} -- the block bar, the same as [pre] and [tem].",
+   "theirs": "TEM: block bar as at tem, plus lock of the chosen minion for 1 blood (effect, needed).",
+   "verdict": "agree",
+   "fix": "Optional: TEM mode {blockBar:'chosen', lockTarget, payBlood:1}; the lock is not modelled.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The block bar is not what the blood buys (it is the same at the free levels); the blood buys the lock, which we do not model. No value is read free, so agree.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Reformation",
+   "level": "inferior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:dom, dir:true, fx:{}} -- empty (inert); the +1 stealth action is at null.",
+   "theirs": "dom: steal a hunting ground for 1 blood (effect, needed); the stealth action is the card's header.",
+   "verdict": "agree",
+   "fix": "Optional: a dom mode for the hunting-ground steal priced payBlood 1; not modelled.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The mode is inert, so nothing is given free; the header +1 stealth is not sold. Agree.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Relentless Reaper",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "[for] prevent 1, [thn] press (both free in the text); no THN mode.",
+   "theirs": "THN: new round for 1 blood when combat would end.",
+   "verdict": "agree",
+   "fix": "Optional: a THN mode (new round) priced payBlood 1; not modelled.",
+   "rulings": [
+    "ANK 20210226",
+    "RTR 20030519"
+   ],
+   "why": "The blood buys a new round we do not model; for and thn are free in the text and in ours. Agree.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Savannah Runner",
+   "level": "inferior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:cel, fx:{intercept:1}} -- free.",
+   "theirs": "[cel] +1 intercept for 1 blood burned; [CEL] lock and unlock Laibon free of blood.",
+   "verdict": "ours-wrong",
+   "fix": "At cel replace fx {intercept:1} by fx {interceptPaid:1, interceptPaidBlood:1}; the requirement is a Laibon (the entry has no req.sect today). [CEL] stays as it is.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The +1 intercept at [cel] costs 1 blood and ours reads it as free.",
+   "needsReader": false,
+   "lead": "corrected: [cel]'s +1 intercept costs 1 blood (payBlood, compiler v1.13.0)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Shadow Boxing",
+   "level": "superior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:obf+pot, use:combat, fx:{maneuver, maneuverTo:close, press}, pressDir continue} -- the combat basic, free; no OBF+POT action-modifier mode.",
+   "theirs": "OBF+POT: continue the action as if unblocked for 1 blood after a blocked combat; the basic maneuver/press free.",
+   "verdict": "agree",
+   "fix": "Optional: an OBF+POT action-modifier mode (continue as if unblocked) priced payBlood 1; not modelled.",
+   "rulings": [
+    "ANK 20210226",
+    "ANK 20230314"
+   ],
+   "why": "The blood buys the continue, which we do not model; the basic maneuver/press are free in the text. Agree.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Siren's Lure",
+   "level": "inferior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:cel, fx:{plusIf:{add:{stealth:1}, if:{unread:'paid with 2 blood'}}}}; [mel] lock:true, fx {}.",
+   "theirs": "cel: +1 stealth for 2 blood burned.",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The 2-blood price is on plusIf; the [mel]/[MEL] block-attempt line is a missing mode and the played-by-other-minion flag is separate.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Stone Travel",
+   "level": "inferior",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{at:obt, fx:{plusIf:{add:{stealth:1}, if:{unread:'paid with 1 blood'}}}}; [myt] and [MYT] stealth 1 free.",
+   "theirs": "obt: +1 stealth for 1 blood; myt/MYT +1 free (MYT also may cancel a resulting combat).",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The obt price is carried and the free levels are free in the text; the MYT combat-cancel rider is a separate unmodelled line.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-extra-cost",
+   "card": "Terra Incognita",
+   "level": "both",
+   "question": "second pass on a cost: does the text sell an effect of this level for blood/pool/life/conviction, and does our entry carry the price?",
+   "ours": "{t:[react]} only; no modes.",
+   "theirs": "Two plays: reduce a bleed by 1 (free), or burn 1 blood to cancel a bleed-retargeting card.",
+   "verdict": "agree",
+   "fix": "Optional: a reduce mode (free, predator's non-Laibon bleed) and a cancel mode priced payBlood 1; neither is modelled.",
+   "rulings": [
+    "ANK 20210226",
+    "LSJ 20061207",
+    "LSJ 20021011"
+   ],
+   "why": "The entry has no modes, so nothing is given free; the blood buys a cancel we do not model. Agree on the cost.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Anarch Revolt",
+   "level": "-",
+   "question": "granted action",
+   "ours": "burnByRef: the burn referendum is a card-less political candidate, +1 stealth as the total, owner burns it on a pass; no stealth key of the card's own",
+   "theirs": "Any vampire may declare a political action with +1 stealth calling a referendum to burn the card",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The granted action is any vampire's +1 stealth political action calling a referendum (no card vote) that burns Anarch Revolt on a pass; our burnByRef carries exactly that and deliberately no card stealth.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Anarch Revolt",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "master, persistent, noAnarchTax (bot bills itself 1 pool per copy at end of unlock phase; human reminded), burnByRef",
+   "theirs": "Rider at unlock phase end, every copy, burn 1 pool unless a ready Anarch; same burn referendum",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 19980225",
+    "LSJ 20080106"
+   ],
+   "why": "Put-in-play, no cost or requirement, the end-of-unlock timing and the per-copy cumulation are all carried; only the bot's own bill is modelled, opponents' being table-handled.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Black Forest Base",
+   "level": "-",
+   "question": "granted action (referendum)",
+   "ours": "mode at null, dir:true, fx poolGain 2 (auto read, as if the card's own directed action giving 2 pool)",
+   "theirs": "Ability: any Methuselah's Sabbat vampire, once each turn (per player turn), political action, +1 stealth, referendum, controller gains 2 pool",
+   "verdict": "ours-wrong",
+   "fix": "Not a card play and not directed: a granted political action by a ready Sabbat vampire (the caller's controller gains 2 pool if the referendum passes), +1 stealth (granted, not the card's number), limited to once each turn and counted as attempted even if blocked. Drop dir and the immediate poolGain 2 as a card-own effect; register the granted referendum.",
+   "rulings": [
+    "LSJ 20091224",
+    "ANK 20180719-4",
+    "LSJ 20080604"
+   ],
+   "why": "Our dir:true poolGain:2 reads the granted political referendum as a directed action of the card itself; the text gives pool only to the calling vampire's controller on a passed referendum, once each turn, by a Sabbat vampire.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 9.12"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Black Forest Base",
+   "level": "-",
+   "question": "granted action (changeling burn)",
+   "ours": "nothing (no mode for it; the dir:true mode is the only action)",
+   "theirs": "Ability: a changeling ally (any Methuselah's) burns the card as a +1 stealth Ⓓ action directed at the controller",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 20080604"
+   ],
+   "why": "Granted action, deliberately not modelled: any changeling ally (not only ours) may burn this location as a +1 stealth directed action, which also counts as an action requiring Sabbat per the ruling; our entry carries no stealth for it on purpose.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Black Forest Base",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "t master, unique, persistent, one mode dir:true poolGain 2, no req",
+   "theirs": "Play requires ready Sabbat (control); referendum limited PerTurn; burn by changeling",
+   "verdict": "ours-wrong",
+   "fix": "Add the play requirement: the controller must control a ready Sabbat vampire to put it in play (req sect Sabbat as a controller condition, not the acting minion). Remove the dir:true poolGain 2 mode (see the referendum line).",
+   "rulings": [
+    "LSJ 20080604"
+   ],
+   "why": "The 'Requires a ready Sabbat vampire' clause is missing from our req (it would let a bot play it without a Sabbat vampire), and the only mode misreads the granted referendum as the card's own directed action.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Break the Bonds",
+   "level": "inferior",
+   "question": "obf level with no mode",
+   "ours": "no mode at obf (modes: null bleedAct, ani bleed 1, pre bloodAdd 1 to uncontrolled)",
+   "theirs": "Mode with IfBleedSuccessful lock a minion of the target, minion chosen at resolution, prey needs none",
+   "verdict": "ours-wrong",
+   "fix": "Add an obf mode: on a successful bleed the acting vampire's controller may lock one minion controlled by the target Methuselah (chosen on resolution; no minion needed to play it). The key for a conditional lock of a target's minion on bleed success does not exist.",
+   "rulings": [
+    "ANK 20240706"
+   ],
+   "why": "The obf line prints a distinct success rider (lock a minion of the bled Methuselah) that no mode of ours carries; the bot would play the card with obf as plain bleed 1.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Break the Bonds",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "action, req disc ani/obf/pre, anarchReq, null bleedAct dir, ani bleed 1, pre bloodAdd 1 bloodAddTo unc",
+   "theirs": "7 modes: each single discipline and each combination (ani+obf, ani+pre, obf+pre, all) with the effects stacked",
+   "verdict": "unsure",
+   "fix": "Combinations: the effects of two or three used disciplines stack (e.g. ani+pre is bleed 2 plus the blood on success); say that explicitly or confirm the engine adds the modes of each discipline the vampire has. The pre blood is only on a successful bleed and the uncontrolled vampire is chosen on declaration (bloodAdd carries the target but check it is conditional on success).",
+   "rulings": [
+    "ANK 20240706",
+    "LSJ 20011204-3",
+    "PIB 20130704",
+    "ANK 20240118-2"
+   ],
+   "why": "Base bleed, Anarch requirement, ani +1 and pre blood are carried; the multi-discipline stacking and the success condition of the pre rider are not stated in our entry, so only the obf gap is certain; unsure until the engine's handling of combined disciplines is checked.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Dominant Personality",
+   "level": "inferior",
+   "question": "pot|pre level with no mode",
+   "ours": "no mode at pot or pre (only POT and PRE blockBar chosen); exactness record: intercept open 10.20",
+   "theirs": "Mode on block attempt: AttemptingIntercept -1",
+   "verdict": "ours-wrong",
+   "fix": "Add inferior (pot, pre) modes: playable only when a minion attempts to block; the attempting blocker gets -1 intercept (a penalty to the blocker's intercept applied to the block attempt, not to our own intercept). The key for a negative intercept on the opposing blocker does not exist.",
+   "rulings": [
+    "LSJ 20011204-3"
+   ],
+   "why": "The inferior line is a separate effect (-1 intercept to the blocking minion when it attempts to block) with its own timing, and our entry has nothing at that level.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.20"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Dominant Personality",
+   "level": "superior",
+   "question": "other clauses",
+   "ours": "POT and PRE modes fx blockBar 'chosen'; req disc pot/pre",
+   "theirs": "Window action-as-announced, target a vampire, target cannot block",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "ANK 20190425",
+    "ANK 20181208"
+   ],
+   "why": "The superior clause (as-announced, a chosen vampire cannot block) is carried by blockBar chosen at both POT and PRE; ordering rulings are engine-side.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Dread Mastiff",
+   "level": "inferior",
+   "question": "ani level with no mode",
+   "ours": "no mode at ani (only ANI press:true); retainer, blood 1, animal, req ani",
+   "theirs": "Employed retainer gets close-range 1 damage each round (not ranged), environmental, inflicted even against dodge",
+   "verdict": "ours-wrong",
+   "fix": "Add an ani mode: envDmgPerRound 1, close range only (not ranged), during normal strike resolution; environmental damage with the retainer as source. Also at ANI: the same 1 damage per round plus the optional press (carry both).",
+   "rulings": [
+    "ANK 20180612",
+    "ANK 20211127",
+    "RTR 19941109"
+   ],
+   "why": "The ani 1 damage per round is the card's main effect and our entry carries only the superior press; the superior line says 'As above' so the damage belongs at ANI too (a Carrion Crows style envDmgPerRound exists).",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.6"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Dread Mastiff",
+   "level": "superior",
+   "question": "other clauses",
+   "ours": "ANI press:true; animal:true; cost blood 1; no life",
+   "theirs": "Two modes: damage 1 close-range; damage plus HostCombatPress 1",
+   "verdict": "ours-wrong",
+   "fix": "At ANI add the 1 damage per round (as at ani) beside the press. Retainer life 2 is not carried (retainer life is table-handled in our entries, as noted for Murder of Crows); the press is an optional 1 press each combat for the employer.",
+   "rulings": [
+    "ANK 20180612"
+   ],
+   "why": "ANI is read as press only, missing the inherited damage; cost, animal tag and press are right.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.6"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Eagle's Sight",
+   "level": "superior",
+   "question": "AUS level with no mode",
+   "ours": "no mode at AUS (only aus intercept 1)",
+   "theirs": "Mode: reacting minion with ability to attempt a block of any action ignoring who may block; one attempt",
+   "verdict": "ours-wrong",
+   "fix": "Add a superior (AUS) mode: reaction by a vampire to make a block attempt on the current action ignoring the prey/predator/target restriction on who may block; all other block requirements still apply (Blood Bond, Day Operation, Seduction, a prior decision not to block are not bypassed) and it covers one attempt only. The key for a reaction that grants a block attempt regardless of who may block does not exist.",
+   "rulings": [
+    "RTR 19950413",
+    "RTR 20020501",
+    "LSJ 20030227"
+   ],
+   "why": "The superior is a different effect (a block attempt itself, widening who may block) and our entry offers only the +1 intercept, so a bot never uses the superior at all.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Eagle's Sight",
+   "level": "inferior",
+   "question": "other clauses",
+   "ours": "aus intercept 1, react, req aus",
+   "theirs": "InterceptNeeded then AddIntercept 1",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The inferior +1 intercept is carried; the flagged gap is only the superior.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Gifts From Hereafter",
+   "level": "inferior",
+   "question": "who plays it (dom|obl)",
+   "ours": "mod, limited, dom/obl bleed 1; no actor or target conditions",
+   "theirs": "Played by another own ready unlocked vampire; the acting minion must be a wraith or zombie ally; bleed action only; limited",
+   "verdict": "ours-wrong",
+   "fix": "Add conditions: the card is played by a ready unlocked vampire you control other than the acting minion, and only when the acting minion is a wraith or zombie ally performing a bleed; the +1 bleed goes to that ally. Our entry as written reads as bleed +1 played by the acting minion (e.g. a vampire bleeding).",
+   "rulings": [
+    "LSJ 20011204-3"
+   ],
+   "why": "The text restricts both the player (another ready unlocked vampire) and the acting minion (wraith or zombie ally); our entry is a plain +1 bleed modifier that a bot would consider for any bleed of its own.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Gifts From Hereafter",
+   "level": "superior",
+   "question": "who plays it (DOM|OBL)",
+   "ours": "DOM/OBL bleed 1 only",
+   "theirs": "Same, plus unlock the acting ally for 1 blood of the playing vampire after resolution (whatever the result)",
+   "verdict": "ours-wrong",
+   "fix": "At DOM/OBL add: after the action resolves (successful, failed or blocked), the playing vampire may burn 1 blood to unlock the acting ally; same who-plays and ally-only conditions as at the inferior.",
+   "rulings": [
+    "rules-qa 55.5"
+   ],
+   "why": "The unlock-for-1-blood rider is missing and the same player and ally restrictions apply.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Gifts From Hereafter",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "limited:true; the four levels split",
+   "theirs": "Two modes with LIMITED_BLEED",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 20011204-3"
+   ],
+   "why": "The numbers (+1 bleed), the limited flag and the or-split of disciplines are carried; the gaps are the who-plays and the unlock, in the lines above.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Heart of the City",
+   "level": "inferior",
+   "question": "pre ongoing modifier",
+   "ours": "pre fx bleed 1 on the action mode (reads as this action's bleed); persistent",
+   "theirs": "Attach to the actor, bearer +1 bleed, no vampire with another Heart of the City",
+   "verdict": "ours-wrong",
+   "fix": "The +1 bleed is the bearer's bleed stat while the card stays on this vampire (a bearer stat, like the stealth of Blithe Acceptance), not a bleed of this action, which is a +1 stealth non-bleed action. Also carry one per vampire (a vampire can have only one Heart of the City).",
+   "rulings": [],
+   "why": "Our bleed:1 on the action's mode would price the action as a bleed; the text attaches the card and gives the vampire a lasting +1 bleed, limited to one copy per vampire.",
+   "needsReader": false,
+   "lead": "corrected: the +1 / +2 bleed is its bearer's (bearerStat, a C1b merge); one per vampire is SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Heart of the City",
+   "level": "superior",
+   "question": "PRE ongoing modifier",
+   "ours": "PRE fx bleed 2 on the action mode",
+   "theirs": "Attach, bearer +2 bleed",
+   "verdict": "ours-wrong",
+   "fix": "As at the inferior: the bearer gets +2 bleed while attached (bearer stat), one Heart of the City per vampire.",
+   "rulings": [],
+   "why": "Same misread of a lasting bearer bleed as the action's own bleed.",
+   "needsReader": false,
+   "lead": "corrected: the +1 / +2 bleed is its bearer's (bearerStat, a C1b merge); one per vampire is SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Heart of the City",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "action, cost blood 2, req pre, persistent, null actStealth 1",
+   "theirs": "ActionDeclare +1 stealth, put on actor",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The +1 stealth action, 2 blood cost and discipline requirement are carried (the one-per-vampire limit is in the lines above).",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Heartrender",
+   "level": "-",
+   "question": "granted action (burn an ally)",
+   "ours": "mode at null dir:true fx {} (empty)",
+   "theirs": "Ability, the ally acts: +1 stealth, remove actor from game, burn target ally (not wraith/zombie) not controlled by the actor's controller",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "Our entry carries no stealth for it on purpose; the action is the Heartrender's own +1 stealth directed ability: it removes itself from the game (cost) to burn a non-wraith non-zombie ally in the target Methuselah's control.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Heartrender",
+   "level": "-",
+   "question": "granted action (burn a retainer)",
+   "ours": "same empty dir mode",
+   "theirs": "Second ability targeting a retainer",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "Same ability with a retainer as the target (any retainer, any type); the cost is removal of the Heartrender from the game, the stealth +1 and no combat.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Heartrender",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "ally, pool 1, unique, persistent, one empty dir:true mode",
+   "theirs": "recruit; two abilities",
+   "verdict": "ours-wrong",
+   "fix": "The empty dir:true mode implies a directed action with no effect; replace with the removal-burn ability described above (or drop it). Wraith tag and 1 life / 1 strength / 1 bleed are not carried (check they come from elsewhere).",
+   "rulings": [],
+   "why": "Pool cost 1 and unique are right but the ability that is the card's whole point is read as an effect-less directed action.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 9.12"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Hedonism",
+   "level": "inferior",
+   "question": "who plays it (for|pre)",
+   "ours": "mod, modes at for and pre with lock:true, fx {}",
+   "theirs": "Played by another own ready unlocked vampire when a minion attempts to block; attempt fails, blocker cannot block again, lock both, queue combat",
+   "verdict": "ours-wrong",
+   "fix": "Add: only a ready unlocked vampire you control other than the acting minion may play it; only when a minion attempts to block; the attempt fails and that blocker cannot attempt again this action; lock the playing vampire and the blocking minion and queue a combat between them (after the block resolution, part of the action; only one queued combat at a time).",
+   "rulings": [
+    "LSJ 20021121",
+    "LSJ 20090826",
+    "ANK 20170918-2",
+    "ANK 20250613"
+   ],
+   "why": "Our entry has only a bare lock; the who-plays, the failed attempt, the no-reblock and the queued combat are missing.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 8.7"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Hedonism",
+   "level": "superior",
+   "question": "who plays it (FOR|PRE)",
+   "ours": "FOR/PRE lock:true fx {} identical to the inferior",
+   "theirs": "Same without the queued combat",
+   "verdict": "ours-wrong",
+   "fix": "Same who-plays and effects as at the inferior, but no combat is queued; our entry does not distinguish the two levels.",
+   "rulings": [],
+   "why": "Superior differs from inferior only by queuing no combat, which our identical entries cannot express.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 8.7"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Hedonism",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "req disc for/pre",
+   "theirs": "two modes",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 20011204-3"
+   ],
+   "why": "No further clauses beyond those in the lines above; discipline requirement is carried as an or.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Heroic Might",
+   "level": "inferior",
+   "question": "pot level with no mode",
+   "ours": "no mode at pot (null actStealth 3; POT strike 2 ranged)",
+   "theirs": "Attach, +1 strength to bearer, strike burn equipment, burn if torpor, one per vampire",
+   "verdict": "ours-wrong",
+   "fix": "Add a pot mode: the card is put on this vampire; +1 strength (strengthBonus 1); a strike: burn equipment; burned if the vampire goes to torpor; one Heroic Might per vampire (oncePerVampire).",
+   "rulings": [
+    "LSJ 20081120-2"
+   ],
+   "why": "The inferior is a full attached-card reading and our entry carries only the +3 stealth.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Heroic Might",
+   "level": "superior",
+   "question": "other clauses",
+   "ours": "POT strike 2 ranged:true",
+   "theirs": "Strength 2, plus the 2R strike and burn-equipment strike",
+   "verdict": "ours-wrong",
+   "fix": "At POT add strength +2 total (strengthBonus 2), the burn-equipment strike and the torpor burn; strike 2R damage is carried.",
+   "rulings": [
+    "LSJ 20081120-2"
+   ],
+   "why": "The 2R strike is right but the strength bonus, burn-equipment strike and torpor burn are missing.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Hunting the Quarry",
+   "level": "superior",
+   "question": "CEL|THA extra cost",
+   "ours": "no modes; the bot holds the card (note, D-123)",
+   "theirs": "Mode with BurnActorBlood 1 then NewRound, actor needs at least 1 blood",
+   "verdict": "ours-wrong",
+   "fix": "Add a CEL/THA mode: only if both combatants are ready and combat would end; this vampire burns 1 blood (needs at least 1) and a new round starts instead; only one Hunting the Quarry per vampire each combat; played after presses, nothing 'would end' after it.",
+   "rulings": [
+    "ANK 20191219",
+    "RTR 20030519",
+    "LSJ 20011204-3"
+   ],
+   "why": "The 1 blood is a cost on a combat extension, absent from our empty entry; the card is held on purpose until the press/maneuver round, so this is a gap, not a contradiction.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Hunting the Quarry",
+   "level": "inferior",
+   "question": "granted action",
+   "ours": "no modes; the earlier mistaken +1 stealth was removed (D-123)",
+   "theirs": "Ability: your vampire burns the card as the action is declared, +1 stealth, enters combat with the host",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 20080604"
+   ],
+   "why": "Granted action carrying no stealth of ours on purpose: any vampire you control may burn the attached card to attempt to enter combat with the attached minion, +1 stealth, directed; counts as requiring the card's discipline.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Hunting the Quarry",
+   "level": "-",
+   "question": "cost question (sold effect)",
+   "ours": "no modes, no stealth/intercept/bleed value read",
+   "theirs": "BurnActorBlood",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The text sells a new round for 1 blood, not a stealth, intercept or bleed value, and our entry reads no value as free (it reads nothing), so the cost question finds no misread; the price must be carried when the mode is added.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Hunting the Quarry",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "no modes (deliberate hold), t combat, req cel/tha",
+   "theirs": "Two modes with per-combat limit",
+   "verdict": "ours-wrong",
+   "fix": "Add the inferior (cel, tha) mode: both combatants still ready, combat about to end; put this card on the opposing minion while you keep control; one per vampire per combat. Both modes wait for the maneuver/press grants round.",
+   "rulings": [
+    "ANK 20191219",
+    "LSJ 20021113",
+    "RTR 20020501"
+   ],
+   "why": "No level is modelled; the entry is a deliberate hold, so the card cannot be reported exact.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "KRCG News Radio",
+   "level": "-",
+   "question": "another use",
+   "ours": "only lock:true lockIntercept 1 (own minion); second half unmodelled (note)",
+   "theirs": "Second ability: lock self, pay 1 pool, +1 intercept to the attempting block of another Methuselah's minion",
+   "verdict": "ours-wrong",
+   "fix": "Add the second use: lock this card and burn 1 pool to give +1 intercept to a minion controlled by another Methuselah (the pool is the cost, needs at least 1 pool; by the impulse sequencing, after that Methuselah's own attempt).",
+   "rulings": [
+    "ANK 20200607"
+   ],
+   "why": "Our entry knows only the first half and the note admits the second is missing; it is a real second use with a cost.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.7"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "KRCG News Radio",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "master, unique, persistent, pool 2, lock lockIntercept 1",
+   "theirs": "Location; first ability LockSelf +1 intercept",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "ANK 20200607"
+   ],
+   "why": "Unique, pool cost 2 and the lock-for-+1 intercept to your own minion are carried.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Obedience",
+   "level": "inferior",
+   "question": "block rider (dom)",
+   "ours": "react, req dom, no mode at all",
+   "theirs": "Window block/queued combat; end the action; the blocker not locked; two variants with unlock and without",
+   "verdict": "ours-wrong",
+   "fix": "Add a dom mode: when this vampire is about to enter combat with an acting younger vampire (blocking or fought), unlock the acting vampire and end the action unsuccessfully at once (no combat, no more cards), do not lock the blocker, and the acting vampire cannot perform the same action again this turn.",
+   "rulings": [
+    "LSJ 20070709",
+    "RTR 20180719",
+    "ANK 20200207",
+    "ANK 20171212",
+    "LSJ 19991025"
+   ],
+   "why": "Our entry has no mode, so the whole effect (end the block, unlock, no repeat) is absent.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Obedience",
+   "level": "superior",
+   "question": "other clauses",
+   "ours": "no mode at DOM",
+   "theirs": "Same without unlock",
+   "verdict": "ours-wrong",
+   "fix": "At DOM the same ending of the action but the acting vampire stays locked; only usable against an acting younger vampire, not a Hedonism or Siren's Lure combat or a substituted slave.",
+   "rulings": [
+    "LSJ 19991025",
+    "ANK 20250710"
+   ],
+   "why": "The superior drops the unlock; both versions are missing and so is the younger-vampire condition.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Pack Alpha",
+   "level": "superior",
+   "question": "ANI ongoing modifier",
+   "ours": "no modes; entry-level req beforeRangeDetermined:true",
+   "theirs": "Burn target animal retainer on actor, attach, +1 strength bearer, once per round, one per vampire",
+   "verdict": "ours-wrong",
+   "fix": "Add an ANI mode: burn an animal retainer this vampire employs; put this card on this vampire; +1 strength (strengthBonus 1); one Pack Alpha per minion and one play per vampire each round. The before-range requirement applies only to the inferior, not to ANI.",
+   "rulings": [
+    "LSJ 20100130"
+   ],
+   "why": "The superior is a different effect from the inferior (attach for +1 strength by burning a retainer) with no range timing; our entry has nothing and applies beforeRangeDetermined to the whole card.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Pack Alpha",
+   "level": "inferior",
+   "question": "other clauses",
+   "ours": "combat, req ani, beforeRangeDetermined, persistent; no mode",
+   "theirs": "Employ a named animal retainer from hand, before range, per-round limit",
+   "verdict": "ours-wrong",
+   "fix": "Add an ani mode: before range is determined, employ an animal retainer from hand (requirements and blood cost apply as normal, cost reductions not tied to an action apply), once per round per vampire; not an action and not counted as the employ action. This is an employ with requirements unlike the Banu Haqim shape that ignores requirements.",
+   "rulings": [
+    "RTR 20070707",
+    "ANK 20230824",
+    "LSJ 20080815",
+    "LSJ 20090115-1",
+    "LSJ 20100725"
+   ],
+   "why": "The inferior is the retainer play from hand; our entry only carries the timing, with no effect.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Pillars Fall",
+   "level": "-",
+   "question": "ongoing modifier",
+   "ours": "action, dir:true, fx bleed 1 (action's bleed); exactness: bleed graded",
+   "theirs": "Declare enter-combat action, put on actor if opposing not ready, bearer +1 bleed",
+   "verdict": "ours-wrong",
+   "fix": "The action is Ⓓ enter combat with a vampire (no bleed); the +1 bleed is a lasting bearer stat gained only if the opposing vampire is not ready at the end of the combat, when the owner may put the card on the actor; one per vampire. Replace the action bleed 1 by a bearer bleed bonus and the combat-entry action.",
+   "rulings": [],
+   "why": "bleed:1 on a directed action prices the card as a bleed action; it enters combat and gives a conditional lasting +1 bleed.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Pillars Fall",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "dir:true, persistent",
+   "theirs": "target a vampire not controlled, actor ready",
+   "verdict": "ours-wrong",
+   "fix": "Carry the combat-entry action with a vampire target and the conditional attach; one per vampire (oncePerVampire).",
+   "rulings": [],
+   "why": "Nothing but dir is correct; the enter-combat effect and the attach condition are absent.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Pit of Contemplation",
+   "level": "-",
+   "question": "granted action",
+   "ours": "mode at null dir:true actStealth 1",
+   "theirs": "Own put-in-play (+1 stealth, 1 counter); ability add counter +1 stealth by Hecata; ability burn as Ⓓ by any vampire; unlock-phase move",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 20080604"
+   ],
+   "why": "Granted actions not modelled on purpose: a Hecata you control adds 1 counter as a +1 stealth action; any vampire may burn the card as a directed action (no stealth number); the card's own +1 stealth in the header is carried.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-1",
+   "card": "Pit of Contemplation",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "action, req clan Hecata, persistent, dir:true actStealth 1; no counters, no unlock-phase effect; unique not set",
+   "theirs": "Put in play with counter; add counter; unlock-phase move to uncontrolled; burn by any vampire",
+   "verdict": "ours-wrong",
+   "fix": "Remove dir:true from the card's own action (the Ⓓ in the text is the granted burn, not the card's play, which is an undirected +1 stealth action putting it in play). Add: unique; enters with 1 counter; in your unlock phase burn it to move a vampire controlled by your predator or prey with capacity below the counters to its owner's uncontrolled region (blood stays as counters).",
+   "rulings": [
+    "LSJ 20080604"
+   ],
+   "why": "The own action is read as directed from the granted burn, and the counters, unique flag and the unlock-phase move are missing.",
+   "needsReader": false,
+   "lead": "corrected: unique (compiler v1.13.0, the header's \"Unique.\"); its dir and counters are SWEEP-REGISTER 9.12 and 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Priority Contract",
+   "level": "-",
+   "question": "granted action",
+   "ours": "rushGrant 1 (the granted rush's +1 stealth), rushBy 'chosen', hostOf 'prey'",
+   "theirs": "Ability on the host: the chosen Banu Haqim enters combat with the attached minion, +1 stealth, requires being the chosen one",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 20080604"
+   ],
+   "why": "Our entry does carry the granted action: who (only the chosen Banu Haqim), its stealth (1), its effect (enter combat with the host, a minion of my prey, directed). The cross-check's claim that no key models it does not hold here. The granted action counts as requiring Banu Haqim, which the chosen one is by construction.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Priority Contract",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "master, req clan Banu Haqim, unique, trifle, contract, persistent, hostOf prey, poolOnHostLeave 3",
+   "theirs": "Master phase play, needs a ready Banu Haqim, host is a prey minion, pool 3 when host leaves, also as its controller is ousted",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "ANK 20180129-2",
+    "RBK contested-cards"
+   ],
+   "why": "Header, trifle, ready-Banu-Haqim requirement, host choice, chosen minion and the 3-pool burn on the host leaving (including the ousted-controller case) are all carried. Only point to keep an eye on in the engine: the chosen Banu Haqim must be recorded at play and be ready at play, but the entry's rushBy 'chosen' says that.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Putrescent Sustenance",
+   "level": "both",
+   "question": "obl|tha, OBL|THA level with no mode",
+   "ours": "Only the level-free mode actStealth 1; no mode at obl/tha or OBL/THA",
+   "theirs": "Four modes: remove an ally from any ash heap from the game, then 2 (3 at superior) blood to the actor, or 2 (3) life to a zombie ally you control",
+   "verdict": "ours-wrong",
+   "fix": "At the inferior level (obl or tha): requirement an ally in any Methuselah's ash heap; effect: remove that ally from the game (chosen as the card is played) and choose one of: the acting vampire gains 2 blood, or add 2 life to a zombie ally the player controls (not above its starting life, ally in play). At the superior level (OBL or THA): same, 3 instead of 2. The action cannot be played if no ally is in any ash heap.",
+   "rulings": [
+    "LSJ 20011204-3",
+    "PIB 20130704"
+   ],
+   "why": "The whole effect of the card is missing: our entry only carries the +1 stealth. A bot playing it would pay the action and get nothing, or play it with no ally in an ash heap.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Putrescent Sustenance",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "actStealth 1 at level-free, req disc obl/tha",
+   "theirs": "Stealth 1 on every version",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The header stealth is right and uniform across levels. The missing requirement (an ally in an ash heap) is reported on the level line above.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Rolling with the Punches",
+   "level": "superior",
+   "question": "FOR extra cost",
+   "ours": "prevent:'all', no blood",
+   "theirs": "Burn 1 blood of the actor as the effect (needs blood at least 1 and damage pending), then prevent all damage from the opposing minion's strikes for the whole round",
+   "verdict": "ours-wrong",
+   "fix": "At FOR: the playing minion burns 1 blood as part of the effect (not a cost: not reduced by cost reducers; the card cannot be played if the minion has no blood to burn; also not playable with no damage to prevent); the prevention covers all of the opposing minion's strikes this round, not only the strike in progress. Our 'prevent all' should carry the 1-blood price and the round-long scope.",
+   "rulings": [
+    "ANK 20210226",
+    "LSJ 20001114"
+   ],
+   "why": "Our entry reads the FOR effect as free and, as far as it says, one strike's worth. The text prices it at 1 blood.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Rolling with the Punches",
+   "level": "superior",
+   "question": "cost second pass: does the text sell the effect for blood",
+   "ours": "prevent 'all', no price",
+   "theirs": "Burn 1 blood, then prevent",
+   "verdict": "ours-wrong",
+   "fix": "The effect (prevent all damage from the opposing minion's strikes this round) is sold for 1 blood burned from the playing minion. Our entry gives it free: it needs the price (1 blood burned from the actor, a play condition that the actor has at least 1 blood) on this one value; the inferior prevent 1 is not sold.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "A prevent value read as free where the text sells it for blood is ours-wrong under the pass's rule.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Rolling with the Punches",
+   "level": "inferior",
+   "question": "other clauses",
+   "ours": "prevent 1 at for",
+   "theirs": "Prevent 1 damage; not usable with no damage to prevent",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 20001114"
+   ],
+   "why": "Number and level right. The 'cannot be used if there is no damage to prevent' ruling is a play condition our entry does not state; check the engine applies it to every prevent card (it is generic, not per card).",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Saulot's Avenging Fist",
+   "level": "-",
+   "question": "granted action",
+   "ours": "fx.rushSelf {notClan Salubri, stealthVs {Tremere:1}}: bearer may rush any ready non-Salubri vampire of another Methuselah, +1 stealth at a Tremere, 0 otherwise",
+   "theirs": "Two abilities of the bearer: enter combat with a non-Salubri non-Tremere vampire (D, stealth 0), and with a Tremere as a +1 stealth action",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 20080604"
+   ],
+   "why": "The granted action is carried: who (the bearer), at whom (non-Salubri vampire), the conditional stealth (1 only against Tremere), directed, and the Salubri requirement for the action. The cross-check's 'no key' claim does not hold: rushSelf with stealthVs models it.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Saulot's Avenging Fist",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "master, pool 2, unique, persistent, archetype, hostReq clan Salubri, strengthBonus 1",
+   "theirs": "Archetype on a controlled Salubri, +1 strength, one archetype per vampire",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "Header, host requirement, strength bonus and the one-archetype limit are all carried.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Saulot's Healing Touch",
+   "level": "-",
+   "question": "granted action",
+   "ours": "Nothing for a granted action. The entry's only effect is bloodAdd 1 at level-free, which reads as the card's own effect",
+   "theirs": "The bearer can add 1 blood (vampire) or life (ally) up to starting life to another ready minion as a +1 stealth action",
+   "verdict": "ours-wrong",
+   "fix": "Granted action: the bearer (a Salubri carrying this card) may, as a +1 stealth action, add 1 blood or life to another ready minion (any controller; blood to a vampire, life to an ally, never past starting life). Stealth 1 is the action's, not the card's. Register it as a granted action as for the other archetypes; and remove the bloodAdd 1 read as the card's own gain, since nothing in the text gives blood when the card is played.",
+   "rulings": [
+    "LSJ 20080604"
+   ],
+   "why": "Our entry does not model the granted action (deliberate by rule), but it also carries a bloodAdd 1 that is the granted action's value read as if the card gave it. The text prints no (D) on the action, so by KRCG's text it is undirected; the witness treats it as directed at the target's controller, which the text does not print.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 9.12"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Saulot's Healing Touch",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "No host requirement (no hostReq Salubri), no rescue discount, no rescued-vampire gain; persistent, archetype, unique, clan Salubri carried",
+   "theirs": "Archetype on a controlled Salubri, rescue discount 2 blood for non-Tremere, +1 blood to the rescued on success",
+   "verdict": "ours-wrong",
+   "fix": "Add: host must be a controlled Salubri (hostReq clan Salubri, as the sister archetype has). Add the rescue discount: for the bearer, a rescue action on a non-Tremere vampire costs 2 less blood (applies to the action whoever pays), and if the rescue succeeds the rescued vampire gains 1 blood. Plus the archetype rule: a vampire can only have one.",
+   "rulings": [
+    "PIB 20110918",
+    "LSJ 20020304-2"
+   ],
+   "why": "Our entry is an auto read that lost the rescue clauses and the host requirement; the bot could put it on a non-Salubri, and the rescue discount is never applied.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Sculpt the Flesh",
+   "level": "superior",
+   "question": "granted action",
+   "ours": "Not modelled (note: amber)",
+   "theirs": "Any minion can burn the card (while it is on the opposing minion) as a +1 stealth action",
+   "verdict": "modelled-differently",
+   "fix": null,
+   "rulings": [],
+   "why": "The flag holds in the sense that we do not model it (deliberate under C1). The granted action: any minion (not only the host or its controller) may burn this card in play, as an undirected +1 stealth action with no cost; effect: burn the card. Register it. A correct note: it only exists once the card is on the opposing minion.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.19"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Sculpt the Flesh",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "[pro]: handStrike, aggr, handBonus 0; [PRO]: handBonus 1, handStrike; note says the card goes to the ash heap and the unlock burn is not modelled",
+   "theirs": "[pro] aggravated hand strike; [PRO] +1 hand strike, the card goes on the opposing minion; during the attached minion's unlock phase it burns 1 blood (vampire) or life (ally)",
+   "verdict": "ours-wrong",
+   "fix": "[pro] and the +1 on [PRO] are right. At PRO: the card must stay in play, attached to the opposing minion (not to the ash heap), and at the attached minion's controller's unlock phase the minion burns 1 blood or 1 life (an ally at no life is burned). Mark the entry persistent with a host of the opposing minion, and carry the unlock-phase burn (1). Open point: the text does not say the card goes on only if the strike hits; the witness reads on-hit, KRCG prints no condition and no ruling decides.",
+   "rulings": [],
+   "why": "The entry deliberately drops the persistence and the rider (documented as amber); the card is read as a one-shot, which misreads where the card ends up and loses an ongoing 1 blood per turn. Fidelity pass: not exact.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.4"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Seeds of Terror",
+   "level": "both",
+   "question": "obf|pre level with no mode",
+   "ours": "Modes only at OBF and PRE: blockBar 'chosen'. No mode at obf/pre, and no block toll at either level",
+   "theirs": "Block toll 1 blood for every minion attempting (blood only; allies cannot attempt; a minion already attempting pays nothing), and at superior also a chosen vampire cannot block",
+   "verdict": "ours-wrong",
+   "fix": "At obf and at pre (inferior): every minion that attempts to block this action must burn 1 blood (a minion with no blood cannot attempt; allies cannot attempt; a minion that already attempted can resign and pay nothing). At OBF and at PRE: that block toll plus the chosen vampire that cannot block (we already carry the choice). So add the toll at all four levels and the inferior mode.",
+   "rulings": [
+    "LSJ 20031121-2",
+    "LSJ 20011204-3",
+    "PIB 20130704"
+   ],
+   "why": "Our entry carries only the superior's second half (the barred vampire); the toll that is the card's whole inferior effect and the first half of the superior is missing.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Seeds of Terror",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "t mod, cost blood 1, req disc obf/pre",
+   "theirs": "Window ActionAsAnnounced by the acting minion, cost 1 blood",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "ANK 20190425",
+    "ANK 20181208"
+   ],
+   "why": "The 1-blood cost and the disciplines are right. The timing (only as the action is announced, before ordinary action modifiers) is not a key in our entry; it is covered if the engine treats this card as an announced-timing modifier by its text, otherwise the lead should check it. Played by the acting minion.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Stygian Shroud",
+   "level": "superior",
+   "question": "OBL extra cost",
+   "ours": "No mode at all (entry is t mod, req disc obl)",
+   "theirs": "Burn 1 blood (an effect, not a cost; not playable without blood) to make the block attempt fail",
+   "verdict": "ours-wrong",
+   "fix": "At OBL: usable only if a minion attempts to block; the acting minion burns 1 blood (effect-paid, not reduced by cost reducers, not playable with no blood) to make that block attempt fail, and the blocking minion cannot attempt to block this action again.",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "The whole OBL effect is missing, and the price is too.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Stygian Shroud",
+   "level": "superior",
+   "question": "cost second pass: does the text sell the effect for blood",
+   "ours": "Nothing carried",
+   "theirs": "Burn 1 blood, then the attempt fails",
+   "verdict": "ours-wrong",
+   "fix": "The effect 'attempt fails, the blocker cannot try again' is sold for 1 blood from the playing minion; the entry carries neither effect nor price. Add both together (price as a play condition and a burn).",
+   "rulings": [
+    "ANK 20210226"
+   ],
+   "why": "Not read as free, but not read at all.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Stygian Shroud",
+   "level": "inferior",
+   "question": "other clauses",
+   "ours": "No mode at obl (exactness record: intercept 'open 10.20')",
+   "theirs": "The blocking minion gets -1 intercept for that attempt",
+   "verdict": "ours-wrong",
+   "fix": "At obl: usable only when a minion attempts to block this action; that attempt's blocker gets -1 intercept (a negative intercept on the attempt, no key for it in our vocabulary, exactness item 10.20 is the open place).",
+   "rulings": [],
+   "why": "A required effect is missing; the record already lists it as open, so this confirms the open item rather than a new finding.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.20"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "The Gate of Acheron",
+   "level": "-",
+   "question": "granted action",
+   "ours": "Not modelled; the entry gives the card's own action dir:true, actStealth 1",
+   "theirs": "Two granted actions: Hecata capacity 4+ add a counter, +1 stealth; any vampire burns the card as a directed action",
+   "verdict": "modelled-differently",
+   "fix": null,
+   "rulings": [
+    "LSJ 20080604"
+   ],
+   "why": "Holds in the sense we do not model it. The granted actions: (1) any Hecata vampire you control with capacity 4 or more may add 1 counter to this card as a +1 stealth action (undirected, requires Hecata); (2) any vampire (any controller) may burn this card as a directed action (stealth 0).",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.19"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "The Gate of Acheron",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "action, clan Hecata, persistent, level-free mode dir:true actStealth 1; no unique, no counters, no riders",
+   "theirs": "Own action undirected, +1 stealth; enters with 1 counter; +1 counter each own unlock; prey's unlock: per counter burn 1 pool or remove a random library card from the ash heap",
+   "verdict": "ours-wrong",
+   "fix": "(a) dir:true is wrong: the card's own action is a +1 stealth action with no (D), undirected (the (D) belongs to the burn action). (b) Add unique. (c) Add the counters: in play with 1, +1 at the controller's unlock. (d) Add the prey's unlock cost: per counter, burn 1 pool or remove a random library card in the prey's ash heap from the game (prey chooses per counter).",
+   "rulings": [],
+   "why": "The directed marker changes who may block it and what the bot expects, and the persistent effect (the whole point of the card) is absent. The stealth value is right.",
+   "needsReader": false,
+   "lead": "corrected: unique (compiler v1.13.0, the header's \"Unique.\"); its dir and counters are SWEEP-REGISTER 9.12 and 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "The Platinum Protocol",
+   "level": "inferior",
+   "question": "pro level with no mode",
+   "ours": "No mode at pro",
+   "theirs": "Combination modes: if the bleed succeeds for 1 or more, put a corruption counter on a minion of the target (chosen at resolution)",
+   "verdict": "ours-wrong",
+   "fix": "At pro: if the bleed is successful for 1 or more, put 1 corruption counter on a minion controlled by the target Methuselah, chosen at resolution, not declaration. Corruption counter gives no opportunity to steal.",
+   "rulings": [
+    "ANK 20240706",
+    "LSJ 20080608",
+    "ANK 20200925",
+    "ANK 20211105"
+   ],
+   "why": "The pro line is missing; the counter on a minion is a lasting effect the bot never gets.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "The Platinum Protocol",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "anarchReq, dir bleedAct at level-free, actStealth 1 at obf, bleed 1 at pre",
+   "theirs": "Anarch requirement, directed bleed, obf +1 stealth, pre +1 bleed, combinations",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 20011204-3",
+    "PIB 20130704"
+   ],
+   "why": "All other lines carried. Check that combined disciplines add up when more than one is used (the card says they can); the entry's separate obf and pre modes are the cumulative form.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "The Sleeping Mind",
+   "level": "superior",
+   "question": "DOM level with no mode",
+   "ours": "No mode at DOM",
+   "theirs": "During this action no minion unlocks (wakes still work; unlocks after resolution do not)",
+   "verdict": "ours-wrong",
+   "fix": "At DOM (not 'as above'): for the whole action, minions cannot unlock, including unlocks after the action resolves; wake effects can still be played.",
+   "rulings": [
+    "PIB 20150703"
+   ],
+   "why": "The superior effect is missing.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "The Sleeping Mind",
+   "level": "inferior",
+   "question": "other clauses",
+   "ours": "dom: blockBar 'chosen'; cost blood 1",
+   "theirs": "A locked vampire is chosen; it cannot block",
+   "verdict": "ours-wrong",
+   "fix": "The chosen vampire must be a locked one; ours says 'chosen' with no locked restriction, which would let the bot bar an unlocked vampire (a wasted card, since the text only names a locked one) and fail to model the intended case (a locked vampire that could unlock and block). Add the locked requirement on the choice. Timing: as the action is announced.",
+   "rulings": [
+    "ANK 20190425",
+    "ANK 20181208"
+   ],
+   "why": "The bar, the 1 blood and the level are right; the choice is wider than the text.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Touch of Oblivion",
+   "level": "inferior",
+   "question": "obl level with no mode",
+   "ours": "No mode at obl",
+   "theirs": "Strike that puts the card on the opposing minion with 2 counters; a counter replaces unlocking until counters run out, then the card burns",
+   "verdict": "ours-wrong",
+   "fix": "At obl: a strike that puts this card on the opposing minion with 2 counters (the card stays in play). In the attached minion's unlock phase it burns 1 counter instead of unlocking; with no counters the card is burned. The strike deals no damage as such.",
+   "rulings": [
+    "LSJ 20090622-2"
+   ],
+   "why": "The whole inferior effect is missing, including that the card stays in play (the entry's persistent flag has no mode to use it).",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Touch of Oblivion",
+   "level": "superior",
+   "question": "other clauses",
+   "ours": "OBL: torpor true; cost blood 2",
+   "theirs": "Torpor for a vampire, burn for an ally; the vampire is wounded",
+   "verdict": "unsure",
+   "fix": null,
+   "rulings": [
+    "LSJ 20090622-2"
+   ],
+   "why": "Vampire side is carried. The ally half (burn the opposing ally) is not visibly carried by 'torpor: true', whose definition is only 'sends a vampire to torpor'. What would settle it: whether the engine applies torpor to an ally by burning it, or needs a burn-ally effect. The ruling that the vampire is wounded is a game rule, not entry content.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Touch of Valeren",
+   "level": "superior",
+   "question": "FOR who plays it",
+   "ours": "FOR combat: prevent 'all', played by the combatant as at inferior",
+   "theirs": "A mode played by a ready vampire you control that is not in the combat, protecting another minion of yours in that combat",
+   "verdict": "ours-wrong",
+   "fix": "At FOR (combat): a third party plays it: a ready vampire you control not involved in the combat; the effect prevents all damage to the minion you control that is in the combat, from the opposing minion's strike (not the player's own combat strikes). Our entry offers the combatant itself, which the text does not say at this level, and misses the third-party player. Needs damage pending.",
+   "rulings": [
+    "LSJ 20001114"
+   ],
+   "why": "The cost (1 blood) is paid by the playing vampire; the wording 'prevent all damage from the opposing minion's strike' at [for] is for the combatant, [FOR] is for another vampire.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 8.7"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Touch of Valeren",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "for action: bloodAdd 3, actStealth 1; for combat: prevent all; cost blood 1; clan Salubri",
+   "theirs": "Action +1 stealth: 3 blood to the minion; combat: prevent all",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 20001114"
+   ],
+   "why": "Header values, stealth and the inferior combat effect are carried. The ceiling (starting life for life) and the not-playable-with-no-damage condition are generic rules, not entry keys.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Veil the Legions",
+   "level": "inferior",
+   "question": "obf who plays it",
+   "ours": "stealth 1 at obf, no player restriction, no limit",
+   "theirs": "Played by another ready unlocked vampire you control; one per action",
+   "verdict": "ours-wrong",
+   "fix": "At obf: played by a ready, unlocked vampire you control other than the acting minion (and only by the acting minion's controller); the acting minion gets +1 stealth; only one Veil the Legions per action. Our entry has stealth 1 with no other player and no per-action limit, so the acting minion could be taken as the player.",
+   "rulings": [
+    "LSJ 19990425"
+   ],
+   "why": "The stealth value is right, the who and the limit are missing.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 8.7"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Veil the Legions",
+   "level": "superior",
+   "question": "OBF who plays it",
+   "ours": "stealth 1 at OBF, no X-blood rider, no turn limit",
+   "theirs": "Same player; burn X blood for +1 stealth to the next X actions of your minions this turn; one superior per turn",
+   "verdict": "ours-wrong",
+   "fix": "At OBF: as above (the acting minion +1 stealth, played by another ready unlocked vampire), plus the playing vampire may burn X blood (a choice, X >= 0) to give the next X actions your minions perform this turn +1 stealth each (an action cancelled after being played still counts). Only one Veil the Legions at superior per turn. Not carried: the X-blood rider or the limits.",
+   "rulings": [
+    "LSJ 20070526",
+    "ANK 20210124"
+   ],
+   "why": "This is a priced value (X blood) that the entry omits: the +1 stealth for later actions is sold for blood.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 8.7"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Veil the Legions",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "req disc obf, t mod",
+   "theirs": "a mod by another vampire",
+   "verdict": "ours-wrong",
+   "fix": "Add the 'other ready unlocked vampire of mine' actor requirement for both levels (see the level lines).",
+   "rulings": [
+    "LSJ 19990425"
+   ],
+   "why": "Covered by the two level lines.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 8.7"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Wall Street Night, Financial Newspaper",
+   "level": "-",
+   "question": "granted action",
+   "ours": "Not modelled (note: amber; the precon has no investment card)",
+   "theirs": "Granted action by any minion you control: lock the location, +1 stealth, directed; moves 1 counter from an investment card to your pool",
+   "verdict": "modelled-differently",
+   "fix": null,
+   "rulings": [],
+   "why": "Holds in the sense we do not model it. The granted action: any minion you control locks the location to attempt, as a directed +1 stealth action, to move 1 counter from an investment card (any) to your pool.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.19"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Wall Street Night, Financial Newspaper",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "lockIntercept 1, lockInterceptOn 'undirected', lock, unique, persistent, pool 1",
+   "theirs": "Lock for +1 intercept in an undirected action when your minion attempts",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "Cost (1 pool), unique, location persistence, the intercept amount and the undirected-only condition are carried. The family row's 'formula true vs false' difference is a modelling-format point: both read a flat +1.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "War of Ages",
+   "level": "-",
+   "question": "granted action",
+   "ours": "None: the entry is an unmodelled placeholder (req.unmodelled)",
+   "theirs": "Vampire-called political action burning the card, +1 stealth, 1 pool",
+   "verdict": "modelled-differently",
+   "fix": null,
+   "rulings": [
+    "LSJ 20100129",
+    "ANK 20191228"
+   ],
+   "why": "Holds in the sense we do not model it. The granted action: any vampire may call a referendum (a +1 stealth political action costing 1 pool, paid when the action resolves) whose success burns this card.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.19"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "War of Ages",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "political, unique, persistent, req unmodelled: no effect, no requirement, no riders",
+   "theirs": "Political action by a titled Sabbat vampire; in play; prey burns 1 pool at its unlock; when prey is ousted: burn this card, +3 pool",
+   "verdict": "ours-wrong",
+   "fix": "Read: requirement a titled Sabbat vampire (the caller); the referendum puts the card in play (the play path); rider in the prey's unlock phase: prey burns 1 pool; rider on the prey's ouster: gain 3 pool and burn this card. Not playable when already in play (uniqueness).",
+   "rulings": [
+    "LSJ 20100129",
+    "ANK 20191228"
+   ],
+   "why": "Entry is an auto placeholder that fails closed (not played), not a reading of the card.",
+   "needsReader": true,
+   "lead": "registered: SWEEP-REGISTER 10.26"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Week of Nightmares",
+   "level": "-",
+   "question": "granted action",
+   "ours": "fx.wonStealHunt 1: the special hunt (a hunt, my prey or predator may block), once a turn",
+   "theirs": "Special hunt by a Ravnos steals 1 blood from another Ravnos, +1 stealth",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "RBK action-card-or-card-in-play",
+    "LSJ 19970224",
+    "LSJ 20050720-2",
+    "LSJ 20010809-1",
+    "RTR 20180511",
+    "LSJ 20080604"
+   ],
+   "why": "Carried: who (any Ravnos), the target (another Ravnos, vampire), the amount (1), the stealth (+1, per the note), the once-a-turn limit and the unsuccessful-on-empty and bank rules. The cross-check's 'no key' claim does not hold.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-fidelity-2",
+   "card": "Week of Nightmares",
+   "level": "-",
+   "question": "other clauses",
+   "ours": "oncePerGame, worth won, req clan Ravnos, wonCounters 10, wonBleed 1, wonStrength 1, wonStealHunt; per the note the counter move and the end are modelled",
+   "theirs": "Layers +1 bleed and +1 strength for Ravnos, they cannot hunt normally, counter move at each unlock, end sequence",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [
+    "LSJ 20090606",
+    "ANK 20190606-2",
+    "LSJ 20060306"
+   ],
+   "why": "All clauses are carried per the note. The family row 'bleed theirs only' is the +1 bleed for Ravnos, which wonBleed carries. Only check: the 'do not hunt as normal' clause is carried by the special hunt replacing the normal hunt branch; the note describes it that way but names no separate key.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Children of Stone",
+   "level": "-",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 2 at level null",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Shattering",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "chi actStealth 1, dem actStealth 2",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Khazar's Diary (Endless Night)",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1 (base and NEC mode)",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Earth-Feeder",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 2",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Augury of Doom",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Redistribution",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Lifeless Tongues",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Travelers Obey the Tenets",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Blood Tempering",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Clan Impersonation",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Movement of the Slow Body",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 2",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Swift Cover",
+   "level": "-",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "stealth 1 at CEL and OBF",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Rastacourere",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Renewed Vigor",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Purification",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1 at qui",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Swiftness of the Stag",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "stealth 1 at SPI",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Sense Vitality",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Mind of a Killer",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "False Resonance",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "stealth 1 at CHI",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Frozen Object",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Phobia",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1 at SER",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Border Skirmish",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Vaticination",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 3",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Hag's Wrinkles",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "stealth 2 at obf, 1 at THN",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Anonymous Freight",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 3",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Biothaumaturgic Experiment",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Consecration Rites",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Hatchling",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Unwholesome Bond",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-1",
+   "card": "Psychophagia",
+   "level": "both",
+   "question": "stealth value, level, play, free, unconditional",
+   "ours": "actStealth 1",
+   "theirs": "same value",
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "The printed header or level line gives exactly this number on this play, free and unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Occlusion",
+   "level": "superior",
+   "question": "is the shared stealth value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "[CHI] action modifier +1 stealth, free; ours at CHI.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Grasp the Ghostly",
+   "level": "both",
+   "question": "is the shared stealth value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "Header '+1 stealth action' is the card's own actStealth 1, level-free, unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Belonging Grants Protection",
+   "level": "-",
+   "question": "is the shared stealth value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "'+1 stealth action' header; requires a ready magaji is a requirement, not a change of value.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Sires Command, Childer Inherit",
+   "level": "-",
+   "question": "is the shared stealth value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "'+1 stealth action' header, level-free.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Retain the Quick Blood",
+   "level": "both",
+   "question": "is the shared stealth value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "'+1 stealth action' header, level-free.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Chair of Hades",
+   "level": "-",
+   "question": "is the shared stealth value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "'+1 stealth action' header; the discipline lines are separate effects.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Martial Ritus",
+   "level": "-",
+   "question": "is the shared stealth value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "'+1 stealth action' header; the card's blood cost 1 is in cost, not a price on the stealth.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Polaris Coach",
+   "level": "-",
+   "question": "is the shared stealth value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "ours-wrong",
+   "fix": "Not a free +1: the bearer may burn one counter from the Coach for +1 stealth on the current action (counters come from blood moved from the vampire each unlock phase; the card's blood cost is not placed on it). Model as sold stealth, e.g. fx.plusIf {add:{stealth:1}, if:{unread:'burn a counter from the Polaris Coach'}}, or a stealth-paid price once the format has one.",
+   "rulings": [],
+   "why": "'may burn one counter ... to get +1 stealth for the current action': the +1 is bought with a counter (blood), only while acting, not a free standing bonus. Theirs models the counter as a cost in its ability, so not both wrong.",
+   "needsReader": false,
+   "lead": "corrected: the +1 stealth is bought with a counter of the Coach (an unread plusIf, SWEEP-REGISTER 7.6)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "No Secrets From the Magaji",
+   "level": "-",
+   "question": "is the shared stealth value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "'+1 stealth action' header; the +1 intercept is conditional and is already handled by plusIf.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Soul of the Earth",
+   "level": "-",
+   "question": "is the shared stealth value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "'+1 stealth action' header.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Plasmic Form",
+   "level": "inferior",
+   "question": "is the shared stealth value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "[vic] action modifier +1 stealth; blood cost 1 is the card cost.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Eagle's Sight",
+   "level": "inferior",
+   "question": "is the shared intercept value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "[aus] +1 intercept; the [AUS] line is a block attempt, not an intercept number.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "WMRH Talk Radio",
+   "level": "-",
+   "question": "is the shared intercept value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "Lock the card for +1 intercept, free of blood or pool; the pool burn is a downside rider if the minion does not block, not a price on the number.",
+   "needsReader": false,
+   "lead": "corrected: the lead's spot check -- the +1 intercept costs 1 pool when its minion does not block (an unread plusIf, SWEEP-REGISTER 7.6); the reader read the pool as a rider"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Eyes of Argus",
+   "level": "inferior",
+   "question": "is the shared intercept value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "[aus] +2 intercept, only vs actions directed at you, modelled by onlyDirected.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Mr. Winthrop",
+   "level": "-",
+   "question": "is the shared intercept value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "'The employer gets +1 intercept', standing, unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Rooftop Shadow",
+   "level": "both",
+   "question": "is the shared intercept value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "ours-wrong",
+   "fix": "Keep intercept 1 at cel and CEL but add the bar: not usable if the acting minion has Celerity (cel level) / superior Celerity (CEL level), e.g. a notVs-style condition or fx.plusIf with if:{unread:'acting minion lacks Celerity'} until a key exists.",
+   "rulings": [],
+   "why": "Number and levels are right, but the text bars the card against an acting minion with Celerity (superior at CEL); ours has no condition. Theirs models the bar.",
+   "needsReader": false,
+   "lead": "corrected: not usable when the acting minion has Celerity (notActorDisc, compiler v1.13.0; read by _dirOk)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Protection Racket",
+   "level": "-",
+   "question": "is the shared intercept value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "+1 intercept, plus 1 only if the acting minion is titled (plusIf), requires Anarch (anarchReq).",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Party Out Of Bounds",
+   "level": "inferior",
+   "question": "is the shared intercept value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "[pro] +1 intercept at the pro line; Anarch requirement is anarchReq.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Changeling Skin Mask",
+   "level": "-",
+   "question": "is the shared intercept value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "ours-wrong",
+   "fix": "Move the +2 intercept to at:null (the text does not tie it to superior Obfuscate) and mark it a one-shot burn-the-equipment effect usable only by a vampire bearer (e.g. a burn/once marker), not a standing +2.",
+   "rulings": [],
+   "why": "'may burn it to get +2 intercept for the current action': a one-shot sold by burning the mask, not a level-OBF standing bonus; ours is both mis-levelled and unpriced. Theirs models the burn in its ability.",
+   "needsReader": false,
+   "lead": "corrected: the +2 intercept is a one-shot bought by burning the mask, at no level (an unread plusIf, SWEEP-REGISTER 7.6)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Patrol",
+   "level": "-",
+   "question": "is the shared intercept value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "'+1 intercept.' free, unconditional.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Conditioning",
+   "level": "both",
+   "question": "is the shared bleed value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "[dom] +2 and [DOM] +3 bleed, limited, only during a bleed action.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Weigh the Heart",
+   "level": "inferior",
+   "question": "is the shared bleed value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "[aus][ser] +1 bleed limited, bleed action only.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Puppet Master",
+   "level": "inferior",
+   "question": "is the shared bleed value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "[dom] 'Bleed with +2 bleed': bleedAct with bonus 2; blood cost 2 is card cost.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Gifts From Hereafter",
+   "level": "both",
+   "question": "is the shared bleed value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "ours-wrong",
+   "fix": "Add the condition: the +1 bleed (limited) goes to the acting wraith or zombie ally and is played by another ready unlocked vampire of the player's; as unconditional bleed 1 it would be counted on any bleed. Mark e.g. plusIf with if:{unread:'acting minion is a wraith or zombie ally, played by another own vampire'}.",
+   "rulings": [],
+   "why": "Text: 'The acting ally gets +1 bleed' usable by a vampire other than the acting wraith or zombie ally, so the +1 applies only to an acting wraith/zombie ally; ours counts it unconditionally. Theirs models actor and ally label.",
+   "needsReader": false,
+   "lead": "corrected: the +1 bleed is an acting wraith or zombie ally's, played by another vampire (an unread plusIf, SWEEP-REGISTER 10.24)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Childling Muse",
+   "level": "-",
+   "question": "is the shared bleed value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "'This Malkavian gets +1 bleed', req clan Malkavian.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Shroud of Decay",
+   "level": "inferior",
+   "question": "is the shared bleed value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "[obl] bleed with +1 bleed; the discard rider is not the number.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Revelation of Desire",
+   "level": "both",
+   "question": "is the shared bleed value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "ours-wrong",
+   "fix": "Keep ser +1 and SER +3 but mark the SER +3 as priced and conditional: burn 1 of your corruption counters from a minion of the target Methuselah (plusIf with if:{unread:'burn a corruption counter of yours from target Methuselah minion'}).",
+   "rulings": [],
+   "why": "SER +3 requires burning one of your corruption counters on a target Methuselah's minion; ours treats it as free and unconditional. Theirs requires the counter on its target.",
+   "needsReader": false,
+   "lead": "corrected: [SER]'s +3 bleed is bought with a corruption counter (an unread plusIf, SWEEP-REGISTER 7.6)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Ancestor Spirit",
+   "level": "-",
+   "question": "is the shared bleed value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "'This Laibon has +1 bleed' once placed on a Laibon of capacity above 4; value and persistence right.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "Visions of Gehenna",
+   "level": "superior",
+   "question": "is the shared bleed value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "agree",
+   "fix": null,
+   "rulings": [],
+   "why": "[PRE] +2 bleed (limited) only during a bleed action.",
+   "needsReader": false,
+   "lead": "dropped: our entry holds (agree)"
+  },
+  {
+   "batch": "c1b-sample-2",
+   "card": "The Guruhi Are the Land",
+   "level": "-",
+   "question": "is the shared bleed value right",
+   "ours": null,
+   "theirs": null,
+   "verdict": "ours-wrong",
+   "fix": "Mark the +1 bleed as conditional on a bleed action (onlyBleed on the bleed mode, and model the hunt (+1 blood) and equip (unlock) branches separately) so it is not counted on a hunt or equip action.",
+   "rulings": [],
+   "why": "'If this is a bleed action, this Guruhi gets +1 bleed': the +1 holds only on a bleed action although the card is also playable on hunt and equip; ours has bleed 1 with no onlyBleed. Theirs gates it by IsBleed.",
+   "needsReader": false,
+   "lead": "dropped: the +1 bleed holds where the bleed finder plays it (a bleed action); its hunt and equip uses are SWEEP-REGISTER 10.24's"
+  }
+ ],
+ "samples": []
+}

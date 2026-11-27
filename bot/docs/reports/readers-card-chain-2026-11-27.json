@@ -637,7 +637,549 @@
     }
    ],
    "prediction": "Of the 60 rows, at most 2 are wrong on both sides (3.3 %; C1 found 7 of 144 agreeing modifier and reaction rows wrong, all a value sold for blood or pool, and those cards' flags are left out here). 3 or more: the two witnesses share a blind spot beyond costs, and C1b reads a second sample of 60.",
-   "read": null
+   "read": [
+    {
+     "card": "Children of Stone",
+     "fam": "stealth",
+     "lvl": "tha",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Shattering",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Khazar's Diary (Endless Night)",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Earth-Feeder",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Augury of Doom",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Redistribution",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Lifeless Tongues",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Travelers Obey the Tenets",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Blood Tempering",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Clan Impersonation",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Movement of the Slow Body",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Swift Cover",
+     "fam": "stealth",
+     "lvl": "CEL|OBF",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Rastacourere",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Renewed Vigor",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Purification",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Swiftness of the Stag",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Sense Vitality",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Mind of a Killer",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "False Resonance",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Frozen Object",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Phobia",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Border Skirmish",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Vaticination",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Hag's Wrinkles",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Anonymous Freight",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Biothaumaturgic Experiment",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Consecration Rites",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Hatchling",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Unwholesome Bond",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Psychophagia",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Occlusion",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Grasp the Ghostly",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Belonging Grants Protection",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Sires Command, Childer Inherit",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Retain the Quick Blood",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Chair of Hades",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Martial Ritus",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Polaris Coach",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "ours-wrong",
+     "verdict": "ours-wrong",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "No Secrets From the Magaji",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Soul of the Earth",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Plasmic Form",
+     "fam": "stealth",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Eagle's Sight",
+     "fam": "intercept",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "WMRH Talk Radio",
+     "fam": "intercept",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "ours-wrong",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Eyes of Argus",
+     "fam": "intercept",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Mr. Winthrop",
+     "fam": "intercept",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Rooftop Shadow",
+     "fam": "intercept",
+     "lvl": "all",
+     "reader": "ours-wrong",
+     "verdict": "ours-wrong",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Protection Racket",
+     "fam": "intercept",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Party Out Of Bounds",
+     "fam": "intercept",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Changeling Skin Mask",
+     "fam": "intercept",
+     "lvl": "all",
+     "reader": "ours-wrong",
+     "verdict": "ours-wrong",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Patrol",
+     "fam": "intercept",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Conditioning",
+     "fam": "bleed",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Weigh the Heart",
+     "fam": "bleed",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Puppet Master",
+     "fam": "bleed",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Gifts From Hereafter",
+     "fam": "bleed",
+     "lvl": "DOM|OBL",
+     "reader": "ours-wrong",
+     "verdict": "ours-wrong",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Childling Muse",
+     "fam": "bleed",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Shroud of Decay",
+     "fam": "bleed",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Revelation of Desire",
+     "fam": "bleed",
+     "lvl": "all",
+     "reader": "ours-wrong",
+     "verdict": "ours-wrong",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Ancestor Spirit",
+     "fam": "bleed",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "Visions of Gehenna",
+     "fam": "bleed",
+     "lvl": "all",
+     "reader": "agree",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    },
+    {
+     "card": "The Guruhi Are the Land",
+     "fam": "bleed",
+     "lvl": "#1",
+     "reader": "ours-wrong",
+     "verdict": "agree",
+     "bothWrong": false,
+     "by": "readers-c1b-2026-11-27.json"
+    }
+   ],
+   "readNote": "Read in C1b (27 Nov 2026): 6 of 60 ours wrong, 0 wrong on both sides (zero-vtes carries each price or condition in its requirements or abilities; the cross-check compares the number only: C1c). The prediction held on its letter (at most 2 wrong on both sides)."
   }
  ]
 }

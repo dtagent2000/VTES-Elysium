@@ -961,9 +961,9 @@ ok(fx.counts.libLock >= 140,
                blackQ: LB('Black Sunrise', 'qui'), blackQQ: LB('Black Sunrise', 'QUI'), elude: LB('Eluding the Arms of Morpheus', null),
                dogged: LB('Dogged Pursuit', 'ani'), spirits: LB('Speak with Spirits', 'SPI'), winds: LB('Read the Winds', 'ANI+AUS'), mole: LB('The Mole', 'ani') };
   ok(lb.sense === 'route' && lb.sentA === 'route' && lb.sentT === 'route' && lb.owl === 'noStrikeFirstRound=true' && lb.deep === 'payBlood=1' && lb.blackQ === 'route' && lb.blackQQ === 'route' && lb.elude === 'route'
-     && lb.dogged === null && lb.spirits === null && lb.winds === null && lb.mole === null && M('Black Sunrise', 'qui').onlyDirected === true && L['Sentry Signal'].cost.blood === 1
+     && lb.dogged === null && lb.spirits === 'interceptPaid=1,interceptPaidBlood=1' && lb.winds === null && lb.mole === null && M('Black Sunrise', 'qui').onlyDirected === true && L['Sentry Signal'].cost.blood === 1
      && M('Sense the Savage Way', 'ani').fx.intercept === 1 && M('One With the Land', 'pro').fx.intercept === 2 && M('Sentry Signal', 'ANI').fx.reduce === 3,
-     'the locked route (v1.9.11): Sense the Savage Way [ANI], Sentry Signal [ani]/[tha], One With the Land [PRO] (+ no strikes in the first round), Deep Ecology [pro] (burn 1 blood), Black Sunrise, Eluding the Arms of Morpheus; none for Dogged Pursuit, Speak with Spirits, Read the Winds, The Mole (got ' + JSON.stringify(lb) + ')');
+     'the locked route (v1.9.11): Sense the Savage Way [ANI], Sentry Signal [ani]/[tha], One With the Land [PRO] (+ no strikes in the first round), Deep Ecology [pro] (burn 1 blood), Black Sunrise, Eluding the Arms of Morpheus; none for Dogged Pursuit, Read the Winds, The Mole; Speak with Spirits [SPI] by its C1b merge, with its paid +1 (got ' + JSON.stringify(lb) + ')');
   // Night Terrors and its class
   ok(M('Night Terrors', 'obf+pre').fx.stealthToZero === true && M('Night Terrors', 'OBF+PRE').fx.stealthToZero === true && M('Veiled Sight', 'chi').fx.stealthToZero === true && M('Draba', 'CHI').fx.stealthToZero === true && !M('Draba', 'chi').fx.stealthToZero
      && L['Night Terrors'].cost.blood === 1 && (L['Night Terrors'].req.clan || []).includes('Ravnos'),
@@ -1178,27 +1178,28 @@ ok(fx.counts.libLock >= 140,
     const shippedTxt = (() => { try { return fs.readFileSync(here('elysium-cardfx.json'), 'utf8'); } catch (e) { return null; } })();
     /* compiler v1.11.0 (20 Nov 2026, the Banu Haqim pilot): the guard that went red on purpose when the first entry opted in now pins the
        first opt-ins -- exactly the pilot's five opt in, and exactly their compiled and committed entries carry merged and handKeys */
-    const C1M = [   // v0.6.243 (C1): the readers' corrections of the stealth / intercept / bleed family, 80 merges (their notes begin 'C1 (27 Nov 2026')
+    const C1M = [   // v0.6.243 (C1): the readers' corrections of the stealth / intercept / bleed family, 80 merges (their notes begin 'C1 (27 Nov 2026'); v0.6.244 (C1b): 74 -- the six prices the compiler reads now (payBlood, v1.13.0) left, and C1b's six joined (C1BM)
       'Abbot', 'Achilles\' Heel', 'Anarch Manifesto, An', 'Asanbonsam Ghoul', 'Baltimore Purge', 'Bear-Baiting', 'Blessings of the Loa',
       'Blithe Acceptance', 'Bloodstone', 'Bloodwork', 'Canopic Jar', 'Carlton Van Wyk', 'Charigger, The Axe', 'Charnas the Imp',
       'Codex of the Edenic Groundskeepers', 'Communal Haven: Temple', 'Corpse Balloon', 'Cãoera', 'Defender of the Haven', 'Divine Sign',
-      'Dogged Pursuit', 'Dream World', 'Ears of the Hare', 'Form of Mist', 'Giuseppe, Gravedigger', 'Gravebound Drone', 'Guard Duty',
+      'Dogged Pursuit', 'Dream World', 'Form of Mist', 'Giuseppe, Gravedigger', 'Gravebound Drone', 'Guard Duty',
       'Guinea-Bissau Carnival', 'Hexaped', 'Hidden Pathways', 'High Aye', 'Illuminate', 'Ilomba', 'Inevitability of the Void', 'Lock',
-      'Marijava Ghoul', 'Marked Territory', 'Ministry', 'Mirror\'s Visage', 'Mithraic Cultist', 'Mole\'s Tunneling', 'No Secrets From the Magaji',
-      'Nosferatu Performance Art', 'Pallid', 'Pentex™ Loves You!', 'Phased Motion Detector', 'Pocket Out of Time', 'Priestess of Sekhmet',
+      'Marijava Ghoul', 'Marked Territory', 'Ministry', 'Mirror\'s Visage', 'Mithraic Cultist', 'No Secrets From the Magaji',
+      'Nosferatu Performance Art', 'Pallid', 'Pentex™ Loves You!', 'Phased Motion Detector', 'Priestess of Sekhmet',
       'Protection Racket', 'Psalm of the Damned', 'Psychic Veil', 'Pulled Fangs', 'Rampage', 'Samuel Haight', 'Scarlet Lore', 'Sense the Sin',
-      'Shell Break', 'Sins of the Cauchemar', 'Siren\'s Lure', 'Songs of the Distant Vitae', 'Soul Painting', 'Speak with Spirits', 'Special Report',
-      'Stone Travel', 'Strained Vitae Supply', 'Sunset Strip, Hollywood', 'Swarm', 'Taking the Skin: Minion', 'The Ancestor\'s Talisman',
+      'Shell Break', 'Sins of the Cauchemar', 'Songs of the Distant Vitae', 'Soul Painting', 'Speak with Spirits', 'Special Report',
+      'Strained Vitae Supply', 'Sunset Strip, Hollywood', 'Swarm', 'Taking the Skin: Minion', 'The Ancestor\'s Talisman',
       'The Portrait', 'The Rumor Mill, Tabloid Newspaper', 'The Unmasking', 'Tremere Convocation', 'Under Siege', 'Unholy Penance',
-      'Unleash the Hounds', 'Unlicensed Taxicab', 'Voices of the Castle', 'Warning Sirens', 'Watchtower: The Wolves Feed'];
-    const PILOT = ['Biothaumaturgic Experiment', 'New Moon Sigil', 'Night Terrors', 'Priority Contract', 'Shadow of the Beast', 'Aire of Elation', 'The Warrens', 'Mirror Walk'].concat(C1M), srt = x => JSON.stringify((x || []).slice().sort());   // v0.6.241: + the exactness round's three (7.1, 7.2, Mirror Walk [THA]); v0.6.243: + C1's 80
+      'Unleash the Hounds', 'Unlicensed Taxicab', 'Warning Sirens', 'Watchtower: The Wolves Feed'];
+    const C1BM = ['Changeling Skin Mask', 'Gifts From Hereafter', 'Heart of the City', 'Polaris Coach', 'Revelation of Desire', 'WMRH Talk Radio'];   // v0.6.244 (C1b): the sample's five and the fidelity pass's one (their notes begin 'C1b (27 Nov 2026')
+    const PILOT = ['Biothaumaturgic Experiment', 'New Moon Sigil', 'Night Terrors', 'Priority Contract', 'Shadow of the Beast', 'Aire of Elation', 'The Warrens', 'Mirror Walk'].concat(C1M, C1BM), srt = x => JSON.stringify((x || []).slice().sort());   // v0.6.241: + the exactness round's three (7.1, 7.2, Mirror Walk [THA]); v0.6.243: + C1's 80
     const shipped = (() => { try { return JSON.parse(shippedTxt); } catch (e) { return null; } })();
     const mergedIn = lib => Object.keys((lib && lib.lib) || {}).filter(n => lib.lib[n].merged !== undefined || lib.lib[n].handKeys !== undefined);
     const delOnly = n => { const L = curated.lib[n] || {}, ms = L.modes || []; return ms.some(m => m.drop === true) || ms.some(m => Object.values(m.fx || {}).some(v => v === null)); };   // v0.6.243 (C1): a correction that only deletes compiled keys sets no hand key
     ok(srt(realOpt) === srt(PILOT) && !!a && srt((ra.merged || []).map(m => m.name)) === srt(PILOT) && srt(mergedIn(a)) === srt(PILOT)
        && PILOT.every(n => a.lib[n].merged === true && a.lib[n].src === 'hand' && Array.isArray(a.lib[n].handKeys) && (a.lib[n].handKeys.length > 0 || delOnly(n)))
        && !!shipped && srt(mergedIn(shipped)) === srt(PILOT) && (shippedTxt.match(/"merged":true/g) || []).length === PILOT.length,
-       'the real opt-ins are the pilot\u2019s five, the exactness round\u2019s three and C1\u2019s 80 (' + realOpt.length + ': ' + realOpt.join(', ') + '): exactly their compiled and committed entries carry merged and handKeys (until v1.11.0 this guard held that none opted in)'); }
+       'the real opt-ins are the pilot\u2019s five, the exactness round\u2019s three, C1\u2019s 74 and C1b\u2019s six (' + realOpt.length + ': ' + realOpt.join(', ') + '): exactly their compiled and committed entries carry merged and handKeys (until v1.11.0 this guard held that none opted in)'); }
 }
 /* end: the merge of hand entries */
 /* The Banu Haqim pilot (20 Nov 2026, compiler v1.11.0; spec-sweep-pilot-2026-11-20.md §3.1, RULINGS D-125 / D-127 / D-132): the whole-mode
@@ -1628,16 +1629,32 @@ ok(fx.counts.libLock >= 140,
   ok(!own('Baltimore Purge', 'actStealth').length && bp && bp.fx.plusIf.add.actStealth === 1 && bp.fx.plusIf.if.selfClan === 'Ravnos',
     'C1: Baltimore Purge is a +1 stealth action only for a Ravnos (plusIf selfClan)');
   const sl = mode('Scarlet Lore', 'MYT'), mv = mode('Mirror\'s Visage', 'CHI');
-  ok(sl && sl.fx.actStealth === 2 && mv && mv.fx.stealth === 1 && mv.fx.plusIf && mv.fx.plusIf.add.stealth === 1 && /undirected/.test(mv.fx.plusIf.if.unread),
-    'C1: Scarlet Lore [MYT] 2 (the opening +1 and its additional +1); Mirror\'s Visage [CHI] +1, +2 when undirected');
+  ok(sl && sl.fx.actStealth === 2 && mv && mv.fx.stealth === 1 && mv.fx.plusIf && mv.fx.plusIf.add.stealth === 1 && mv.fx.plusIf.if.actUndirected === true,
+    'C1: Scarlet Lore [MYT] 2 (the opening +1 and its additional +1); Mirror\'s Visage [CHI] +1, +2 when undirected (C1b: plusIf actUndirected, read)');
   const ws = fx.lib['Warning Sirens'].modes || [], ss = mode('Speak with Spirits', 'SPI'), ba = mode('Blithe Acceptance', 'obf');
   ok(ws.length === 2 && ws.filter(m => m.fx.intercept === 1).length === 1 && ws.filter(m => m.fx.dodge === true).length === 1 && !ws.some(m => m.fx.intercept && m.fx.dodge),
     'C1: Warning Sirens\' two uses are two modes (+1 intercept, or a dodge)');
   ok(ss && ss.fx.intercept === undefined && ss.fx.interceptPaid === 1 && ss.fx.interceptPaidBlood === 1 && ba && ba.fx.actStealth === undefined && ba.fx.bearerStat && ba.fx.bearerStat.stealth === 1,
     'C1: Speak with Spirits [SPI]\'s +1 intercept costs 1 blood; Blithe Acceptance\'s +1 stealth is its bearer\'s, not the action\'s');
   const pr = (fx.lib['Protection Racket'].modes || [])[0];
-  ok(pr && pr.fx.intercept === 1 && pr.fx.plusIf && pr.fx.plusIf.add.intercept === 1 && /titled/.test(pr.fx.plusIf.if.unread),
-    'C1: Protection Racket +1 intercept, +2 against a titled acting minion (the condition unread: SWEEP-REGISTER 7.5)');
+  ok(pr && pr.fx.intercept === 1 && pr.fx.plusIf && pr.fx.plusIf.add.intercept === 1 && pr.fx.plusIf.if.actorTitled === true,
+    'C1: Protection Racket +1 intercept, +2 against a titled acting minion (C1b: plusIf actorTitled, read; SWEEP-REGISTER 7.5)');
+  /* C1b (v0.6.244, cardfx v1.13.0): the 'or' option, the actor's discipline gate, a value sold for blood -- each on exactly its cards */
+  { const L = fx.lib, so = ['Fata Morgana', 'Power of One', 'Revelation of the Serpent', 'Subversion', 'Virtuosa'].map(n => (L[n].modes || []).filter(m => m.fx && m.fx.stealthOpt).map(m => m.at).join('+'));
+    const soAll = Object.keys(L).filter(n => (L[n].modes || []).some(m => m.fx && m.fx.stealthOpt));
+    ok(JSON.stringify(so) === JSON.stringify(['CHI', 'pre', 'pre+pro+PRE+PRO', 'CEL+PRE', 'mel']) && soAll.length === 5 && (L['Subversion'].modes || []).filter(m => m.fx.stealthOpt).every(m => m.fx.stealth === 1 && m.fx.bleed === 1) && mode('Virtuosa', 'mel').fx.bleed === 2,
+      'C1b: stealthOpt on the five modifiers whose line prints "+1 bleed (limited), or +1 stealth and +1 bleed (limited)" (Virtuosa [mel] the reverse, +2) and on no other entry (' + soAll.length + ')');
+    const nd = Object.keys(L).filter(n => (L[n].modes || []).some(m => m.notActorDisc)).sort();
+    ok(JSON.stringify(nd) === JSON.stringify(['Rooftop Shadow', 'The Mole']) && mode('Rooftop Shadow', 'cel').notActorDisc === 'cel' && mode('Rooftop Shadow', 'CEL').notActorDisc === 'CEL' && mode('The Mole', 'cel').notActorDisc === 'cel' && !mode('The Mole', 'dom').notActorDisc,
+      'C1b: notActorDisc -- "Not usable if the acting minion has Celerity [cel]" on its own line\'s modes, the token\'s case its level (' + nd.join(', ') + ')');
+    const pb = Object.keys(L).filter(n => (L[n].modes || []).some(m => m.fx && m.fx.payBlood > 0 && m.when !== 'lockedBlock')).sort();
+    ok(JSON.stringify(pb) === JSON.stringify(['Aura Absorption', 'Ears of the Hare', 'Falcon\'s Eye', 'Mole\'s Tunneling', 'Pocket Out of Time', 'Savannah Runner', 'Siren\'s Lure', 'Stone Travel', 'Voices of the Castle'])
+      && mode('Stone Travel', 'obt').fx.stealth === 1 && mode('Stone Travel', 'obt').fx.payBlood === 1 && mode('Siren\'s Lure', 'cel').fx.payBlood === 2 && mode('Mole\'s Tunneling', 'SPI').fx.stealth === 2
+      && mode('Ears of the Hare', 'pro').fx.intercept === 1 && mode('Ears of the Hare', 'pro').fx.interceptPaid === undefined && mode('Aura Absorption', 'myt').fx.payBlood === undefined,
+      'C1b: payBlood on a line that sells its value ("Burn 1 blood to get +1 stealth.", "This vampire burns 1 blood to get +1 intercept."): the nine, each value with its price, the free lines without (' + pb.length + ')');
+    const V5 = JSON.parse(fs.readFileSync(here('vtes.json'), 'utf8')), uq = V5.filter(c => L[c.name] && /(?:^|[.:]\s+)Unique\b/.test((c.card_text || '').split('\n')[0]) && !/^unique\b/i.test((c.card_text || '').trim())).map(c => c.name);
+    ok(uq.length === 46 && uq.every(n => L[n].unique === true) && ['Gather', 'Pit of Contemplation', 'The Gate of Acheron', 'Under Siege', 'Constant Revolution', 'Dance of the Dead'].every(n => L[n].unique === true),
+      'C1b: "Unique." as a sentence of the header line ("+1 stealth action. Unique.", "Requires a ready Seraph. Unique.") is unique -- the 46 whose header line carries it (45 the line-start reading missed; Carfax Abbey\'s hand entry had it), Gather and Under Siege among them (' + uq.filter(n => L[n].unique !== true).join(', ') + ')'); }
   /* the family's exactness record (cardfx-exact.json, a development file; RULINGS D-144): its states, its cards, its open gaps */
   let ex = null, exErr = '', regT2 = null;
   try { ex = JSON.parse(fs.readFileSync(here('cardfx-exact.json'), 'utf8')); } catch (e) { exErr = e.message; }
@@ -1667,7 +1684,7 @@ ok(fx.counts.libLock >= 140,
      and every sample re-derived from its seed (a sample is drawn, never picked) */
   const drawSample = (X, fam, exclude, n, seed) => { const rows = [];
     for (const card of Object.keys(X.cards).sort()) { if (exclude.includes(card)) continue; const v = X.cards[card][fam]; if (v == null) continue;
-      for (const [lvl, st] of Object.entries(typeof v === 'string' ? { all: v } : v).sort()) if (String(st) === 'agree') rows.push({ card, fam, lvl }); }
+      for (const [lvl, st] of Object.entries(typeof v === 'string' ? { all: v } : v).sort()) if (String(st) === 'agree' || String(st).split(' ').slice(1).includes('was-agree')) rows.push({ card, fam, lvl }); }   // v0.6.244 (C1b): a row that was agree at the draw and changed since keeps was-agree in its state (cardfx-exact.json's comment)
     let z = seed >>> 0 || 1; const rnd = () => { z ^= z << 13; z >>>= 0; z ^= z >>> 17; z ^= z << 5; z >>>= 0; return z / 4294967296; };
     const pool = rows.slice(), out = []; while (out.length < n && pool.length) { const i = Math.floor(rnd() * pool.length); out.push(pool.splice(i, 1)[0]); }
     return out; };
@@ -1695,14 +1712,20 @@ ok(fx.counts.libLock >= 140,
     for (const f of rfiles) { let D = null; try { D = JSON.parse(fs.readFileSync(path.join(rdir, f), 'utf8')); } catch (e) { RP.push(f + ': ' + e.message); continue; }
       nv += (D.verdicts || []).length; ns += (D.samples || []).length; readersProblems(D, ex, regE3, has3).forEach(q => RP.push(f + ': ' + q)); }
     ok(rfiles.length >= 1 && RP.length === 0, 'the readers\' data files: ' + rfiles.length + ' file(s), ' + nv + ' verdicts, ' + ns + ' sample(s); every disposition a register entry, every sample the draw of its seed' + (RP.length ? ': ' + RP.slice(0, 4).join('; ') : ''));
-    const D0 = JSON.parse(fs.readFileSync(path.join(rdir, rfiles[0]), 'utf8')), B0 = JSON.parse(JSON.stringify(D0));
+    const fS = rfiles.find(f => (JSON.parse(fs.readFileSync(path.join(rdir, f), 'utf8')).samples || []).length) || rfiles[0];   // v0.6.244: the file that holds a sample (C1b's holds none)
+    const D0 = JSON.parse(fs.readFileSync(path.join(rdir, fS), 'utf8')), B0 = JSON.parse(JSON.stringify(D0));
     B0.verdicts[0].verdict = 'maybe'; B0.verdicts[1].lead = 'registered: SWEEP-REGISTER 99.97'; if (B0.samples[0]) B0.samples[0].rows[0] = { card: 'Abbot', fam: 'stealth', lvl: 'all' };
     ok(readersProblems(B0, ex, regE3, has3).length === 3, 'planted: an unknown verdict, a disposition naming no register entry and a hand-picked sample row are each reported');
+    const X2 = JSON.parse(JSON.stringify(ex)), wa = Object.entries(X2.cards).find(([, ks]) => Object.values(ks).some(v => typeof v === 'string' && / was-agree c1-agree-1/.test(v)));
+    if (wa) for (const k of Object.keys(wa[1])) if (/ was-agree c1-agree-1/.test(String(wa[1][k]))) wa[1][k] = 'corrected';
+    ok(!!wa && readersProblems(D0, X2, regE3, has3).some(q => /not the draw of its seed/.test(q)), 'planted (C1b): a sampled row corrected without its was-agree marker breaks the draw (' + (wa ? wa[0] : 'no marked row') + ')');
   }
-  const IFK = new Set(['selfClan', 'selfTitled', 'unread']), badIf = [];
+  const IFK = new Set(['selfClan', 'selfTitled', 'actorTitled', 'actorSect', 'actDirected', 'actUndirected', 'unread']), badIf = [];   // v0.6.244 (C1b): the bot's PLUSIF_CONDS and 'unread' (pinned below)
+  { const m = /const PLUSIF_CONDS = (\[[^\]]*\])/.exec(fs.readFileSync(here('elysium-bot.js'), 'utf8')), bc = m ? JSON.parse(m[1].replace(/'/g, '"')) : null;
+    ok(!!bc && JSON.stringify(bc.slice().sort()) === JSON.stringify([...IFK].filter(k => k !== 'unread').sort()), 'C1b: the plusIf vocabulary here is the bot\'s PLUSIF_CONDS (and unread, which _plusIf fails closed) -- one list, read from elysium-bot.js (' + (bc ? bc.join(', ') : 'not found') + ')'); }
   for (const n in fx.lib) for (const m of fx.lib[n].modes || []) if (m.fx && m.fx.plusIf){ const pi = m.fx.plusIf;
     if (!pi.add || typeof pi.add !== 'object' || !Object.keys(pi.add).length || !pi.if || !Object.keys(pi.if).length || Object.keys(pi.if).some(k => !IFK.has(k)) || (pi.if.unread !== undefined && !(typeof pi.if.unread === 'string' && pi.if.unread.length > 8))) badIf.push(n); }
-  ok(!badIf.length, 'C1: every plusIf names what it adds and a condition the vocabulary knows (selfClan, selfTitled, or an unread condition in words)' + (badIf.length ? ': ' + badIf.join(', ') : ''));
+  ok(!badIf.length, 'C1: every plusIf names what it adds and a condition the vocabulary knows (selfClan, selfTitled, actorTitled, actorSect, actDirected, actUndirected, or an unread condition in words)' + (badIf.length ? ': ' + badIf.join(', ') : ''));
 }
 
 console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green'));

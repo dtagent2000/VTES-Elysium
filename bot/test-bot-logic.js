@@ -7625,7 +7625,7 @@ async function connectWithRetry(client, tries = 30){
   ok(d1.spend === false && d4.spend === true && /a modifier in hand worth 3/.test(d4.why), '115a the same bleed of 1 at P(intercept) 0.5: bare -> no stealth; with a Conditioning (+3) in hand -> stealth. ' + d4.why);
   ok(m.decide('spend-stealth', { pInt: 0.9, stakes: 4, announced: 1, pump: 3 }).spend === false, '115a ...a blocker who surely out-intercepts is still not chased (insight holds)');
   const src115 = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
-  ok(/av\.kind === 'bleed' \|\| \(av\.kind == null && av\.target\)/.test(src115) && /stakes: annN \+ pump/.test(src115), '115b the call site adds the best playable bleed modifier for a BLEED only (a hunt has no target and gets no pump)');
+  ok(/av\.kind === 'bleed' \|\| \(av\.kind == null && av\.target\)/.test(src115) && /stakes: annN \+ own \+ pump/.test(src115), '115b the call site adds the best playable bleed modifier for a BLEED only (a hunt has no target and gets no pump)');
   const col = { id: 'm1', kind: 'crypt', name: 'Colette (G6)', zone: 'ready', blood: 4, locked: true, attached: [] }; m.board = [col]; m.hand = ['Conditioning', 'Lost in Crowds'];
   const bm = m._bestBleedModifierFor(col, new Set(), false); ok(bm && bm.n >= 2, '115b fixture: Colette can pump the bleed with Conditioning (' + JSON.stringify(bm && { name: bm.name, n: bm.n }) + ')');
   const f = mk115({ deckName: 'ventrue' }); const alice = { id: 'v1', kind: 'crypt', name: 'Alice Chen (G6)', zone: 'ready', blood: 3, locked: true, attached: [] }; f.board = [alice]; f.hand = ['Freak Drive'];
@@ -16815,7 +16815,7 @@ async function connectWithRetry(client, tries = 30){
         const got = { tor: n(tor), torS: n(torS), bru: n(bru) };
         ok(got.tor === 2 && got.torS === 3 && got.bru === 1,
            '187e Aire of Elation adds +1 more bleed when its vampire is Toreador: [pre] +2 and [PRE] +3 for a Toreador, +1 for a Brujah (got ' + JSON.stringify(got) + '; v0.6.240 read +1 / +2 / +1)');
-        const mo = { at: null, fx: { bleed: 1, plusIf: { add: { bleed: 1 }, if: { selfClan: 'Toreador', actorTitled: true } } } };
+        const mo = { at: null, fx: { bleed: 1, plusIf: { add: { bleed: 1 }, if: { selfClan: 'Toreador', unread: 'a condition in words no reader knows' } } } };   // v0.6.244: actorTitled is read since C1b -- the unknown one is an unread condition
         ok(typeof u._plusIf === 'function' && u._plusIf(mo, 'bleed', tor) === 0 && u._plusIf({ fx: { bleed: 1, plusIf: { add: { bleed: 1 }, if: { selfClan: 'Toreador' } } } }, 'intercept', tor) === 0,
            '187e a condition the reader does not know fails closed (no bonus), and a bonus for another key adds nothing here');
       }
@@ -17000,6 +17000,171 @@ async function connectWithRetry(client, tries = 30){
            '187l a Change of Target line heard under a before-range gate spends nothing either: Carrion Crows and Wall of Filth stay in hand, no combat round, the cancel told (the register’s 11.4, its second half; v0.6.240 spent both) (got ' + JSON.stringify(got) + ')');
       }
     }
+
+    /* 188) v0.6.244 -- C1b: the card chain's gaps the readers left (RULINGS D-147, D-148; SWEEP-REGISTER 7.5, 7.6, 9.13, 10.17, 10.25).
+       (a) 9.13: a bleed card's header '+1 stealth action.' is booked at the announce (Cat Burglary, Fleetness: _cardActStealth), as the
+       rush's and the attach's are; (b) 9.13: a level-free bleed whose discipline lines add to it (Break the Bonds [ani] +1 bleed, The
+       Platinum Protocol [obf] +1 stealth and [pre] +1 bleed) takes every line its vampire has; (c) 9.13: a pool-damage action books its
+       header too (Edge Vitiation); (d) 10.17: Bonding [DOM] spent for its stealth books its +1 bleed on the action and takes the limited
+       slot (no Conditioning after it), the add line said once the blocks are declined (_sayOwedAdd); (e) 10.25: the 'or' option --
+       Subversion [CEL]'s bleed alone after the block (fx.stealthOpt), and in the contest the [CEL] mode over [cel] at the same stealth,
+       unless a limited modifier in hand would use the slot for more; (f) 7.5: Protection Racket +2 against a titled actor, +1 otherwise;
+       (g) 7.6: a value sold for blood (fx.payBlood) -- Stone Travel [obt] not offered at 0 blood, its blood paid with the card; Ears of
+       the Hare [pro] likewise on the intercept side; (h) 7.6: Mirror's Visage [CHI] +2 on an undirected action (the announce's form,
+       _myActDirected), +1 on a bleed; (i) 7.6: Corpse Balloon [VIC]'s +1 intercept for its employer during a directed action only;
+       (j) the agreeing rows' sample: Rooftop Shadow is not usable when the acting minion has Celerity (notActorDisc); (k) the round's
+       240: a target's reduction before the stealth card's add line is read off my own total, and the add line says what its total lacks;
+       (l) the egress review: the same-stealth pick across cards (a stealth card's bleed, the slot) and the spend's stakes; (m) the
+       block decision reads Corpse Balloon's +1 as the pick does.
+       LAST LINE OF 188 is the closing brace below. */
+    {
+      console.log('\n[188] v0.6.244 -- C1b: the card chain’s gaps (a bleed card’s header, a stealth mode’s bleed, the or-option, prices, the actor and the action’s form)');
+      const cf8 = JSON.parse(require('fs').readFileSync(__dirname + '/elysium-cardfx.json', 'utf8')), PLAIN8 = new Set(['cap', 'clan', 'sect', 'group', 'disc', 'title', 'votes']);
+      const pick8 = pred => { for(const nm in cf8.crypt){ const c = cf8.crypt[nm]; if(!c || !c.disc || Object.keys(c).some(k => !PLAIN8.has(k))) continue; try { if(pred(c, nm)) return nm; } catch(e){} } return null; };   // a plain vampire (no crypt text the bot reads)
+      const has8 = (d, x) => (d.all || []).includes(x), sup8 = (d, x) => (d.sup || []).includes(x);
+      const mk8 = () => { const u = new Bot({ server: 'ws://127.0.0.1:1', room: 'x', pass: 'x', name: 'C', persona: 'expert', paceMs: 0, log: () => {} });
+        u.seat = 1; u.started = true; u.sent = []; u.send = m => u.sent.push(m); u.push = () => {}; u.fxClone = () => {}; u.note = () => {};
+        u.players = [{ seat: 1, name: 'C', bot: true }, { seat: 2, name: 'Viktor', bot: true }, { seat: 3, name: 'Lisa', bot: true }]; u.table = {}; u.edge = false; return u; };
+      const V8 = (id, name, blood, extra) => Object.assign({ id, name, kind: 'crypt', zone: 'ready', locked: false, blood, cap: 6, attached: [] }, extra || {});
+      const logs8 = u => u.sent.filter(m => m && m.t === 'log').map(m => String(m.html || '').replace(/<[^>]*>/g, ''));
+
+      // a) 9.13: the header of a bleed card
+      { const vn = pick8(c => has8(c.disc, 'cel') && !sup8(c.disc, 'cel')), u = mk8(), v = V8('a1', vn, 4); u.board = [v];
+        const st = card => { u.hand = [card]; const b = u._bestBleedCardFor(v); return b && b.name === card ? b.st : null; };
+        const got = { vn: !!vn, cat: st('Cat Burglary'), fleet: st('Fleetness') };
+        ok(got.vn && got.cat === 1 && got.fleet === 1, '188a a bleed card’s printed "+1 stealth action." is booked at the announce: Cat Burglary [cel] and Fleetness [cel] bleed at +1 stealth (got ' + JSON.stringify(got) + '; v0.6.243 announced them at 0, SWEEP-REGISTER 9.13)'); }
+
+      // b) 9.13: a level-free bleed and its discipline lines
+      { const vA = pick8(c => c.sect === 'Anarch' && has8(c.disc, 'ani') && !has8(c.disc, 'obf') && !has8(c.disc, 'pre'));
+        const vB = pick8(c => c.sect === 'Anarch' && has8(c.disc, 'obf') && has8(c.disc, 'pre') && !has8(c.disc, 'pro'));
+        const u = mk8(), a = V8('b1', vA, 4), b = V8('b2', vB, 4); u.board = [a, b];
+        const g = (v, card) => { u.hand = [card]; const r = u._bestBleedCardFor(v); return r && r.name === card ? { n: r.n, st: r.st } : null; };
+        const got = { vA: !!vA, vB: !!vB, btb: g(a, 'Break the Bonds'), plat: g(b, 'The Platinum Protocol') };
+        ok(got.vA && got.vB && got.btb && got.btb.n === 2 && got.plat && got.plat.n === 2 && got.plat.st === 1,
+           '188b a level-free bleed takes the discipline lines its vampire has: Break the Bonds with [ani] bleeds 2, The Platinum Protocol with [obf][pre] bleeds 2 at +1 stealth (got ' + JSON.stringify(got) + '; v0.6.243 bled 1 at 0)'); }
+
+      // c) 9.13: a pool-damage action's header
+      { const vn = pick8(c => has8(c.disc, 'ser')), u = mk8(), v = V8('c1', vn, 4); u.board = [v]; u.hand = ['Edge Vitiation'];
+        const r = u._bestPoolDmgActionFor(v);
+        ok(!!vn && !!r && r.name === 'Edge Vitiation' && r.st === 1, '188c a pool-damage action books its printed stealth: Edge Vitiation [ser] at +1 (got ' + JSON.stringify(r && { name: r.name, n: r.n, st: r.st }) + '; v0.6.243 announced it at 0)'); }
+
+      // d) 10.17: Bonding [DOM] spent for its stealth -- the +1 bleed, the limited slot, the add line once the blocks are declined
+      { const vn = pick8(c => sup8(c.disc, 'dom') && !has8(c.disc, 'pre') && !has8(c.disc, 'obf') && !has8(c.disc, 'cel')), u = mk8(), v = V8('d1', vn, 4); u.board = [v]; u.hand = ['Bonding', 'Conditioning'];
+        const av = { v, n: 1, played: new Set(), target: 2, edgeLocked: false, limitedUsed: false }; u._actingVamp = av; u._cryptStealthMod(v, 'bleed');
+        const st = u._bestStealthFor(v, av.played, 2);
+        u._spendStealthCard(st, av, {});
+        const mod = u._bestBleedModifierFor(v, av.played, av.limitedUsed);
+        const said = typeof u._sayOwedAdd === 'function' ? (u._sayOwedAdd(v), logs8(u).filter(l => /adds \+1 bleed \(= 2\)\./.test(l)).length) : 'no _sayOwedAdd';
+        const got = { vn: !!vn, card: st && st.name, bleed: st && st.bleed, n: av.n, lim: av.limitedUsed, cond: mod ? mod.name : null, said, owed: av.owedAdd || null };
+        ok(got.vn && got.card === 'Bonding' && got.bleed === 1 && got.n === 2 && got.lim === true && got.cond === null && got.said === 1 && got.owed === null,
+           '188d Bonding [DOM] spent for its stealth adds its +1 bleed to the action and takes the limited slot (no Conditioning after it); "adds +1 bleed (= 2)." is said once (got ' + JSON.stringify(got) + '; v0.6.243 added the stealth only and let Conditioning follow, SWEEP-REGISTER 10.17)'); }
+
+      // e) 10.25: the or-option -- the bleed alone after the block, and the [CEL] mode in the contest unless the slot is worth more
+      { const vn = pick8(c => sup8(c.disc, 'cel') && !has8(c.disc, 'pre') && !has8(c.disc, 'dom')), vd = pick8(c => sup8(c.disc, 'cel') && sup8(c.disc, 'dom') && !has8(c.disc, 'pre'));
+        const u = mk8(), v = V8('e1', vn, 4); u.board = [v];
+        u.hand = ['Subversion']; const after = u._bestBleedModifierFor(v, new Set(), false);
+        u._actingVamp = { v, n: 1, played: new Set(), target: 2, limitedUsed: false }; u._cryptStealthMod(v, 'bleed');
+        const inC = u._bestStealthFor(v, u._actingVamp.played, 2);
+        const u2 = mk8(), w = V8('e2', vd || vn, 4); u2.board = [w]; u2.hand = ['Subversion', 'Conditioning'];
+        u2._actingVamp = { v: w, n: 1, played: new Set(), target: 2, limitedUsed: false }; u2._cryptStealthMod(w, 'bleed');
+        const keep = vd ? u2._bestStealthFor(w, u2._actingVamp.played, 2) : null;
+        const got = { vn: !!vn, vd: !!vd, after: after && { name: after.name, n: after.n }, inC: inC && { s: inC.s, bleed: inC.bleed || 0 }, keep: keep && { s: keep.s, bleed: keep.bleed || 0 } };
+        ok(got.vn && got.vd && got.after && got.after.name === 'Subversion' && got.after.n === 1 && got.inC && got.inC.s === 1 && got.inC.bleed === 1 && got.keep && got.keep.s === 1 && got.keep.bleed === 0,
+           '188e Subversion’s "+1 bleed (limited), or +1 stealth and +1 bleed (limited)": the bleed alone after the block; in the contest [CEL] with its bleed, and [cel] when Conditioning would use the slot for more (got ' + JSON.stringify(got) + '; v0.6.243 never played its bleed, SWEEP-REGISTER 10.25)'); }
+
+      // f) 7.5: Protection Racket -- +2 against a titled actor, +1 otherwise (the actor read on its seat's pub board)
+      { const re = pick8(c => c.sect === 'Anarch'), tit = pick8(c => !!c.title), unt = pick8(c => !c.title && c.sect !== 'Anarch');
+        const u = mk8(), v = V8('f1', re, 4); u.board = [v]; u.hand = ['Protection Racket'];
+        const p = actor => { u.table = { 2: { pub: { cards: [{ id: 'x2', name: actor, kind: 'crypt', zone: 'ready', blood: 3 }] } } }; return { kind: 'bleed', who: 'Viktor', actorSeat: 2, actingVampName: actor }; };
+        const ic = actor => { const b = u._bestInterceptFor(v, null, p(actor)); return b && b.name === 'Protection Racket' ? b.s : null; };
+        const got = { names: !!(re && tit && unt), titled: ic(tit), untitled: ic(unt), stack: (() => { const pp = p(tit); return u._interceptStack(v, null, pp).sum; })() };
+        ok(got.names && got.titled === 2 && got.untitled === 1 && got.stack === 2,
+           '188f Protection Racket: +2 intercept against a titled acting minion, +1 against an untitled one, the stack too (got ' + JSON.stringify(got) + '; v0.6.243 read +1 always: SWEEP-REGISTER 7.5)'); }
+
+      // g) 7.6: a value sold for blood -- not offered without the blood, paid with the card
+      { const vo = pick8(c => has8(c.disc, 'obt') && !has8(c.disc, 'myt') && !has8(c.disc, 'tem')), vp = pick8(c => has8(c.disc, 'pro') && !has8(c.disc, 'spi'));
+        const u = mk8(), v0 = V8('g0', vo, 0), v2 = V8('g2', vo, 2); u.board = [v2]; u.hand = ['Stone Travel'];
+        u._actingVamp = { v: v2, n: 1, played: new Set(), target: 2, limitedUsed: false }; u._cryptStealthMod(v2, 'bleed');
+        const s2 = u._bestStealthFor(v2, u._actingVamp.played, 2); const s0 = (() => { u.board = [v0]; u._actingVamp.v = v0; return u._bestStealthFor(v0, new Set(), 2); })();
+        u.board = [v2]; u._actingVamp.v = v2; if(s2) u._spendStealthCard(s2, u._actingVamp, {});
+        const u3 = mk8(), w = V8('g3', vp, 2); u3.board = [w]; u3.hand = ['Ears of the Hare'];
+        const ic = u3._bestInterceptFor(w, null, { kind: 'bleed', who: 'Viktor' }); if(ic && typeof u3._spendIntercept === 'function') u3._spendIntercept(ic, w, false);
+        const got = { names: !!(vo && vp), s0: s0 ? s0.name : null, s2: s2 && { s: s2.s, cost: s2.cost }, bloodAfter: v2.blood, ic: ic && { s: ic.s, cost: ic.cost }, earsAfter: w.blood };
+        ok(got.names && got.s0 === null && got.s2 && got.s2.s === 1 && got.s2.cost && got.s2.cost.blood === 1 && got.bloodAfter === 1 && got.ic && got.ic.s === 1 && got.ic.cost && got.ic.cost.blood === 1 && got.earsAfter === 1,
+           '188g a value sold for blood: Stone Travel [obt]’s +1 stealth is not offered at 0 blood and costs 1; Ears of the Hare [pro]’s +1 intercept costs 1 (got ' + JSON.stringify(got) + '; v0.6.243 kept both on unread shapes: SWEEP-REGISTER 7.6)'); }
+
+      // h) 7.6: Mirror's Visage [CHI] -- +2 on an undirected action, +1 on a bleed (the announce's form)
+      { const vn = pick8(c => sup8(c.disc, 'chi')), u = mk8(), v = V8('h1', vn, 4); u.board = [v]; u.hand = ["Mirror's Visage"];
+        const mo = (cf8.lib["Mirror's Visage"].modes || []).find(m => m.at === 'CHI');
+        u._actingVamp = { v, n: 0, played: new Set(), target: null, kind: 'political' }; u._cryptStealthMod(v, 'political', false); const und = u._modeStealth(mo, v);
+        u._actingVamp = { v, n: 1, played: new Set(), target: 2 }; u._cryptStealthMod(v, 'bleed'); const dir = u._modeStealth(mo, v);
+        u._actingVamp = { v, n: 1, played: new Set(), target: 2 }; const before = u._modeStealth(mo, v);   // no announce of this action yet: the form unknown
+        const got = { vn: !!vn, und: und && und.s, dir: dir && dir.s, before: before && before.s };
+        ok(got.vn && got.und === 2 && got.dir === 1 && got.before === 1, '188h Mirror’s Visage [CHI]: +2 stealth on an undirected action, +1 on a bleed, +1 before the action’s form is known (got ' + JSON.stringify(got) + '; v0.6.243 read +1 always)'); }
+
+      // i) 7.6: Corpse Balloon [VIC] -- its employer's +1 intercept during a directed action only
+      { const vn = pick8(c => sup8(c.disc, 'vic')), u = mk8(), v = V8('i1', vn, 4); const cb = { id: 'cb1', name: 'Corpse Balloon', kind: 'lib', zone: 'ready', host: 'i1' };
+        v.attached = ['cb1']; u.board = [v, cb];
+        const got = { vn: !!vn, bleed: u._equipIntercept(v, { kind: 'bleed' }), undirected: u._equipIntercept(v, { kind: 'undirected' }), none: u._equipIntercept(v) };
+        ok(got.vn && got.bleed === 1 && got.undirected === 0 && got.none === 0, '188i Corpse Balloon [VIC]: +1 intercept for its employer during a directed action, none during an undirected one or in an estimate (got ' + JSON.stringify(got) + ')'); }
+
+      // j) the sample: Rooftop Shadow is not usable when the acting minion has Celerity
+      { const vr = pick8(c => has8(c.disc, 'cel') && !sup8(c.disc, 'cel')), ac = pick8((c, nm) => has8(c.disc, 'cel') && nm !== vr), an = pick8(c => !has8(c.disc, 'cel'));
+        const u = mk8(), v = V8('j1', vr, 4); u.board = [v]; u.hand = ['Rooftop Shadow'];
+        const p = actor => { u.table = { 2: { pub: { cards: [{ id: 'x2', name: actor, kind: 'crypt', zone: 'ready', blood: 3 }] } } }; return { kind: 'bleed', who: 'Viktor', actorSeat: 2, actingVampName: actor }; };
+        const ic = actor => { const b = u._bestInterceptFor(v, null, p(actor)); return b && b.name === 'Rooftop Shadow' ? b.s : null; };
+        const got = { names: !!(vr && ac && an), cel: ic(ac), noCel: ic(an) };
+        ok(got.names && got.cel === null && got.noCel === 1, '188j Rooftop Shadow [cel]: not usable against an acting minion with Celerity, +1 intercept otherwise (got ' + JSON.stringify(got) + ')'); }
+
+      // k) the round's 240 (9 ledger faults): the target reduces the bleed (Protected District, by 3) while Bonding's +1 is on my total and not yet on its
+      { const vn = pick8(c => sup8(c.disc, 'dom') && !has8(c.disc, 'pre') && !has8(c.disc, 'obf') && !has8(c.disc, 'cel'));
+        const run = (n0, by, how) => { const u = mk8(), v = V8('k1', vn, 4); u.board = [v]; u.hand = ['Bonding'];
+          const av = { v, n: n0, played: new Set(), target: 2, edgeLocked: false, limitedUsed: false, kind: 'bleed' }; u._actingVamp = av; u._cryptStealthMod(v, 'bleed');
+          const st = u._bestStealthFor(v, av.played, 2); if(!st || st.name !== 'Bonding') return { st: st && st.name };
+          u._spendStealthCard(st, av, {});
+          const reduce = () => u._onLog('Viktor', how === 'human' ? 'Viktor reduces the bleed by ' + by + '.' : '<b>Larissa</b> plays <b>Protected District</b> \u2014 reduces the bleed by ' + by + ' (now ' + Math.max(0, n0 - by) + ').');
+          let k; if(how === 'late'){ k = u._sayOwedAdd(v); reduce(); } else { reduce(); k = u._sayOwedAdd(v); }
+          return { n: av.n, k, adds: logs8(u).filter(l => /adds \+\d+ bleed/.test(l)) }; };
+        const got = { vn: !!vn, bot: run(3, 3), ate: run(1, 3), human: run(3, 3, 'human'), late: run(3, 3, 'late') };
+        const one = (r, line) => r.adds && r.adds.length === 1 && r.adds[0].endsWith(line);
+        ok(got.vn && got.bot.n === 1 && got.bot.k === 1 && one(got.bot, 'adds +1 bleed (= 1).') && got.ate.n === 0 && got.ate.k === 0 && got.ate.adds.length === 0 &&
+           got.human.n === 1 && got.human.k === 1 && one(got.human, 'adds +1 bleed (= 1).') && got.late.n === 1 && got.late.k === 1,
+           '188k a bleed of 3 with Bonding’s +1, reduced by 3 before the add line: my total is 1 (not the target’s "now 0") and "adds +1 bleed (= 1)." is said; a bleed of 1 reduced by 3 lands 0 and says nothing; a human’s "reduces the bleed by 3." the same; a reduction heard after the add line leaves 1 (got ' + JSON.stringify(got) + '; v0.6.244’s first build took the target’s 0: the 240’s 9 ledger faults, the Edge not taken)'); }
+
+      // l) the egress review: at the same stealth Bonding [DOM]'s +1 bleed wins across cards, unless Conditioning would use the slot for more; the spend's stakes count what the pick leaves playable
+      { const vn = pick8(c => sup8(c.disc, 'dom') && has8(c.disc, 'obf') && !sup8(c.disc, 'obf') && !has8(c.disc, 'cel') && !has8(c.disc, 'pre'));
+        const mkA = (hand, id) => { const u = mk8(), v = V8(id, vn, 4); u.board = [v]; u.hand = hand.slice();
+          const av = { v, n: 1, played: new Set(), target: 2, limitedUsed: false, kind: 'bleed' }; u._actingVamp = av; u._cryptStealthMod(v, 'bleed'); return { u, v, av }; };
+        const pickOf = hand => { const { u, v, av } = mkA(hand, 'l1'); const st = u._bestStealthFor(v, av.played, 2); return st ? st.name : null; };
+        const stakes = hand => { const { u, v, av } = mkA(hand, 'l2'); u.tally = { mode: 'block', a: 0, b: 1 }; let ctx = null; const dec = u.decide.bind(u);
+          u.decide = (q, c) => { if(q === 'spend-stealth'){ ctx = c; return { spend: false, tag: 'probe' }; } return dec(q, c); };
+          const st = u._bestStealthFor(v, av.played, 2); u._stealthFirstLook('Viktor', av, { contested: true }, st); return ctx ? ctx.stakes : null; };
+        const second = hand => { const { u } = mkA(hand, 'l3'); u.tally = { mode: 'block', a: 0, b: 1 }; u._ask = { contested: true }; let ctx = null; const dec = u.decide.bind(u);
+          u.decide = (q, c) => { if(q === 'spend-stealth'){ ctx = c; return { spend: false, tag: 'probe' }; } return dec(q, c); };
+          u._stealthSecondLook(); return ctx ? ctx.stakes : null; };
+        const keepOf = (hand, cm) => { const { u, v, av } = mkA(hand, 'l5'); u._combatMind = () => !!cm; const st = u._bestStealthFor(v, av.played, 2); return st ? st.name : null; };   // the mind forced either way (the fixture's own is a combat mind)
+        const hidden = () => { const { u, v, av } = mkA(['C1b Test Pump', 'Bonding', 'Lost in Crowds', 'Conditioning'], 'l4'); u.fx.lib['C1b Test Pump'] = { t: ['mod'], modes: [{ at: null, fx: { bleed: 3 } }] };
+          const st = u._bestStealthFor(v, av.played, 2); return st ? st.name : null; };   // a non-limited +3 (a stub: no printed one is that large) is the best modifier in hand and must not hide Conditioning's limited +3
+        const got = { vn: !!vn, withCond: pickOf(['Bonding', 'Lost in Crowds', 'Conditioning']), withCond2: pickOf(['Lost in Crowds', 'Bonding', 'Conditioning']),
+                      noCond: pickOf(['Lost in Crowds', 'Bonding']), noCond2: pickOf(['Bonding', 'Lost in Crowds']), stakesBond: stakes(['Bonding', 'Conditioning']), stakesLic: stakes(['Lost in Crowds', 'Conditioning']),
+                      secondBond: second(['Bonding', 'Conditioning']), secondLic: second(['Lost in Crowds', 'Conditioning']), hidden: hidden(),
+                      spyLast: keepOf(['Spying Mission', 'Bonding', 'Conditioning']), spyLast2: keepOf(['Bonding', 'Spying Mission', 'Conditioning']),
+                      dualKept: keepOf(['Swallowed by the Night', 'Bonding', 'Conditioning'], true), dualKept2: keepOf(['Bonding', 'Swallowed by the Night', 'Conditioning'], true),
+                      dualCalm: keepOf(['Bonding', 'Swallowed by the Night', 'Conditioning'], false) };   // outside a combat mind the older tie-breaks keep the hand's order: the slot does not spend Swallowed by the Night first
+        ok(got.vn && got.withCond === 'Lost in Crowds' && got.withCond2 === 'Lost in Crowds' && got.noCond === 'Bonding' && got.noCond2 === 'Bonding' && got.stakesBond === 2 && got.stakesLic === 4 &&
+           got.secondBond === 2 && got.secondLic === 4 && got.hidden === 'Lost in Crowds' && got.spyLast === 'Bonding' && got.spyLast2 === 'Bonding' && got.dualKept === 'Bonding' && got.dualKept2 === 'Bonding' && got.dualCalm === 'Bonding',
+           '188l at +1 stealth Lost in Crowds leaves the slot to Conditioning (+3), and Bonding [DOM] wins without it, in either hand order; the spend’s stakes at both looks: Bonding with Conditioning 1 + 1 (Conditioning refused), Lost in Crowds with it 1 + 3; a larger non-limited modifier does not hide the limited one; and the keep rules outrank the slot: Spying Mission still goes last (D-60), Swallowed by the Night is kept in a combat mind (D-24, O-8), Bonding spent instead (got ' + JSON.stringify(got) + '; the round’s first builds took the first card in hand and counted Conditioning after Bonding)'); }
+
+      // m) the egress review: the block decision counts Corpse Balloon [VIC]'s +1 during a directed action, as the pick does
+      { const vn = pick8(c => sup8(c.disc, 'vic') && !has8(c.disc, 'aus')), u = mk8(), v = V8('m1', vn, 4); const cb = { id: 'cb2', name: 'Corpse Balloon', kind: 'lib', zone: 'ready', host: 'm1' };
+        v.attached = ['cb2']; u.board = [v, cb]; u.hand = [];
+        const vl = pick8(c => sup8(c.disc, 'vic') && has8(c.disc, 'ani') && !has8(c.disc, 'aus')), u2 = mk8(), w = V8('m3', vl, 4, { locked: true }); const cb2 = { id: 'cb4', name: 'Corpse Balloon', kind: 'lib', zone: 'ready', host: 'm3' };
+        w.attached = ['cb4']; u2.board = [w, cb2]; u2.hand = ['Guard Dogs'];   // the locked route: no unlocked body, Guard Dogs [ani] unlocks this one on a bleed at me
+        const got = { vn: !!vn, vl: !!vl, dir: u.interceptPotential(null, { kind: 'bleed', who: 'Viktor', actingVampName: 'Someone' }), und: u.interceptPotential(null, { kind: 'undirected', who: 'Viktor', actingVampName: 'Someone' }),
+                      locked: u2.interceptPotential(null, { kind: 'bleed', who: 'Viktor', actingVampName: 'Someone' }) };
+        ok(got.vn && got.vl && got.dir === 1 && got.und === 0 && got.locked === 1, '188m the block decision reads Corpse Balloon’s +1 intercept during a directed action and none during an undirected one, as the pick and the tally do, on a ready body and on the locked route (got ' + JSON.stringify(got) + '; the first build read 0: _equipIntercept without the action)'); }
+    }
+
 
 
 

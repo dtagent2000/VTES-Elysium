@@ -9,7 +9,10 @@
   "`-` for a level-free mode, `#n` their n-th mode, `all` when the levels could not be paired).",
   "gaps.reader: the gated rows no code reads that way (gen-reader-gate.js, the card chain, RULINGS D-147), each with its register entry;",
   "gaps.bench: the rows the scenario bench plays wrong or cannot play (test-card-scenarios.js), each with its register entry. A gate fails on",
-  "a gap with no line here and on a line whose row is read or played right now (stale)."
+  "a gap with no line here and on a line whose row is read or played right now (stale).",
+  "C1b (27 Nov 2026, bot v0.6.244): a state may carry words after its own (its first word is the state): `was-agree` on a row that was",
+  "agree when a sample was drawn and changed since (test-cardfx.js re-derives each sample from the rows that are agree or carry was-agree),",
+  "and the round or the sample that changed it (c1b, c1-agree-1)."
  ],
  "families": {
   "C1": {
@@ -134,7 +137,7 @@
    "stealth": "agree"
   },
   "Aura Absorption": {
-   "intercept": "agree",
+   "intercept": "corrected was-agree c1b",
    "stealth": "agree"
   },
   "Babble": {
@@ -343,7 +346,7 @@
    "stealth": "agree"
   },
   "Changeling Skin Mask": {
-   "intercept": "agree"
+   "intercept": "corrected was-agree c1-agree-1"
   },
   "Channel 10": {
    "intercept": "agree"
@@ -818,7 +821,7 @@
    "intercept": "agree"
   },
   "Falcon's Eye": {
-   "intercept": "agree"
+   "intercept": "corrected was-agree c1b"
   },
   "False Resonance": {
    "stealth": "agree"
@@ -970,10 +973,10 @@
   },
   "Gifts From Hereafter": {
    "bleed": {
-    "DOM|OBL": "agree",
-    "OBL": "graded",
-    "dom|obl": "agree",
-    "obl": "graded"
+    "DOM|OBL": "corrected was-agree c1-agree-1",
+    "OBL": "corrected c1b",
+    "dom|obl": "corrected was-agree c1b",
+    "obl": "corrected c1b"
    }
   },
   "Giuseppe, Gravedigger": {
@@ -1057,7 +1060,7 @@
    "stealth": "agree"
   },
   "Heart of the City": {
-   "bleed": "graded",
+   "bleed": "corrected c1b",
    "stealth": "agree"
   },
   "Heart's Desire": {
@@ -1557,7 +1560,7 @@
    "stealth": "agree"
   },
   "Polaris Coach": {
-   "stealth": "agree"
+   "stealth": "corrected was-agree c1-agree-1"
   },
   "Political Antagonist": {
    "intercept": "agree"
@@ -1790,7 +1793,7 @@
    "stealth": "agree"
   },
   "Revelation of Desire": {
-   "bleed": "agree"
+   "bleed": "corrected was-agree c1-agree-1"
   },
   "Revelation of Ecstasy": {
    "stealth": "agree"
@@ -1821,7 +1824,7 @@
    "stealth": "single"
   },
   "Rooftop Shadow": {
-   "intercept": "agree"
+   "intercept": "corrected was-agree c1-agree-1"
   },
   "Root of Vitality": {
    "stealth": "agree"
@@ -1847,7 +1850,7 @@
    "stealth": "agree"
   },
   "Savannah Runner": {
-   "intercept": "agree"
+   "intercept": "corrected was-agree c1b"
   },
   "Scarlet Lore": {
    "stealth": "agree"
@@ -2421,7 +2424,7 @@
    "stealth": "agree"
   },
   "WMRH Talk Radio": {
-   "intercept": "agree"
+   "intercept": "corrected was-agree c1-agree-1"
   },
   "Walk of Caine": {
    "bleed": "graded"
@@ -2519,14 +2522,6 @@
    "Bloodwork": {
     "stealth": "7.6"
    },
-   "Bonding": {
-    "bleed": {
-     "DOM": "10.17"
-    }
-   },
-   "Break the Bonds": {
-    "bleed": "9.13"
-   },
    "Brutal Influence": {
     "stealth": "9.13"
    },
@@ -2535,9 +2530,6 @@
    },
    "Carlton Van Wyk": {
     "intercept": "7.6"
-   },
-   "Cat Burglary": {
-    "stealth": "9.13"
    },
    "Charigger, The Axe": {
     "bleed": "10.23",
@@ -2549,15 +2541,6 @@
    "Communal Haven: Temple": {
     "intercept": "7.6"
    },
-   "Concordance": {
-    "stealth": "9.13"
-   },
-   "Confusion": {
-    "bleed": "10.17"
-   },
-   "Corpse Balloon": {
-    "intercept": "7.6"
-   },
    "Cãoera": {
     "bleed": "10.23"
    },
@@ -2567,16 +2550,7 @@
    "Dream World": {
     "stealth": "9.13"
    },
-   "Ears of the Hare": {
-    "intercept": "7.6"
-   },
    "Entrancement": {
-    "stealth": "9.13"
-   },
-   "Fata Morgana": {
-    "bleed": "10.25"
-   },
-   "Fleetness": {
     "stealth": "9.13"
    },
    "Form of Mist": {
@@ -2590,22 +2564,12 @@
      "OBL": "7.6"
     }
    },
-   "Greater Curse": {
-    "stealth": "9.13"
-   },
    "Gremlins": {
     "stealth": "9.13"
    },
    "Hexaped": {
     "bleed": "7.6",
     "stealth": "7.6"
-   },
-   "High Aye": {
-    "stealth": "7.6"
-   },
-   "Illegalism": {
-    "bleed": "9.13",
-    "stealth": "9.13"
    },
    "Illuminate": {
     "intercept": "7.6"
@@ -2618,9 +2582,6 @@
      "AUS+NEC": "7.7"
     }
    },
-   "Keystone Kine": {
-    "bleed": "9.13"
-   },
    "Lock": {
     "stealth": "7.6"
    },
@@ -2630,19 +2591,8 @@
    "Melange": {
     "bleed": "10.23"
    },
-   "Ministry": {
-    "intercept": "7.5"
-   },
-   "Mirror's Visage": {
-    "stealth": "7.6"
-   },
    "Mithraic Cultist": {
     "intercept": "7.6"
-   },
-   "Mole's Tunneling": {
-    "stealth": {
-     "SPI": "7.6"
-    }
    },
    "No Secrets From the Magaji": {
     "intercept": "7.6"
@@ -2656,19 +2606,8 @@
    "Phased Motion Detector": {
     "intercept": "7.6"
    },
-   "Pocket Out of Time": {
-    "stealth": {
-     "obt": "7.6"
-    }
-   },
-   "Power of One": {
-    "bleed": "10.25"
-   },
    "Priestess of Sekhmet": {
     "bleed": "7.6"
-   },
-   "Protection Racket": {
-    "intercept": "7.5"
    },
    "Psalm of the Damned": {
     "bleed": "7.6"
@@ -2679,9 +2618,6 @@
    "Rayzeel's Song": {
     "stealth": "9.13"
    },
-   "Revelation of the Serpent": {
-    "bleed": "10.25"
-   },
    "Samuel Haight": {
     "bleed": "7.6"
    },
@@ -2691,23 +2627,11 @@
    "Shaman": {
     "stealth": "10.23"
    },
-   "Siren's Lure": {
-    "stealth": "7.6"
-   },
    "Smash and Grab": {
     "stealth": "9.13"
    },
    "Songs of the Distant Vitae": {
-    "bleed": "7.6",
-    "stealth": "9.13"
-   },
-   "Soul Decoration": {
-    "stealth": "9.13"
-   },
-   "Speak with Spirits": {
-    "intercept": {
-     "SPI": "7.6"
-    }
+    "bleed": "7.6"
    },
    "Special Report": {
     "intercept": "7.6"
@@ -2717,14 +2641,6 @@
    },
    "Steely Tenacity": {
     "stealth": "9.13"
-   },
-   "Stone Travel": {
-    "stealth": {
-     "obt": "7.6"
-    }
-   },
-   "Subversion": {
-    "bleed": "10.25"
    },
    "Sunset Strip, Hollywood": {
     "stealth": "7.6"
@@ -2738,13 +2654,6 @@
    "The Ancestor's Talisman": {
     "intercept": "7.6"
    },
-   "The Eternal Mask": {
-    "stealth": "9.13"
-   },
-   "The Platinum Protocol": {
-    "bleed": "9.13",
-    "stealth": "9.13"
-   },
    "The Rumor Mill, Tabloid Newspaper": {
     "intercept": "7.6"
    },
@@ -2756,9 +2665,6 @@
      "#1": "7.6"
     }
    },
-   "Undue Influence": {
-    "stealth": "9.13"
-   },
    "Unleash the Hounds": {
     "bleed": {
      "VIS": "7.7"
@@ -2767,20 +2673,28 @@
    "Unlicensed Taxicab": {
     "stealth": "7.6"
    },
-   "Virtuosa": {
-    "bleed": "10.25"
-   },
-   "Voices of the Castle": {
-    "intercept": "7.6"
-   },
    "Watchtower: The Wolves Feed": {
     "stealth": "7.6"
+   },
+   "Revelation of Desire": {
+    "bleed": "7.6"
+   },
+   "Polaris Coach": {
+    "stealth": "7.6"
+   },
+   "Changeling Skin Mask": {
+    "intercept": "7.6"
+   },
+   "WMRH Talk Radio": {
+    "intercept": "7.6"
+   },
+   "Gifts From Hereafter": {
+    "bleed": {
+     "OBL": "10.24",
+     "obl": "10.24"
+    }
    }
   },
-  "bench": {
-   "The Eternal Mask": {
-    "stealth": "9.13"
-   }
-  }
+  "bench": {}
  }
 }

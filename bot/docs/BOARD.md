@@ -1,4 +1,4 @@
-# BOARD — the open asks (27 Nov 2026, the card chain). A line is deleted when done; found work is added as a line (a card
+# BOARD — the open asks (27 Nov 2026, C1b). A line is deleted when done; found work is added as a line (a card
 problem the sweep finds: an entry in `SWEEP-REGISTER.md`, D-135).
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. The owner orders the board; a round takes one line
@@ -20,12 +20,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
   consumer. *Done when* their spec is in `specs/` and the owner has given the go-ahead. Docs: RULINGS D-83, D-147, O-32.
 - **The V5 sweep** (D-125, D-130, D-132: exactness first; `specs/spec-card-sweep-2026-11-18.md` §11): every printed effect first
   asked who else in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. C goes
-  concentrated (§11.8): C1 is built (D-144); next C1b (below), the bots' first readers of a human's play (rounds of their own,
-  D-132), then C2 (combat), then the rest of §11.4's horizon. C's riders: the title family; the ledger's grade column (spec
-  §11.10); Hunting the Quarry (`history/specs/spec-sweep-pilot-2026-11-20.md` §3.3). **D**, the starters' remainder where a
+  concentrated (§11.8): C1 and C1b are built (D-144, D-148); next C1c (the cross-check reads the price and the
+  condition), the bots' first readers of a human's play (rounds of their own, D-132), then C2 (combat), then the rest of §11.4's horizon. C's riders: the title family; the ledger's grade column (spec
+  §11.10). **D**, the starters' remainder where a
   starter needs it, with its strategy baseline. Crypt waves (D-108): B = the rest by class, the 13 partial copies first. A deck
   joins the menu by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check`
-  compares them). The root README credits zero-vtes (D-125; main's, handoff). *Done when* C's horizon is reached, the 18
+  compares them). *Done when* C's horizon is reached, the 18
   starters' rows are playable, every hand-only key has its sharing answer and C's riders are done or ruled out. Docs: RULINGS
   D-84, D-102, D-104, D-108, D-125 – D-127, D-130, D-132, D-134, D-135; `CARDS.md`; HOWTO.
 - **The official deck guides as each deck's strategy baseline** (the owner, 29 Oct; refined by the archetypes): D-112 checks each
@@ -54,17 +54,12 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
   compares the card score with and without the streak.
 
 ## The sweep register (D-135): `SWEEP-REGISTER.md` by class; a round takes one; *done when* its class is empty
-- **The active entries** (7.5 Protection Racket's +1 against a titled actor; 8.3 Bait and Switch by a non-baron; 10.17 Bonding
-  [DOM]'s bleed and limit; 11.1 Revelations' predator never asked): rules broken in the 240 or a smoke, each a release of its
-  own (D-135; Claude orders them, D-137). The missed
-  options (4.6 the onward bounce, 5.2 the .44 Magnum's maneuver, 8.6 Freak Drive after a failed referendum, 9.8 Form of Mist's
-  continue, 10.1 Faceless Night [OBF], 10.2 burning another's card, 10.16 Vessel's and Anarch Troublemaker's burns, 12.2
-  Precognition and Spirit's Touch [AUS], 13.10 a host's income picked with no host) wait in their classes until their class's
-  round.
+- **The active entries** (8.3 Bait and Switch by a non-baron; 11.1 Revelations' predator never asked): rules broken in the 240 or
+  a smoke, each a release of its own (D-135; Claude orders them, D-137). The missed options (the register's header lists them)
+  wait in their classes until their class's round.
 - **The fidelity pass** (D-138): `cardfx-fidelity.json` and CARDS.md's `text-checked` / `exact` per deck; the five base starters
-  were read in v0.6.241. Next the other 13 V5 decks' flagged cards (C1b, D-144 (1)), with the family's second pass (§11.7), the
-  agreeing rows' sample and the gaps the reader gate and the bench list (D-147: `cardfx-exact.json` `gaps`). *Done when* every
-  deck's text-checked is N/N and each gap it finds is in the register.
+  were read in v0.6.241, the 13 other V5 decks' flagged cards in C1b (v0.6.244; their gaps: 10.26). Next each deck's unflagged
+  cards. *Done when* every deck's text-checked is N/N and each gap it finds is in the register.
 - **1. Retainers: version and holder** (R-47): next; its design question first (where another seat's retainer's version comes from).
 - **2. `aggr` misreads.**
 - **3. Another minion's sentence read as the player's** (L-98's rest).

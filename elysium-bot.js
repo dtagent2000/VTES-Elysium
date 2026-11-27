@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.243';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.244';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of the project owner's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -364,6 +364,7 @@ const COT = /^(.+?) plays Change of Target(?: \u2014 .+?)?\.(?: Target: .+)?$/; 
 const CONTRACT_BURN = /^(.+?) burns (.+?) and gains (\d+) pool \((.+?)\)\.$/;   // v0.6.236 (the Banu Haqim pilot, bot grammar): Priority Contract's 'If the attached minion is about to leave the ready region, you can burn this card to gain 3 pool' -- m[1] the Methuselah, m[2] the card, m[3] the pool, m[4] why (the host went to torpor / was burned / left the ready region / left the game with its Methuselah). An explanation line (the duplicate rule: the ledger shows the pool and the card's move, not the why); read by the event log only
 const ARCHON_BURN = /^(.+?) plays Archon Investigation \u2014 (.+?) is burned \(the bleed of (\d+) is not successful\)\.$/;   // v0.6.215 (V5 wave 3): the target's out-of-turn answer to a bleed of 4+ -- the ACTING bot burns its own minion and the action ends unsuccessful (bot-emitted; owed to main's \u00a712 + the canary, the handoff)
 const NET_STEALTH_ADJ = /^(.+?): (.+?) (?:does not reach|reaches) (.+?) \(([\u2212+-])(\d+) stealth\)\.$/;   // v0.6.228 (round F; the egress review, finding 10): a conditional stealth (Perfect Paragon [PRE]) off for a later blocker it does not reach, or back on -- the tally net's third reader (bot-emitted, not in the frozen L12 contract)
+const PLUSIF_CONDS = ['selfClan', 'selfTitled', 'actorTitled', 'actorSect', 'actDirected', 'actUndirected'];   // v0.6.244 (C1b): the fx.plusIf conditions _plusIf reads (test-cardfx's vocabulary and gen-reader-gate's PLUSIF_READ mirror it); any other ('unread', in words) fails closed
 const NET_STEALTH = /^(.+?) (?:plays|burns|locks) .+?: \+(\d+) stealth\.$/, NET_UNLOCK_IC = /^(.+?) attempts to block with \+(\d+) intercept \(.+\)\.$/;   // v0.6.147: the tally net's two readers (bot-emitted lines; not part of the frozen L12 contract the canary pins)
 const DECK_STRATEGY = {   // A2 (v0.6.73): the reviewer's yardstick -- curated intent per archetype, emitted in the manifest so play is judged AGAINST strategy, not in a vacuum
   hacking:   { strategy: 'Ashur-cycling swarm: cap-1/2 crypt floods the table fast, Leverage-class bleed pressure every turn, Ashur Tablets recycle the engine; win by tempo before the table organizes.', axes: ['swarm-bleed', 'cycling', 'tempo'], combat: 'wave' },
@@ -1549,7 +1550,8 @@ class Bot {
      the raw helpers return unfloored deltas, the floor sits at the summing sites.    */
   _cryptFxOf(name){ const h = this.fxLookup(name); return (h && h.kind === 'crypt' && h.e.fx) || null; }
   _cryptBleedBonus(vamp, noWon){ const fx = vamp && this._cryptFxOf(vamp.name); return ((fx && (fx.bleedBonus | 0)) || 0) + (noWon ? 0 : this._wonPlus(vamp, 'bleed')); }   /* v0.6.232 (D-122): + Week of Nightmares' +1 for a Ravnos (noWon: without it, the card's own look ahead) */   // Lenny Burkhead: +1 bleed, passive unconditional   // the local is NAMED fx so the coverage scanner's fx.<key> literal sees the read (the N4a scanner lesson, applied at birth this time -- the first draft's `f` hid all four keys)
-  _cryptStealthMod(vamp, kind, dir){ const fx = vamp && this._cryptFxOf(vamp.name); const m = fx && fx.stealthMod;   // Royce: -1 stealth when bleeding. v0.6.219 (crypt wave A, D-108): `when` is an action kind or a list of them (Kalyani 'hunt', Frau Schädel recruit + employ) or 'undirected' / 'directed' (Ariane); dir = the announce's own form (true / false), else a bleed is directed and any other form unknown -- a condition on an unknown form invents nothing; poolMax = 'while you have N or fewer pool' (Devorah), my pool at the announce
+  _cryptStealthMod(vamp, kind, dir){ if(vamp && this._actingVamp && this._actingVamp.v === vamp) this._actForm = { av: this._actingVamp, dir: (dir === true || dir === false) ? dir : (kind === 'bleed' ? true : null) };   // v0.6.244 (C1b, 7.6): every announce passes its form here -- recorded for this action (_myActDirected: High Aye's undirected +1)
+    const fx = vamp && this._cryptFxOf(vamp.name); const m = fx && fx.stealthMod;   // Royce: -1 stealth when bleeding. v0.6.219 (crypt wave A, D-108): `when` is an action kind or a list of them (Kalyani 'hunt', Frau Schädel recruit + employ) or 'undirected' / 'directed' (Ariane); dir = the announce's own form (true / false), else a bleed is directed and any other form unknown -- a condition on an unknown form invents nothing; poolMax = 'while you have N or fewer pool' (Devorah), my pool at the announce
     if(!m) return 0;
     if(m.poolMax != null && !(this._poolNow() <= (m.poolMax | 0))) return 0;
     if(m.when == null) return m.n | 0;
@@ -1771,6 +1773,18 @@ class Bot {
   _haqimAddMay(v){                   // v0.6.240 (the egress review): _playHaqimLaw's own conditions, read only (the discard pick reads the hand) -- no floor wait for a copy that keeps its cards
     const av = this._actingVamp; return !!(av && !av.bounced && av.target && (av.n | 0) >= 1 && this._haqimLawFor(v) && this._haqimDiscardPick(v, av.target));
   }
+  _sayOwedAdd(v){                    // v0.6.244 (C1b, SWEEP-REGISTER 10.17): the bleed a stealth card added in the contest (Bonding [DOM]: _spendStealthCard booked it on the action) -- said once the blocks are declined, in the frozen L12.add line a bot actor's modifiers use (the target's parser takes the running total; a bounce's new target too: the line names my vampire). Returns the +N said, or 0 when nothing is said
+    const av = this._actingVamp, ow = av && av.owedAdd; if(!ow || !(ow.n > 0) || !av.target) return 0;
+    av.owedAdd = null;
+    /* The target reduced the bleed before this line (Protected District in its reaction window, C1b's 240): its '(now N)' was N of a total
+       that lacked this bleed, and after its own reduction a bot target's L12.add parser adds +N to what it holds. So the +N is what its last
+       stated total lacks (ow.base, written by the reduce handlers), the '(= T)' my own total; nothing is said when the reduction ate it all. */
+    const k = typeof ow.base === 'number' ? Math.max(0, (av.n | 0) - ow.base) : ow.n;
+    if(k <= 0) return 0;
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> adds +' + k + ' bleed (= ' + av.n + ').' });   // PROTOCOL §12, frozen -- the target's L12.add parser
+    this.push();
+    return k;
+  }
   _playHaqimLaw(v){                  // v0.6.215: the +1 -- the combat card to the ash heap, the frozen L12.add re-announce (Spying Mission's bank shape)
     const av = this._actingVamp; if(!av || av.bounced || !av.target || (av.n | 0) < 1) return false;
     const hl = this._haqimLawFor(v); if(!hl) return false;
@@ -1925,7 +1939,7 @@ class Bot {
     const seen = new Set(); let S = 0, sum = 0; const bl = this._myActIsBleed(vamp);
     (this.hand || []).forEach(n => { const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('mod') || seen.has(FX_NORM(h.name))) return;
       if(!this._mayPlay(h.name, h.e, played)) return; if(((h.e.cost && h.e.cost.blood) || 0) > (vamp.blood | 0)) return;
-      let best = 0; (h.e.modes || []).forEach(mo => { const ms = this._modeStealth(mo, vamp), st = ms ? ms.s : null; if(typeof st === 'number' && st > best && this._modeUsableBy(mo, vamp) && this._actCondOk(h.e, mo, bl)) best = st; });   // v0.6.228: _modeStealth (a conditional stealth counts against the blocker it reaches). v0.6.235: the card's condition on the action (_actCondOk)
+      let best = 0; (h.e.modes || []).forEach(mo => { if((((h.e.cost && h.e.cost.blood) || 0) + ((mo.fx && mo.fx.payBlood) | 0)) > (vamp.blood | 0)) return; const ms = this._modeStealth(mo, vamp), st = ms ? ms.s : null; if(typeof st === 'number' && st > best && this._modeUsableBy(mo, vamp) && this._actCondOk(h.e, mo, bl)) best = st; });   // v0.6.244 (C1b): + the mode's price (fx.payBlood)   // v0.6.228: _modeStealth (a conditional stealth counts against the blocker it reaches). v0.6.235: the card's condition on the action (_actCondOk)
       if(best > 0){ seen.add(FX_NORM(h.name)); S++; sum += best; } });
     this._lockStealthFor(vamp, played, true).forEach(lb => { S++; sum += lb.s; });   // v0.6.205 (R4): The Labyrinth's lock counts like a card; v0.6.215: EVERY location that locks for this vampire (Backways and Anarch Railroad for a Gangrel Anarch: two sources)
     return { S, sum };
@@ -1976,18 +1990,34 @@ class Bot {
   _combatCover(v){ return !!(this._bestCombatEndFor(v) || this._bestDodgeFor(v) || this._bestManeuverFor(v)); }   // v0.6.143: the project owner -- a chump bleed is better with a combat ends, a dodge or a maneuver to long range in hand
   _bestStealthFor(vamp, played, targetSeat){   // highest usable +stealth for this acting vampire: hand cards, PLUS (fas C, 16 July) board-attached Marked Path-class burns whose recorded target matches THIS action's target. v0.6.12 (18 July, the project owner's standing question): TYPE-FILTERED to action modifiers -- 147 non-mod cards (ally/equip/master/retainer grants, combat stealth) carry mode fx.stealth and were offerable from hand as mid-action modifiers; the actStealth sweep closed the Action-card half of this class, the type filter closes the rest structurally
     let best = null; const bl = this._myActIsBleed(vamp);   // v0.6.235: the action's kind, for the cards' conditions (_actCondOk)
+    const av0 = this._actingVamp, limUsed = !!(av0 && av0.v === vamp && av0.limitedUsed);   // v0.6.244 (C1b, 10.17): the action's limited slot
     this.hand.forEach((n, idx) => {
       const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).includes('mod')) return;
       if(!this._mayPlay(h.name, h.e, played)) return;   // rules gate: unique-in-play + once-per-action same name
       const cB = (h.e.cost && h.e.cost.blood) || 0;      // v0.6.116 round 2 (the project owner's sweep for any other unpaid cost): the SECOND real find -- this finder never read cost.blood either, and the play site (_onBlockAttempt's spend-stealth branch) never paid it. ~30 compiled stealth mods cost blood (Forgotten Labyrinth 1 -- x5 in the sewer deck -- Blanket of Night 1, Mind Tricks 1, Alacrity 2, ...); all played free. Gate + carry, the intercept finder's own shape (which has done this since v0.6.13).
       if(cB > (vamp.blood | 0)) return;
       (h.e.modes || []).forEach(mo => {
+        const pB = cB + ((mo.fx && mo.fx.payBlood) | 0);   // v0.6.244 (C1b, 7.6): the mode's own price, paid with the card ('[obt] Burn 1 blood to get +1 stealth': Stone Travel, Pocket Out of Time, Siren's Lure [cel] 2, Mole's Tunneling [SPI]) -- fx.payBlood
+        if(pB > (vamp.blood | 0)) return;
+        const mb = (mo.fx && typeof mo.fx.bleed === 'number' && !mo.fx.bleedAct) ? mo.fx.bleed : 0;   // v0.6.244 (C1b, 10.17): the stealth mode's own bleed (Bonding [DOM], Confusion [DEM]: '+1 stealth and +1 bleed (limited)'; the 'or' options of 10.25) -- booked with the stealth (_spendStealthCard)
+        if(mb && (!bl || (h.e.limited && limUsed))) return;   // a bleed outside a bleed action, or a limited one when the action's slot is taken: that mode is not played (the advanced rules 3.7.1); the card's stealth-only mode still is
         const ms = this._modeStealth(mo, vamp), st = ms ? ms.s : null;   // v0.6.228 (round F): + a stealth that counts only against this blocker (Perfect Paragon [PRE], fx.icpVs)
         const hasCombat = (h.e.t || []).includes('combat');   // v0.6.156 (the project owner): Swallowed by the Night is stealth AND the deck's only defensive maneuver -- at equal stealth spend the pure stealth card first and keep the dual card for combat
         const keepLast = (h.e.modes || []).some(m2 => m2.fx && m2.fx.bleedNullify);   // v0.6.211 (the project owner, 19 Oct: it is usually the last stealth card played of those already in hand): Spying Mission's superior cancels a bounced bleed -- at equal stealth the other card goes first
         const ble = !!(mo.fx && mo.fx.blockedLockEnd);   // v0.6.241 (the exactness round): Mirror Walk [THA] -- 'if this action is blocked, lock the blocking minion and end the action before block resolution'; on the stealth tie the card's own rider mode wins (its [tha] came first and kept it)
-        if(typeof st === 'number' && this._modeUsableBy(mo, vamp) && this._actCondOk(h.e, mo, bl) && (!best || st > best.s || (st === best.s && ble && this.o.riderTie !== 0 && best.idx === idx && !best.blockedLockEnd) || (st === best.s && this._combatMind() && best.combat && !hasCombat) || (st === best.s && best.keepLast && !keepLast && !(this._combatMind() && hasCombat && !best.combat)))){
-          best = { idx, name: h.name, s: st, cost: cB ? { blood: cB } : null, combat: hasCombat, keepLast };
+        /* v0.6.244 (C1b, D-148): at the same stealth the mode that adds its bleed wins ('+1 stealth and +1 bleed (limited)': Bonding [DOM], Subversion
+           [CEL], Fata Morgana [CHI], Virtuosa [mel]), within a card or across cards, unless a limited modifier in hand would use the action's slot for
+           more (Conditioning after the blocks): then that mode loses to a card that leaves the slot free. val: the bleed added, -1 for a slot that
+           costs more than it adds, 0 for none. The owner's keep rules outrank it (the egress review, pass 2; L-10): it never decides a tie with
+           a card they name on either side -- Spying Mission goes last (D-60), a combat dual is kept for its maneuver (D-24, O-8) -- the older
+           tie-breaks below decide those as before, and every tie between equal vals. */
+        const val = mb > 0 ? (this._limitedSlotWorthMore(vamp, played, h, mb) ? -1 : mb) : 0;
+        const kept = (kl, cb) => !!kl || !!cb;
+        const eqS = !!best && typeof st === 'number' && st === best.s && best.idx != null && !kept(keepLast, hasCombat) && !kept(best.keepLast, best.combat), bval = eqS ? (best.val | 0) : 0;
+        const moreBleed = eqS && val > bval, lessBleed = eqS && val < bval;
+        if(typeof st === 'number' && this._modeUsableBy(mo, vamp) && this._actCondOk(h.e, mo, bl) && !lessBleed && (!best || st > best.s || moreBleed || (st === best.s && ble && this.o.riderTie !== 0 && best.idx === idx && !best.blockedLockEnd) || (st === best.s && this._combatMind() && best.combat && !hasCombat) || (st === best.s && best.keepLast && !keepLast && !(this._combatMind() && hasCombat && !best.combat)))){
+          best = { idx, name: h.name, s: st, cost: pB ? { blood: pB } : null, combat: hasCombat, keepLast, val };
+          if(mb) Object.assign(best, { bleed: mb, limited: !!h.e.limited, at: mo.at || null });   // v0.6.244 (10.17)
           if(ble) Object.assign(best, { blockedLockEnd: true, at: mo.at || null });
           if(ms.cond) Object.assign(best, { cond: ms.cond, condWho: ms.who, condTo: ms.to, condAt: ms.at || null }); }
       });
@@ -2008,6 +2038,17 @@ class Bot {
     }
     return best;
   }
+  _stealthSlot(st){                  // v0.6.244 (C1b, the egress review): what the stealth card about to be spent does to the bleed -- its own +N (Bonding [DOM]: _spendStealthCard books it) and whether it takes the action's limited slot, so the spend's stakes count no limited modifier the slot would then refuse
+    const own = (st && st.bleed > 0) ? (st.bleed | 0) : 0;
+    return { own, takes: !!(own && st.limited) };
+  }
+  _limitedSlotWorthMore(vamp, played, h, mb){   // v0.6.244 (C1b, 10.25): would a limited bleed modifier still in hand (another card) add more than mb, the bleed a limited stealth mode of h would take the action's slot for
+    if(!h.e.limited) return false;
+    let pl = this._withPlayed(played, h.name);
+    for(const n of this.hand){ const x = this.fxLookup(n); if(x && x.kind === 'lib' && !x.e.limited) pl = this._withPlayed(pl, x.name); }   // the egress review: the best LIMITED one -- a non-limited modifier leaves the slot alone and must not hide it
+    const lb = this._bestBleedModifierFor(vamp, pl, false);
+    return !!(lb && lb.limited && (lb.n | 0) > mb);
+  }
   _modeStealth(mo, vamp){            // v0.6.228 (round F): the stealth a mode gives my acting vampire against the minion attempting to block NOW -- fx.stealth, plus fx.icpVs {n, who} when that blocker is one of `who` (Perfect Paragon [PRE]: 'Allies and younger vampires get -1 intercept' -- n intercept to them is -n stealth for me, against that blocker alone); null = no stealth. { s, cond, who, to }: cond = the part that counts only against this blocker (booked so a later blocker it does not reach takes it off, _condStealthAdjust)
     const f = mo && mo.fx; if(!f) return null;
     const base = (typeof f.stealth === 'number') ? f.stealth : null, cv = mo.fx.icpVs;   // a literal read (the coverage scanner tracks fx.<key>)
@@ -2016,8 +2057,9 @@ class Bot {
     if(cv && typeof cv.n === 'number' && cv.n < 0 && Array.isArray(cv.who)){ kind = this._condBlockerKind(vamp);
       if(kind && cv.who.includes(kind)) cond = -cv.n;
       else if(cv.who.includes('this') && (at = this._condBlockerName(vamp))){ cond = -cv.n; kind = kind || 'this'; } }   // v0.6.233 (V5 wave 6a): who 'this' -- Forced Confessional [dom]: 'The blocking minion gets -1 intercept', the minion attempting now whatever its kind (booked with its name: a later blocker it does not reach takes it off)
-    if(base === null && !cond) return null;
-    return { s: (base | 0) + cond, cond, who: cond ? cv.who : null, to: cond ? kind : null, at: cond ? at : null };
+    const pls = this._plusIf(mo, 'stealth', vamp);   // v0.6.244 (C1b, 7.6): a stealth the text conditions on the action (High Aye, Mirror's Visage [CHI]: +1 more on an undirected action) -- the action's, not the blocker's
+    if(base === null && !cond && !pls) return null;
+    return { s: (base | 0) + cond + pls, cond, who: cond ? cv.who : null, to: cond ? kind : null, at: cond ? at : null };
   }
   _condBlockerName(vamp){            // v0.6.233 (V5 wave 6a): the name of the minion attempting to block MY acting vampire now -- _condBlockerKind's freshness (this attempt's line named it), or null
     const av = this._actingVamp; if(!av || av.v !== vamp || !av.attemptAt) return null;
@@ -2054,14 +2096,27 @@ class Bot {
     av._lookKey = null; try { this._stealthSecondLook(); } catch(e){ this.o.log('second look error:', e.message); }
   }
   _vampClan(vamp){ const h = vamp && this.fxLookup(vamp.name); return (h && h.kind === 'crypt' && h.e && h.e.clan) || null; }
-  _plusIf(mo, key, vamp){            // v0.6.241 (the exactness round; the sweep register's class 7: 7.1 Aire of Elation, 7.2 The Warrens): 'with an additional +N <key> if this vampire
+  _plusIf(mo, key, vamp, p){         // v0.6.241 (the exactness round; the sweep register's class 7: 7.1 Aire of Elation, 7.2 The Warrens): 'with an additional +N <key> if this vampire
     const pi = mo && mo.fx && mo.fx.plusIf;   // is <clan>' / 'if this Nosferatu is titled' -- the condition kept on the key: fx.plusIf {add: {<key>: N}, if: {selfClan, selfTitled}}. The
     if(!pi || !pi.add || typeof pi.add[key] !== 'number' || !vamp) return 0;   // vampire is the one playing the card; a condition this reader cannot see fails closed (no bonus)
     const c = pi.if || {};
+    if(Object.keys(c).some(k => !PLUSIF_CONDS.includes(k))) return 0;   // a condition no reader knows yet (Sense the Sin's corruption, every `unread` one in words): no bonus
     if(c.selfClan && !String(this._vampClan(vamp) || '').split('/').includes(c.selfClan)) return 0;
     if(c.selfTitled && !this._titleOf(vamp).title) return 0;
-    if(Object.keys(c).some(k => k !== 'selfClan' && k !== 'selfTitled')) return 0;   // a condition no reader knows yet (Protection Racket's acting minion, Sense the Sin's corruption): no bonus
+    /* v0.6.244 (C1b; SWEEP-REGISTER 7.5, 7.6): the action and its actor. p = the action I would block, for a blocker's key (intercept); a
+       stealth or a bleed is my own acting vampire's. actorTitled (Protection Racket: 'if the acting minion is titled'), actorSect (Ministry:
+       'if the acting vampire is Sabbat'), actDirected (Corpse Balloon [VIC]: 'during directed actions'), actUndirected (High Aye, Mirror's
+       Visage [CHI]: 'if this action is undirected'). Unknown fails closed, as every condition here. */
+    if(c.actorTitled && this._actorTitled(p) !== true) return 0;
+    if(c.actorSect){ const a = this._actorOf(p); if(!a || !a.h || a.h.kind !== 'crypt' || a.h.e.sect !== c.actorSect) return 0; }
+    if(c.actDirected || c.actUndirected){ const d = key === 'intercept' ? (p ? this._pendDirected(p) : null) : this._myActDirected(vamp);
+      if(c.actDirected ? d !== true : d !== false) return 0; }
     return pi.add[key] | 0;
+  }
+  _myActDirected(vamp){              // v0.6.244 (C1b, 7.6): is MY acting vampire's action directed -- the form its announce passed to _cryptStealthMod (every announce does), recorded there for this action; null = unknown (before the announce, another vampire's action): a condition on the form fails closed
+    const av = this._actingVamp, f = this._actForm;
+    if(!av || !f || (vamp && av.v !== vamp) || f.av !== av) return null;
+    return f.dir;
   }   // v0.6.205: the printed clan of a vampire (cardfx crypt entry), null when unknown -- a clan gate fails closed
   _vampSect(vamp){ const h = vamp && this.fxLookup(vamp.name); return (h && h.kind === 'crypt' && h.e && h.e.sect) || null; }   // v0.6.215: the printed sect, null when unknown
   _lockStealthAtAnnounce(v, kind){   // v0.6.215 (V5 wave 3): Creepshow Casino -- 'You can lock this card as a vampire you control announces an undirected action to give that vampire +1 stealth, even if stealth is not yet needed.' Its only window is the announce, so the block gate's 'stealth only when needed' (R-12) does not reach it: the card says so. Spent on the undirected actions worth defending -- a recruit, an employ, an equip, a political action -- never on a hunt (nobody's hunt is worth a lock it could spend on a referendum this turn). Returns the stealth added (the announce books it into tally a); the lock line follows the announce line (the caller sends it).
@@ -2103,11 +2158,15 @@ class Bot {
       if(h.e.cost && h.e.cost.pool) return;               // v0.6.116: pool-costed bleed actions stay out of scope (none compiled today; the stock finder's own precedent)
       const cB = (h.e.cost && h.e.cost.blood) || 0;       // v0.6.116 (the project owner's Tremere test, 16 Sep: Govern [dom] bled without paying): the finder never read cost.blood -- 22 compiled bleed actions carry one (Govern 1, Dominate Kine 2, Propaganda 2, Cheat the Fates 3, ...) and every one announced free. Same gate + same carried cost shape as _bestBloodStockFor (the superior-Govern sibling, which got this right in v0.6.14).
       if(cB > (vamp.blood | 0)) return;                   // cannot announce what the vampire cannot pay
+      const lf = (h.e.modes || []).find(m => m && !m.at && m.fx && m.fx.bleedAct);   // v0.6.244 (C1b, SWEEP-REGISTER 9.13): a level-free bleed whose discipline lines add to it -- 'More than one Discipline can be used to play this card. Ⓓ Bleed. [ani] The bleed is with +1 bleed.' (Break the Bonds, Illegalism, Keystone Kine, The Platinum Protocol: the library's only such shape)
       (h.e.modes || []).forEach(mo => {
         if(!mo.fx || !mo.fx.bleedAct || !this._modeUsableBy(mo, vamp)) return;
-        const amt = 1 + (typeof mo.fx.bleed === 'number' ? mo.fx.bleed : 0);
-        const st = (typeof mo.fx.actStealth === 'number') ? mo.fx.actStealth
-                 : (typeof mo.fx.stealth === 'number') ? mo.fx.stealth : 0;   // fas A (16 July, sewer archetype): Night Moves-class BUILT-IN stealth ("bleed at +3/+6 stealth") -- carried so the announce can book it into tally a, where the contested verdict actually reads it. v0.6.11 (17 July, fas B/C sweep): the compiler now emits actStealth for built-in action stealth (cardfx v1.5.0) so the generic modifier finder (_bestStealthFor) is structurally blind to Action cards -- it would otherwise play one from hand as a mid-action modifier the moment a deck holds two differently-named stealth actions. This announce-side booking is the ONE site that legitimately wants the built-in value; stealth kept as fallback for older compiled databases.
+        let amt = 1 + (typeof mo.fx.bleed === 'number' ? mo.fx.bleed : 0);
+        // fas A (16 July, sewer archetype): Night Moves-class BUILT-IN stealth ("bleed at +3/+6 stealth") -- carried so the announce can book it into tally a, where the contested verdict actually reads it. v0.6.11 (17 July, fas B/C sweep): the compiler now emits actStealth for built-in action stealth (cardfx v1.5.0) so the generic modifier finder (_bestStealthFor) is structurally blind to Action cards -- it would otherwise play one from hand as a mid-action modifier the moment a deck holds two differently-named stealth actions. This announce-side booking is the ONE site that legitimately wants the built-in value; stealth kept as fallback for older compiled databases.
+        let st = Math.max(this._cardActStealth(h.e, mo), (typeof mo.fx.actStealth !== 'number' && typeof mo.fx.stealth === 'number') ? mo.fx.stealth : 0);   // v0.6.244 (C1b, 9.13): the header's '+1 stealth action.' too (Cat Burglary, The Eternal Mask, Fleetness ... -- _cardActStealth, as the rush, the attach and the employ book it): the bleed was announced at 0
+        if(mo === lf) (h.e.modes || []).forEach(ad => { if(!ad || !ad.at || !ad.fx || ad.fx.bleedAct || !this._modeUsableBy(ad, vamp)) return;   // each discipline the vampire has adds its line (all of them: the card costs the same)
+          if(typeof ad.fx.bleed === 'number') amt += ad.fx.bleed;
+          if(typeof ad.fx.actStealth === 'number') st += ad.fx.actStealth; });
         if(!best || amt > best.n || (amt === best.n && st > (best.st | 0))) best = { idx, name: h.name, n: amt, st, cost: cB ? { blood: cB } : null, bloodAfter: (vamp.blood | 0) - cB };   // v0.6.116: cost paid at announce (the bleed branch), bloodAfter read by decide('action')'s cost drag
       });
     });
@@ -2131,7 +2190,7 @@ class Bot {
       }
       (h.e.modes || []).forEach(mo => {
         if(!mo.fx || !(mo.fx.poolDmg > 0) || !this._modeUsableBy(mo, vamp)) return;
-        if(!best || mo.fx.poolDmg > best.n) best = { idx, name: h.name, n: mo.fx.poolDmg, kind: 'pool', costEdge: !!h.e.costEdge, cost: h.e.cost || null };
+        if(!best || mo.fx.poolDmg > best.n) best = { idx, name: h.name, n: mo.fx.poolDmg, kind: 'pool', costEdge: !!h.e.costEdge, cost: h.e.cost || null, st: this._cardActStealth(h.e, mo) };   // v0.6.244 (C1b, 9.13): + the card's printed '+1 stealth action.' (Choir, Clio's Kiss, Edge Vitiation, Precision, Harmony: _cardActStealth), booked at the announce
       });
     });
     return best;
@@ -2331,15 +2390,16 @@ class Bot {
       if(h.e.limited && limitedUsed) return;
       (h.e.modes || []).forEach(mo => {
         if(!mo.fx || typeof mo.fx.bleed !== 'number' || mo.fx.bleedAct) return;
-        if(mo.fx.stealth) return;
+        if(mo.fx.stealth && !mo.fx.stealthOpt) return;   // v0.6.244 (C1b, 10.25): fx.stealthOpt -- '+1 bleed (limited), or +1 stealth and +1 bleed (limited)' (Subversion [CEL], Fata Morgana [CHI], Revelation of the Serpent, Power of One [pre], Virtuosa [mel]): the bleed alone is a play of its own after the block
         if(!this._modeUsableBy(mo, vamp)) return;
-        if((vamp.blood | 0) < ((h.e.cost && h.e.cost.blood) || 0)) return;
+        const pB = ((h.e.cost && h.e.cost.blood) || 0) + (mo.fx.payBlood | 0);   // v0.6.244 (C1b, 7.6): + the mode's own price (fx.payBlood)
+        if((vamp.blood | 0) < pB) return;
         if(mo.req && typeof mo.req.targetPoolMax === 'number'){   // v0.6.105 (track C): Foreshadowing Destruction-class -- the bonus exists only while the target's pool is at or under the cap; an unknown pool fails CLOSED (a missed +3 beats a phantom one)
           const ts = this._actingVamp && this._actingVamp.target, tp = ts && this.table[ts] && this.table[ts].pub;
           if(!tp || typeof tp.pool !== 'number' || tp.pool > mo.req.targetPoolMax) return;
         }
         const bn = mo.fx.bleed + this._plusIf(mo, 'bleed', vamp);   // v0.6.241 (7.1): Aire of Elation's +1 for a Toreador
-        if(!best || bn > best.n) best = { idx, name: h.name, n: bn, cost: h.e.cost || null, costEdge: !!h.e.costEdge, edgeLock: !!h.e.edgeLock, limited: !!h.e.limited };
+        if(!best || bn > best.n) best = { idx, name: h.name, n: bn, cost: pB !== ((h.e.cost && h.e.cost.blood) || 0) ? Object.assign({}, h.e.cost || {}, { blood: pB }) : (h.e.cost || null), costEdge: !!h.e.costEdge, edgeLock: !!h.e.edgeLock, limited: !!h.e.limited };
       });
     });
     return best;
@@ -2893,11 +2953,11 @@ class Bot {
       n += cm; });
     return n;
   }
-  _equipIntercept(vamp){             // E1: passive +intercept from borne equipment (fx.intercept), mode-gated (Bowl's [aus]). Per-CARD MAX, not a mode sum -- Bowl's [AUS] line is the same grant with an OPTIONAL burn-blood extra (not modeled v1), so counting both modes would double the passive.
+  _equipIntercept(vamp, p){          // E1: passive +intercept from borne equipment (fx.intercept), mode-gated (Bowl's [aus]). Per-CARD MAX, not a mode sum -- Bowl's [AUS] line is the same grant with an OPTIONAL burn-blood extra (not modeled v1), so counting both modes would double the passive. v0.6.244 (C1b, 7.6): + a value the text conditions on the action (Corpse Balloon [VIC]: 'the employer gets +1 intercept during directed actions'), read against p, the action I would block -- without it (an estimate) the condition fails closed
     let n = 0;
     this._attachedEquips(vamp).forEach(c => { const h = this.fxLookup(c.name);
       let cm = 0;
-      (h.e.modes || []).forEach(mo => { if(mo.fx && typeof mo.fx.intercept === 'number' && this._modeUsableBy(mo, vamp) && mo.fx.intercept > cm) cm = mo.fx.intercept; });
+      (h.e.modes || []).forEach(mo => { if(!mo.fx || !this._modeUsableBy(mo, vamp)) return; const v1 = (typeof mo.fx.intercept === 'number' ? mo.fx.intercept : 0) + this._plusIf(mo, 'intercept', vamp, p); if(v1 > cm) cm = v1; });
       n += cm; });
     return n;
   }
@@ -3076,11 +3136,11 @@ class Bot {
     const vamps = this.board.filter(c => c.zone === 'ready' && c.kind === 'crypt' && (!c.locked || !!this._wakeCardFor(c)) && !this._cryptCannotBlock(c, p && p.actingVampName, p)   // v0.6.233 (RED 1's decision side): the wake THIS vampire can play -- the blind _wakeCard counted a basic-Auspex body behind Eyes of Argus [AUS], which the pick (_wakeCardFor) never raises
       && !(p && p.attempted && p.attempted.has(c.id)) && !(this._pentexVamp && c.name === this._pentexVamp));   // v0.6.103 (#4): decision == pick -- a failed attempter and a Pentexed minion count for neither (the v0.4.1/v0.4.3 drift class, third occurrence)
     let best = -Infinity;
-    vamps.forEach(v => { const wk = v.locked ? this._wakeCardFor(v) : null, b = this._bestInterceptFor(v, wk ? this._withPlayed(reacted, wk.name) : (reacted || null), p); const s2 = (b ? b.s : 0) + this._equipIntercept(v) + this._hostedIntercept(v, p) + this._cryptIntercept(v, p); if(s2 > best) best = s2; });   // v0.6.233: a woken body cannot play its wake card again for intercept   // v0.6.48 (uncertainty review): borne equipment (Bowl/Sport Bike) counts toward the DECISION too -- decision/pick agreement; the execution side (_setTallyB + _pickBlocker) already read it   // VA review: RAW best -- the old `best = 0` seed was an implicit floor (a lone Christine must report -1, not 0); empty candidate set still reports 0
+    vamps.forEach(v => { const wk = v.locked ? this._wakeCardFor(v) : null, b = this._bestInterceptFor(v, wk ? this._withPlayed(reacted, wk.name) : (reacted || null), p); const s2 = (b ? b.s : 0) + this._equipIntercept(v, p) + this._hostedIntercept(v, p) + this._cryptIntercept(v, p); if(s2 > best) best = s2; });   // v0.6.233: a woken body cannot play its wake card again for intercept   // v0.6.48 (uncertainty review): borne equipment (Bowl/Sport Bike) counts toward the DECISION too -- decision/pick agreement; the execution side (_setTallyB + _pickBlocker) already read it   // VA review: RAW best -- the old `best = 0` seed was an implicit floor (a lone Christine must report -1, not 0); empty candidate set still reports 0   // v0.6.244 (C1b, the egress review): p for the equipment too (Corpse Balloon [VIC]'s +1 during a directed action), as the pick reads it
     /* v0.6.228 (round F): decision == pick for the LOCKED routes -- with no unlocked body to pick, _commitBlock raises a locked one through an
        unlock reaction before any wake (Guard Dogs-class on a bleed, Second Tradition- and Eyes of the Wild-class on any action); a locked
        Toreador prince's Second Tradition counted nothing here, so the route it opens was taken only behind a wake the deck does not carry */
-    if(!vamps.some(c => !c.locked)) this._lockedRouteBodies(p, reacted).forEach(r => { const s2 = r.s + this._equipIntercept(r.v) + this._hostedIntercept(r.v, p) + this._cryptIntercept(r.v, p); if(s2 > best) best = s2; });
+    if(!vamps.some(c => !c.locked)) this._lockedRouteBodies(p, reacted).forEach(r => { const s2 = r.s + this._equipIntercept(r.v, p) + this._hostedIntercept(r.v, p) + this._cryptIntercept(r.v, p); if(s2 > best) best = s2; });
     return (best === -Infinity) ? 0 : best;
   }
   _strayBurnFor(p){                  // v0.6.233 (V5 wave 6a): the ready ally I may burn to unlock a minion of mine for this action -- fx.allyBurnUnlock; 'directed' (Underbridge Stray: 'During an action directed at you (or a card you control), you can burn this ally ...') only when the action is directed (_pendDirected true; unknown fails closed). v0.6.232 burned it at any action
@@ -6156,12 +6216,13 @@ class Bot {
       if(!this._titleOk(h, vamp)) return;   // v0.6.139
       if(!this._entryReqOk(h.e, vamp)) return;   // v0.6.228 (round F, BOARD 'Three auto readings'): the card's clan / sect -- a Banu Haqim played Eyes of the Wild in a fixture
       (h.e.modes || []).forEach(mo => {
-        const ic = mo.fx && typeof mo.fx.intercept === 'number' ? mo.fx.intercept + this._plusIf(mo, 'intercept', vamp) : (mo.fx && mo.fx.intercept);   // v0.6.241 (7.2): The Warrens' +1 for a titled Nosferatu
+        const ic = mo.fx && typeof mo.fx.intercept === 'number' ? mo.fx.intercept + this._plusIf(mo, 'intercept', vamp, p) : (mo.fx && mo.fx.intercept);   // v0.6.241 (7.2): The Warrens' +1 for a titled Nosferatu; v0.6.244 (C1b, 7.5): p -- the actor's title (Protection Racket), its sect (Ministry), the action's form
         if(mo.when === 'lockedBlock') return;   // v0.6.139: the locked-only mode is the sleeper route's, never a plain intercept
         if(!this._dirOk(h.e, mo, p)) return;   // v0.6.233: 'Only usable during an action directed at you'
+        const pB = ((h.e.cost && h.e.cost.blood) || 0) + ((mo.fx && mo.fx.payBlood) | 0);   // v0.6.244 (C1b, 7.6): + the mode's own price ('[pro] Burn 1 blood to get +1 intercept': Ears of the Hare, Voices of the Castle [tha], Aura Absorption [aus], Falcon's Eye [ani], Savannah Runner [cel]) -- fx.payBlood, paid by _spendIntercept with the card
         if(typeof ic === 'number' && this._modeUsableBy(mo, vamp) &&
-           (vamp.blood | 0) >= ((h.e.cost && h.e.cost.blood) || 0) && (!best || ic > best.s))
-          best = { idx, name: h.name, s: ic, cost: h.e.cost || null };
+           (vamp.blood | 0) >= pB && (!best || ic > best.s))
+          best = { idx, name: h.name, s: ic, cost: pB !== ((h.e.cost && h.e.cost.blood) || 0) ? Object.assign({}, h.e.cost || {}, { blood: pB }) : (h.e.cost || null) };
       });
     });
     { const lb = this._lockInterceptFor(vamp, played, p);   // v0.6.215: a location's lock -- spent first on a tie (it unlocks at my unlock phase, the hand card is kept), The Labyrinth's rule
@@ -6220,6 +6281,10 @@ class Bot {
       if(((e && e.onlyBleed) || (mo && mo.onlyBleed)) && p.kind !== 'bleed') return false;
       if(((e && e.notBleed) || (mo && mo.notBleed)) && p.kind === 'bleed') return false;
       if((e && e.onlyPredatorActs) || (mo && mo.onlyPredatorActs)){ const as = (p.actorSeat | 0) || this._seatOfName(p.who); if(!as || as !== this.predSeat()) return false; }
+      const nd = (mo && mo.notActorDisc) || (e && e.notActorDisc);   // v0.6.244 (C1b, the agreeing rows' sample: Rooftop Shadow, The Mole [cel]; cardfx v1.13.0): 'Not usable if the acting minion has Celerity [cel]' -- [CEL] its superior: the actor's printed disciplines (_discOf on its pub card); an ally has none; unknown fails closed
+      if(nd){ const a = this._actorOf(p); if(!a || !a.h) return false;
+        if(a.h.kind === 'crypt'){ const d = this._discOf(a.card || { name: a.name }, a.cards), lo = String(nd).toLowerCase(); if(!d) return false;
+          if(nd === lo ? (d.all || []).includes(lo) : (d.sup || []).includes(lo)) return false; } }
     }
     if(!((e && e.onlyDirected) || (mo && mo.onlyDirected))) return true;
     return !p || this._pendDirected(p) === true;
@@ -8315,7 +8380,7 @@ class Bot {
                    why: 'stealth in hand ' + S + ' card(s) adding ' + sum + ' vs ' + need + ' needed now' + (more ? ' + a plausible intercept card (P ' + (ctx.pIntEff != null ? ctx.pIntEff : ctx.pInt).toFixed(2) + (ctx.attempts ? ', ' + ctx.attempts + ' attempt(s) already drawn this turn' : '') + ')' : ' (they probably hold no more intercept)') + ', bleed can become ' + (ctx.stakes || 1) + (pD ? ', top-deck ' + pD : '') + ' \u2192 ' + tag };
         }
         return { spend: P.aggression * (1 - P.insight * ctx.pInt) * stakesW >= 0.5, pump: ctx.pump | 0,
-                 why: 'aggr ' + P.aggression + ' × (1 − insight ' + P.insight + ' × P(int) ' + ctx.pInt.toFixed(2) + ') × stakes-weight ' + stakesW.toFixed(2) + ' (stakes ' + (ctx.stakes || 1) + (ctx.pump ? ' = the announced ' + ctx.announced + ' + a modifier in hand worth ' + ctx.pump : '') + ')' };
+                 why: 'aggr ' + P.aggression + ' × (1 − insight ' + P.insight + ' × P(int) ' + ctx.pInt.toFixed(2) + ') × stakes-weight ' + stakesW.toFixed(2) + ' (stakes ' + (ctx.stakes || 1) + ((ctx.pump || ctx.own) ? ' = the announced ' + ctx.announced + (ctx.own ? ' + the card\u2019s own ' + ctx.own : '') + (ctx.pump ? ' + a modifier in hand worth ' + ctx.pump : '') : '') + ')' };
       }
       case 'bleed-modifier': {     // steg 2 (15 July): Leverage-class -- burn the Edge (if held) for +bleed on an action that's already going through. A REAL trade-off (unlike Parthenon's lock, which has none): burning it now forfeits the passive +1 pool this same Edge would otherwise grant at my OWN next unlock phase, in exchange for extra damage to the opponent RIGHT NOW -- persona-weighted on aggression, not unconditional. steg 4 (16 July, real Conditioning/Bonding card_text): generalized cost-aware -- a PURE blood cost (no Edge involved) has no such forfeiture to weigh, so it carries no penalty; only an actual `costEdge` card pays it.
         const edgePenalty = ctx.mod.costEdge ? 0.5 : 0;
@@ -9127,7 +9192,7 @@ class Bot {
       if(attempted && attempted.has(c.id)) return;   // fas A+: a failed attempter never retries the same action
       const ic = this._bestInterceptFor(c, reacted || null, p);   // v0.6.215: the action's conditions (Wall Street Night, Channel 10)
       const frail = ((c.blood | 0) <= 1) ? -0.4 : 0;   // B-55f BASE (4 Aug, M4's four-straight-Zöe trace): a 1-blood blocker eats the default incoming strike into TORPOR -- at equal intercept, prefer a body that survives the trade (3-blood Casey stood idle while Zöe blocked herself to torpor). The -0.4 is tie-breaker-scale: intercept CAPABILITY still dominates (a dying vampire WITH the card beats a healthy bare one), and a dying SOLE candidate is still picked (blocking beats not blocking -- decide already said yes). GENERAL base behavior per the project owner's doctrine: every blocking bot weighs survivability; archetype-level intercept BANKING is the deck-axis sibling (B-55f-b).
-      const sc = (ic ? ic.s : 0) + this._equipIntercept(c) + this._hostedIntercept(c, p) + this._cryptIntercept(c, p) + frail;   // E1: borne equipment counts   // VA: + crypt intercept
+      const sc = (ic ? ic.s : 0) + this._equipIntercept(c, p) + this._hostedIntercept(c, p) + this._cryptIntercept(c, p) + frail;   // E1: borne equipment counts   // VA: + crypt intercept
       if(sc > bestS){ best = c; bestS = sc; }
     });
     return best;
@@ -9204,7 +9269,7 @@ class Bot {
     const aFresh = aStanding === null ? null : (!humanActor ? aStanding : ((this._aAt && this._obs && this._obs.who === p.who && (this._aAt >= this._obs.at || (this._aWho === p.who && this._aAt >= this._obs.at - 3000))) ? aStanding : null));   // v0.6.171 (pre-handover review): a HUMAN actor's 'a' counts only if it changed after their announce -- a bot actor's earlier action that went through leaves its stealth on the counter (the tally is closed only by a mode change), and the next human bleed read it as its own
     const stealthNow = (!humanActor && aFresh != null) ? aFresh : Math.max(aFresh == null ? 0 : aFresh, baseSt);   // v0.6.219 (the graded readings): a BOT actor's counter is its raw stealth, written at its own announce -- Ariane's and Kalyani's undirected 0 is not floored at the default 1 (the floor stays for a human's unbooked counter)
     if(humanActor && aFresh == null && blocker) this._writeTally({ mode: 'block', a: baseSt });   // v0.6.171: seed the human's side with the rulebook default (0 directed / 1 undirected) so the counter and the verdict read the true numbers   // v0.6.169 (the project owner: the bot played intercept at once against a declared bleed with no stealth): directed actions carry 0 stealth, undirected +1
-    const baseIcp = blocker ? this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p) : 0;
+    const baseIcp = blocker ? this._equipIntercept(blocker, p) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p) : 0;
     const icNeeded = stealthNow > baseIcp;   // v0.6.170 (the project owner: the base rules forbid adding stealth or intercept that is not needed) -- bot-vs-bot too   // intercept is spent only when the stealth standing NOW beats what the blocker has for free; if the actor adds stealth later, _interceptSecondLook answers (v0.6.143d)
     if(blocker && !unIc && !icNeeded) this.o.log('block (' + blocker.name + '): no intercept card -- stealth ' + stealthNow + ' vs ' + baseIcp + ' already blocks; the cards wait for a stealth raise');
     /* v0.6.228 (round F): Eyes of the Wild -- 'During this action, this Gangrel can burn 1 blood to get +1 intercept. Lock this Gangrel after
@@ -9218,7 +9283,7 @@ class Bot {
     const pg = (!unIc && icNeeded && p.paidGrant && !doomed) ? this._grantPaidIntercept(blocker, p) : null, unPaid = (pg && stealthNow <= baseIcp + pg.n) ? pg : null;
     const ic = blocker && !unIc && !unPaid && icNeeded && !doomed && this._bestInterceptFor(blocker, p.reacted, p);
     if(unIc){
-      this._setTallyB(unIc + this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));
+      this._setTallyB(unIc + this._equipIntercept(blocker, p) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));
       this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block with +' + unIc + ' intercept (<b>' + esc(plan.un.name) + '</b>).' });
       if(humanActor){ try { this._interceptSecondLook(); } catch(e){ this.o.log('second look error:', e.message); } }   // v0.6.223 (the egress review): a stealth raise booked inside the route's beat -- online the counter's echo looks again, offline nothing echoes
     } else if(unPaid){   // v0.6.228: the attempt's line names the card (L12.attemptIcp, Second Tradition's shape); the blood shows on the board
@@ -9239,9 +9304,9 @@ class Bot {
       p.reacted.add(FX_NORM(ic.name));
       this._spendIntercept(ic, blocker, true);   // v0.6.215: a hand card or a location's lock (with the attempt line)
 
-      this._setTallyB((ic.s) + this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));   // VA review: RAW (rulebook: intercept below 0 is real; the verdict compares raw)   // fas A+ (16 July, rulebook source-verified): intercept belongs to THE MINION -- "all modifications made to a minion's stealth or intercept remain in effect for the duration of the action" (vekn.net Detailed Turn Sequence) -- so a NEW attempt by a DIFFERENT minion (the attempted-set guarantees it IS different) starts from ITS OWN intercept: b is written FRESH, never accumulated across minions. The old _bumpTallyB stacked d1's +2 under d2's +1 into a phantom b=3.   // VA: + crypt intercept (Dowager/Christine), the minion's TOTAL floored at 0 on the wire
+      this._setTallyB((ic.s) + this._equipIntercept(blocker, p) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));   // VA review: RAW (rulebook: intercept below 0 is real; the verdict compares raw)   // fas A+ (16 July, rulebook source-verified): intercept belongs to THE MINION -- "all modifications made to a minion's stealth or intercept remain in effect for the duration of the action" (vekn.net Detailed Turn Sequence) -- so a NEW attempt by a DIFFERENT minion (the attempted-set guarantees it IS different) starts from ITS OWN intercept: b is written FRESH, never accumulated across minions. The old _bumpTallyB stacked d1's +2 under d2's +1 into a phantom b=3.   // VA: + crypt intercept (Dowager/Christine), the minion's TOTAL floored at 0 on the wire
     } else if(blocker){
-      this._setTallyB((0) + this._equipIntercept(blocker) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));   // VA review: RAW -- a bare Christine writes -1 and the actor's raw verdict correctly FAILS her block vs 0 stealth   // fas C uncertainty-review (16 July, the project owner's question): a BARE attempt (no intercept card) must still write b FRESH -- the new minion's OWN intercept is 0 (+permanents, unmodelled in v1). Without this, the PREVIOUS attempt's b (a different minion's card, possibly a cancelled attempt's) survived in the shared tally and the verdict attributed it to the new blocker: the exact per-minion violation class fas A+ was built to kill, hiding in the card-less branch.   // VA: the bare attempt carries the crypt layer too -- a bare Dowager blocks a directed action at b=1
+      this._setTallyB((0) + this._equipIntercept(blocker, p) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p));   // VA review: RAW -- a bare Christine writes -1 and the actor's raw verdict correctly FAILS her block vs 0 stealth   // fas C uncertainty-review (16 July, the project owner's question): a BARE attempt (no intercept card) must still write b FRESH -- the new minion's OWN intercept is 0 (+permanents, unmodelled in v1). Without this, the PREVIOUS attempt's b (a different minion's card, possibly a cancelled attempt's) survived in the shared tally and the verdict attributed it to the new blocker: the exact per-minion violation class fas A+ was built to kill, hiding in the card-less branch.   // VA: the bare attempt carries the crypt layer too -- a bare Dowager blocks a directed action at b=1
       this.send({ t: 'log', html: '<b>' + esc(blocker.name) + '</b> attempts to block.' });   // v0.6.106 (#14): FROZEN bot-emitted line -- the actor's L12.attempt parser reads the blocker name from here (was the 'Trainbot:' chat prefix)
 
     }
@@ -11133,12 +11198,18 @@ class Bot {
       return;
     }
     if((m = t.match(L12.reduce)) && this._actingVamp && this._actingVamp.target && who === this.seatName(this._actingVamp.target)){   // v0.6.200 (point 15): my bleed's target reduced it -- the amount is theirs to state ('now N'); no return: the line is still a card play for the event log
-      const now = parseInt(m[4], 10);
-      if(Number.isFinite(now) && now < (this._actingVamp.n | 0)){ this.o.log('bleed reduced (' + m[2] + '): ' + this._actingVamp.n + ' -> ' + now); this._actingVamp.n = now; this._actingVamp.reducedTo = now; }
+      const now = parseInt(m[4], 10), av = this._actingVamp;
+      if(av.ownTotal){   /* v0.6.244 (C1b's 240: 9 ledger faults): a stealth card's bleed is on my total since the contest (Bonding [DOM]) and, while its add
+           line is unsaid, not on the target's -- its '(now N)' lacks it. My total less the reduction is the bleed; the add line then says what N lacks. */
+        const by = parseInt(m[3], 10) | 0, was = av.n | 0; av.n = Math.max(0, was - by); av.reducedTo = av.n;
+        if(av.owedAdd && Number.isFinite(now)) av.owedAdd.base = now;
+        this.o.log('bleed reduced (' + m[2] + '): ' + was + ' -> ' + av.n + ' (the target states ' + now + ')');
+      } else if(Number.isFinite(now) && now < (av.n | 0)){ this.o.log('bleed reduced (' + m[2] + '): ' + av.n + ' -> ' + now); av.n = now; av.reducedTo = now; }
     }
     if((m = t.match(L12.reduceBy)) && this._actingVamp && this._actingVamp.target && who === this.seatName(this._actingVamp.target) && (!this._actingVamp.kind || this._actingVamp.kind === 'bleed')){   // v0.6.201 (the project owner, 16 Oct): a HUMAN target reduced my bleed with a card I do not know -- the client's Reduce line says by how much
       const by = parseInt(m[2], 10) | 0, was = this._actingVamp.n | 0;
-      if(by > 0){ this._actingVamp.n = Math.max(0, was - by); this._actingVamp.reducedTo = this._actingVamp.n; this.o.log('bleed reduced by ' + who + (m[3] ? ' (' + m[3] + ')' : '') + ': ' + was + ' -> ' + this._actingVamp.n); }
+      if(by > 0){ const ow = this._actingVamp.owedAdd; if(ow && ow.n > 0) ow.base = Math.max(0, (typeof ow.base === 'number' ? ow.base : was - ow.n) - by);   // v0.6.244 (C1b): the human's total lacks an unsaid stealth card's bleed (_sayOwedAdd)
+        this._actingVamp.n = Math.max(0, was - by); this._actingVamp.reducedTo = this._actingVamp.n; this.o.log('bleed reduced by ' + who + (m[3] ? ' (' + m[3] + ')' : '') + ': ' + was + ' -> ' + this._actingVamp.n); }
       return;
     }
     if((m = t.match(L12.spyNull))){   // v0.6.211: the actor made its bleed unsuccessful (Spying Mission [OBF]) -- nothing lands on me: no pool, no Edge
@@ -12038,9 +12109,15 @@ class Bot {
       this._toAsh(st.name);
     } else {
       this.hand.splice(st.idx, 1); this._drawOwed = (this._drawOwed || 0) + 1;
-      if(st.cost && st.cost.blood) av.v.blood = Math.max(0, (av.v.blood | 0) - st.cost.blood);   // v0.6.116 round 2: the stealth card's blood cost, paid by the acting vampire when played (the intercept side has paid at line ~3532 since v0.6.13; this side never did). Board burns (Marked Path) carry no cost.
+      if(st.cost && st.cost.blood) av.v.blood = Math.max(0, (av.v.blood | 0) - st.cost.blood);   // v0.6.116 round 2: the stealth card's blood cost, paid by the acting vampire when played (the intercept side has paid at line ~3532 since v0.6.13; this side never did). Board burns (Marked Path) carry no cost. v0.6.244: + the mode's own price (fx.payBlood, folded into st.cost by _bestStealthFor)
       this._toAsh(st.name);   // v0.6.12 ash sweep -- the hand-played stealth branch (the Marked Path BURN branch above already had its own _toAsh)
       this._emitPlay(st.name, 'stealth', av && av.v && av.v.name);   // v0.6.139: this spend left no trace row (CLAUDE.md 43c)
+      if(st.bleed > 0 && av){   /* v0.6.244 (C1b, SWEEP-REGISTER 10.17): the mode's own bleed (Bonding [DOM]: '+1 stealth and +1 bleed (limited)') is the action's
+           from now on, and takes its limited slot (no Conditioning after it). The table hears it in the frozen add line once the blocks are
+           declined (_sayOwedAdd), where a bot actor's modifiers speak: an add line inside the contest ends a receiving bot's block (L12.add). */
+        av.n = (av.n | 0) + st.bleed; av.owedAdd = { n: ((av.owedAdd && av.owedAdd.n) | 0) + st.bleed, card: st.name }; av.ownTotal = true;   // ownTotal: a reduction is read off my total, never the target's stated one (the reduce handlers)
+        if(st.limited) av.limitedUsed = true;
+      }
     }
     this.fxClone({ name: st.name, kind: 'lib' }, '+' + st.s + ' stealth', { actor: av.v });
     this._bumpTallyA(st.s);   // fas A (16 July): the spent stealth must reach the shared tally -- the v0.6.3 contested verdict is computed from a/b, and a bot attacker's stealth previously never got there (a=0 -> a wrong "block succeeds" against any stealth)
@@ -12061,7 +12138,7 @@ class Bot {
     const seen = new Set(); let S = 0, sum = 0;
     (this.hand || []).forEach(n => { const h = this.fxLookup(n); if(!h || h.kind !== 'lib' || !(h.e.t || []).some(t => t === 'react' || t === 'mod') || seen.has(FX_NORM(h.name))) return;
       if(played && played.has(FX_NORM(h.name))) return; if(!this._titleOk(h, vamp)) return; if(!this._entryReqOk(h.e, vamp)) return; if(((h.e.cost && h.e.cost.blood) || 0) > (vamp.blood | 0)) return;   // v0.6.228: + the clan / sect (_bestInterceptFor's mirror)
-      let best = 0; (h.e.modes || []).forEach(mo => { if(mo.when === 'lockedBlock' || !this._dirOk(h.e, mo, p)) return; const ic = mo.fx && typeof mo.fx.intercept === 'number' ? mo.fx.intercept + this._plusIf(mo, 'intercept', vamp) : null; if(typeof ic === 'number' && ic > best && this._modeUsableBy(mo, vamp)) best = ic; });   // v0.6.241 (7.2): + The Warrens' titled +1   // v0.6.233: + the directed condition (_bestInterceptFor's mirror)
+      let best = 0; (h.e.modes || []).forEach(mo => { if(mo.when === 'lockedBlock' || !this._dirOk(h.e, mo, p)) return; if((((h.e.cost && h.e.cost.blood) || 0) + ((mo.fx && mo.fx.payBlood) | 0)) > (vamp.blood | 0)) return; const ic = mo.fx && typeof mo.fx.intercept === 'number' ? mo.fx.intercept + this._plusIf(mo, 'intercept', vamp, p) : null; if(typeof ic === 'number' && ic > best && this._modeUsableBy(mo, vamp)) best = ic; });   // v0.6.244 (C1b): + the mode's price (fx.payBlood) and the plusIf's action (p)   // v0.6.241 (7.2): + The Warrens' titled +1   // v0.6.233: + the directed condition (_bestInterceptFor's mirror)
       if(best > 0){ seen.add(FX_NORM(h.name)); S++; sum += best; } });
     this._lockInterceptFor(vamp, played, p, true).forEach(lb => { S++; sum += lb.s; });   // v0.6.215: every location that locks for this blocker counts like a card
     return { S, sum };
@@ -12155,13 +12232,13 @@ class Bot {
     { const key = sa + ':' + b; if(av._lookKey === key) return; av._lookKey = key; }   // v0.6.152: the same counter state is looked at once (the chat grammar's write and its echo both arrive here)
     if((av.looks | 0) >= 4) return; av.looks = (av.looks | 0) + 1;
     const st = this._bestStealthFor(av.v, av.played, av.target); const stack = this._stealthStack(av.v, av.played); const need = b - sa + 1;
-    const annN = (typeof av.n === 'number' ? av.n : 1); let pump = 0;
-    if(av.kind === 'bleed' || (av.kind == null && av.target)){ const bm = this._bestBleedModifierFor(av.v, av.played, av.limitedUsed); if(bm && typeof bm.n === 'number' && (!st || bm.name !== st.name)) pump = bm.n | 0; }
+    const annN = (typeof av.n === 'number' ? av.n : 1); let pump = 0, own = 0;
+    if(av.kind === 'bleed' || (av.kind == null && av.target)){ const sl = this._stealthSlot(st); own = sl.own; const bm = this._bestBleedModifierFor(av.v, av.played, av.limitedUsed || sl.takes); if(bm && typeof bm.n === 'number' && (!st || bm.name !== st.name)) pump = bm.n | 0; }
     const bw = a._lineBlockFrom || a._sayBlockFrom || null; const bSeat = bw ? ((this.players || []).find(p => p.name === bw) || {}).seat : null;
     const pInt = +((bSeat ? this._pCat(bSeat, 'intercept') : 0.15) * (b > 0 ? 0.6 : 1)).toFixed(2);   // intercept already on the table (a card or a permanent) makes a FURTHER card less likely
-    const d = st ? this.decide('spend-stealth', { pInt, pIntEff: pInt, attempts: 0, need, stakes: annN + pump, announced: annN, pump, stack, axis: this._stealthAxis(), pDraw: this._pDrawStealth(av.v), second: true })
+    const d = st ? this.decide('spend-stealth', { pInt, pIntEff: pInt, attempts: 0, need, stakes: annN + own + pump, announced: annN, own, pump, stack, axis: this._stealthAxis(), pDraw: this._pDrawStealth(av.v), second: true })
                  : { spend: false, tag: 'no-stealth', stack: 0, need, theirs: 0, why: 'no stealth card left to answer intercept ' + b + ' vs stealth ' + sa };
-    this._emit('stealth-stack', { vamp: av.v.name, look: 1 + (av.looks | 0), S: d.stack, sum: stack.sum, need, more: d.theirs, contest: !!d.spend, tag: d.tag, stakes: annN + pump, tally: { a: sa, b } });
+    this._emit('stealth-stack', { vamp: av.v.name, look: 1 + (av.looks | 0), S: d.stack, sum: stack.sum, need, more: d.theirs, contest: !!d.spend, tag: d.tag, stakes: annN + own + pump, tally: { a: sa, b } });
     this.o.log('second look (stealth ' + sa + ' vs intercept ' + b + '): ' + d.why + ' \u2192 ' + (d.spend ? 'another stealth card' : 'stop'));
     if(d.spend && st) this._queueStealthSpend(st, av, a);   // v0.6.152: after the beat
   }
@@ -12210,14 +12287,14 @@ class Bot {
     const pInt = seat ? this._pCat(seat, 'intercept') : 0.15;   // R2 (v0.6.43): ground truth (revealed/open hand) overrides the inference when present
     /* v0.6.141 (serie-bal3: malkavian answered a block with stealth 20 of 78 times): the stakes of a bleed are what it can BECOME, not what was announced -- a stealth-bleed deck slips the bleed of 1
        past the blocker and pumps it afterwards (Conditioning +3). The best bleed modifier this vampire can still play counts. */
-    const annN = (typeof av.n === 'number' ? av.n : 1); let pump = 0;
-    if(av.kind === 'bleed' || (av.kind == null && av.target)){ const bm = this._bestBleedModifierFor(av.v, av.played, av.limitedUsed); /* a bleed carries a target and no kind; a hunt has neither */ if(bm && typeof bm.n === 'number' && st && bm.name !== st.name) pump = bm.n | 0; }
+    const annN = (typeof av.n === 'number' ? av.n : 1); let pump = 0, own = 0;
+    if(av.kind === 'bleed' || (av.kind == null && av.target)){ const sl = this._stealthSlot(st); own = sl.own; const bm = this._bestBleedModifierFor(av.v, av.played, av.limitedUsed || sl.takes); /* a bleed carries a target and no kind; a hunt has neither */ if(bm && typeof bm.n === 'number' && st && bm.name !== st.name) pump = bm.n | 0; }
     const stack = this._stealthStack(av.v, av.played);
     const tb = this.tally && this.tally.mode === 'block' ? (this.tally.b | 0) : 0, ta = this.tally && this.tally.mode === 'block' ? (this.tally.a | 0) : 0; const need = Math.max(1, tb - ta + 1);   // a block succeeds when intercept >= stealth
     if(!av.attemptCounted){ av.attemptCounted = true; this._turnAttempts = (this._turnAttempts | 0) + 1; }   // PROBE THEN PUNCH's other half: every block attempt my prey has already made this turn has cost it a wake or an intercept card more often than not
     const attemptsBefore = Math.max(0, (this._turnAttempts | 0) - 1), pIntEff = +(pInt * Math.pow(0.6, attemptsBefore)).toFixed(2);
-    const d = this.decide('spend-stealth', { pInt, pIntEff, attempts: attemptsBefore, need, stakes: annN + pump, announced: annN, pump, stack, axis: this._stealthAxis(), pDraw: this._pDrawStealth(av.v) });
-    if(d.tag) this._emit('stealth-stack', { vamp: av.v.name, S: d.stack, sum: stack.sum, need: d.need, more: d.theirs, contest: !!d.spend, tag: d.tag, stakes: annN + pump, pInt: +pInt.toFixed(2), pIntEff, attempts: attemptsBefore });
+    const d = this.decide('spend-stealth', { pInt, pIntEff, attempts: attemptsBefore, need, stakes: annN + own + pump, announced: annN, own, pump, stack, axis: this._stealthAxis(), pDraw: this._pDrawStealth(av.v) });
+    if(d.tag) this._emit('stealth-stack', { vamp: av.v.name, S: d.stack, sum: stack.sum, need: d.need, more: d.theirs, contest: !!d.spend, tag: d.tag, stakes: annN + own + pump, pInt: +pInt.toFixed(2), pIntEff, attempts: attemptsBefore });
     this.o.log('block attempt by ' + who + ': ' + d.why + ' → ' + (d.spend ? 'stealth' : 'await verdict'));
     if(d.spend){ this._spendStealthCard(st, av, a); return true; }
     return false;
@@ -13843,10 +13920,10 @@ class Bot {
           if(act.cost && act.cost.blood) { v.blood = Math.max(0, (v.blood | 0) - act.cost.blood); this._park(act.cost.blood, 0); }   // v0.6.116: blood cost at announce (latent for Inside Dirt, which costs the Edge, not blood)
           this.push();
           this.fxClone({ name: act.name, kind: 'lib' }, act.n + ' pool damage', { actor: v });
-          this._announceTallyA(0 + this._cryptStealthMod(v, 'pool', true));   // fresh referendum, no built-in stealth on this card
+          this._announceTallyA((act.st | 0) + this._cryptStealthMod(v, 'pool', true));   // fresh referendum; v0.6.244 (C1b, 9.13): + the card's printed stealth (Inside Dirt prints none; Choir and the other header cards do)
           this._grandBallBar(v);   // v0.6.217 (V5 wave 4): the Grand Ball's free Toreador -- every non-bleed action (the egress map: leave torpor, stock, rescue, strength, card actions, rushes, fetch, peek, pool damage)
           this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> plays <b>' + esc(act.name) + '</b>' + (act.costEdge ? ': burns the Edge' : '') + ' \u2014 ' + act.n + ' pool damage to <b>' + esc(this.seatName(prey)) + '</b>.' });
-          const qp = 'Trainbot: ' + v.name + ' plays ' + act.name + ' \u2014 ' + act.n + ' pool damage to ' + this.seatName(prey) + ' (not a bleed \u2014 no bounce). Block?';
+          const qp = 'Trainbot: ' + v.name + ' plays ' + act.name + ' \u2014 ' + act.n + ' pool damage to ' + this.seatName(prey) + (act.st ? ' (+' + act.st + ' stealth)' : '') + ' (not a bleed \u2014 no bounce). Block?';   // v0.6.244: the stealth named, as the bleed's question does
           const ansP = await this._askBlock(qp);
           await sleep(150);
           if(ansP.what === 'block'){
@@ -13908,9 +13985,17 @@ class Bot {
              require an intervening reaction" nuance the project owner's rule summary didn't
              resolve -- deliberately not invented here, flagged for whenever a real
              card makes it matter. */
-          let curAns = ans, pumped = 0, spyBankTried = false;
+          let curAns = ans, pumped = 0, spyBankTried = false, owedTried = false;
           while(true){
             if(this._actingVamp.archoned) break;   // v0.6.215: burned by Archon Investigation -- no more modifiers
+            if(!owedTried){ owedTried = true; const ow = this._actingVamp.owedAdd;   // v0.6.244 (C1b, 10.17): a stealth card's own bleed, played in the contest (Bonding [DOM]) -- its add line first, with its reactions window (a modifier's shape)
+              if(ow){ if(this._floorHeld()){ await this._floorClear(); if(this.out || this._actingVamp.archoned) continue; }
+                const k = this._sayOwedAdd(v);
+                if(k > 0){ pumped++;
+                  curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +' + k + ' bleed (' + ow.card + ') — now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
+                  await sleep(150);
+                  if(curAns.what === 'block') break;
+                  continue; } } }
             if(this._actingVamp.bounced && this.o.lateBounce !== 0){ this.o.log('bleed-modifier: the bleed was bounced \u2014 no pump on somebody else\'s prey'); break; }   // v0.6.144
             if(this._actingVamp.pendingBounce){   // v0.6.237 (the egress review): a human's bounce between my windows -- _bounceGate applies it
               if(this.o.lateBounce !== 0) break;   // below, after the loop

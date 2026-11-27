@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
-/* test-card-scenarios.js v1.0.0 (27 Nov 2026) -- THE SCENARIO BENCH: the card chain's dynamic link, card by card through the bot's real
+/* test-card-scenarios.js v1.1.0 (27 Nov 2026, C1b: a mode's price (fx.payBlood) is part of what the card costs; the plusIf conditions bot
+   v0.6.244 reads (the actor's title and sect, the action's form) are read against the scenario's actor and its bleed; a stealth mode's own
+   bleed is said in the add line once the blocks are declined (10.17); the 'or' option's bleed alone is a B window (10.25); v1.0.0 27 Nov
+   2026) -- THE SCENARIO BENCH: the card chain's dynamic link, card by card through the bot's real
    path (RULINGS D-147). A fast gate of its own, outside the suite x3.
 
    For each row of cardfx-exact.json (the families' exactness record) whose state keeps our value, and each of our modes at that
@@ -37,7 +40,7 @@
    Needs elysium-bot.js, elysium-cardfx.json, cardfx-exact.json, the read-only client copy and the abstract table beside it.         */
 const T = require('./elysium-bot-abstract.js');           // first: it installs the virtual clock before the bot is required
 const fs = require('fs'), path = require('path');
-const BENCH_VERSION = '1.0.0';
+const BENCH_VERSION = '1.1.0';
 const here = f => path.join(__dirname, f);
 const KEPT = new Set(['agree', 'graded', 'corrected', 'explained']);
 const esc = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -69,7 +72,7 @@ function windowFor(fam, e, mo){
     if(mo.when) return { none: 'an unlock reaction (when ' + mo.when + ')' };
     return { w: 'I' };
   }
-  if(fam === 'bleed' && t.includes('mod') && f.bleed !== undefined && !f.bleedAct && f.stealth === undefined){
+  if(fam === 'bleed' && t.includes('mod') && f.bleed !== undefined && !f.bleedAct && (f.stealth === undefined || f.stealthOpt)){   // v1.1.0: the 'or' option's bleed alone (stealthOpt, 10.25)
     if(!num(f.bleed)) return { none: 'bleed ' + f.bleed };
     if(e.notBleed || mo.notBleed) return { none: 'not usable during a bleed' };
     return { w: 'B' };
@@ -82,7 +85,7 @@ function vampireFor(e, mo){
   const own = new Set(String(mo.at || '').toLowerCase().split('+').filter(Boolean));
   const others = [...new Set((e.modes || []).filter(m2 => m2 !== mo && m2.at).flatMap(m2 => String(m2.at).toLowerCase().split('+')))].filter(x => !own.has(x));
   if(others.length) want.without = others;   // the mode alone: a vampire with another mode's discipline would play that mode when it is worth more (Skullduggery's [pre] beside its [obf])
-  const cost = (e.cost && num(e.cost.blood)) ? e.cost.blood : 0;
+  const cost = costOf(e, mo);
   if(cost) want.minCap = cost + 2;
   if(mo.at) want.disc = mo.at;
   else if(r.disc && r.disc.length && !(e.t || []).some(t => t === 'equip' || t === 'retainer' || t === 'ally')) want.disc = String(r.disc[0]).toLowerCase();
@@ -94,25 +97,30 @@ function vampireFor(e, mo){
   const n = T.pickVampire(want);
   return n ? { name: n } : { none: 'no vampire in the crypt for ' + JSON.stringify(want) };
 }
-function plusIfFor(mo, key, vampName, crypt){
+function plusIfFor(mo, key, vampName, crypt, actorName){   // v1.1.0: actorName -- the acting minion of the bench's bleed (the I window's), for the conditions on the actor
   const pi = mo.fx && mo.fx.plusIf; if(!pi || !pi.add || !num(pi.add[key])) return 0;
-  const c = pi.if || {}, ce = crypt[vampName] || {};
-  if(Object.keys(c).some(k => k !== 'selfClan' && k !== 'selfTitled')) return 0;   // _plusIf fails an unread condition closed
+  const c = pi.if || {}, ce = crypt[vampName] || {}, ae = actorName ? (crypt[actorName] || null) : null;
+  const KNOWN = ['selfClan', 'selfTitled', 'actorTitled', 'actorSect', 'actDirected', 'actUndirected'];   // the bot's PLUSIF_CONDS
+  if(Object.keys(c).some(k => !KNOWN.includes(k))) return 0;   // _plusIf fails an unread condition closed
   if(c.selfClan && !String(ce.clan || '').split('/').includes(c.selfClan)) return 0;
   if(c.selfTitled && !ce.title) return 0;
+  if(c.actorTitled && !(ae && ae.title)) return 0;
+  if(c.actorSect && !(ae && ae.sect === c.actorSect)) return 0;
+  if(c.actUndirected) return 0;   // the bench's action is a bleed: directed
   return pi.add[key];
 }
+const costOf = (e, mo) => ((e.cost && num(e.cost.blood)) ? e.cost.blood : 0) + ((mo && mo.fx && num(mo.fx.payBlood)) ? mo.fx.payBlood : 0);   // v1.1.0: the card's blood and the mode's own price (fx.payBlood, 7.6)
 /* The action's stealth as the card prints it: the level-free header's "+N stealth action" or the played mode's, whichever is more
-   (_cardActStealth's reading, the rush's and the attach's; _bestBleedCardFor reads the played mode's only: 9.13). */
+   (_cardActStealth's reading: the rush's, the attach's and, since bot v0.6.244, the bleed card's: 9.13). */
 function actStealthOf(e, mo){ let st = 0; for(const m of (e.modes || [])){ if(!m || !m.fx || (m.at && m !== mo)) continue; const v = num(m.fx.actStealth) ? m.fx.actStealth : (m === mo && num(m.fx.stealth)) ? m.fx.stealth : 0; if(v > st) st = v; } return st; }
-function bloodFor(e, crypt, name){ const cap = (crypt[name] || {}).cap | 0, cost = (e.cost && num(e.cost.blood)) ? e.cost.blood : 0; return Math.max(1, Math.min(cap || 3, Math.max(3, cost + 2))); }   // enough to pay the card and keep 1
+function bloodFor(e, crypt, name, mo){ const cap = (crypt[name] || {}).cap | 0, cost = costOf(e, mo); return Math.max(1, Math.min(cap || 3, Math.max(3, cost + 2))); }   // enough to pay the card (and its mode's price) and keep 1
 
 /* One scenario: the spec and its check. */
 function scenarioFor(card, e, mo, win, crypt){
   const v = vampireFor(e, mo); if(v.none) return { none: v.none };
-  const V = v.name, cost = (e.cost && num(e.cost.blood)) ? e.cost.blood : 0, edge = !!e.costEdge || !!(mo.fx && mo.fx.costEdge);
+  const V = v.name, cost = costOf(e, mo), edge = !!e.costEdge || !!(mo.fx && mo.fx.costEdge);
   const blocker = T.pickVampire({ disc: 'aus', exact: true, noText: true, notName: [V] }), actor = T.pickVampire({ disc: 'obf', exact: true, noText: true, notName: [V] });
-  const me = { name: 'Hanna', pool: 30, hand: [card], ready: [{ name: V, blood: bloodFor(e, crypt, V) }], edge };
+  const me = { name: 'Hanna', pool: 30, hand: [card], ready: [{ name: V, blood: bloodFor(e, crypt, V, mo) }], edge };
   const preyPool = (mo.req && num(mo.req.targetPoolMax)) ? Math.max(1, mo.req.targetPoolMax) : 20;   // Foreshadowing Destruction [DOM]: the target at 9 or fewer pool
   if(e.cost && num(e.cost.pool) && e.cost.pool >= 30) return { none: 'a pool cost of ' + e.cost.pool };
   if(win.w === 'S'){
@@ -120,23 +128,24 @@ function scenarioFor(card, e, mo, win, crypt){
     return { what: 'S: +' + N + ' stealth', spec: { acting: 1, seats: [me, { name: 'Viktor', pool: 2, hand: [], ready: [{ name: blocker, blood: 4 }] }, IDLE] },
       check: r => { const re = new RegExp('^' + esc(V) + ' plays ' + esc(card) + '(?: \\[[^\\]]+\\])?(?: \\([^)]*\\))?: \\+(\\d+) stealth\\.$'), l = T.linesOf(r, 1, re)[0], m = l && l.txt.match(re);
         const got = m ? +m[1] : null, tal = T.tallyOf(r, 1, 'block').some(x => x.a === N), blood = l ? T.bloodAt(r, 1, V, l) : null;
-        const ok = got === N && tal && !r.seats[0].hand.includes(card) && blood === bloodFor(e, crypt, V) - cost;
-        return { ok, got: m ? l.txt + (tal ? '' : ' (no counter at ' + N + ')') + (blood === bloodFor(e, crypt, V) - cost ? '' : ' (blood ' + blood + ', cost ' + cost + ')') : 'not played: ' + (T.linesOf(r, 1, /stealth|Block:/).map(x => x.txt).slice(-3).join(' | ') || T.linesOf(r).map(x => x.txt).slice(-3).join(' | ')) }; } };
+        const b = (num(mo.fx.bleed) && !mo.fx.bleedAct) ? mo.fx.bleed : 0, add = !b || T.linesOf(r, 1, new RegExp('^' + esc(V) + ' adds \\+' + b + ' bleed \\(= ' + (1 + b) + '\\)\\.$')).length > 0;   // v1.1.0 (10.17): Bonding [DOM]'s +1 bleed, said once the blocks are declined
+        const ok = got === N && tal && add && !r.seats[0].hand.includes(card) && blood === bloodFor(e, crypt, V, mo) - cost;
+        return { ok, got: m ? l.txt + (tal ? '' : ' (no counter at ' + N + ')') + (add ? '' : ' (no "adds +' + b + ' bleed (= ' + (1 + b) + ')" line)') + (blood === bloodFor(e, crypt, V, mo) - cost ? '' : ' (blood ' + blood + ', cost ' + cost + ')') : 'not played: ' + (T.linesOf(r, 1, /stealth|Block:/).map(x => x.txt).slice(-3).join(' | ') || T.linesOf(r).map(x => x.txt).slice(-3).join(' | ')) }; } };
   }
   if(win.w === 'I'){
-    const N = mo.fx.intercept + plusIfFor(mo, 'intercept', V, crypt);
+    const N = mo.fx.intercept + plusIfFor(mo, 'intercept', V, crypt, actor);
     return { what: 'I: +' + N + ' intercept', spec: { acting: 1, seats: [{ name: 'Hanna', pool: 30, hand: ['Lost in Crowds'], ready: [{ name: actor, blood: 3 }] },
-        { name: 'Viktor', pool: 2, hand: [card], ready: [{ name: V, blood: bloodFor(e, crypt, V) }], edge }, IDLE] },
+        { name: 'Viktor', pool: 2, hand: [card], ready: [{ name: V, blood: bloodFor(e, crypt, V, mo) }], edge }, IDLE] },
       check: r => { const re = new RegExp('^' + esc(V) + ' plays ' + esc(card) + ': \\+(\\d+) intercept\\.$'), l = T.linesOf(r, 2, re)[0], m = l && l.txt.match(re);
         const got = m ? +m[1] : null, tal = T.tallyOf(r, 2, 'block').some(x => x.b === N), blood = l ? T.bloodAt(r, 2, V, l) : null;
-        const ok = got === N && tal && !r.seats[1].hand.includes(card) && blood === bloodFor(e, crypt, V) - cost;
-        return { ok, got: m ? l.txt + (tal ? '' : ' (no counter at ' + N + ')') + (blood === bloodFor(e, crypt, V) - cost ? '' : ' (blood ' + blood + ', cost ' + cost + ')') : 'not played: ' + (T.linesOf(r, 2).map(x => x.txt).slice(-3).join(' | ') || T.linesOf(r).map(x => x.txt).slice(-3).join(' | ')) }; } };
+        const ok = got === N && tal && !r.seats[1].hand.includes(card) && blood === bloodFor(e, crypt, V, mo) - cost;
+        return { ok, got: m ? l.txt + (tal ? '' : ' (no counter at ' + N + ')') + (blood === bloodFor(e, crypt, V, mo) - cost ? '' : ' (blood ' + blood + ', cost ' + cost + ')') : 'not played: ' + (T.linesOf(r, 2).map(x => x.txt).slice(-3).join(' | ') || T.linesOf(r).map(x => x.txt).slice(-3).join(' | ')) }; } };
   }
   if(win.w === 'B'){
     const N = mo.fx.bleed + plusIfFor(mo, 'bleed', V, crypt);
     return { what: 'B: +' + N + ' bleed', spec: { acting: 1, seats: [me, { name: 'Viktor', pool: preyPool, hand: [], ready: [{ name: blocker, blood: 4, locked: true }] }, IDLE] },
       check: r => { const re = new RegExp('^' + esc(V) + ' plays ' + esc(card) + ':(?: burns the Edge for)? \\+(\\d+) bleed\\.$'), l = T.linesOf(r, 1, re)[0], m = l && l.txt.match(re);
-        const add = T.linesOf(r, 1, new RegExp('^' + esc(V) + ' adds \\+' + N + ' bleed \\(= ' + (1 + N) + '\\)\\.$'))[0], blood = l ? T.bloodAt(r, 1, V, l) : null, paid = blood === bloodFor(e, crypt, V) - cost;
+        const add = T.linesOf(r, 1, new RegExp('^' + esc(V) + ' adds \\+' + N + ' bleed \\(= ' + (1 + N) + '\\)\\.$'))[0], blood = l ? T.bloodAt(r, 1, V, l) : null, paid = blood === bloodFor(e, crypt, V, mo) - cost;
         const ok = !!m && +m[1] === N && !!add && paid && !r.seats[0].hand.includes(card);
         return { ok, got: m ? l.txt + (add ? '' : ' (no "adds +' + N + ' bleed (= ' + (1 + N) + ')" line)') + (paid ? '' : ' (blood ' + blood + ', cost ' + cost + ')') : 'not played: ' + T.linesOf(r, 1).map(x => x.txt).filter(x => /bleed/.test(x)).slice(-3).join(' | ') }; } };
   }
@@ -145,7 +154,7 @@ function scenarioFor(card, e, mo, win, crypt){
     return { what: 'A: bleed ' + M + ' at +' + S + ' stealth', spec: { acting: 1, seats: [me, { name: 'Viktor', pool: 20, hand: [], ready: [{ name: blocker, blood: 4, locked: !(S > 0) }] }, IDLE] },   // a card's stealth is worth something only against an unlocked blocker
       check: r => { const q = T.linesOf(r, 1, new RegExp('plays ' + esc(card) + ' — bleeds \\S.* for (\\d+)'))[0], ann = T.linesOf(r, 1, new RegExp('^' + esc(V) + ' bleeds for (\\d+)\\.$'))[0];
         const qm = q && q.txt.match(/ for (\d+)/), am = ann && ann.txt.match(/for (\d+)\./), t0 = T.tallyOf(r, 1, 'block')[0];
-        const blood = ann ? T.bloodAt(r, 1, V, ann) : null, paid = blood === bloodFor(e, crypt, V) - cost;   // the first board push after the announce line: the cost paid (a blocked action's refund comes later: a push order that moves turns a paid card red, never a false pass)
+        const blood = ann ? T.bloodAt(r, 1, V, ann) : null, paid = blood === bloodFor(e, crypt, V, mo) - cost;   // the first board push after the announce line: the cost paid (a blocked action's refund comes later: a push order that moves turns a paid card red, never a false pass)
         const okM = !!qm && +qm[1] === M && !!am && +am[1] === M, okS = !!t0 && (t0.a | 0) === S;
         return { ok: okM && paid && (win.key !== 'stealth' || okS), got: q ? q.txt + ' / ' + (ann ? ann.txt : 'no announce') + ' / counter ' + (t0 ? t0.a : 'none') + (paid ? '' : ' / blood ' + blood + ', cost ' + cost) : 'not played as the bleed: ' + T.linesOf(r, 1).map(x => x.txt).filter(x => /bleed/.test(x)).slice(0, 2).join(' | ') }; } };
   }

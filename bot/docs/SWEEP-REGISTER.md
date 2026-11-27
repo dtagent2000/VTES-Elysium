@@ -35,7 +35,7 @@ What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under the owner's go-ahead, 4 and 5 broadened to another seat's play and a maneuver's
 source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's and v0.6.239's egress reviews; Claude orders the rounds, D-137).
-Active entries: 7.5, 8.3, 10.17, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 10.16, 10.24, 12.2, 13.10.
+Active entries: 8.3, 11.1. Missed: 4.6, 5.2, 7.6, 8.6, 9.8, 10.1, 10.2, 10.16, 10.24, 12.2, 13.10.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -67,7 +67,7 @@ retainer comes from.
 The compiler reads "aggravated" where the card says the opposite, misses an aggravated strike (which the weapon nullifier, Blood
 Rage-class since v0.6.236, then reads as the weapon's), or drops the condition on a weapon's. [pilot]
 - **2.1 Negated or prevented aggravation read as `aggr`** — "non-aggravated", "treats aggravated damage as normal", "prevent all
-  aggravated damage" (Soak, Resilience, Skin of Night …); test-cardfx pins Bloodform [VIC]'s. · latent · the compiler's negation
+  aggravated damage" (Soak, Resilience, Skin of Night …; C1b's second pass: Ignore the Searing Flames, all three lines); test-cardfx pins Bloodform [VIC]'s. · latent · the compiler's negation
   strip for `aggr`; the pin flips.
 - **2.2 Aggravated strikes with no strike key** — Body of Sun, Mayaparisatya [CHI], Smite, Bone Spur, Devil-Channel: Hands: the
   nullifier reads their line as the weapon's (as K1 did). · latent · a strike key carrying `aggr`.
@@ -141,19 +141,29 @@ is a handoff first. Bot-to-bot gaps are marked.
 - **4.21 A human's Carrion Crows** — the environmental damage of a human's Crows (1R [ani], 2R [ANI], each round during normal strike
   resolution) is not applied to the bot's minion: the bot narrates the strike alone and does not read a later change on the counter.
   Not 12.3 (the bot's own prevention against Crows). [Claude's playtest game 2, 25 Nov, 1474.3 and 2817; the 26 Nov handoff's
-  check] · human · a reader of a human's Crows play line (its level) that adds the damage in each round's strike resolution.
+  check; the C1b playtest, 27 Nov, at [ANI], 4237.8–4264.0] · human · a reader of a human's Crows play line (its level) that adds
+  the damage in each round's strike resolution.
 - **4.22 A human's The Dowager (+1 intercept during directed actions)** — at Claude's playtest table the printed +1 was not counted
   on the block counter (game 2, the panel's point 4: Claude's own Dowager, in the human's Nosferatu starter, blocking). The
-  bot blocker writes its own crypt intercept (`_cryptIntercept`); which side missed it at that table is not traced. [Claude's
-  playtests, 25 Nov; D-111 (6), BOARD's measurement debt] · human · trace it at the next human table: a bot's Dowager blocking a
-  human's directed action, and a human's Dowager blocking a bot's (the bot could seed a human blocker's printed intercept into an
-  untouched counter, as it seeds a human actor's stealth).
+  bot blocker writes its own crypt intercept (`_cryptIntercept`); which side missed it at that table is not traced. The human
+  blocker's half is traced with two other permanents: after the human's blocks the counter held none of Guardian Angel's +1 (a
+  bleed at the human) or Raven Spy's +1 until the human set it (3639.9 a=1 b=0; 3868.2; 4503.6): neither the client nor a bot
+  seeds it. [Claude's playtests, 25 Nov; the C1b playtest, 27 Nov; D-111 (6), BOARD's measurement debt] · human · trace the
+  bot's half at the next human table (a bot's Dowager blocking a human's directed action); the bot could seed a human blocker's
+  printed and permanent intercept into an untouched counter, as it seeds a human actor's stealth.
 - **4.23 A human's Pass at the strike step** — the bot counts it as no strike (0 damage), but the rulebook makes the hand strike the
   default: "Each minion chooses their strike … by default from a hand strike" and "The default strike is a hand strike"
   (https://archon.vekn.net/help/rules#choose-strike, #hand-strike). Seen with a second gap: after a human's combat card the bot
   moves to the next step, so the human's next Pass answers one step later (Claude's strike step became a Pass, 2797.6 → 2816.8).
   [Claude's playtest game 2, 25 Nov] · human · a human's Pass, or no strike line by the step's end, reads as a hand strike (the
   minion's strength at close range, nothing at long range); the step waits for the human's answer to its own question.
+- **4.24 A human's hand strike at long range is booked** — the bot's vampire had maneuvered to long (Swallowed by the Night) and
+  takes the human's hand strike for 3 as damage (torpor); "Most strikes are effective only at close range" (rulebook, resolve
+  strike), and the bot's own fist at long deals 0 (`longFist`). [the C1b playtest, 27 Nov, 5717.9 → 5728.4] · human · a human's
+  hand strike (and its boosts) reads as 0 when the range is long, said in the bot's damage line.
+- **4.25 A human's "No" to a block question is not read** — the bot's prompt says `say "block" or "no"`, but the decline parser
+  takes "No" only for a reactions-only question (`No block`, `No reaction` and `Pass` work): the bot waits on. [the C1b playtest,
+  27 Nov, 2343.6 → 2364.5 and 3487.0] · human · read "No" as a decline at a block question too, or the prompt names "Pass".
 
 ## 5. Maneuvers: direction and source
 Which way a maneuver goes, and where a maneuver comes from (a card, equipment, a grant).
@@ -186,37 +196,33 @@ A card in play is known by its name where its record should follow the card (its
 A value the text conditions or caps, compiled as a plain number.
 - **7.3 Kevlar Vest** — 2 only against guns; `_equipPrevent` prevents 1 against everything (sweep §4.3 calls it a red). [w1; sweep
   §4.3] · latent (tremere holds the vest and the only gun).
-- **7.4 Night Moves** — the bleed is capped at 1 pool. [sweep §4.3: red] · latent (nothing in the sewer deck bleeds for more).
-- **7.5 The `plusIf` row's other cards** — `_plusIf` (v0.6.241) reads a condition on my own vampire (`selfClan`, `selfTitled`) and
-  fails any other closed, and these entries carry the plain value: Protection Racket's "with an additional +1 intercept if the
-  acting minion is titled" (KRCG; `{intercept: 1}`), Ministry's additional +1 intercept if the acting vampire is Sabbat, Sense the
-  Sin [dai]'s if the acting minion has corruption counters, The Mausoleum, Venice's additional +1 vote while Ventrue Headquarters
-  is not in play (`cardfx-sharing.json`'s plusIf row: owed). Since C1 (v0.6.243) the first three carry their +1 on `plusIf` with an
-  `unread` condition (7.6); the readers are what is left. [the exactness round's egress review, pass 3] · **active**
-  (Protection Racket: v0.6.241's V5 smokes, 13 plays, gangrel 8 and ravnos 5; 7 against a titled actor, Donny Kowalczyk ×2,
-  Alexander Silverson, The Dowager, Lloyd Brooks ×2 and Larissa Moreira, each booked at +1) / latent (Ministry, Sense the Sin,
-  The Mausoleum: no deck) · conditions on the acting minion (titled, sect, corruption) read where the intercept is summed against
-  a known actor; the Mausoleum's a check of the table.
+- **7.4 Night Moves** — the bleed is capped at 1 pool; so is Cat Burglary's ("If more than 1 pool is bled with this action, ignore the
+  excess", KRCG; its [CEL] bleeds any Methuselah). [sweep §4.3: red; C1b's egress review] · latent (nothing in the sewer deck bleeds
+  for more; no deck holds Cat Burglary).
+- **7.5 The `plusIf` row's other cards** — since C1b (v0.6.244) `_plusIf` reads the acting minion's title (Protection Racket: "with an
+  additional +1 intercept if the acting minion is titled", KRCG) and its sect (Ministry's +1 against a Sabbat acting vampire); left: Sense
+  the Sin [dai]'s additional +1 intercept "if the acting minion has any corruption counters" (the bots count no corruption counters) and
+  The Mausoleum, Venice's additional +1 vote while Ventrue Headquarters is not in play (`cardfx-sharing.json`'s plusIf row: owed). [the
+  exactness round's egress review, pass 3; C1b] · latent (no deck) · a corruption counter read on the actor; the Mausoleum's a check of
+  the table.
 
 - **7.6 C1's unread conditions** — the stealth / intercept / bleed family's corrections (v0.6.243) keep a value the text conditions on
-  `fx.plusIf` with an `unread` condition in words, which `_plusIf` fails closed (and the stealth and actStealth paths do not call it):
-  on directed actions (Asanbonsam Ghoul, Corpse Balloon [VIC]); against the chosen minion (Divine Sign, Canopic Jar); an undirected
-  action (High Aye, Mirror's Visage [CHI], Lock); against vampires, monsters or as an ally (Carlton Van Wyk, No Secrets From the
-  Magaji, Illuminate, The Unmasking); on actions that require a discipline, an anarch or a clan (Anarch Manifesto, Giuseppe,
-  Marijava Ghoul, The Ancestor's Talisman, Tremere Convocation, Watchtower: The Wolves Feed); the acting minion (Protection Racket,
-  Ministry, Sense the Sin [dai]: 7.5; Nosferatu Performance Art's capacity); the target or its controller (Bloodwork, Priestess of
-  Sekhmet, Songs of the Distant Vitae [QUI], Rampage [pot], and the employ or equip action's own +1 on another's minion: Charnas the
-  Imp, Ilomba, Swarm, Bloodstone); a price in blood or pool (Special Report, Mole's Tunneling [SPI], Pocket Out of Time [obt], Stone
-  Travel [obt], Siren's Lure [cel], Psalm of the Damned [pre], Pentex™ Loves You!, Samuel Haight); and one each (Abbot, Achilles'
-  Heel, Bear-Baiting, Communal Haven: Temple, Form of Mist [PRO]: 9.8, Gravebound Drone [OBL], Guinea-Bissau Carnival, Hexaped,
-  Mithraic Cultist, Pallid, Phased Motion Detector, Sunset Strip, Unlicensed Taxicab, Charigger's hunt stealth; Baltimore Purge's
-  `selfClan` Ravnos, which the actStealth path does not read). And the bought intercept `interceptPaid` on a hand reaction or a
-  location (Ears of the Hare [pro], Voices of the Castle [tha], Speak with Spirits [SPI], The Rumor Mill): `_equipPaidIntercept`
-  reads it on equipment and `_bestUnlockReactFor` on an unlock reaction only, and Speak with Spirits [SPI] is an unlock reaction by
-  its text (a locked vampire unlocks and attempts to block) whose mode carries no `unlock` or `when`, as Eyes of the Wild's does.
-  Unlicensed Taxicab's own `actStealth` 2: the equip announce books the basic +1 only (`_bestEquipActionFor`'s stealth is 0). [C1's readers and the lead] · missed (Protection Racket: 7.5,
-  active; Abbot: pathcaine ×1, Gravebound Drone: pathdeath) / latent (the rest: no deck) · a reader per condition kind where the
-  number is summed, the price paid where the bot plays the card; the cross-check compares the condition (`plusIf`) with theirs.
+  `fx.plusIf` with an `unread` condition in words, which `_plusIf` fails closed. C1b (v0.6.244) reads the actor's title and sect, the
+  action's form (High Aye, Mirror's Visage [CHI], Corpse Balloon [VIC]) and a value sold for blood (`fx.payBlood`: Stone Travel, Pocket
+  Out of Time, Siren's Lure [cel], Mole's Tunneling [SPI], Ears of the Hare, Voices of the Castle [tha]; Speak with Spirits [SPI] on the
+  locked route). Left unread: an ally's or a monster's (Asanbonsam Ghoul, Carlton Van Wyk, Illuminate, The Unmasking); against the chosen
+  minion (Divine Sign, Canopic Jar); a bearer's on a card in play, a retainer or equipment (Abbot, No Secrets From the Magaji against
+  vampires, Anarch Manifesto, Giuseppe, Marijava Ghoul, The Ancestor's Talisman, Tremere Convocation, Watchtower: The Wolves Feed, on
+  actions that require a discipline, an anarch or a clan); an undirected action's on an action card (Lock); the target or its controller
+  (Bloodwork, Priestess of Sekhmet, Songs of the Distant Vitae [QUI], Rampage [pot], and the employ or equip action's own +1 on another's
+  minion: Charnas the Imp, Ilomba, Swarm, Bloodstone); a price in pool, in a counter or by a card in play (Special Report, Psalm of the
+  Damned [pre], Pentex™ Loves You!, Samuel Haight, The Rumor Mill's lock; the agreeing rows' sample, C1b: Polaris Coach's counter,
+  Changeling Skin Mask burned, WMRH Talk Radio's pool when its minion does not block, Revelation of Desire [SER]'s corruption counter);
+  and one each (Achilles' Heel, Bear-Baiting, Communal Haven: Temple, Form of Mist [PRO]: 9.8, Gravebound Drone [OBL], Guinea-Bissau
+  Carnival, Hexaped, Mithraic Cultist, Pallid, Phased Motion Detector, Sunset Strip, Unlicensed Taxicab, Charigger's hunt stealth;
+  Baltimore Purge's `selfClan` Ravnos, which the actStealth path does not read). Unlicensed Taxicab's own `actStealth` 2: the equip
+  announce books the basic +1 only. [C1's readers and the lead; C1b] · missed (Abbot: pathcaine ×1, Gravebound Drone: pathdeath) /
+  latent (the rest: no deck) · a reader per condition kind where the number is summed, the price paid where the bot plays the card.
 
 - **7.7 A family value of X** — Unleash the Hounds [VIS] ("+1 bleed for each ready vampire of the enslaving clan you control",
   KRCG) and Inevitability of the Void [AUS][NEC] (+1 bleed for every 10 cards in the target's ash heap) carry `bleed: 'X'`; the finders take a number only, so the mode is never played.
@@ -227,6 +233,12 @@ A value the text conditions or caps, compiled as a plain number.
   control (not counting this one)", KRCG) and Precision [CEL] (1 pool only if the prey discards the named card, the vampire paying 1
   blood) carry a flat `poolDmg`. [the card chain's egress review, pass 1] · latent (no deck) · a count and a condition the
   pool-damage finder reads, or the mode skipped.
+
+- **7.9 Prices outside the family** (C1b's second pass on the cross-check's extra-cost flags) — Folderol [aus] ("This vampire burns 1
+  blood to reduce a bleed against you by 1", KRCG: the reduce read free), Panacea [aus] (1 blood to unlock a younger vampire), Rayzeel's
+  Song [ani] (1 blood to unlock an ally), Chiropteran Marauder [VIC] (1 blood to make this round's hand strikes aggravated: read as an
+  aggravated hand strike with no price; class 2's reading too). The reduce, unlock and strike finders read no `payBlood`. [C1b's readers]
+  · latent (no deck) · `payBlood` on those lines, read where the bot plays them.
 
 ## 8. Requirements, conditions and gates
 A requirement or a condition the text prints and a finder does not ask (the five playability layers' second and third, HARNESS), or
@@ -244,7 +256,8 @@ a legal play the bot refuses.
 - **8.4 A discipline line's own capacity** (Hall of Hades' Court [dom]: `_voteBoosts` plays it past its line's capacity; The
   Missing Voice [cel]); **Enkil Cog** (`_bestBleedModifierFor` reads no requirement: its capacity 10 and "after resolution of a
   successful bleed"). [w6 §8] · latent.
-- **8.5 Conditions not tagged** — Faerie Wards [aus] (the directed condition with an ally-or-younger clause); the leftover +1
+- **8.5 Conditions not tagged** — Faerie Wards [aus] (the directed condition with an ally-or-younger clause); Hag's Wrinkles' "Only
+  usable during an equip action" (KRCG; C1b's sample: its stealth agrees, the gate is not read); the leftover +1
   intercept mode of The Mole plays at any action (Dogged Pursuit [ANI] and Speak with Spirits [SPI] were corrected in C1, v0.6.243); the condition sentences' untagged
   variants (their list: `specs/spec-card-sweep-2026-11-18.md`'s status block, "The finished decks' round"). [w6 §8; B] · latent
   (the named cards: no deck) / reachable (the list's Protected District, "… or during the polling step": nosferatu ×4).
@@ -254,7 +267,11 @@ a legal play the bot refuses.
   followed; pass 3's count) · a section through `_maybeActAgain`.
 - **8.7 Who may play a mode** — Cloak the Gathering's [OBF] is played by a vampire other than the acting one (the finder's tie
   keeps [obf]); Lost in Crowds is not usable with Into Thin Air; Sport Bike is one vehicle per minion (the equip guard is one per
-  name). [sweep §4.3: latent reds] · latent (no deck reaches the contradiction).
+  name). The fidelity pass of C1b: Veil the Legions [obf] and [OBF] (played by another ready unlocked vampire of mine, one per action;
+  [OBF]'s X blood for the next X actions' +1 stealth), Hedonism (the same player; the attempt fails, the blocker cannot try again, its
+  [for]/[pre] combat), Touch of Valeren [FOR] (a ready vampire not in the combat), Gifts From Hereafter (another vampire; 10.24 holds
+  its acting ally). [sweep §4.3: latent reds; C1b's readers] · latent (no deck reaches the contradiction) / reachable (Veil the Legions:
+  ravnos; Hedonism: pathcathari; Touch of Valeren: salubri; Gifts From Hereafter: pathdeath, whose bleed the bot no longer plays).
 - **8.8 Flight from a card** (Concordance [DAI], Taking the Skin: Vulture) is not read (a vampire's Flight is read from its text,
   the crypt's `flight`; Pounce needs Flight). [pilot] · latent.
 - **8.9 Over-strict: `_bestStrengthFor`** refuses a Preternatural Strength-class action on any vampire with a strength bonus
@@ -298,22 +315,19 @@ A key the compiler writes and a reader reads in another shape, or a sentence sha
   allies) carries `dir: true` on a mode that is no directed play; the political cards lost theirs with their granted stealth in C1
   (v0.6.243). Atonement and Dive into Madness [DEM] are the same reading on a card put on the acting vampire: their only Ⓓ is the
   burn action the card grants (C1's readers' side notes, read in the card chain round: `docs/reports/readers-card-chain-2026-11-27.json`).
-  [C1's readers] · latent (no reader of a card in play's `dir` found) · read Ⓓ with the granted clause stripped, as
-  GRANTED_STEALTH strips its stealth.
+  The fidelity pass of C1b adds Pit of Contemplation and The Gate of Acheron (their own action is an undirected +1 stealth action),
+  Heartrender's empty `dir` mode, and the granted action's EFFECT read as the card's own: Black Forest Base's `poolGain` 2 (the Sabbat
+  referendum it grants), Saulot's Healing Touch's `bloodAdd` 1 (the bearer's +1 stealth action). [C1's readers; C1b's] · latent (no
+  reader of a card in play's `dir` found; no finder plays those two values) · read Ⓓ and the effect with the granted clause stripped,
+  as GRANTED_STEALTH strips its stealth.
 
-- **9.13 A bleed card's stealth or bleed outside the mode it plays** — Cat Burglary ("+1 stealth action. [cel] Ⓓ Bleed", KRCG), Concordance,
-  Greater Curse, Soul Decoration, Songs of the Distant Vitae, The Eternal Mask and Undue Influence print the action's stealth on the
-  header: `_bestBleedCardFor` books the played mode's `actStealth` (or `stealth`) only, where `_cardActStealth` (the rush, the attach,
-  the employ) reads the level-free header too, so the bleed is announced at 0 stealth (the bench plays it: The Eternal Mask [ser]
-  bleeds for 2 at a counter of 0); Fleetness ("+1 stealth action. [cel] Ⓓ Bleed") likewise, whose [CEL] rush books it. A level's stealth or bleed in a mode of its
-  own beside the bleed (Brutal Influence [POT], Dream World [PRE], Entrancement [PRE], Gremlins [myt], Illegalism [chi] and [pre],
-  Rayzeel's Song [VAL], Smash and Grab [ani] and [pot], Spirit Marionette [OBE], The Ailing Spirit [OBE], Steely Tenacity [qui], The
-  Platinum Protocol [obf] and [pre], Break the Bonds [ani], Keystone Kine [nec]) is never played by the bleed finder: an add-on to the
-  bleed (a shape the compiler should merge) or an action of its own (unbuilt), each read against its text in its round. The
-  pool-damage actions are the same reading outside the gate's paths: `_bestPoolDmgActionFor` books no stealth at its announce (Choir,
-  Clio's Kiss, Edge Vitiation, Precision, Harmony and Rise of the Fallen carry a header `actStealth`). [the card chain's reader gate]
-  · reachable (Entrancement: ravnos, pathcathari, ministry; The Platinum Protocol: ministry; Break the Bonds: ravnos; Fleetness:
-  banuhaqim) / latent (the rest) · the bleed and pool-damage finders book `_cardActStealth(e, mo)`.
+- **9.13 A bleed card's stealth or bleed outside the mode it plays** — since C1b (v0.6.244) the bleed finder books the header's "+1
+  stealth action." (`_cardActStealth`: Cat Burglary, The Eternal Mask, Fleetness …), takes the discipline lines of a level-free bleed
+  (Break the Bonds, Illegalism, Keystone Kine, The Platinum Protocol) and the pool-damage finder books its header (Choir, Clio's Kiss,
+  Edge Vitiation, Precision, Harmony). Left: a level's stealth in an action of its own beside the bleed, which the bot does not take
+  (unbuilt): Brutal Influence [POT], Dream World [PRE], Entrancement [PRE], Gremlins [myt], Rayzeel's Song [VAL], Smash and Grab [ani]
+  and [pot], Spirit Marionette [OBE], The Ailing Spirit [OBE], Steely Tenacity [qui]. [the card chain's reader gate; C1b] · reachable
+  (Entrancement: ravnos, pathcathari, ministry) / latent (the rest) · the action of its own, read in its family's round.
 
 - **9.14 Two shapes the card chain's review saw** — Rise of the Fallen's `poolDmg: 1` reads as a pool-damage action, where the text puts
   the card in play with a trigger ("Your prey burns 1 pool after resolution of each action during which you have burned corruption
@@ -390,13 +404,6 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   · missed (Vessel; v0.6.241's 240: 366 of the 570 Vessels placed came after another seat had placed a Blood Doll in the same
   match, 156 matches; no bot burns one) / reachable (ventrue ×1: Anarch Troublemaker, against tremere's equipment) · the burn of
   an opponent's Blood Doll when Vessel is played; the equipment burn as the giver's choice when it is worth more than two locks.
-- **10.17 Bonding [DOM] spent for its stealth** (and Confusion [DEM], the same mode: the card chain's reader gate) —
-  "+1 stealth and +1 bleed (limited)" (KRCG): `_spendStealthCard` adds the stealth
-  only, never the +1 bleed, and takes no limited slot, so Conditioning (limited) can follow in the same action ("one limited action
-  modifier may increase the bleed amount per action", the advanced rules 3.7.1). [the exactness round's egress review, pass 2]
-  · **active** (v0.6.241's 240: 208 stealth plays, 110 of their bleeds through without the +1, 18 followed by Conditioning in the
-  same action; v0.6.240's: 217, 118, 19) · the stealth spend applies the mode's bleed to the running amount and its limited slot,
-  as `_playBleedModifier` does.
 - **10.18 Life in the City on another Methuselah's vampire** — "Add 1 blood to a ready vampire" names no controller (the advanced
   rules 6.1.4); the entry's `own-ready` and the handler pick only mine, and v0.6.241 holds the card while I have no ready vampire:
   no legal object in the first round, a choice where another seat has one. [the exactness round's egress review, pass 2] · latent
@@ -404,7 +411,8 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
 - **10.19 Granted actions** — an action a card lets a minion take later ("burn this card as a +1 stealth political action", "the
   attached vampire can enter combat … as a +1 stealth Ⓓ action", "may take a +1 stealth action") has no key of ours: since C1
   (compiler v1.12.0) its number is no longer the card's own, and the cross-check flags 152 granted actions that carry a stealth,
-  intercept or bleed. [C1] · human (the readers' rounds: a human's granted action at the table) / latent (the bots take none).
+  intercept or bleed; Khazar's Diary (Endless Night)'s wraith from an ash heap at 7 counters is still compiled as an [NEC] mode of the
+  card's own (C1b's sample). [C1; C1b] · human (the readers' rounds: a human's granted action at the table) / latent (the bots take none).
 - **10.20 The blocking minion's malus** — "the blocking minion gets -1 intercept" (Forced Confessional's `icpVs` with `who:
   ['this']` is the precedent; Perfect Paragon's for allies and younger vampires) on Call of the Hungry Dead [nec], Dominant
   Personality [pot]/[pre], Form of the Bat [pro], Mole's Tunneling [ani], Random Patterns [AUS][DEM], Smoke and Mirrors [obt],
@@ -422,12 +430,6 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
 - **10.22 Punish [COMBAT]** — the entry models the [ACTION] half (a +1 stealth action); "As [ACTION] above, but put this card on the
   opposing vampire as a hand strike" is a combat use the entry's mode does not split out. [C1's readers] · latent (no deck).
 
-- **10.25 A modifier's "or" option** — Fata Morgana [CHI], Power of One [pre], Revelation of the Serpent, Subversion [CEL] and [PRE] print
-  "+1 bleed (limited), or +1 stealth and +1 bleed (limited)" (KRCG), Virtuosa [mel] "+1 stealth and +2 bleed (limited), or +2 bleed
-  (limited)": our entries carry only the combined mode, `_bestBleedModifierFor` skips a mode with stealth, so the plain bleed is never
-  played after the block window (only Power of One has another bleed mode, its [pot]) and the combined one adds no bleed (10.17). [the card
-  chain's egress review, pass 1] · reachable (Revelation of the Serpent: ministry; Subversion: pathcathari) / latent (the rest) · a
-  second, stealth-free mode for the option, and 10.17's fix for the combined one.
 - **10.23 Family values no reader takes on a card in play, an ally or a reaction** — Blessings of the Loa's bleed (a master),
   Cãoera's (an ally: allies do not act in the bot), Charigger, The Axe's and Shaman's (a retainer's bleed and stealth for its bearer;
   `_equipIntercept` reads a retainer's intercept only), Melange [AUS]'s bleed (a reaction). [the card chain's reader gate] · latent
@@ -445,6 +447,23 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   text names aggravated damage only in its burn trigger). [C1's readers, read by bot-card-reader] · reachable (Gifts From Hereafter:
   pathdeath) / missed (Enthrall: pathcathari) / latent (the rest) · eleven need a reader the bot has none of (the data file names
   them); Soul Painting, Drink the Blood of Ahriman and Shell Game's [san] unlock are data fixes.
+
+- **10.26 The fidelity pass of the 13 other V5 decks' flagged cards** (C1b, D-138; the verdicts: `docs/reports/readers-c1b-2026-11-27.json`)
+  — modes, riders and limits our entries leave out (KRCG's text): Black Forest Base's "Requires a ready Sabbat vampire" (pathpower);
+  Break the Bonds [obf]'s lock of the target's minion and [pre]'s blood on a successful bleed (ravnos; its lines' bleed and stealth are
+  read since v0.6.244); Gifts From Hereafter [DOM]/[OBL]'s unlock of the acting ally for 1 blood (pathdeath); Eagle's Sight [AUS]'s block ignoring the
+  prey-predator restriction (salubri; D-123); Heart of the City's one per vampire (ministry); Heroic Might [pot]'s attach (+1 strength,
+  strike: burn equipment, burned on torpor, one per vampire) and [POT]'s +2 (brujah); Hunting the Quarry's [cel]/[tha] card on the
+  opposing minion and [CEL]/[THA] new round for 1 blood (pathcaine; the pilot's §3.3); Obedience's end of an acting younger vampire's
+  action (pathdeath); Pack Alpha [ani]'s employ before range and [ANI]'s burn for +1 strength (ravnos); Pillars Fall's enter-combat
+  action, its bleed the bearer's only after a win (pathcaine); Pit of Contemplation's and The Gate of Acheron's counters and their
+  unlock-phase effects (hecata); Putrescent Sustenance's ash-heap ally for blood or life (pathdeath); Rolling with the Punches [FOR]'s
+  1 blood for every strike's damage this round (hecata, salubri); Saulot's Healing Touch's rescue discount and +1 blood (salubri); Seeds
+  of Terror's 1-blood toll on every block attempt and its [obf]/[pre] modes (pathcathari); Stygian Shroud [OBL]'s failed attempt for 1
+  blood (hecata, lasombra; [obl]: 10.20); The Platinum Protocol [pro]'s corruption counter (ministry); The Sleeping Mind [dom]'s locked
+  vampire and [DOM]'s no unlocks (lasombra); Touch of Oblivion [obl]'s strike that puts the card on with 2 counters, [OBL]'s ally burn
+  read as torpor (lasombra); War of Ages' titled Sabbat requirement, referendum, the prey's unlock burn and the ouster's 3 pool
+  (pathpower). [C1b's readers] · reachable (each card's deck above) · each in its class's round (combat's in C2).
 
 ## 11. Windows: who is asked, and when
 Who may answer an action or a card, and in which window; a line read after its window closed.
@@ -471,6 +490,18 @@ Who may answer an action or a card, and in which window; a line read after its w
   changes, a human who has not passed gets the vote clock again. [w4] · human.
 - **11.10 Frontal Assault's +1 pool and the loss rates** read the prey's pub pushes; Tension in the Ranks can oust a bot outside
   its turn (`_oust`). [w5 §10] · reachable (brujah, banuhaqim, pathcaine).
+- **11.11 A second blocker of an undirected action** — "the prey getting the first opportunity to block", and "a minion can
+  attempt to block as many times as they wish as long as another minion is not already blocking" (rulebook, who may attempt to
+  block). At a human's undirected action both bots attempted: the prey's minion at 1 vs 1, then the predator's, whose counter
+  write (a=0) dropped the action's +1 stealth; both declared the block and two combats ran. At a bot's undirected action the human
+  prey's minion blocked at 1 vs 1, the human's Pass counted as an eligible seat's pass, and the bot predator's minion attempted and
+  took the verdict and the combat. [the C1b playtest, 27 Nov, 529.3–670.4 and 4718.4–4810.0] · human (v0.6.244's 240: of 1,969
+  undirected windows where both eligible bots weighed a block, none had two attempts) · no attempt while a block attempt stands;
+  the predator weighs only after the prey has declined; a human blocker's Pass resolves that blocker's attempt.
+- **11.12 The turn-end note on a human's undirected action** — both eligible bots passed a human's 0-pool undirected action (an
+  employ), the human never said "It resolves", and at the turn's end each bot's note called it a bleed ("an unresolved bleed at
+  me … bleed 0"). [the C1b playtest, 27 Nov, 3077–3083 → 3130.0, 3136.8] · human · the note names the action's kind, and a 0-pool
+  record closes at the last eligible pass with nothing said.
 
 ## 12. Combat's steps
 - **12.1 Additional strikes, v2** — one source a round per side (Quickness [CEL]'s outside-the-limit rider never stacks); no impulse

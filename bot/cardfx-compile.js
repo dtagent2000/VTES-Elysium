@@ -98,7 +98,8 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.12.0';   // 27 Nov 2026 (C1, the V5 sweep's first family: stealth, intercept, bleed against zero-vtes's definitions): a GRANTED action's stealth is not the card's own (GRANTED_STEALTH below)
+const FXC_VERSION = '1.13.0';   // 27 Nov 2026 (C1b, SWEEP-REGISTER 10.25 and the agreeing rows' sample): `stealthOpt` -- a modifier's 'or' option, '+1 bleed (limited), or +1 stealth and +1 bleed (limited)' (and the reverse order: Virtuosa [mel]), the stealth optional on the mode (5 entries); `payBlood` on a line that sells its value ('Burn 1 blood to get +1 stealth.', 'This vampire burns 1 blood to get +1 intercept.': 9 entries); `unique` from a sentence of the header line ('+1 stealth action. Unique.': 45 entries the line-start reading missed); `notActorDisc` -- 'Not usable if the acting minion has Celerity [cel]' on the modes of its line, the token's case its level (Rooftop Shadow, The Mole [cel]). Every other entry compiles byte for byte as in v1.12.0
+// const FXC_VERSION_1120 = '1.12.0';   // 27 Nov 2026 (C1, the V5 sweep's first family: stealth, intercept, bleed against zero-vtes's definitions): a GRANTED action's stealth is not the card's own (GRANTED_STEALTH below)
 // const FXC_VERSION_1114 = '1.11.4';   // 20 Nov 2026 (the pilot's review, pass 3): 'As above, but for NR + X ranged damage' is strike N, the printed floor (Eldritch Glimmer [THA] 4R), as the compiler reads every 'N + X'
 /* v1.12.0 (C1, spec-card-sweep §11.8; the cross-check gen-cross-check.js): an action a card lets a minion take LATER is not the stealth
    of the card's own play -- "Vampires can call a referendum to burn this card as a +1 stealth political action" (Archon and twenty
@@ -539,12 +540,22 @@ function actWhen(segText, headText){
   if(/after resolution of a successful action/i.test(both)) return 'actSuccess';
   return null;
 }
+const PRICED = /^(?:This (?:reacting )?(?:vampire|Laibon) burns|Burn) (\d+) blood to get \+(\d+) (stealth|intercept|bleed)\.$/i;   // v1.13.0 (7.6): a value sold for blood, the whole line
+const STEALTH_OPT = /\+(\d+) bleed \(limited\),? or \+\d+ stealth and \+\1 bleed \(limited\)|\+\d+ stealth and \+(\d+) bleed \(limited\),? or \+\2 bleed \(limited\)/i;   // v1.13.0 (10.25)
 function libModes(text){
   const segs = segment(text);
   const done = [];
   const headText = segs.filter(s => !s.at).map(s => s.text).join(' ');
   segs.forEach(s => {
     let fx = extractFx(s.text);
+    /* v1.13.0 (C1b, SWEEP-REGISTER 10.25): a modifier's 'or' option -- '+N bleed (limited), or +1 stealth and +N bleed (limited)', or the reverse
+       (Virtuosa [mel]) -- is one mode whose stealth is optional: fx.stealthOpt (the bot's bleed finder plays the bleed alone after the block,
+       its stealth finder the whole in the contest). extractFx reads the stealth and the bleed together; the flag says the bleed stands alone. */
+    if(fx.stealth !== undefined && typeof fx.bleed === 'number' && STEALTH_OPT.test(s.text)) fx.stealthOpt = true;
+    /* v1.13.0 (C1b, SWEEP-REGISTER 7.6): a value the line SELLS -- '[obt] Burn 1 blood to get +1 stealth.', '[aus] This vampire burns 1 blood to
+       get +1 intercept.' (nine cards) -- carries its price: fx.payBlood, paid with the card where the bot plays it (C1 kept it on an unread
+       plusIf or interceptPaid by hand: the stealth, intercept and bleed modifier finders read the price now). Only a whole line of that shape. */
+    { const pm = s.text.trim().match(PRICED); if(pm && fx[pm[3].toLowerCase()] === +pm[2]) fx.payBlood = +pm[1]; }
     const when = (fx.unlock && s.at) || (fx.unlock && segs.length === 1) ? actWhen(s.text, s.at ? headText : '') : null;
     let dir = /\u24b9/.test(s.text) || undefined;   // v1.3.0: PER-SEGMENT, not whole-card -- a split-mode action (Govern the Unaligned: directed bleed / undirected special) needs a per-mode answer, not one flag lying for half the card
     /* v1.4.0 (14 July 2026): same per-segment shape as dir. LEADING \b is load-bearing --
@@ -967,6 +978,8 @@ function libEntry(c, sink){
   if(Object.keys(req).length) e.req = req;
   const txt = c.card_text || '';
   if(/^unique\b/i.test(txt.trim())) e.unique = true;   // rulebook: unique library cards follow vampire uniqueness (one in play; a second contests)
+  { const first = txt.split('\n')[0] || '';   // v1.13.0 (C1b, the fidelity pass: Pit of Contemplation, The Gate of Acheron): 'Unique.' or 'Unique <type> with N life.' as a sentence of the header line, after '+1 stealth action.', a requirement or a 'Master:' keyword -- 45 entries read none (Gather, Under Siege, Constant Revolution, Dance of the Dead ...)
+    if(!e.unique && /(?:^|[.:]\s+)Unique\b/.test(first) && !/\bnon-unique\b/i.test(first)) e.unique = true; }
   /* v1.5.0 (17 July, fas B/C sweep): keyword-SENTENCE scan replaces v1.4.2's line-start
      regex. Two blind spots, both found the day after that sweep shipped: (1) the older
      "Master: trifle." templating puts the keyword after a COLON (Vessel and ~18 more --
@@ -1121,7 +1134,8 @@ function libEntry(c, sink){
       ['notBleed', /\bnot usable during a bleed action\b/i, () => true],
       ['onlyPredatorActs', /\bonly usable (?:if|when) a minion controlled by your predator is acting\b/i, () => true],
       ['oncePerUnlock', /\bcan play only one [^.]* between (?:their|his or her|its) unlock phases\b/i, () => true],
-      ['pressDir', /\bpress,? only usable to (continue|end) combat\b/i, m => m[1].toLowerCase()] ];
+      ['pressDir', /\bpress,? only usable to (continue|end) combat\b/i, m => m[1].toLowerCase()],
+      ['notActorDisc', /\bnot usable if the acting minion has (?:superior )?[A-Za-z ]+? \[([A-Za-z]{3})\]/i, m => m[1]] ];   // v1.13.0 (C1b, the agreeing rows' sample): Rooftop Shadow, The Mole [cel] -- the token's case is its level ([CEL]: superior)
     const NOREPL = [[/\bdo not replace (?:this card |these cards )?until after combat\b/i, 'combat'], [/\bdo not replace until after (?:this|the) action\b/i, 'action'],
       [/\bdo not replace until your (?:next )?discard phase\b/i, 'discard'], [/\bdo not replace until your (?:next )?unlock phase\b/i, 'unlock'],
       [/\bdo not replace until your (?:next )?influence phase\b/i, 'influence']];
