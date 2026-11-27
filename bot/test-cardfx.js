@@ -1638,6 +1638,27 @@ ok(fx.counts.libLock >= 140,
   const pr = (fx.lib['Protection Racket'].modes || [])[0];
   ok(pr && pr.fx.intercept === 1 && pr.fx.plusIf && pr.fx.plusIf.add.intercept === 1 && /titled/.test(pr.fx.plusIf.if.unread),
     'C1: Protection Racket +1 intercept, +2 against a titled acting minion (the condition unread: SWEEP-REGISTER 7.5)');
+  /* the family's exactness record (cardfx-exact.json, a development file; RULINGS D-144): its states, its cards, its open gaps */
+  let ex = null, exErr = '', regT2 = null;
+  try { ex = JSON.parse(fs.readFileSync(here('cardfx-exact.json'), 'utf8')); } catch (e) { exErr = e.message; }
+  try { regT2 = fs.readFileSync(path.join(__dirname, 'docs', 'SWEEP-REGISTER.md'), 'utf8'); } catch (e) { exErr = exErr || e.message; }
+  const exProblems = (X, regE, has) => { const P = [], ST = new Set(Object.keys((X && X.states) || {})), FAM = new Set([].concat(...Object.values((X && X.families) || {}).map(f => f.keys || [])));
+    if (!['agree', 'graded', 'corrected', 'explained', 'open', 'single'].every(k => ST.has(k))) P.push('the states are not the six');
+    for (const [card, ks] of Object.entries((X && X.cards) || {})){ if (!has(card)) P.push(card + ': no library entry');
+      for (const [key, v] of Object.entries(ks)){ if (!FAM.has(key)) P.push(card + ': ' + key + ' is no family key');
+        for (const sv of (typeof v === 'string' ? [v] : Object.values(v))){ const [w, id] = String(sv).split(' ');
+          if (!ST.has(w)) P.push(card + ' ' + key + ': state ' + sv);
+          else if (w === 'open' && !(id && regE.has(id))) P.push(card + ' ' + key + ': open names no register entry (' + sv + ')'); } } }
+    return P; };
+  ok(!!ex && !!regT2, 'cardfx-exact.json and docs/SWEEP-REGISTER.md read' + (exErr ? ' (' + exErr + ')' : ''));
+  if (ex && regT2){
+    const regE2 = require('./gen-card-ledger.js').registerEntries(regT2), has = n => Object.prototype.hasOwnProperty.call(fx.lib, n);
+    const P = exProblems(ex, regE2, has), tally = {};
+    for (const ks of Object.values(ex.cards)) for (const v of Object.values(ks)) for (const sv of (typeof v === 'string' ? [v] : Object.values(v))) { const w = String(sv).split(' ')[0]; tally[w] = (tally[w] || 0) + 1; }
+    ok(P.length === 0 && Object.keys(ex.cards).length >= 700, 'the exactness record: ' + Object.keys(ex.cards).length + ' cards, ' + Object.entries(tally).map(([k, n]) => k + ' ' + n).join(' · ') + '; every card a library entry, every open gap a register entry' + (P.length ? '\n      ' + P.slice(0, 8).join('\n      ') : ''));
+    const bad = JSON.parse(JSON.stringify(ex)), c0 = Object.keys(bad.cards)[0]; bad.cards[c0] = { stealth: 'open 99.99', bleed: 'maybe' }; bad.cards['No Such Card'] = { intercept: 'agree' };
+    ok(exProblems(bad, regE2, has).length === 3, 'planted: an open gap naming no register entry, an unknown state and an unknown card are each reported');
+  }
   const IFK = new Set(['selfClan', 'selfTitled', 'unread']), badIf = [];
   for (const n in fx.lib) for (const m of fx.lib[n].modes || []) if (m.fx && m.fx.plusIf){ const pi = m.fx.plusIf;
     if (!pi.add || typeof pi.add !== 'object' || !Object.keys(pi.add).length || !pi.if || !Object.keys(pi.if).length || Object.keys(pi.if).some(k => !IFK.has(k)) || (pi.if.unread !== undefined && !(typeof pi.if.unread === 'string' && pi.if.unread.length > 8))) badIf.push(n); }

@@ -1,0 +1,2490 @@
+{
+ "_comment": [
+  "cardfx-exact.json -- the V5 sweep's exactness record by effect family (spec-card-sweep-2026-11-18.md §11.2 (5), §11.5; RULINGS",
+  "D-130, D-132, D-144). A development file beside cardfx-fidelity.json, never in the bundle: the readers of a human's play (their own",
+  "rounds, D-132) act only on an exact effect, and their round designs how the bundle says so (the owner, 27 Nov 2026: outside the bundle",
+  "until then). Written by the family's round from its cross-check (gen-cross-check.js against zero-vtes at the commit below), its",
+  "readers' verdicts against KRCG's text and the rulings, and the lead's corrections; test-cardfx.js checks its form against the",
+  "library and docs/SWEEP-REGISTER.md. cards: card -> family key -> a state, or level -> state (the cross-check's level: `obf`, `OBF`,",
+  "`-` for a level-free mode, `#n` their n-th mode, `all` when the levels could not be paired)."
+ ],
+ "families": {
+  "C1": {
+   "keys": [
+    "stealth",
+    "intercept",
+    "bleed"
+   ],
+   "round": "bot v0.6.243, 27 Nov 2026",
+   "witness": "zero-vtes f9f227f (2026-11-25)",
+   "tool": "gen-cross-check.js v1.1.0, cross-check-pairing.json"
+  }
+ },
+ "states": {
+  "agree": "exact: our reading and the witness's definition give the same value at this level",
+  "graded": "exact: the tool could not compare them; a reader graded ours green against KRCG's text and the rulings",
+  "corrected": "exact: ours was wrong, corrected in this round to the reader's reading of KRCG's text",
+  "explained": "exact: both readings are true, modelled differently",
+  "open": "not exact: our entry leaves the value out; the register entry named after the state holds it",
+  "single": "not exact yet: the witness has no definition, and no reader graded it"
+ },
+ "cards": {
+  "419 Operation": {
+   "stealth": "agree"
+  },
+  "Abactor": {
+   "stealth": "agree"
+  },
+  "Abandoning the Flesh": {
+   "bleed": "graded"
+  },
+  "Abbot": {
+   "intercept": "corrected",
+   "stealth": "agree"
+  },
+  "Ablative Skin": {
+   "stealth": "agree"
+  },
+  "Abomination": {
+   "stealth": {
+    "#1": "agree",
+    "PRO": "graded"
+   }
+  },
+  "Absimiliard's Army": {
+   "bleed": "explained"
+  },
+  "Abuse of Power": {
+   "stealth": "agree"
+  },
+  "Achilles' Heel": {
+   "bleed": "corrected"
+  },
+  "Adhocracy": {
+   "bleed": "agree"
+  },
+  "Ahrimane Protectorate": {
+   "intercept": "explained",
+   "stealth": "agree"
+  },
+  "Aire of Elation": {
+   "bleed": "agree"
+  },
+  "Alacrity": {
+   "stealth": "agree"
+  },
+  "Alvusia": {
+   "bleed": "agree"
+  },
+  "Anarch Manifesto, An": {
+   "stealth": "corrected"
+  },
+  "Anarch Railroad": {
+   "stealth": "graded"
+  },
+  "Anarch Secession": {
+   "stealth": "agree"
+  },
+  "Ancestor Spirit": {
+   "bleed": "agree"
+  },
+  "Ancestor's Insight": {
+   "bleed": "agree"
+  },
+  "Anima Gathering": {
+   "bleed": "graded",
+   "intercept": "graded",
+   "stealth": "agree"
+  },
+  "Anonymous Freight": {
+   "stealth": "agree"
+  },
+  "Antithesis": {
+   "stealth": "agree"
+  },
+  "Aranthebes, The Immortal": {
+   "stealth": "agree"
+  },
+  "Armor of Terra": {
+   "stealth": "agree"
+  },
+  "Army of Rats": {
+   "stealth": "agree"
+  },
+  "Art Scam": {
+   "stealth": "agree"
+  },
+  "Art's Traumatic Essence": {
+   "stealth": "agree"
+  },
+  "Asanbonsam Ghoul": {
+   "intercept": "corrected"
+  },
+  "Atonement": {
+   "intercept": "graded",
+   "stealth": "agree"
+  },
+  "Augur": {
+   "stealth": "agree"
+  },
+  "Augury of Doom": {
+   "stealth": "agree"
+  },
+  "Aura Absorption": {
+   "intercept": "agree",
+   "stealth": "agree"
+  },
+  "Babble": {
+   "intercept": "agree"
+  },
+  "Backroom Deal": {
+   "stealth": "agree"
+  },
+  "Backways": {
+   "stealth": "graded"
+  },
+  "Baltimore Purge": {
+   "stealth": "corrected"
+  },
+  "Bamba": {
+   "stealth": "agree"
+  },
+  "Banshee Ironwail": {
+   "stealth": "open 10.21"
+  },
+  "Barrenness": {
+   "stealth": "agree"
+  },
+  "Bauble": {
+   "stealth": "agree"
+  },
+  "Bear-Baiting": {
+   "bleed": "corrected"
+  },
+  "Beast Meld": {
+   "stealth": "agree"
+  },
+  "Belonging Grants Protection": {
+   "stealth": "agree"
+  },
+  "Bestow Vigor": {
+   "stealth": "agree"
+  },
+  "Biothaumaturgic Experiment": {
+   "stealth": "agree"
+  },
+  "Black Hand Emissary": {
+   "stealth": "agree"
+  },
+  "Black Hand Ritual": {
+   "stealth": "agree"
+  },
+  "Black Metamorphosis": {
+   "stealth": "agree"
+  },
+  "Blanket of Night": {
+   "stealth": "agree"
+  },
+  "Blessed Audience": {
+   "stealth": "agree"
+  },
+  "Blessing of Chaos": {
+   "stealth": "agree"
+  },
+  "Blessing of the Name": {
+   "intercept": "graded",
+   "stealth": "agree"
+  },
+  "Blessings of the Loa": {
+   "bleed": "corrected"
+  },
+  "Blood Awakening": {
+   "intercept": "agree"
+  },
+  "Blood Bond": {
+   "stealth": "agree"
+  },
+  "Blood Clots": {
+   "stealth": "agree"
+  },
+  "Blood Feast": {
+   "stealth": "agree"
+  },
+  "Blood Hunt": {
+   "stealth": "agree"
+  },
+  "Blood Tempering": {
+   "stealth": "agree"
+  },
+  "Blood of Sandman": {
+   "stealth": "agree"
+  },
+  "Blood of the Sabbat": {
+   "stealth": "agree"
+  },
+  "Bloodbath": {
+   "stealth": "agree"
+  },
+  "Blooding": {
+   "stealth": "agree"
+  },
+  "Bloodlust": {
+   "stealth": "agree"
+  },
+  "Bloodstone": {
+   "intercept": "open 10.21",
+   "stealth": "corrected"
+  },
+  "Bloodwork": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Bond": {
+   "stealth": "agree"
+  },
+  "Bonding": {
+   "bleed": {
+    "DOM": "graded",
+    "dom": "agree"
+   },
+   "stealth": "agree"
+  },
+  "Bone Shambler": {
+   "bleed": "agree"
+  },
+  "Border Skirmish": {
+   "stealth": "agree"
+  },
+  "Bowl of Convergence": {
+   "intercept": "graded"
+  },
+  "Break the Bonds": {
+   "bleed": "agree"
+  },
+  "Breath of Thanatos": {
+   "stealth": "agree"
+  },
+  "Brigitte Gebauer": {
+   "bleed": "agree"
+  },
+  "Brother in Arms": {
+   "stealth": "agree"
+  },
+  "Brutal Influence": {
+   "bleed": "graded",
+   "stealth": "agree"
+  },
+  "Bujo": {
+   "stealth": "agree"
+  },
+  "Burning Touch": {
+   "bleed": "agree"
+  },
+  "Burnt Offerings": {
+   "intercept": "agree"
+  },
+  "Call of the Hungry Dead": {
+   "intercept": "open 10.20"
+  },
+  "Call the Great Beast": {
+   "stealth": "agree"
+  },
+  "Camarilla Conclave": {
+   "stealth": "agree"
+  },
+  "Camera Phone": {
+   "bleed": "explained"
+  },
+  "Canopic Jar": {
+   "intercept": "corrected"
+  },
+  "Carlton Van Wyk": {
+   "intercept": "corrected"
+  },
+  "Carnivale": {
+   "stealth": "agree"
+  },
+  "Carrion Coffin": {
+   "stealth": "single"
+  },
+  "Carthage Remembered": {
+   "stealth": "agree"
+  },
+  "Cat Burglary": {
+   "stealth": "agree"
+  },
+  "Catacombs": {
+   "stealth": "agree"
+  },
+  "Cats' Guidance": {
+   "intercept": "agree"
+  },
+  "Celestial Harmony": {
+   "stealth": "agree"
+  },
+  "Census Taker": {
+   "bleed": "agree",
+   "intercept": "agree"
+  },
+  "Chain of Command": {
+   "stealth": "agree"
+  },
+  "Chair of Hades": {
+   "stealth": "agree"
+  },
+  "Chameleon": {
+   "stealth": "agree"
+  },
+  "Changeling": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Changeling Skin Mask": {
+   "intercept": "agree"
+  },
+  "Channel 10": {
+   "intercept": "agree"
+  },
+  "Charigger, The Axe": {
+   "bleed": "corrected",
+   "stealth": "corrected"
+  },
+  "Charming Lobby": {
+   "stealth": "graded"
+  },
+  "Charnas the Imp": {
+   "stealth": "corrected"
+  },
+  "Cheat the Fates": {
+   "bleed": "agree"
+  },
+  "Childe of the Revolution": {
+   "stealth": "agree"
+  },
+  "Childling Muse": {
+   "bleed": "agree"
+  },
+  "Children of Stone": {
+   "stealth": {
+    "VIS": "graded",
+    "tha": "agree",
+    "vis": "agree"
+   }
+  },
+  "Chill of Oblivion": {
+   "stealth": "agree"
+  },
+  "Choir": {
+   "stealth": "agree"
+  },
+  "Chronicle of the Lost Tribe": {
+   "stealth": "agree"
+  },
+  "City Star Taxi": {
+   "stealth": "agree"
+  },
+  "Clan Impersonation": {
+   "stealth": "agree"
+  },
+  "Clandestine Contract": {
+   "stealth": "agree"
+  },
+  "Cleansing Ritual": {
+   "stealth": "agree"
+  },
+  "Clio's Kiss": {
+   "stealth": "agree"
+  },
+  "Cloak the Gathering": {
+   "stealth": "agree"
+  },
+  "Clotho's Gift": {
+   "stealth": {
+    "TEM": "agree",
+    "obf": "agree",
+    "tem": "graded"
+   }
+  },
+  "Club Illusion": {
+   "bleed": "graded"
+  },
+  "Club Zombie": {
+   "intercept": "agree"
+  },
+  "Codex of the Edenic Groundskeepers": {
+   "stealth": "open 10.21"
+  },
+  "Command of the Beast": {
+   "bleed": "agree"
+  },
+  "Communal Haven: Temple": {
+   "intercept": "corrected"
+  },
+  "Community Justice": {
+   "stealth": "agree"
+  },
+  "Compel the Spirit": {
+   "stealth": "agree"
+  },
+  "Computer Hacking": {
+   "bleed": "graded"
+  },
+  "Concert Tour": {
+   "stealth": "agree"
+  },
+  "Concordance": {
+   "stealth": "agree"
+  },
+  "Condemn the Sins of the Father": {
+   "stealth": "agree"
+  },
+  "Condemnation: Betrayed": {
+   "stealth": "agree"
+  },
+  "Condemnation: Doomed": {
+   "stealth": "agree"
+  },
+  "Condemnation: Languid": {
+   "stealth": "agree"
+  },
+  "Condemnation: Mute": {
+   "stealth": "agree"
+  },
+  "Conditioning": {
+   "bleed": "agree"
+  },
+  "Confusion": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Conscripted Statue": {
+   "bleed": "graded"
+  },
+  "Consecration Rites": {
+   "stealth": "agree"
+  },
+  "Consignment to Duat": {
+   "stealth": "agree"
+  },
+  "Constant Revolution": {
+   "stealth": "agree"
+  },
+  "Consume the Dead": {
+   "stealth": {
+    "#1": "agree",
+    "#2": "agree",
+    "#3": "graded"
+   }
+  },
+  "Contagion": {
+   "stealth": "agree"
+  },
+  "Convento da Penha, Vila Velha": {
+   "stealth": "agree"
+  },
+  "Corpse Balloon": {
+   "intercept": "corrected"
+  },
+  "Corpse Minion": {
+   "intercept": "explained"
+  },
+  "Corrupt Construction": {
+   "bleed": "graded"
+  },
+  "Corruption": {
+   "stealth": "agree"
+  },
+  "Council of Seraphim": {
+   "intercept": "open 10.20"
+  },
+  "Create Gargoyle": {
+   "stealth": "agree"
+  },
+  "Creation Rites": {
+   "stealth": "agree"
+  },
+  "Creeping Infection": {
+   "bleed": "explained"
+  },
+  "Creeping Sabotage": {
+   "stealth": "agree"
+  },
+  "Creepshow Casino": {
+   "stealth": "graded"
+  },
+  "Cryptic Mission": {
+   "stealth": "agree"
+  },
+  "Cull the Herd": {
+   "stealth": "agree"
+  },
+  "Cursed Abattoir": {
+   "bleed": "graded"
+  },
+  "Cãoera": {
+   "bleed": "corrected"
+  },
+  "D'habi Revenant": {
+   "bleed": "agree"
+  },
+  "Dance of the Dead": {
+   "stealth": "agree"
+  },
+  "Dark Mirror of the Mind": {
+   "stealth": "agree"
+  },
+  "Darksight": {
+   "intercept": "agree"
+  },
+  "Dartmoor, England": {
+   "stealth": "single"
+  },
+  "Dead Pool": {
+   "bleed": "agree"
+  },
+  "Deadly Secrets": {
+   "bleed": "agree"
+  },
+  "Death Pact": {
+   "stealth": "single"
+  },
+  "Decompose": {
+   "stealth": "agree"
+  },
+  "Deep Cover Agent": {
+   "stealth": "agree"
+  },
+  "Deep Ecology": {
+   "intercept": "agree"
+  },
+  "Deep Song": {
+   "bleed": "agree"
+  },
+  "Defender of the Haven": {
+   "stealth": "agree"
+  },
+  "Deny": {
+   "stealth": "agree"
+  },
+  "Depravity": {
+   "stealth": "explained"
+  },
+  "Derange": {
+   "stealth": "agree"
+  },
+  "Descent into Darkness": {
+   "stealth": "agree"
+  },
+  "Despiral": {
+   "bleed": "graded",
+   "stealth": "agree"
+  },
+  "Destilaria Estrela da Paraíba": {
+   "intercept": "agree"
+  },
+  "Destructive Secrets": {
+   "stealth": "single"
+  },
+  "Detect Authority": {
+   "intercept": "agree"
+  },
+  "Dis Pater": {
+   "bleed": "agree"
+  },
+  "Discern": {
+   "intercept": "agree"
+  },
+  "Disciple of Lazarus": {
+   "stealth": {
+    "#1": "graded",
+    "#2": "agree"
+   }
+  },
+  "Distant Friend": {
+   "stealth": "agree"
+  },
+  "Distraction": {
+   "stealth": "agree"
+  },
+  "Dive Bomb": {
+   "stealth": "agree"
+  },
+  "Dive into Madness": {
+   "bleed": "graded",
+   "stealth": "agree"
+  },
+  "Divine Image": {
+   "bleed": "agree"
+  },
+  "Divine Sign": {
+   "intercept": "corrected",
+   "stealth": "agree"
+  },
+  "Domain of Evernight": {
+   "stealth": "agree"
+  },
+  "Dominant Personality": {
+   "intercept": "open 10.20"
+  },
+  "Dominate Kine": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Donate": {
+   "bleed": "agree",
+   "intercept": "agree"
+  },
+  "Double Deuce": {
+   "stealth": "agree"
+  },
+  "Draba": {
+   "stealth": "agree"
+  },
+  "Draught of the Soul": {
+   "bleed": "explained",
+   "intercept": "graded"
+  },
+  "Dream World": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Drink the Blood of Ahriman": {
+   "stealth": {
+    "#1": "agree",
+    "obt": "graded"
+   }
+  },
+  "Dual Form": {
+   "stealth": "agree"
+  },
+  "Eagle's Sight": {
+   "intercept": "agree"
+  },
+  "Ears of the Hare": {
+   "intercept": "agree"
+  },
+  "Earth Control": {
+   "stealth": "agree"
+  },
+  "Earth-Feeder": {
+   "stealth": "agree"
+  },
+  "Ecstatic Agony": {
+   "stealth": "agree"
+  },
+  "Edge Vitiation": {
+   "stealth": "agree"
+  },
+  "Elder Impersonation": {
+   "stealth": "agree"
+  },
+  "Elder Intervention": {
+   "intercept": "agree"
+  },
+  "Elemental Stoicism": {
+   "stealth": "agree"
+  },
+  "Elysian Fields": {
+   "stealth": "graded"
+  },
+  "Emboldened Councilor": {
+   "intercept": {
+    "#1": "agree",
+    "#2": "graded"
+   }
+  },
+  "Emergency Powers": {
+   "stealth": "agree"
+  },
+  "Emergency Rations": {
+   "stealth": "agree"
+  },
+  "Empowering the Puppet King": {
+   "bleed": "agree"
+  },
+  "Enchant Kindred": {
+   "bleed": "graded",
+   "stealth": "graded"
+  },
+  "Enchanted Marionette": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Enchanting Gaze": {
+   "stealth": "agree"
+  },
+  "Enforcer": {
+   "stealth": "agree"
+  },
+  "Engling Fury": {
+   "stealth": "agree"
+  },
+  "Enhanced Senses": {
+   "intercept": "agree"
+  },
+  "Enkil Cog": {
+   "bleed": "graded"
+  },
+  "Enrage": {
+   "stealth": "agree"
+  },
+  "Ensconced": {
+   "stealth": "agree"
+  },
+  "Ensemble": {
+   "bleed": "graded"
+  },
+  "Ensnare a Beast": {
+   "intercept": {
+    "ANI|CEL": "agree",
+    "CEL": "graded",
+    "ani|cel": "agree",
+    "cel": "graded"
+   }
+  },
+  "Enthrall": {
+   "bleed": {
+    "OBF|PRE": "agree",
+    "PRE": "graded",
+    "obf|pre": "agree",
+    "pre": "graded"
+   }
+  },
+  "Entrancement": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Entrenching": {
+   "stealth": "agree"
+  },
+  "Ephor": {
+   "intercept": "agree"
+  },
+  "Epiphany": {
+   "stealth": "agree"
+  },
+  "Erebus Mask": {
+   "stealth": "agree"
+  },
+  "Erosion": {
+   "stealth": "agree"
+  },
+  "Esbat": {
+   "stealth": "agree"
+  },
+  "Esprit de Corps": {
+   "stealth": "agree"
+  },
+  "Eternal Vigilance": {
+   "stealth": "agree"
+  },
+  "Ex Nihilo": {
+   "stealth": "agree"
+  },
+  "Exile": {
+   "stealth": "agree"
+  },
+  "Eye of Hazimel": {
+   "bleed": "agree"
+  },
+  "Eyes of Argus": {
+   "intercept": "agree"
+  },
+  "Eyes of Chaos": {
+   "bleed": "agree"
+  },
+  "Eyes of the Beast": {
+   "intercept": "agree"
+  },
+  "Eyes of the Dead": {
+   "intercept": "single"
+  },
+  "Eyes of the Night": {
+   "intercept": "single"
+  },
+  "Eyes of the Wild": {
+   "intercept": "graded"
+  },
+  "Faceless Night": {
+   "stealth": "agree"
+  },
+  "Fae Contortion": {
+   "stealth": "agree"
+  },
+  "Faerie Wards": {
+   "intercept": "agree"
+  },
+  "Falcon's Eye": {
+   "intercept": "agree"
+  },
+  "False Resonance": {
+   "stealth": "agree"
+  },
+  "Familial Bond": {
+   "intercept": "agree"
+  },
+  "Fantasy World": {
+   "stealth": "agree"
+  },
+  "Far Mastery": {
+   "stealth": "agree"
+  },
+  "Fata Morgana": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Fatuus Mastery": {
+   "stealth": "agree"
+  },
+  "Feast of the Soul's Secrets": {
+   "bleed": "agree"
+  },
+  "Fee Stake: Boston": {
+   "stealth": "agree"
+  },
+  "Fee Stake: Corte": {
+   "stealth": "agree"
+  },
+  "Fee Stake: Los Angeles": {
+   "stealth": "agree"
+  },
+  "Fee Stake: New York": {
+   "stealth": "agree"
+  },
+  "Fee Stake: Perth": {
+   "stealth": "agree"
+  },
+  "Fee Stake: Seattle": {
+   "stealth": "agree"
+  },
+  "Feral Hound": {
+   "intercept": "agree"
+  },
+  "Festivo dello Estinto": {
+   "stealth": "open 10.21"
+  },
+  "Fever Pitch": {
+   "bleed": {
+    "FOR|PRE": "agree",
+    "PRE": "graded",
+    "for|pre": "agree",
+    "pre": "graded"
+   }
+  },
+  "Field Training": {
+   "stealth": "agree"
+  },
+  "Fiendish Tongue": {
+   "bleed": "agree"
+  },
+  "Fifth Tradition: Hospitality": {
+   "stealth": "agree"
+  },
+  "Fiorella, Empty One": {
+   "intercept": "agree",
+   "stealth": "agree"
+  },
+  "Fire Dance": {
+   "stealth": "agree"
+  },
+  "Fire on the Mountain": {
+   "stealth": "agree"
+  },
+  "Fleetness": {
+   "stealth": "agree"
+  },
+  "Force of Will": {
+   "bleed": "agree"
+  },
+  "Forced Confessional": {
+   "intercept": "graded"
+  },
+  "Forced March": {
+   "stealth": "agree"
+  },
+  "Foreshadowing Destruction": {
+   "bleed": {
+    "DOM": "graded",
+    "dom": "agree"
+   }
+  },
+  "Forest of Shadows": {
+   "stealth": "explained"
+  },
+  "Forgotten Labyrinth": {
+   "stealth": "agree"
+  },
+  "Form of Mist": {
+   "stealth": "corrected"
+  },
+  "Form of the Bat": {
+   "intercept": {
+    "PRO": "agree",
+    "pro": "open 10.20"
+   }
+  },
+  "Form of the Cobra": {
+   "stealth": "agree"
+  },
+  "Form of the Serpent": {
+   "stealth": "agree"
+  },
+  "Fortune Teller Shop": {
+   "stealth": "graded"
+  },
+  "Founders of the Ebony Kingdom": {
+   "stealth": "agree"
+  },
+  "Fourth Tradition: The Accounting": {
+   "stealth": "agree"
+  },
+  "Freakish Conglomeration": {
+   "bleed": "graded"
+  },
+  "Friend of Mine": {
+   "intercept": "agree"
+  },
+  "Frozen Object": {
+   "stealth": "agree"
+  },
+  "Gather": {
+   "stealth": "agree"
+  },
+  "Gear Up": {
+   "stealth": "agree"
+  },
+  "Gestalt": {
+   "intercept": "graded"
+  },
+  "Ghost-Eater": {
+   "stealth": "agree"
+  },
+  "Gift of Proteus": {
+   "stealth": "agree"
+  },
+  "Gift of Sleep": {
+   "stealth": "agree"
+  },
+  "Gifts From Hereafter": {
+   "bleed": {
+    "DOM|OBL": "agree",
+    "OBL": "graded",
+    "dom|obl": "agree",
+    "obl": "graded"
+   }
+  },
+  "Giuseppe, Gravedigger": {
+   "stealth": "corrected"
+  },
+  "Go Anarch": {
+   "stealth": "agree"
+  },
+  "Go-getter": {
+   "stealth": "agree"
+  },
+  "Goblinism": {
+   "stealth": "agree"
+  },
+  "Govern the Unaligned": {
+   "bleed": "graded",
+   "stealth": "graded"
+  },
+  "Gramle": {
+   "stealth": "agree"
+  },
+  "Grasp the Ghostly": {
+   "stealth": "agree"
+  },
+  "Gravebound Drone": {
+   "bleed": {
+    "OBL": "corrected",
+    "obl": "graded"
+   }
+  },
+  "Greater Curse": {
+   "stealth": "agree"
+  },
+  "Gremlins": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Guard Duty": {
+   "stealth": "agree"
+  },
+  "Guarded Rubrics": {
+   "bleed": "explained"
+  },
+  "Guardian Angel": {
+   "intercept": "graded"
+  },
+  "Guardian Vigil": {
+   "intercept": "agree"
+  },
+  "Gypsies": {
+   "stealth": "single"
+  },
+  "Hag's Wrinkles": {
+   "stealth": "agree"
+  },
+  "Haqim's Law: Leadership": {
+   "stealth": "agree"
+  },
+  "Haqim's Law: Retribution": {
+   "bleed": "graded"
+  },
+  "Harmony": {
+   "stealth": "agree"
+  },
+  "Harvest Rites": {
+   "stealth": "agree"
+  },
+  "Harzomatuili": {
+   "intercept": "agree"
+  },
+  "Hatchling": {
+   "stealth": "agree"
+  },
+  "Haunt": {
+   "stealth": "agree"
+  },
+  "Haven Hunting": {
+   "stealth": "agree"
+  },
+  "Healing Touch": {
+   "stealth": "agree"
+  },
+  "Heart of the City": {
+   "bleed": "graded",
+   "stealth": "agree"
+  },
+  "Heart's Desire": {
+   "bleed": "agree"
+  },
+  "Heroic Might": {
+   "stealth": "agree"
+  },
+  "Hexaped": {
+   "bleed": "corrected",
+   "stealth": "corrected"
+  },
+  "Hidden Pathways": {
+   "stealth": "agree"
+  },
+  "High Aye": {
+   "stealth": "explained"
+  },
+  "High Top": {
+   "intercept": "agree"
+  },
+  "Hive Mind": {
+   "stealth": "agree"
+  },
+  "Hourglass of the Mind": {
+   "stealth": "agree"
+  },
+  "Humanitas": {
+   "stealth": "agree"
+  },
+  "Hunting the Beast": {
+   "stealth": "agree"
+  },
+  "I am Legion": {
+   "stealth": "agree"
+  },
+  "Iara": {
+   "intercept": "open 10.20"
+  },
+  "Illegalism": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Illuminate": {
+   "intercept": "corrected"
+  },
+  "Illusory Resources": {
+   "stealth": "agree"
+  },
+  "Ilomba": {
+   "stealth": "corrected"
+  },
+  "Imperial Decree": {
+   "stealth": "single"
+  },
+  "In Memory of the Two Lands": {
+   "bleed": "agree"
+  },
+  "Inevitability of the Void": {
+   "bleed": {
+    "AUS+NEC": "corrected",
+    "aus+nec": "agree"
+   }
+  },
+  "Information Network": {
+   "intercept": "agree"
+  },
+  "Inquisition": {
+   "stealth": "agree"
+  },
+  "Inspire": {
+   "stealth": "explained"
+  },
+  "Instantaneous Transformation": {
+   "stealth": "agree"
+  },
+  "Instinctive Reaction": {
+   "intercept": "agree"
+  },
+  "Intimidation": {
+   "bleed": "graded"
+  },
+  "Into Thin Air": {
+   "stealth": "agree"
+  },
+  "Inveraray, Scotland": {
+   "bleed": "single"
+  },
+  "Iron Glare": {
+   "bleed": "agree"
+  },
+  "J. S. Simmons, Esq.": {
+   "bleed": "agree"
+  },
+  "Jack of Both Sides": {
+   "stealth": "agree"
+  },
+  "Jackal": {
+   "stealth": "single"
+  },
+  "Jake Washington": {
+   "bleed": "graded"
+  },
+  "Jar the Soul": {
+   "stealth": "agree"
+  },
+  "Judgment: Camarilla Segregation": {
+   "stealth": "agree"
+  },
+  "Judgment: Death to the Brujah!": {
+   "stealth": "single"
+  },
+  "Justicar Retribution": {
+   "bleed": "graded"
+  },
+  "KRCG News Radio": {
+   "intercept": "agree"
+  },
+  "Kduva's Mask": {
+   "bleed": "agree"
+  },
+  "Keystone Kine": {
+   "bleed": "agree"
+  },
+  "Khabar: Glory": {
+   "bleed": "graded",
+   "stealth": "agree"
+  },
+  "Khabar: Loyalty": {
+   "stealth": "graded"
+  },
+  "Khazar's Diary (Endless Night)": {
+   "stealth": "agree"
+  },
+  "Kindred Intelligence": {
+   "stealth": "agree"
+  },
+  "Kindred Spirits": {
+   "bleed": "agree"
+  },
+  "Kiss of Lachesis": {
+   "stealth": "agree"
+  },
+  "Kumpania": {
+   "intercept": "agree"
+  },
+  "Lambreta": {
+   "intercept": "open 10.20"
+  },
+  "Laptop Computer": {
+   "bleed": "agree"
+  },
+  "Legacy": {
+   "stealth": "agree"
+  },
+  "Legal Manipulations": {
+   "bleed": {
+    "PRE": "agree",
+    "pre": "graded"
+   }
+  },
+  "Legend of the Leopard": {
+   "stealth": "agree"
+  },
+  "Legendary Vampire": {
+   "bleed": "agree"
+  },
+  "Legion": {
+   "stealth": "agree"
+  },
+  "Legwork": {
+   "intercept": "agree"
+  },
+  "Leverage": {
+   "bleed": "agree"
+  },
+  "Liberty Club Intrigue": {
+   "stealth": "agree"
+  },
+  "Lifeless Tongues": {
+   "stealth": "agree"
+  },
+  "Line Brawl": {
+   "bleed": "agree"
+  },
+  "Little Mountain Cemetery": {
+   "stealth": "agree"
+  },
+  "Living Manse": {
+   "bleed": "agree"
+  },
+  "Lock": {
+   "stealth": "corrected"
+  },
+  "Loki's Gift": {
+   "stealth": "agree"
+  },
+  "London Evening Star, Tabloid Newspaper": {
+   "intercept": "agree"
+  },
+  "Lord of Serenity": {
+   "stealth": "agree"
+  },
+  "Loss": {
+   "bleed": "agree"
+  },
+  "Lost in Crowds": {
+   "stealth": "agree"
+  },
+  "Loup": {
+   "stealth": "explained"
+  },
+  "Madman's Quill": {
+   "bleed": "graded"
+  },
+  "Magic of the Smith": {
+   "stealth": "agree"
+  },
+  "Make the Misere": {
+   "stealth": "agree"
+  },
+  "Malajit Chandramouli": {
+   "stealth": "agree"
+  },
+  "Mantle of the Bestial Majesty": {
+   "stealth": "agree"
+  },
+  "Marijava Ghoul": {
+   "stealth": "corrected"
+  },
+  "Marked Territory": {
+   "stealth": "agree"
+  },
+  "Market Square": {
+   "intercept": "graded"
+  },
+  "Martial Ritus": {
+   "stealth": "agree"
+  },
+  "Masai Blood Milk": {
+   "stealth": "agree"
+  },
+  "Masca": {
+   "stealth": "agree"
+  },
+  "Mask of a Thousand Faces": {
+   "stealth": "agree"
+  },
+  "Masochism": {
+   "stealth": "single"
+  },
+  "Masquer": {
+   "intercept": "agree"
+  },
+  "Media Influence": {
+   "bleed": "agree"
+  },
+  "Melange": {
+   "bleed": "explained",
+   "intercept": "agree"
+  },
+  "Member of the Entourage": {
+   "intercept": "agree"
+  },
+  "Memory Rift": {
+   "stealth": "agree"
+  },
+  "Mesmerize": {
+   "stealth": "agree"
+  },
+  "Mesu Bedshet": {
+   "stealth": "agree"
+  },
+  "Mind Numb": {
+   "stealth": "agree"
+  },
+  "Mind Tricks": {
+   "stealth": "agree"
+  },
+  "Mind of a Killer": {
+   "stealth": "agree"
+  },
+  "Mind of the Wilds": {
+   "stealth": "agree"
+  },
+  "Ministry": {
+   "intercept": "agree"
+  },
+  "Minor Curse": {
+   "stealth": "agree"
+  },
+  "Mirror Image": {
+   "stealth": "agree"
+  },
+  "Mirror Walk": {
+   "stealth": "agree"
+  },
+  "Mirror's Visage": {
+   "stealth": "explained"
+  },
+  "Mithraic Cultist": {
+   "intercept": "corrected"
+  },
+  "Mole's Tunneling": {
+   "stealth": {
+    "SPI": "corrected",
+    "spi": "agree"
+   }
+  },
+  "Monastery of Shadows": {
+   "stealth": "agree"
+  },
+  "Monkey Wrench": {
+   "bleed": "graded"
+  },
+  "Monomancy": {
+   "stealth": "agree"
+  },
+  "Monstrous Form": {
+   "stealth": "agree"
+  },
+  "Mouthpiece": {
+   "bleed": "agree"
+  },
+  "Movement of the Slow Body": {
+   "stealth": "agree"
+  },
+  "Mozambique Allure": {
+   "stealth": "agree"
+  },
+  "Mr. Winthrop": {
+   "intercept": "agree"
+  },
+  "Muricia's Call": {
+   "stealth": "agree"
+  },
+  "Murmur of the False Will": {
+   "bleed": "agree"
+  },
+  "Muse of Flame": {
+   "stealth": "agree"
+  },
+  "Mustajib": {
+   "stealth": "agree"
+  },
+  "My Enemy's Enemy": {
+   "intercept": "agree"
+  },
+  "Netwar": {
+   "intercept": "agree"
+  },
+  "New Carthage": {
+   "bleed": "agree"
+  },
+  "New Moon Sigil": {
+   "stealth": "agree"
+  },
+  "New in Town": {
+   "stealth": "open 10.21"
+  },
+  "Night Moves": {
+   "stealth": "agree"
+  },
+  "No Secrets From the Magaji": {
+   "intercept": "corrected",
+   "stealth": "agree"
+  },
+  "Nose of the Hound": {
+   "stealth": "agree"
+  },
+  "Nosferatu Bestial": {
+   "stealth": "agree"
+  },
+  "Nosferatu Performance Art": {
+   "stealth": "agree"
+  },
+  "Obedient Flesh": {
+   "stealth": "agree"
+  },
+  "Occlusion": {
+   "stealth": "agree"
+  },
+  "Of Noble Blood": {
+   "stealth": "agree"
+  },
+  "Off Kilter": {
+   "stealth": "agree"
+  },
+  "Old Friends": {
+   "bleed": "agree"
+  },
+  "One With the Land": {
+   "intercept": "agree"
+  },
+  "Open Dossier": {
+   "intercept": "agree"
+  },
+  "Open War": {
+   "stealth": "agree"
+  },
+  "Opium Den": {
+   "stealth": "graded"
+  },
+  "Oppugnant Night": {
+   "stealth": "agree"
+  },
+  "Organized Resistance": {
+   "intercept": {
+    "#1": "agree",
+    "#2": "graded"
+   }
+  },
+  "Pack Tactics": {
+   "intercept": "agree"
+  },
+  "Palavra Sagrada, Rio de Janeiro": {
+   "intercept": "agree",
+   "stealth": "agree"
+  },
+  "Palla Grande": {
+   "bleed": "agree"
+  },
+  "Pallid": {
+   "intercept": "corrected",
+   "stealth": "open 10.21"
+  },
+  "Panacea": {
+   "stealth": "agree"
+  },
+  "Pandora's Whisper": {
+   "stealth": "agree"
+  },
+  "Paris Opera House": {
+   "stealth": "agree"
+  },
+  "Party Out Of Bounds": {
+   "intercept": "agree"
+  },
+  "Passion": {
+   "stealth": "single"
+  },
+  "Patagia: Flaps Allowing Limited Flight": {
+   "stealth": "agree"
+  },
+  "Path of the Void": {
+   "stealth": "single"
+  },
+  "Paths in Two Worlds": {
+   "stealth": "agree"
+  },
+  "Patrol": {
+   "intercept": "agree"
+  },
+  "Patronage": {
+   "stealth": "agree"
+  },
+  "Patshiv": {
+   "stealth": "agree"
+  },
+  "Peacemaker": {
+   "bleed": "open 10.21"
+  },
+  "Pentex™ Loves You!": {
+   "bleed": "corrected"
+  },
+  "Persistent Echo": {
+   "stealth": "agree"
+  },
+  "Petra Resonance": {
+   "stealth": "agree"
+  },
+  "Phantasmagoria": {
+   "stealth": "agree"
+  },
+  "Phased Motion Detector": {
+   "intercept": "corrected"
+  },
+  "Phobia": {
+   "stealth": "agree"
+  },
+  "Pillars Fall": {
+   "bleed": "graded"
+  },
+  "Pit of Contemplation": {
+   "stealth": "agree"
+  },
+  "Plasmic Form": {
+   "stealth": "agree"
+  },
+  "Pocket Out of Time": {
+   "stealth": {
+    "obt": "corrected",
+    "tem": "agree"
+   }
+  },
+  "Poison the Well of Life": {
+   "stealth": "agree"
+  },
+  "Polaris Coach": {
+   "stealth": "agree"
+  },
+  "Political Antagonist": {
+   "intercept": "agree"
+  },
+  "Political Struggle": {
+   "stealth": "agree"
+  },
+  "Ponticulus": {
+   "intercept": "agree"
+  },
+  "Potio Martyrium": {
+   "stealth": "agree"
+  },
+  "Power of One": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Powerbase: Berlin": {
+   "intercept": "graded"
+  },
+  "Praetorian Backer": {
+   "stealth": "agree"
+  },
+  "Precision": {
+   "stealth": "agree"
+  },
+  "Precognition": {
+   "intercept": "agree"
+  },
+  "Precognizant Mobility": {
+   "stealth": "agree"
+  },
+  "Predator's Communion": {
+   "intercept": "graded"
+  },
+  "Predator's Mastery": {
+   "bleed": {
+    "ABO": "agree",
+    "abo": "graded"
+   }
+  },
+  "Predator's Transformation": {
+   "stealth": "agree"
+  },
+  "Pressing Flesh": {
+   "stealth": "agree"
+  },
+  "Preternatural Strength": {
+   "stealth": "agree"
+  },
+  "Priestess of Sekhmet": {
+   "bleed": "corrected"
+  },
+  "Principia Discordia": {
+   "stealth": "agree"
+  },
+  "Priority Shift": {
+   "stealth": "agree"
+  },
+  "Prison of the Mind": {
+   "stealth": "agree"
+  },
+  "Propaganda": {
+   "bleed": "agree"
+  },
+  "Protection Racket": {
+   "intercept": "agree"
+  },
+  "Psalm of the Damned": {
+   "bleed": "corrected"
+  },
+  "Psychic Projection": {
+   "intercept": "graded",
+   "stealth": "agree"
+  },
+  "Psychophagia": {
+   "stealth": "agree"
+  },
+  "Public Enemy": {
+   "stealth": "agree"
+  },
+  "Public Trust": {
+   "bleed": {
+    "PRE": "agree",
+    "pre": "graded"
+   }
+  },
+  "Pulse of the Canaille": {
+   "bleed": "graded",
+   "stealth": "agree"
+  },
+  "Punish": {
+   "stealth": {
+    "#1": "agree",
+    "#2": "open 10.22"
+   }
+  },
+  "Puppet Master": {
+   "bleed": "agree"
+  },
+  "Puppeteer": {
+   "bleed": "graded"
+  },
+  "Purification": {
+   "stealth": "agree"
+  },
+  "Purity of the Beast": {
+   "stealth": "agree"
+  },
+  "Putrescent Servitude": {
+   "stealth": "agree"
+  },
+  "Putrescent Sustenance": {
+   "stealth": "agree"
+  },
+  "Quicken Sight": {
+   "intercept": "agree"
+  },
+  "Quicksilver Contemplation": {
+   "bleed": "agree",
+   "intercept": "agree"
+  },
+  "Rampage": {
+   "stealth": "corrected"
+  },
+  "Random Patterns": {
+   "intercept": {
+    "AUS+DEM": "open 10.20",
+    "aus+dem": "agree"
+   }
+  },
+  "Rapid Change": {
+   "stealth": "agree"
+  },
+  "Rapid Healing": {
+   "stealth": "agree"
+  },
+  "Raptor": {
+   "intercept": "agree"
+  },
+  "Rastacourere": {
+   "stealth": "agree"
+  },
+  "Rave": {
+   "stealth": "agree"
+  },
+  "Raven Spy": {
+   "intercept": "agree"
+  },
+  "Raw Recruit": {
+   "stealth": "agree"
+  },
+  "Rayzeel's Song": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Razor Bat": {
+   "intercept": "agree"
+  },
+  "Read the Winds": {
+   "intercept": "agree"
+  },
+  "Recruitment Exercise": {
+   "stealth": "agree"
+  },
+  "Recure of the Homeland": {
+   "stealth": "agree"
+  },
+  "Redistribution": {
+   "stealth": "agree"
+  },
+  "Reformation": {
+   "stealth": "agree"
+  },
+  "Regeneration": {
+   "stealth": "single"
+  },
+  "Reindoctrination": {
+   "stealth": "agree"
+  },
+  "Rejuvenate": {
+   "stealth": "explained"
+  },
+  "Release of the Shackled Soul": {
+   "stealth": "single"
+  },
+  "Relentlessness": {
+   "stealth": {
+    "cel|for": "agree",
+    "for": "graded"
+   }
+  },
+  "Reliquary: Akunanse Remains": {
+   "bleed": "agree"
+  },
+  "Renewed Vigor": {
+   "stealth": "agree"
+  },
+  "Repair the Undead Flesh": {
+   "stealth": "agree"
+  },
+  "Repulsion": {
+   "stealth": {
+    "OBE": "explained",
+    "obe": "agree"
+   }
+  },
+  "Resilient Mind": {
+   "stealth": "agree"
+  },
+  "Resist Earth's Grasp": {
+   "stealth": "agree"
+  },
+  "Respire": {
+   "stealth": "explained"
+  },
+  "Restoration": {
+   "stealth": "agree"
+  },
+  "Resume the Coil": {
+   "stealth": "agree"
+  },
+  "Resurrection": {
+   "stealth": "agree"
+  },
+  "Retain the Quick Blood": {
+   "stealth": "agree"
+  },
+  "Reunion Kamut": {
+   "stealth": "agree"
+  },
+  "Revelation of Desire": {
+   "bleed": "agree"
+  },
+  "Revelation of Ecstasy": {
+   "stealth": "agree"
+  },
+  "Revelation of the Serpent": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Revelations": {
+   "stealth": "agree"
+  },
+  "Revenant": {
+   "intercept": "agree"
+  },
+  "Righteous Aura": {
+   "bleed": "graded"
+  },
+  "Rise of the Fallen": {
+   "stealth": "agree"
+  },
+  "Ritual Challenge": {
+   "stealth": "agree"
+  },
+  "Robert Carter": {
+   "bleed": "agree"
+  },
+  "Rom Gypsy": {
+   "stealth": "single"
+  },
+  "Rooftop Shadow": {
+   "intercept": "agree"
+  },
+  "Root of Vitality": {
+   "stealth": "agree"
+  },
+  "Rubicon": {
+   "stealth": "single"
+  },
+  "Ruins of Charizel": {
+   "bleed": "explained"
+  },
+  "Rutor's Hand": {
+   "stealth": "agree"
+  },
+  "Saatet-ta": {
+   "bleed": "agree",
+   "intercept": "agree",
+   "stealth": "agree"
+  },
+  "Samuel Haight": {
+   "bleed": "corrected"
+  },
+  "Sanguine Instruction": {
+   "stealth": "agree"
+  },
+  "Savannah Runner": {
+   "intercept": "agree"
+  },
+  "Scarlet Lore": {
+   "stealth": "agree"
+  },
+  "SchreckNET": {
+   "stealth": "agree"
+  },
+  "Scouting Mission": {
+   "bleed": "graded",
+   "stealth": "graded"
+  },
+  "Scrounging": {
+   "stealth": "agree"
+  },
+  "Scry the Hearthstone": {
+   "intercept": "agree"
+  },
+  "Seal of Veddartha": {
+   "bleed": "explained"
+  },
+  "Second Sight": {
+   "intercept": "agree"
+  },
+  "Second Tradition: Domain": {
+   "intercept": "agree"
+  },
+  "Seeds of Corruption": {
+   "stealth": "single"
+  },
+  "Sense Death": {
+   "stealth": "agree"
+  },
+  "Sense Vitality": {
+   "stealth": "agree"
+  },
+  "Sense the Savage Way": {
+   "intercept": "agree"
+  },
+  "Sense the Sin": {
+   "bleed": "agree",
+   "intercept": "agree"
+  },
+  "Set's Curse": {
+   "bleed": "graded",
+   "stealth": "agree"
+  },
+  "Shadow Cast": {
+   "stealth": "agree"
+  },
+  "Shadow Cloak": {
+   "stealth": "agree"
+  },
+  "Shadow Play": {
+   "stealth": "agree"
+  },
+  "Shadow Twin": {
+   "stealth": "single"
+  },
+  "Shadow of Taint": {
+   "stealth": "agree"
+  },
+  "Shadowed Eyes": {
+   "stealth": "agree"
+  },
+  "Shaman": {
+   "intercept": "agree",
+   "stealth": "agree"
+  },
+  "Shambling Hordes": {
+   "bleed": "graded"
+  },
+  "Shatter the Gate": {
+   "stealth": "agree"
+  },
+  "Shattering": {
+   "stealth": "agree"
+  },
+  "Shell Game": {
+   "stealth": "graded"
+  },
+  "Shepherd's Innocence": {
+   "stealth": "agree"
+  },
+  "Show of Force": {
+   "bleed": "agree"
+  },
+  "Shroud Mastery": {
+   "stealth": "agree"
+  },
+  "Shroud of Absence": {
+   "stealth": "agree"
+  },
+  "Shroud of Decay": {
+   "bleed": "agree"
+  },
+  "Shroud of Night": {
+   "stealth": "agree"
+  },
+  "Sibyl's Tongue": {
+   "stealth": "agree"
+  },
+  "Sight Beyond Sight": {
+   "intercept": "agree"
+  },
+  "Sins of the Cauchemar": {
+   "intercept": "agree"
+  },
+  "Siphon": {
+   "stealth": "agree"
+  },
+  "Siren's Lure": {
+   "stealth": "corrected"
+  },
+  "Sires Command, Childer Inherit": {
+   "stealth": "agree"
+  },
+  "Sixth Tradition: Destruction": {
+   "stealth": "agree"
+  },
+  "Skaald": {
+   "stealth": "agree"
+  },
+  "Skin of the Chameleon": {
+   "stealth": "agree"
+  },
+  "Skullduggery": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Slaughtering the Herd": {
+   "bleed": "agree"
+  },
+  "Smash and Grab": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Smoke and Mirrors": {
+   "intercept": "open 10.20",
+   "stealth": "agree"
+  },
+  "Soar": {
+   "stealth": "agree"
+  },
+  "Social Charm": {
+   "bleed": {
+    "PRE": "agree",
+    "pre": "graded"
+   }
+  },
+  "Sonar": {
+   "intercept": "agree"
+  },
+  "Song of Pan": {
+   "bleed": "explained",
+   "stealth": "agree"
+  },
+  "Songs of the Distant Vitae": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Soul Decoration": {
+   "stealth": "agree"
+  },
+  "Soul Feasting": {
+   "stealth": "agree"
+  },
+  "Soul Painting": {
+   "stealth": "agree"
+  },
+  "Soul Scan": {
+   "stealth": "agree"
+  },
+  "Soul of the Earth": {
+   "stealth": "agree"
+  },
+  "Sound of a Breaking Oath": {
+   "stealth": "single"
+  },
+  "Speak with Spirits": {
+   "intercept": {
+    "SPI": "corrected",
+    "ani": "agree",
+    "spi": "agree"
+   }
+  },
+  "Special Report": {
+   "intercept": "corrected"
+  },
+  "Spectral Divination": {
+   "intercept": "agree",
+   "stealth": "agree"
+  },
+  "Spell of Life": {
+   "stealth": "agree"
+  },
+  "Spirit Claws": {
+   "stealth": "agree"
+  },
+  "Spirit Marionette": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Spirit's Touch": {
+   "intercept": "agree"
+  },
+  "Split the Veil": {
+   "stealth": "agree"
+  },
+  "Sport Bike": {
+   "intercept": "agree"
+  },
+  "Spying Mission": {
+   "stealth": "agree"
+  },
+  "Steadfastness": {
+   "intercept": "agree"
+  },
+  "Steal the Mind": {
+   "intercept": "agree"
+  },
+  "Stealing Years": {
+   "stealth": "agree"
+  },
+  "Stealth Ritus": {
+   "stealth": "explained"
+  },
+  "Steely Tenacity": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Stolen Police Cruiser": {
+   "bleed": "agree"
+  },
+  "Stone Travel": {
+   "stealth": {
+    "MYT": "agree",
+    "myt": "agree",
+    "obt": "corrected"
+   }
+  },
+  "Strike with Conviction": {
+   "bleed": "explained"
+  },
+  "Strix": {
+   "intercept": "agree"
+  },
+  "Stygian Shroud": {
+   "intercept": "open 10.20"
+  },
+  "Subversion": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Succubus": {
+   "bleed": "agree"
+  },
+  "Sudario Refraction": {
+   "stealth": "agree"
+  },
+  "Summon Soul": {
+   "stealth": "agree"
+  },
+  "Summon the Abyss": {
+   "stealth": "single"
+  },
+  "Summon the Serpent": {
+   "stealth": "agree"
+  },
+  "Sunrise Service": {
+   "stealth": "agree"
+  },
+  "Sunset Strip, Hollywood": {
+   "stealth": "corrected"
+  },
+  "Suppressing Fire": {
+   "intercept": "open 10.20"
+  },
+  "Suspension of Disbelief": {
+   "bleed": "agree"
+  },
+  "Swallowed by the Night": {
+   "stealth": "agree"
+  },
+  "Swarm": {
+   "stealth": "corrected"
+  },
+  "Swift Cover": {
+   "stealth": {
+    "CEL|OBF": "agree",
+    "OBF": "graded"
+   }
+  },
+  "Swiftness of the Stag": {
+   "stealth": "agree"
+  },
+  "Taking the Skin: Vulture": {
+   "intercept": "graded"
+  },
+  "Tasha Morgan": {
+   "bleed": "agree"
+  },
+  "Tattoo Signal": {
+   "stealth": "agree"
+  },
+  "Telepathic Misdirection": {
+   "intercept": "agree"
+  },
+  "Tenebrous Form": {
+   "stealth": "agree"
+  },
+  "Thanks for the Donation": {
+   "stealth": "single"
+  },
+  "The Ailing Spirit": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "The Anarch Free Press": {
+   "intercept": "agree"
+  },
+  "The Ancestor's Talisman": {
+   "intercept": "corrected"
+  },
+  "The Becoming": {
+   "stealth": "agree"
+  },
+  "The Call": {
+   "stealth": "agree"
+  },
+  "The Deadliest Sin": {
+   "intercept": "single"
+  },
+  "The Embrace": {
+   "stealth": "agree"
+  },
+  "The Eternal Mask": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "The Framing": {
+   "stealth": "agree"
+  },
+  "The Gate of Acheron": {
+   "stealth": "agree"
+  },
+  "The Guruhi Are the Land": {
+   "bleed": {
+    "#1": "agree",
+    "#2": "graded",
+    "#3": "graded"
+   }
+  },
+  "The Haunting": {
+   "stealth": "agree"
+  },
+  "The Hunt Club": {
+   "stealth": "single"
+  },
+  "The Khabar: Community": {
+   "stealth": "agree"
+  },
+  "The Labyrinth": {
+   "stealth": "graded"
+  },
+  "The Missing Voice": {
+   "stealth": "agree"
+  },
+  "The Mole": {
+   "intercept": "agree"
+  },
+  "The Name Forgotten": {
+   "stealth": "agree"
+  },
+  "The Path of the Scorched Heart": {
+   "stealth": "agree"
+  },
+  "The Platinum Protocol": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "The Portrait": {
+   "bleed": "corrected"
+  },
+  "The Rumor Mill, Tabloid Newspaper": {
+   "intercept": "corrected"
+  },
+  "The Status Perfectus": {
+   "stealth": "agree"
+  },
+  "The Summoning": {
+   "stealth": "agree"
+  },
+  "The Trick of the Danya": {
+   "stealth": "agree"
+  },
+  "The Unmasking": {
+   "intercept": "corrected"
+  },
+  "The Warrens": {
+   "intercept": "agree"
+  },
+  "The Wildebeest": {
+   "stealth": "agree"
+  },
+  "The World's a Canvas": {
+   "stealth": "agree"
+  },
+  "Thing": {
+   "stealth": "graded"
+  },
+  "Third Tradition: Progeny": {
+   "stealth": "agree"
+  },
+  "Threading the Path of Orpheus": {
+   "stealth": "agree"
+  },
+  "Threats": {
+   "bleed": "agree"
+  },
+  "Tier of Souls": {
+   "bleed": "explained"
+  },
+  "Touch of Valeren": {
+   "stealth": "agree"
+  },
+  "Tourette's Voice": {
+   "intercept": "agree"
+  },
+  "Tracker's Mark": {
+   "intercept": "agree"
+  },
+  "Trainer": {
+   "stealth": "agree"
+  },
+  "Travelers Obey the Tenets": {
+   "stealth": "agree"
+  },
+  "Treasured Samadji": {
+   "bleed": "agree"
+  },
+  "Treat the Sick Mind": {
+   "stealth": "agree"
+  },
+  "Tremere Convocation": {
+   "stealth": {
+    "#1": "corrected",
+    "THA": "explained"
+   }
+  },
+  "Triole's Revenge": {
+   "stealth": "single"
+  },
+  "Trochomancy": {
+   "bleed": "agree"
+  },
+  "Trophy: Diablerie": {
+   "stealth": "agree"
+  },
+  "Trophy: Domain": {
+   "intercept": "agree"
+  },
+  "Trophy: Revered": {
+   "bleed": "agree"
+  },
+  "True Love's Face": {
+   "bleed": "agree"
+  },
+  "Truth in Darkness": {
+   "intercept": "agree"
+  },
+  "Truth of Blood": {
+   "bleed": "agree"
+  },
+  "Truth of a Thousand Lies": {
+   "bleed": "agree"
+  },
+  "Tumnimos": {
+   "stealth": "agree"
+  },
+  "Tunnel Runner": {
+   "stealth": "agree"
+  },
+  "Twisted Forest": {
+   "stealth": "single"
+  },
+  "Umbrous Clutch": {
+   "stealth": "agree"
+  },
+  "Unburdening the Bestial Soul": {
+   "stealth": "agree"
+  },
+  "Uncontrolled Impulse": {
+   "stealth": "agree"
+  },
+  "Under My Skin": {
+   "stealth": "agree"
+  },
+  "Under Siege": {
+   "stealth": "agree"
+  },
+  "Underbridge Stray": {
+   "bleed": "graded"
+  },
+  "Undue Influence": {
+   "stealth": "agree"
+  },
+  "Unleash Hell's Fury": {
+   "intercept": "graded",
+   "stealth": "agree"
+  },
+  "Unleash the Hounds": {
+   "bleed": {
+    "VIS": "corrected",
+    "dom": "agree",
+    "vis": "agree"
+   }
+  },
+  "Unlicensed Taxicab": {
+   "stealth": "explained"
+  },
+  "Unwholesome Bond": {
+   "stealth": "agree"
+  },
+  "Vaticination": {
+   "stealth": "agree"
+  },
+  "Vaulderie": {
+   "stealth": "single"
+  },
+  "Veil the Legions": {
+   "stealth": "agree"
+  },
+  "Veneficti": {
+   "stealth": "agree"
+  },
+  "Venetian Conference": {
+   "intercept": "agree"
+  },
+  "Vengeful Spirit": {
+   "bleed": "agree"
+  },
+  "Vermin Channel": {
+   "stealth": "agree"
+  },
+  "Victim of Habit": {
+   "stealth": "agree"
+  },
+  "Vigil: The Thin Line": {
+   "intercept": "agree"
+  },
+  "Violation of Trust": {
+   "stealth": "agree"
+  },
+  "Virtuosa": {
+   "bleed": "agree",
+   "stealth": "agree"
+  },
+  "Visionquest": {
+   "stealth": "agree"
+  },
+  "Visions of Gehenna": {
+   "bleed": "agree"
+  },
+  "Vivienne Géroux": {
+   "stealth": "open 10.21"
+  },
+  "Voices of the Castle": {
+   "intercept": "agree"
+  },
+  "Vulture's Buffet": {
+   "stealth": "agree"
+  },
+  "WMRH Talk Radio": {
+   "intercept": "agree"
+  },
+  "Walk of Caine": {
+   "bleed": "graded"
+  },
+  "Walks-With-Might": {
+   "intercept": "single"
+  },
+  "Wall Street Night, Financial Newspaper": {
+   "intercept": "graded"
+  },
+  "War Party": {
+   "stealth": "agree"
+  },
+  "Warding the Beast": {
+   "stealth": "agree"
+  },
+  "Warning Sirens": {
+   "intercept": "graded"
+  },
+  "Watch Commander": {
+   "intercept": "agree"
+  },
+  "Watchtower: The Wolves Feed": {
+   "stealth": "corrected"
+  },
+  "Waters of Duat": {
+   "stealth": "agree"
+  },
+  "Wave of Insanity": {
+   "stealth": "single"
+  },
+  "Web of Knives Recruit": {
+   "stealth": "agree"
+  },
+  "Week of Nightmares": {
+   "bleed": "graded"
+  },
+  "Weigh the Heart": {
+   "bleed": "agree"
+  },
+  "Well-Marked": {
+   "stealth": "agree"
+  },
+  "Where the Veil Thins": {
+   "stealth": "agree"
+  },
+  "Whispers from the Dead": {
+   "stealth": "agree"
+  },
+  "Will of the Council": {
+   "stealth": "agree"
+  },
+  "Will-o'-the-Wisp": {
+   "intercept": "open 10.20"
+  },
+  "Wise Spider": {
+   "stealth": "agree"
+  },
+  "Zaire River Ferry": {
+   "stealth": "agree"
+  },
+  "Zillah's Tears": {
+   "stealth": "agree"
+  },
+  "Zip Line": {
+   "stealth": "agree"
+  }
+ }
+}
