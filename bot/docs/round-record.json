@@ -3,14 +3,14 @@
  "tool": "tools/gates.sh",
  "date": "2026-11-27",
  "branch": "docs-diet",
- "head": "2320b70",
+ "head": "35ced3a",
  "dirty": false,
  "base": "origin/main",
  "merge_base": "77c5ded",
  "flags": [],
  "changed": {
-  "all": 33,
-  "bot": 31
+  "all": 35,
+  "bot": 33
  },
  "bytes": {
   "elysium-bot.js": "14d48ac8",
@@ -22,13 +22,13 @@
    "gate": "check",
    "result": "PASS",
    "count": "35 of 35 scripts parse",
-   "seconds": 2
+   "seconds": 1
   },
   {
    "gate": "lint",
    "result": "PASS",
    "count": "lint: clean",
-   "seconds": 6
+   "seconds": 7
   },
   {
    "gate": "canary",
@@ -46,7 +46,7 @@
    "gate": "cardfx",
    "result": "PASS",
    "count": "516/0",
-   "seconds": 3
+   "seconds": 4
   },
   {
    "gate": "precon",
@@ -82,13 +82,13 @@
    "gate": "hb1",
    "result": "PASS",
    "count": "11/0 (0 skip)",
-   "seconds": 1
+   "seconds": 2
   },
   {
    "gate": "doc-budget",
-   "result": "FAIL",
-   "count": "doc-budget: FAIL",
-   "seconds": 1
+   "result": "PASS",
+   "count": "bootstrap 39121 / 50000 · standing pages 183055 / 184000",
+   "seconds": 0
   },
   {
    "gate": "public-scan-self",
@@ -99,28 +99,28 @@
   {
    "gate": "round-self",
    "result": "PASS",
-   "count": "17/0",
+   "count": "18/0",
    "seconds": 0
   },
   {
    "gate": "public-scan",
    "result": "PASS",
    "count": "0 hits in 0 files",
-   "seconds": 1
+   "seconds": 0
   },
   {
    "gate": "test-doc-budget",
-   "result": "FAIL",
-   "count": "test-doc-budget: FAIL",
-   "seconds": 10
+   "result": "PASS",
+   "count": "test-doc-budget: every case red, the baseline and the allowed moves green",
+   "seconds": 12
   }
  ],
  "totals": {
-  "PASS": 14,
-  "FAIL": 2,
+  "PASS": 16,
+  "FAIL": 0,
   "SKIPPED": 0,
   "NOT RUN": 0
  },
- "seconds": 31,
+ "seconds": 33,
  "egress": "(the review's pass 1 is running)"
 }
