@@ -19,5 +19,5 @@ The entries of 9 Sep – 27 Nov 2026 (bot v0.1 to v0.6.243 and the rounds withou
   207 → about 183 KB, nothing binding cut; the zero-vtes readings a section of the round's report; the old CHANGELOG, the
   register as it stood and nine delivered round specs frozen in `docs/history/`.
   *Gates:* `tools/gates.sh` on `docs-diet` `2320b70` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 14 · FAIL 2 · SKIPPED 0 (doc-budget FAIL; test-doc-budget FAIL). CI's suite ×3: not read.
-  *Egress:* (pending)
+  *Egress:* (the review's pass 1 is running)
   *Report:* `reports/REPORT-docs-diet-2026-11-27.md`.
