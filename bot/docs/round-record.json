@@ -3,7 +3,7 @@
  "tool": "tools/gates.sh",
  "date": "2026-11-27",
  "branch": "docs-diet",
- "head": "35ced3a",
+ "head": "45475b1",
  "dirty": false,
  "base": "origin/main",
  "merge_base": "77c5ded",
@@ -28,7 +28,7 @@
    "gate": "lint",
    "result": "PASS",
    "count": "lint: clean",
-   "seconds": 7
+   "seconds": 6
   },
   {
    "gate": "canary",
@@ -46,13 +46,13 @@
    "gate": "cardfx",
    "result": "PASS",
    "count": "516/0",
-   "seconds": 4
+   "seconds": 3
   },
   {
    "gate": "precon",
    "result": "PASS",
    "count": "18 precons, no problems",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "ledger-self",
@@ -76,18 +76,18 @@
    "gate": "ana-gates-self",
    "result": "PASS",
    "count": "35/0",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "hb1",
    "result": "PASS",
    "count": "11/0 (0 skip)",
-   "seconds": 2
+   "seconds": 1
   },
   {
    "gate": "doc-budget",
    "result": "PASS",
-   "count": "bootstrap 39121 / 50000 · standing pages 183055 / 184000",
+   "count": "bootstrap 39238 / 50000 · standing pages 183373 / 184000",
    "seconds": 0
   },
   {
@@ -99,20 +99,20 @@
   {
    "gate": "round-self",
    "result": "PASS",
-   "count": "18/0",
+   "count": "22/0",
    "seconds": 0
   },
   {
    "gate": "public-scan",
    "result": "PASS",
    "count": "0 hits in 0 files",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "test-doc-budget",
    "result": "PASS",
    "count": "test-doc-budget: every case red, the baseline and the allowed moves green",
-   "seconds": 12
+   "seconds": 13
   }
  ],
  "totals": {
@@ -121,6 +121,6 @@
   "SKIPPED": 0,
   "NOT RUN": 0
  },
- "seconds": 33,
- "egress": "(the review's pass 1 is running)"
+ "seconds": 32,
+ "egress": "(the review's pass 2 is running)"
 }
