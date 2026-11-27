@@ -408,7 +408,8 @@
   the owner's four answers on the round's card: the family over the whole library, the other V5 decks' fidelity flags in C1b; the
   exactness record outside the bundle; a report per round for zero-vtes; KRCG's MCP a rulings source. **The tool**,
   `gen-cross-check.js` with its pairing `cross-check-pairing.json` (#112's first part, rebased on main; two STATUS-only commits fell
-  away): v1.0.0 gave 1,260 rows, 874 agree, on main's bytes; v1.1.0 fixed the first run's noise (a level-free mode of ours read at
+  away; the pairing is committed with the tool by D-140, and the names of zero-vtes's effect types in it are all of zero-vtes the
+  repository holds, README's credit): v1.0.0 gave 1,260 rows, 874 agree, on main's bytes; v1.1.0 fixed the first run's noise (a level-free mode of ours read at
   every level, a card in play's uses compared one by one, the deferred stealth not added to an action's own, the paid intercept
   added): 1,290 rows, 976 agree, the readers' list; v1.2.0 sets a granted action apart on both sides and flags it (the pairing's
   `granted`), reads the pairing's blood token for an extra cost and a scratch compile (`--cardfx`): 1,282 rows, 898 agree, on
@@ -427,7 +428,8 @@
   `cardfx-exact.json` (D-144 (2), a development file): 1,143 rows — exact 1,079 (agree 896, graded 103, corrected 55, explained
   25), open 22, single-witness 42. `test-cardfx.js` 503 → 516: the record's form, the C1 entries, `plusIf`'s vocabulary, the
   curated count and the actStealth band 385–400 (430 → 393; ac6244a's message says 429, main's bytes count 430). The register: 7.6,
-  9.12, 10.19–10.22 new; 7.5, 8.5, 9.8 updated. `cardfx-sharing.json`: `plusIf`'s row (55 cards: 54 entries and The Mausoleum,
+  9.12, 10.19–10.22 new; 7.5, 8.5, 9.8 updated; and from #112's first part, W1b's match: 4.21 (a human's Carrion Crows),
+  4.22 (a human's The Dowager) and 4.23 (a human's Pass at the strike step). `cardfx-sharing.json`: `plusIf`'s row (55 cards: 54 entries and The Mausoleum,
   Venice, owed); `interceptPaid`, `interceptPaidBlood` and `bearerStat` shared. The ledger (`docs/CARDS.md`, the round's sims):
   the starters' playable copies 1,126 → 1,124, the library's static playable 603 → 576. `elysium-bot.js`: `BOT_VERSION` only; the
   guide's chip and footer. Reports: `reports/REPORT-c1-2026-11-27.md` and, for zero-vtes, `reports/zero-vtes-readings-c1-2026-11-27.md`
