@@ -313,8 +313,11 @@ def _field(entry_lines, name):
 def save(out, paths=HERE, ci=None, egress=None, note=None, today=None, prs=None, data_prs=None):
     rec = json.loads(read(os.path.join(out, 'record.json')))
     prev = load_record(paths)
-    if not egress and prev and prev.get('branch') == rec.get('branch') and prev.get('egress'):
+    same_branch = bool(prev) and prev.get('branch') == rec.get('branch')
+    if not egress and same_branch and prev.get('egress'):
         egress = prev['egress']           # a later save on the branch keeps the review's line unless a new one is given
+    if not note and same_branch and prev.get('head') == rec.get('head') and prev.get('note'):
+        note = prev['note']               # ... and the same run's note (`save DIR --ci` after `save DIR --egress --note`)
     if ci:
         rec['ci'] = ci
     if egress:
@@ -501,6 +504,16 @@ def self_test():
         write(os.path.join(out, 'record.json'), json.dumps(rec2))
         save(out, P, today=datetime.date(2026, 1, 2), prs=[], data_prs=[])
         ok('`bcd2345`' in read(P.changelog) and all(o for o, m in check(P)), 'save: a second save on the branch re-renders')
+        # the carry-overs: the same run keeps its note and the egress line; another run keeps the egress line, not the note
+        save(out, P, egress='1 finding in 2 passes', note='smokes: a known fault', today=datetime.date(2026, 1, 2), prs=[], data_prs=[])
+        save(out, P, ci={'head': 'bcd2345', 'runs': ['2841/0'] * 3, 'gates': 'success'}, today=datetime.date(2026, 1, 2), prs=[], data_prs=[])
+        r4 = load_record(P)
+        ok(r4.get('egress') == '1 finding in 2 passes' and r4.get('note') == 'smokes: a known fault' and r4.get('ci'),
+           'save --ci after save --egress --note keeps both on the same run')
+        write(os.path.join(out, 'record.json'), json.dumps(dict(rec, head='cde3456')))
+        save(out, P, today=datetime.date(2026, 1, 2), prs=[], data_prs=[])
+        r5 = load_record(P)
+        ok(r5.get('egress') == '1 finding in 2 passes' and not r5.get('note'), "another run keeps the egress line, not the old run's note")
         ok(get_block(read(P.status), 'versions').startswith('**Bot v9.8.7**'), 'the versions block starts with the bot')
         # the versions block: a hand edit fails; a newer root release only warns outside a pull request
         st = read(P.status)

@@ -58,7 +58,7 @@ of other projects.
    changed; LESSONS only for a new CLASS of lesson; a HANDOFF when main must act. Before committing them, `python3 tools/round.py
    save DIR --egress "<line>"` (`--note` for a FAIL the round explains) writes the record and renders its copies, so no pending
    line is pushed; `bash tools/doc-budget.sh` green; commit and push. When CI is green on that head, `round.py save DIR --ci`
-   (it reads CI on HEAD and keeps the egress line), commit and push again.
+   (it reads CI on HEAD and keeps the egress line and the run's note), commit and push again.
 8. **PR against `main`**: at the top what the round needs from the owner, then what changed and why in a few lines, the gate
    section (`python3 tools/round.py render pr DIR`), the sim footprint when it ran, and "anything I'm unsure about". CI must be
    green before the owner merges (a flake, or a red the PR did not cause: re-run once and say so, HOWTO "CI").
