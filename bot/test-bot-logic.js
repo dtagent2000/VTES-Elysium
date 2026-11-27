@@ -17193,7 +17193,8 @@ async function connectWithRetry(client, tries = 30){
        (p) a card line's action: an attempt left at an earlier action (the prey's, or another seat's) does not stand at it; (q) a record
        stays at its own action's card (the row first, then the minion's card); (r) a stray attempt by a seat that may not block shadows
        no legal one, at the blocking bot and at the acting bot. Pass 3: (s) the prey's decline while my pool question is open counts,
-       typed too, and a record no It resolves ended takes no word on the next action; (m) a superseded staked record gets its note.
+       typed too, and a record no It resolves ended takes no word on the next action; (m) a superseded staked record gets its note;
+       (t) a bot's reaction line is no newer action (the 240 after pass 3's first fix).
        LAST LINE OF 189 is the closing brace below. */
     {
       console.log('\n[189] v0.6.245 -- one block attempt at a time (11.11), a human’s No (4.25), the turn-end note (11.12)');
@@ -17516,6 +17517,19 @@ async function connectWithRetry(client, tries = 30){
         ok(typed.wf === null && typed.said.includes('Block!') && early.said.length === 0 && !early.inside && late.wf === null && late.said.includes('Block!') && early2.length === 0,
            '189s the prey’s decline while my pool question is open counts, typed too; a record no It resolves ended takes no word on the next action, and an attempt left at it is not inside it (got ' + JSON.stringify({ typed, early, late, early2 }) + '; pass 3: the typed word was swallowed, the old record opened on it, and the decline read as inside the old attempt)');
         quiet9(R); }
+
+      // t) the sim's 240 after pass 3: a bot's play line names the card, then ': …' -- a reaction card's line is no newer action (between bots the predator weighs after its prey's decline, as before)
+      { const P = mk9('Hanna', 2, PA); P.board = [V9('p8', 'Colette', 4)]; P.hand = []; blocks9(P, true);
+        P.table = { 3: { pub: { pool: 20, cards: [{ id: 'v3', name: 'Chelsea Blake (G6)', kind: 'crypt', zone: 'ready', locked: true, blood: 4 }] } } };
+        P._onLog('Viktor', 'Chelsea Blake (G6) hunts.');   // Viktor's prey is Lisa, his predator Hanna
+        const born = P.pending && P.pending.waitingFor;
+        P._onLog('Lisa', 'Ayelech plays Eyes of Argus: may react as though unlocked.'); P._onLog('Lisa', 'Ayelech attempts to block.');
+        P._onLog('Viktor', 'Block: Stealth 1 vs Intercept 0 — block fails.'); await sleep(20);
+        P._onSay({ who: 'Lisa', i: SI('No block') }); await sleep(120);
+        const r = { born, isAct: P._obsIsAction({ card: 'Eyes of Argus: may react as though unlocked' }), wf: P.pending && P.pending.waitingFor, said: P.says.slice() };
+        ok(born === 'Lisa' && r.isAct === false && r.wf === null && r.said.includes('Block!'),
+           '189t a bot’s reaction line (the card, then ": …") is no newer action: the bot prey’s decline opens the predator’s window (got ' + JSON.stringify(r) + '; 9461301: the line read as an unknown card, an action, and the predator never weighed -- the 240 diverged in 16 matches)');
+        quiet9(P); }
     }
 
 

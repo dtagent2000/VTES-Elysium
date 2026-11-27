@@ -11694,8 +11694,9 @@ class Bot {
   _obsIsAction(o){                   // (finding 4) is a remembered line an ACTION (a new one, after the last) -- an action row, or a card played as an action -- and not a modifier, reaction or combat card
     if(!o) return false;
     if(!o.card) return /^(bleeds for|hunts|calls a political action|attempts to rescue|takes an undirected action|takes a card action|commits diablerie)/.test(o.verb || '');
-    const mm = String(o.card).match(/^(.+?) \[[a-zA-Z]+\]$/), h = this.fxLookup(mm ? mm[1] : o.card);
-    return !h || h.kind !== 'lib' || (h.e.t || []).some(t => t === 'action' || t === 'political' || t === 'ally' || t === 'equip' || t === 'retainer');
+    const look = c => { const mm = c.match(/^(.+?) \[[a-zA-Z]+\]$/); return this.fxLookup(mm ? mm[1] : c); };
+    const raw = String(o.card), h = look(raw) || look(raw.replace(/\s*(?::|\u2014|--)\s.*$/, '').trim());   // a bot's play line names the card, then ': …' or ' — …' before its period (a human's ends at the card): the sim's 240 diverged on a bot's 'plays Eyes of Argus: may react as though unlocked.'
+    return !!(h && h.kind === 'lib' && (h.e.t || []).some(t => t === 'action' || t === 'political' || t === 'ally' || t === 'equip' || t === 'retainer'));   // an unknown card is no action: no supersede and no overtaking, as before them
   }
   _preyDeclined(who, via){           // the prey's word at an undirected action I am the predator of: a decline opens my window; inside the prey's own standing attempt it resolves that attempt (B: everybody passed), and I go on waiting
     const p = this.pending; if(!p || !p.waitingFor || p.waitingFor !== who) return false;
