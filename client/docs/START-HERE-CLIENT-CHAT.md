@@ -17,11 +17,13 @@ origin/main` before a PR; CI runs it on the PR's added lines.
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.191** (BLOOD ON THE WHEEL, pure client: a key held while scrolling on a card moves blood between it and your pool -- Settings ▸ Table picks the key, Shift by default; two unbound shortcuts do the same; a double-click of the middle button resets the view; bot v0.6.242's guide embedded. Before: v2.6.190, THE PUBLIC REPOSITORY, PR #116. Every release since v1.4: `docs/elysium-CHANGELOG.md`) | `client/elysium-vtes-bord.html`, copied to `/` |
-| server | **srv-2.6.54**, unchanged at v2.6.191 (THE PUBLIC REPOSITORY, comments only; every token is srv-2.6.53's but the VERSION line. Before: srv-2.6.53, THE SEARCH IS TOLD) | `client/elysium-server.js`, copied to `/` |
+| client | **v2.6.192** (THE TOUR LEARNS THE WHEEL, pure client: the tutorial teaches v2.6.191's controls -- the middle button's double-click in Classic's zoom step and the Overview note, the move key + scroll in Crypt and influence's pool step. Before: v2.6.191, BLOOD ON THE WHEEL, PR #117. Every release since v1.4: `docs/elysium-CHANGELOG.md`) | `client/elysium-vtes-bord.html`, copied to `/` |
+| server | **srv-2.6.54**, unchanged at v2.6.191 and v2.6.192 (THE PUBLIC REPOSITORY, comments only; every token is srv-2.6.53's but the VERSION line. Before: srv-2.6.53, THE SEARCH IS TOLD) | `client/elysium-server.js`, copied to `/` |
 | bot (consumed) | **v0.6.242** beside the suite (the bundle's cleanup release, consumed at v2.6.191: `docs/handoffs/REPLY-to-bot-2026-11-27-v0.6.242.md`, which also carries the owner's answer to O-46. Before: v0.6.241, consumed at v2.6.189) | the 8-file bundle at `/` and in `bot/` -- never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.191 / srv-2.6.54 (the header only: no verb, field or line) | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **439/0** (bot v0.6.242 beside, no skips; v2.6.190 against the new suite 432/7: the embed check and the six new tests) · twelve mutations of the new code, each caught · dispatch 103/0 · protocol 6/0 · canary 283/0 · endpoint 40/0 · soak `--control` fired · both embed checks · B1 byte-identical · check-versions green incl. the root and `SHA256SUMS` · public-scan `--diff` clean · headless Chrome with real wheel, key and middle-button events 17/17 (v2.6.190 fails the gestures) | run from `client/` |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.192 / srv-2.6.54 (the header only: no verb, field or line) | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **440/0** (bot v0.6.242 beside, no skips; v2.6.191 against the new suite 439/1: the tutorial test) · four mutations of the texts, each caught · dispatch 103/0 · protocol 6/0 · canary 283/0 · endpoint 40/0 · soak `--control` fired · both embed checks · B1 byte-identical · check-versions green incl. the root and `SHA256SUMS` · public-scan `--diff` clean · headless Chrome, the three steps and their gestures 12/12; v2.6.191: the wheel's gestures 17/17 | run from `client/` |
+
+**Deploy v2.6.192 (THE TOUR LEARNS THE WHEEL, 27 Nov):** purge the client; the server is unchanged. If v2.6.191 (PR #117) is not live yet, the one purge covers it (and its bot purges, below).
 
 **Deploy v2.6.191 (BLOOD ON THE WHEEL, 27 Nov):** purge the client; the server is unchanged (srv-2.6.54). Bot v0.6.242 reached main with its own PR: if `/elysium-bot.js` and `/elysium-cardfx.json` were not purged then, purge them now. If v2.6.190 is not live yet, the one purge covers it (its server restart as below).
 
@@ -43,7 +45,7 @@ head -40 docs/elysium-learnings.md
 # the bundle beside the suite (gitignored — copy, never commit):
 cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .
 node check-versions.js             # must end green: code, doc headers, AND the root == client/ + bot/ gate
-node test-client-logic.js          # 439 passed, 0 failed (with the bundle beside)
+node test-client-logic.js          # 440 passed, 0 failed (with the bundle beside)
 python3 tools/public-scan.py --diff origin/main   # before a PR: no chat quotes, no names of private persons
 ```
 
@@ -86,8 +88,10 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
    The owner merges.
 8. Update this file's version block when a release went out.
 
-## Open right now (27 Nov 2026, after v2.6.191)
+## Open right now (27 Nov 2026, after v2.6.192)
 
+- **Built in v2.6.192 (on the owner's go):** the tutorial teaches the wheel (journal: TUTORIALEN LÄR SIG HJULET). The three steps
+  were checked one by one in a browser; the chapters were not run end to end.
 - **Built in v2.6.191 (on the owner's go):** the move between a card's blood and your pool on a key + scroll, its two shortcuts, the
   middle button's double-click; bot v0.6.242 consumed (`client/CLAUDE.md` top entry; journal: BLOD PÅ HJULET). Built in v2.6.190:
   the public repository (the data repo's pull request with `client-history/` and the words file goes first).

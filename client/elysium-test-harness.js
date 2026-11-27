@@ -496,6 +496,7 @@ function loadClient(htmlPath, opts) {   // v2.6.74: opts.storage = {key:value} s
   get _mclick(){ return (typeof _mclick!=='undefined')?_mclick:undefined; }, set _mclick(v){ if(typeof _mclick!=='undefined') _mclick=v; },   // a test-only door: the v2.6.181 test's presses would make a double-click
   get _lastBoardHover(){ return (typeof _lastBoardHover!=='undefined')?_lastBoardHover:undefined; }, set _lastBoardHover(v){ if(typeof _lastBoardHover!=='undefined') _lastBoardHover=v; },
   set l3zoom(v){ if(typeof l3zoom!=='undefined') l3zoom=v; },
+  tutXferKey: (typeof tutXferKey!=='undefined'?tutXferKey:undefined),   // v2.6.192: the tutorial names the move's key
   startListen: (typeof startListen!=='undefined'?startListen:undefined), captureKey: (typeof captureKey!=='undefined'?captureKey:undefined), phaseMax: (typeof phaseMax!=='undefined'?phaseMax:undefined),   // v2.6.191: a shortcut bound by hand (the steal) and the Influence helper's count
   saveMatchName: (typeof saveMatchName!=='undefined'?saveMatchName:undefined), saveMatchSend: (typeof saveMatchSend!=='undefined'?saveMatchSend:undefined), saveMatchNow: (typeof saveMatchNow!=='undefined'?saveMatchNow:undefined),   // v2.6.184: the saves dialog
   saveExistsAsk: (typeof saveExistsAsk!=='undefined'?saveExistsAsk:undefined), renderSaves: (typeof renderSaves!=='undefined'?renderSaves:undefined), openSaves: (typeof openSaves!=='undefined'?openSaves:undefined),

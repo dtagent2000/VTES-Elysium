@@ -7937,6 +7937,31 @@ test('v2.6.191 the middle button\'s double-click resets the view as the reset bu
   assert(rows.indexOf('Scroll on the felt (in a room)') === -1, 'and no longer says the felt\'s wheel cycles view levels');
 });
 
+/* ---------- v2.6.192: THE TOUR LEARNS THE WHEEL -- the tutorial teaches v2.6.191's controls (27 Nov 2026) ---------- */
+test('v2.6.192 the tutorial teaches the wheel -- Classic\'s zoom step and the Overview note name the middle button\'s double-click; Crypt and influence\'s pool step names the move key + scroll by the key Settings holds, and says nothing when the move is off; the v2.6.181 panning sentences and the step\'s gate stay; the move passes that gate', () => {
+  const A = loadClient(CLIENT);
+  if (typeof A.tutXferKey !== 'function') throw new Error('tutXferKey missing (before v2.6.192)');
+  const T = id => { for (const k of Object.keys(A.TUT_SECTIONS)) { const st = (A.TUT_SECTIONS[k].steps || []).find(s => s.id === id); if (st) return st; } return null; };
+  const txt = s => (typeof s.text === 'function' ? s.text() : s.text);
+  const zoom = T('ci-zoom'), note = T('si-overview-note'), pool = T('cc-pool');
+  assert(zoom && note && pool, 'the three steps are there');
+  assert(txt(zoom).indexOf('or hold down the <b>mouse wheel</b> and drag, from anywhere on the table.') > -1, 'Classic: the pan, as v2.6.181 taught it');
+  assert(txt(zoom).indexOf('snaps the view back to the start &mdash; and so does a <b>double-click of the mouse wheel</b>.') > -1, 'Classic: the double-click beside the reset button');
+  assert(txt(note).indexOf('(hold down the <b>mouse wheel</b> and drag to pan from anywhere). A <b>double-click of the mouse wheel</b> puts the whole table back in view.') > -1, 'the Overview note: the pan, then the double-click');
+  A.conv.xferWheel = 'shift'; eq(A.tutXferKey(), 'Shift');
+  assert(txt(pool).indexOf('<b>Shift+scroll</b> on a vampire moves blood from your pool onto it, and scrolling down moves it back &mdash; at any point in the game (Settings ▸ Table picks the key).') > -1, 'the pool step names the move: ' + txt(pool));
+  A.conv.xferWheel = 'ctrl'; assert(txt(pool).indexOf('<b>Ctrl+scroll</b>') > -1 && txt(pool).indexOf('Shift+scroll') === -1, 'it names the key the player chose');
+  A.conv.xferWheel = 'off'; eq(A.tutXferKey(), '');
+  eq(txt(pool), 'That blood is paid from your <b>pool</b> &mdash; lower the pool glob the same way (scroll, Ctrl/Shift+click, or the +/− buttons).', 'the move off: the step as it was');
+  A.conv.xferWheel = 'shift';
+  assert(String(pool.gate).indexOf('state.pool<tut._poolBase') > -1, 'the gate is unchanged: a lower pool');
+  A.clearTable({}); A.state.pool = 20; A.toast = () => {};
+  const v = A.makeCard('Tour Vampire', 'crypt'); A.move(v, 'uncontrolled', { x: 30, y: 20, faceDown: true });
+  A.tut._poolBase = A.state.pool; eq(pool.gate(), false, 'not yet');
+  v.wlast = 0; A.cardWheel(v, { deltaY: -100, deltaX: 0, shiftKey: true, preventDefault(){}, stopPropagation(){} });
+  eq(v.blood, 1); eq(A.state.pool, 19); eq(pool.gate(), true, 'the gesture it teaches passes the step (a Tournament tutorial game: the helpers are off, so the move itself pays)');
+});
+
 /* ---------- async sections run after the sync battery, then the summary ---------- */
 (async () => {
   for (const [name, fn] of asyncTests){
