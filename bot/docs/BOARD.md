@@ -25,7 +25,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
   §11.10). **D**, the starters' remainder where a
   starter needs it, with its strategy baseline. Crypt waves (D-108): B = the rest by class, the 13 partial copies first. A deck
   joins the menu by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check`
-  compares them). The root README credits zero-vtes (D-125; main's, handoff). *Done when* C's horizon is reached, the 18
+  compares them). *Done when* C's horizon is reached, the 18
   starters' rows are playable, every hand-only key has its sharing answer and C's riders are done or ruled out. Docs: RULINGS
   D-84, D-102, D-104, D-108, D-125 – D-127, D-130, D-132, D-134, D-135; `CARDS.md`; HOWTO.
 - **The official deck guides as each deck's strategy baseline** (the owner, 29 Oct; refined by the archetypes): D-112 checks each

@@ -14,23 +14,22 @@
 <!-- /round.py:gates -->
 
 ## Next (the owner's order of 26–27 Nov: D-144, D-145, D-147, D-148)
-1. **C1c** (D-148 (2)): the cross-check compares each side's price and condition, not only the number (the agreeing rows' sample:
-   6 of 60 wrong on our side, `reports/REPORT-c1b-2026-11-27.md`), and reads a second sample of the agreeing rows.
+1. **C1c** (D-148 (2)): the cross-check compares the price and the condition beside the number; a second sample of the agreeing
+   rows is read (`reports/REPORT-c1b-2026-11-27.md`).
 2. **Main's replies** (D-148 (3)), a round of their own: "Not yet consumed" below.
-3. **The first readers' round** (D-132): its design to the owner first (spec §11.6: who moves the counter when a human plays a
-   stealth card, a number entered both ways counted once) and the bundle's exactness field (D-144 (2)). Then C2, combat.
+3. **The first readers' round** (D-132): its design to the owner first (spec §11.6) and the bundle's exactness field (D-144 (2)).
+   Then C2, combat.
 4. The register's 8.3 and 11.1: a small release each (D-135).
 5. The owner's answers, then a PR each: O-53 (the playtests' table questions; the resolution panel is main's, a handoff) and O-52
    (the pool floor); Cloak the Gathering (8.7) and Raven Spy (1.3). Then the owner playtests the combined version.
 6. Faceless Night [OBF] (10.1) waits for its design. Still open: O-51; asked 20 Nov, no go-ahead: the pilot's flow proposals,
    BOARD's read-through, class 1's design question (R-47); C's riders; the fizzle misread; Q4; C5; C6; the abstract table's later
-   layers (O-32); class 14; `ana-windows.py` and the floor; the steal-pair debt; 7.7 and 10.23 (D-148 (1)).
+   layers (O-32); class 14; `ana-windows.py` and the floor; the steal-pair debt.
 
 ## Not yet consumed from main
 Client v2.6.187 (#102), v2.6.188 (#104), v2.6.189 (#115), v2.6.190 (#116, comments only), v2.6.191 (#117: a human's blood and pool
 moves, no wire change; its reply relays the owner's answer on O-46, no tempo wait: close it) and v2.6.192 (#118, the tutorial's
 texts). v2.6.189's reply (`client/docs/handoffs/REPLY-to-bot-2026-11-26-v0.6.241.md`) answers eight handoffs (the queued bridge,
-v0.6.235, the guide for v2.6.179, the licence, v0.6.236, v0.6.237, v0.6.240, v0.6.241): to consume in a bot round (its items built
-or declined, the handoffs moved to history, the copies refreshed to the root's release / canary v1.7.0, `bot/README.md` to point
-at the root `LICENSE`). Open: the public repository (main set its own scope, the reply's §6); v0.6.243's guide (301 curated) to
-re-embed.
+v0.6.235, the guide for v2.6.179, the licence, v0.6.236, v0.6.237, v0.6.240, v0.6.241): its items built or declined, the handoffs
+to history, the copies refreshed to the root's release / canary v1.7.0, `bot/README.md` pointing at the root `LICENSE`. Open: the
+public repository (main's own scope, the reply's §6); the guide (301 curated) to re-embed.

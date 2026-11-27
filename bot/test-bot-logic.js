@@ -17139,7 +17139,7 @@ async function connectWithRetry(client, tries = 30){
         const stakes = hand => { const { u, v, av } = mkA(hand, 'l2'); u.tally = { mode: 'block', a: 0, b: 1 }; let ctx = null; const dec = u.decide.bind(u);
           u.decide = (q, c) => { if(q === 'spend-stealth'){ ctx = c; return { spend: false, tag: 'probe' }; } return dec(q, c); };
           const st = u._bestStealthFor(v, av.played, 2); u._stealthFirstLook('Viktor', av, { contested: true }, st); return ctx ? ctx.stakes : null; };
-        const second = hand => { const { u, av } = mkA(hand, 'l3'); u.tally = { mode: 'block', a: 0, b: 1 }; u._ask = { contested: true }; let ctx = null; const dec = u.decide.bind(u);
+        const second = hand => { const { u } = mkA(hand, 'l3'); u.tally = { mode: 'block', a: 0, b: 1 }; u._ask = { contested: true }; let ctx = null; const dec = u.decide.bind(u);
           u.decide = (q, c) => { if(q === 'spend-stealth'){ ctx = c; return { spend: false, tag: 'probe' }; } return dec(q, c); };
           u._stealthSecondLook(); return ctx ? ctx.stakes : null; };
         const keepOf = (hand, cm) => { const { u, v, av } = mkA(hand, 'l5'); if(cm) u._combatMind = () => true; const st = u._bestStealthFor(v, av.played, 2); return st ? st.name : null; };
