@@ -13,16 +13,18 @@
 `tools/gates.sh` on `docs-diet` `eb0f3c8` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 16 · FAIL 0 · SKIPPED 0 — check 35 of 35 scripts parse · lint clean · canary 235/0 · canary-root 235/0 · cardfx 516/0 · precon 18 precons, no problems · ledger-self 81/0 · sheet-self 23/0 · cross-self 19/0 · ana-gates-self 35/0 · hb1 11/0 (0 skip) · doc-budget bootstrap 39238 / 50000 · standing pages 183455 / 184000 · public-scan-self 35/0 · round-self 24/0 · public-scan 0 hits in 0 files · test-doc-budget every case red, the baseline and the allowed moves green. CI's suite 2841/0 ×3, `bot-gates` success on `cca8d0c`.
 <!-- /round.py:gates -->
 
-## Next (the owner's order of 26–27 Nov: D-144, D-145)
-1. **C1b**: the fidelity pass of the other 13 V5 decks reads their flagged cards (D-138, D-144 (1)), with the family's second pass on
-   the 29 "extra cost" flags (spec §11.7). Before C1b or as its first part (the owner's order): the card chain (a reader gate,
-   scenario tests per card), the proposal the owner said yes to after C1; its design questions go on that round's card.
-2. **The first readers' round** (D-132): its design to the owner first (spec §11.6: who moves the counter when a human plays a
+## Next (the owner's order of 26–27 Nov: D-144, D-145, and his yes after C1 to the card chain)
+1. **The card chain**, before C1b: a reader gate (a corrected key or shape no code reads fails), scenario tests per card through
+   the bot's real path, a sample of the agreeing rows read, the decks in play first; its design questions on that round's card.
+   The readers' output is a data file beside the round's report (D-145).
+2. **C1b**: the fidelity pass of the other 13 V5 decks reads their flagged cards (D-138, D-144 (1)), with the family's second
+   pass on the 29 "extra cost" flags (spec §11.7).
+3. **The first readers' round** (D-132): its design to the owner first (spec §11.6: who moves the counter when a human plays a
    stealth card, a number entered both ways counted once) and the bundle's exactness field (D-144 (2)). Then C2, combat.
-3. The register's Bonding [DOM] (10.17) and Protection Racket (7.5, its reader: 7.6), then 8.3 and 11.1: a small release each (D-135).
-4. The owner's answers, then a PR each: O-53 (the playtests' table questions; the resolution panel is main's, a handoff) and O-52
+4. The register's Bonding [DOM] (10.17) and Protection Racket (7.5, its reader: 7.6), then 8.3 and 11.1: a small release each (D-135).
+5. The owner's answers, then a PR each: O-53 (the playtests' table questions; the resolution panel is main's, a handoff) and O-52
    (the pool floor); Cloak the Gathering (8.7) and Raven Spy (1.3). Then the owner playtests the combined version.
-5. Faceless Night [OBF] (10.1) waits for its design. Still open: O-51; main's v2.6.187–188 (the guide, the copies, the canary
+6. Faceless Night [OBF] (10.1) waits for its design. Still open: O-51; main's v2.6.187–188 (the guide, the copies, the canary
    cases for `BLOCKED_LOCK` and `RIDER_STEALTH`); asked 20 Nov, no go-ahead: the pilot's flow proposals, BOARD's read-through,
    class 1's design question (R-47); C's riders; the fizzle misread; Q4; C5; C6; the abstract model; class 14; `ana-windows.py` and
    the floor; the steal-pair debt.
