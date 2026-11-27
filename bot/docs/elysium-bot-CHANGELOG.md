@@ -21,8 +21,8 @@ The entries of 9 Sep – 27 Nov 2026 (bot v0.1 to v0.6.243 and the rounds withou
   stake); a human blocker's Pass resolves the human's own attempt, and is no decline; a later attempt keeps the actor's booked
   stealth. Riders (D-92): a human's No answers a block question (4.25); the turn-end note is silent at 0 pool and names the action
   otherwise, a human's 0-pool record closing at the bot's decline (11.12). Register 11.13–11.16 new. Section 189.
-  *Gates:* `tools/gates.sh --sim` on `r11-11` `28a0158` + the working tree (27 Nov; bytes `73e5440d` / `bc5ff9d5` / cardfx `21ef103f`): PASS 20 · FAIL 0 · SKIPPED 0 (sim-240 240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 73e5440d bc5ff9d5 21ef103f). CI's suite ×3: not read.
-  *Egress:* 14 findings (half-done 11, unproven 2, stale-doc 1) in 3 passes (Opus 5, Fable 4, Fable 5), 13 fixed, 1 listed
+  *Gates:* `tools/gates.sh --sim` on `r11-11` `e22196d` + the working tree (27 Nov; bytes `3469092a` / `3c72d3e7` / cardfx `21ef103f`): PASS 20 · FAIL 0 · SKIPPED 0 (sim-240 240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 3469092a 3c72d3e7 21ef103f). CI's suite ×3: not read.
+  *Egress:* 19 findings (half-done 15, unproven 2, stale-doc 2) in 4 passes (Opus 5, Fable 4, Fable 5, Fable 5), 18 fixed, 1 listed
   *Report:* `reports/REPORT-11-11-2026-11-27.md`.
 
 - **C1b (27 Nov 2026, bot v0.6.244; PR #121)** — D-148 (the owner's card). The card chain's gaps fixed:

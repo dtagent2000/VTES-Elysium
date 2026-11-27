@@ -24,7 +24,8 @@ and no frozen line: the 240-match sim is IDENTICAL to v0.6.244's with the versio
   ("referendum" and "vote N" for a political action; "@<bot> bleed N" when the actor is not that bot's predator, as the damage
   grammar needs). A human who never says It resolves and starts the next action with "Any blocks?" gets the same note at once
   for the record it ends, when pool was at stake (`Note: an unresolved bleed at me was overtaken by <who>’s next action — if it
-  landed, tell me "bleed N".`; "…was still unresolved when their next action began…" for another action).
+  landed, tell me "bleed N".`; "…was still unresolved when their next action began…" for another action). Its phrase is read
+  while the bot's next pool question is open.
 
 ## 3. Asks
 1. Re-embed the guide (your embed test compares the whole of it); the v0.6.244 handoff's re-embed is folded into this one.

@@ -3,7 +3,7 @@
  "tool": "tools/gates.sh",
  "date": "2026-11-27",
  "branch": "r11-11",
- "head": "28a0158",
+ "head": "e22196d",
  "dirty": true,
  "base": "origin/main",
  "merge_base": "60c59e8",
@@ -15,8 +15,8 @@
   "bot": 14
  },
  "bytes": {
-  "elysium-bot.js": "73e5440d",
-  "test-bot-logic.js": "bc5ff9d5",
+  "elysium-bot.js": "3469092a",
+  "test-bot-logic.js": "3c72d3e7",
   "elysium-cardfx.json": "21ef103f"
  },
  "gates": [
@@ -30,7 +30,7 @@
    "gate": "lint",
    "result": "PASS",
    "count": "lint: clean",
-   "seconds": 5
+   "seconds": 6
   },
   {
    "gate": "canary",
@@ -42,7 +42,7 @@
    "gate": "canary-root",
    "result": "PASS",
    "count": "235/0",
-   "seconds": 2
+   "seconds": 1
   },
   {
    "gate": "cardfx",
@@ -54,7 +54,7 @@
    "gate": "precon",
    "result": "PASS",
    "count": "18 precons, no problems",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "ledger-self",
@@ -77,8 +77,8 @@
   {
    "gate": "table-self",
    "result": "PASS",
-   "count": "abstract table 1.0.0: 6/0 (390 ms)",
-   "seconds": 0
+   "count": "abstract table 1.0.0: 6/0 (425 ms)",
+   "seconds": 1
   },
   {
    "gate": "reader",
@@ -113,7 +113,7 @@
   {
    "gate": "doc-budget",
    "result": "PASS",
-   "count": "bootstrap 39318 / 50000 · standing pages 186879 / 187000",
+   "count": "bootstrap 39337 / 50000 · standing pages 186898 / 187000",
    "seconds": 0
   },
   {
@@ -137,8 +137,8 @@
   {
    "gate": "sim-240",
    "result": "PASS",
-   "count": "240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 73e5440d bc5ff9d5 21ef103f",
-   "seconds": 346
+   "count": "240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 3469092a 3c72d3e7 21ef103f",
+   "seconds": 329
   }
  ],
  "totals": {
@@ -147,6 +147,6 @@
   "SKIPPED": 0,
   "NOT RUN": 0
  },
- "seconds": 427,
- "egress": "14 findings (half-done 11, unproven 2, stale-doc 1) in 3 passes (Opus 5, Fable 4, Fable 5), 13 fixed, 1 listed"
+ "seconds": 410,
+ "egress": "19 findings (half-done 15, unproven 2, stale-doc 2) in 4 passes (Opus 5, Fable 4, Fable 5, Fable 5), 18 fixed, 1 listed"
 }
