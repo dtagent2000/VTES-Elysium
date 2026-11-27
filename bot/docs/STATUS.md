@@ -5,7 +5,7 @@
 <!-- /round.py:versions -->
 
 <!-- round.py:deploy -->
-**Deploy state** (read at the round's end, 27 Nov): `main` `77c5ded` carries bot v0.6.243 at the root, with client v2.6.192 / srv-2.6.54. Open pull requests: #119 `docs-diet` (draft); the private data repo: #8 `words-d145-2026-11-27`.
+**Deploy state** (read at the round's end, 27 Nov): `main` `77c5ded` carries bot v0.6.243 at the root, with client v2.6.192 / srv-2.6.54. Open pull requests: #119 `docs-diet`; the private data repo: #8 `words-d145-2026-11-27`.
 <!-- /round.py:deploy -->
 
 <!-- round.py:gates -->
