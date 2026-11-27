@@ -1252,7 +1252,7 @@ test('srv-2.6.46 the snapshot round-trips tableLayout, re-validated: a legacy re
   eq(S.roomUnsnap(Object.assign({}, disk, { tableLayout:'huge' })).tableLayout, null, 'a garbled value is dropped');
 });
 
-/* === srv-2.6.47 (the 16 Oct code review, Johan: 'kör A'): names, clans and ids; the WebSocket limits; the admin lockout === */
+/* === srv-2.6.47 (the 16 Oct code review, group A, on the owner's go): names, clans and ids; the WebSocket limits; the admin lockout === */
 function wsPeer(cbOver){                                 // wsAttach on a fake socket: feed client bytes, read what the server wrote back
   const handlers = {}, out = [], got = { msgs: [], ctrl: 0, alive: 0, close: 0 };
   const sock = { destroyed:false, writable:true, write(b){ out.push(Buffer.from(b)); return true; }, end(){}, destroy(){ this.destroyed = true; }, on(ev, fn){ handlers[ev] = fn; }, once(){} };
@@ -1784,7 +1784,7 @@ test('srv-2.6.51 (bot v0.6.221\'s ask) the game is over when every OTHER seat is
   eq(room.turnSeat, 2, 'one opponent left: the prey takes the turn');
 });
 
-/* === srv-2.6.52 THE SAVES HOLD (HeySteev through Johan, 24 Nov 2026) === */
+/* === srv-2.6.52 THE SAVES HOLD (a player's questions, passed on by the owner, 24 Nov 2026) === */
 test('srv-2.6.52 every message that can change what the snapshot stores schedules a write -- 250 ms after a pile, seat, turn, score or roster change, 2 s after a board or hand escrow, the sooner one wins; relays, reads and a socket at no table schedule nothing', () => {
   if (!S.snapAfter || !S._snapCancel) throw new Error('the snapshot scheduler is not exposed (srv-2.6.51 has none)');
   eq(S.SNAP_FAST_MS, 250); eq(S.SNAP_SLOW_MS, 2000);
@@ -1920,7 +1920,7 @@ test('srv-2.6.52 an existing save of the group is replaced only with overwrite:t
   S.saves.clear(); S.rooms.clear();
 });
 
-/* === srv-2.6.53 THE SEARCH IS TOLD (Johan's 'kör G', 24 Nov 2026) === */
+/* === srv-2.6.53 THE SEARCH IS TOLD (item G, on the owner's go, 24 Nov 2026) === */
 test('srv-2.6.53 a search lists the pile by NAME, never in its order, and the server tells the table -- srv-2.6.52 sent it top-first and left the line to the client, so a modified client could read its own library order in silence', () => {
   const { room, cs } = seatTable(['P1', 'P2']);
   const order = ['Zeta', 'Alpha', 'Mid', 'Alpha', 'Beta'];                   // index 4 is the top

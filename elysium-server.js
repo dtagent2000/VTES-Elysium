@@ -11,7 +11,7 @@ const fs     = require('fs');
 const path   = require('path');
 const os     = require('os');
 
-const VERSION = '2.6.53';   // srv-2.6.53 (24 Nov 2026, THE SEARCH IS TOLD -- restart; ships with client v2.6.185; carries srv-2.6.52's THE SAVES HOLD, never deployed, same PR #100): Johan's 'kör G'. A search of your own pile (browse) answers with the names sorted -- srv-2.6.52 sent the pile top-first, so a modified client could read its own library order -- and the server tells the table ('NAME searches their library.'). A fetch from it (pileTake) is found by name, the copy nearest the top (the list's index names no position any more), and told ('NAME fetches a card from their library.' / '... from their crypt to their uncontrolled region.'). A park from the top (reveal) is told ('NAME parks the top 3 cards of their library face down.'). Before, only the client wrote these lines, so a modified client could look or fetch without the table knowing. They are sys lines, sent only at a started table, and none names a card.
+const VERSION = '2.6.54';   // srv-2.6.54 (27 Nov 2026, THE PUBLIC REPOSITORY, comments only -- the automated deploy restarts it when the server is empty; ships with client v2.6.190; no wire change): two comments named a player whose questions reached us through the owner and quoted their words, and this line quoted the owner; they now say it in our own words. Every token is srv-2.6.53's but this line's.
                                // warns on any mismatch when joining). 2.5.38 adds sanHtml() defence-in-depth
                                // on the logTo relay -- the first server logic change since 2.5.30.
 /* v2.5.68 (L1): named flags ride alongside the two positionals.
@@ -897,7 +897,7 @@ const GAME_HANDLERS = {
     shuffle(m.pile === 'crypt' ? p.game.crypt : p.game.lib);
     wsSend(conn.sock, Object.assign({ t:'pileN' }, pileCounts(p.game)));
   },
-  /* srv-2.6.53 (Johan, 24 Nov 2026 -- G, after HeySteev's 'data at rest'): a search of your own pile is the server's to
+  /* srv-2.6.53 (the owner, 24 Nov 2026 -- item G, after a player's question about data at rest): a search of your own pile is the server's to
      announce, and its list says nothing about the order. srv-2.6.52 sent the pile top-first and left the table's line
      ('The library is being browsed.') and the reshuffle to the client, so a modified client could read its own library
      order, or fetch a card, without the table knowing. Now: the list is sorted by name, the server tells the table
@@ -2318,7 +2318,7 @@ function snapshot(sync){
     else writeStore(json);                                // H1-d: the 60s tick no longer blocks the event loop
   }catch(err){ /* persistence is best-effort */ }
 }
-/* srv-2.6.52 (Johan, 24 Nov 2026 -- HeySteev's 'a lost game'): the snapshot went to disk on the 60 s tick and on a
+/* srv-2.6.52 (the owner, 24 Nov 2026 -- after a player's question whether a game can be lost): the snapshot went to disk on the 60 s tick and on a
    clean stop only. Measured on srv-2.6.51 with a real process: kill -9 a minute after the deal brought the table back with
    its library as it was at the tick, so the card drawn since was drawn AGAIN (it was already in the hand); kill -9 inside
    the first minute lost the room ('No such room.'); SIGTERM kept everything. Now every message that can change what

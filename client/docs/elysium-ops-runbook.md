@@ -1,6 +1,6 @@
 # Elysium Ops Runbook — the minimal-maintenance edition
 
-*For Johan, by Claude, 24 July 2026. This is the "for dummies" companion to `elysium-hosting-plan.md`: everything needed to access, update, and un-stick the live server at **https://elysium.cards** — and nothing else. Update this file whenever the ops reality changes.*
+*For the owner, by Claude, 24 July 2026. This is the plain step-by-step companion to `elysium-hosting-plan.md`: everything needed to access, update, and un-stick the live server at **https://elysium.cards** — and nothing else. Update this file whenever the ops reality changes.*
 
 ---
 

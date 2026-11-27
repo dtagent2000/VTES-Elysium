@@ -2,7 +2,7 @@
 
 *Self-contained hand-off, 17 July 2026. A fresh chat can execute this plan from this brief alone. Read `elysium-project-context.md` + `elysium-learnings.md` first as usual. Companion to the retired backlog §4 "VPS hosting" item, which this document supersedes and expands.*
 
-*Status: **DECIDED 17 July 2026 — D1–D7 all locked (Johan: "kör på allt som rekommenderas", D2 = elysium.cards). H1 ✅ + uncertainty round ✅ (srv-2.6.19 is the deploy version); H2+ unblocked.** The domain's availability is finally confirmed only at registration — fallback ladder in §6/D2. Extended the same evening after the final "anything I've missed?" sweep: meta-account hardening (H2 step 0 + threat-model row), the soft launch (H3), OG tags / password placeholder / best-effort About (H4), and the restore drill + bus-factor items (H5). **Del A executed 24 July 2026: elysium.cards REGISTERED at Cloudflare** (first attempt bounced, cause unrecorded — resolved on retry); the availability caveat and fallback ladder are retired, kept for history. **H2 WENT LIVE 24 July 2026, evening: box hardened (zero open ports), srv-2.6.20 under systemd, dashboard-managed tunnel up, elysium.cards serving — byte-identity receipt IDENTISK (edge bytes = origin file).** Remaining H2 tail: EO toggle confirmation, images/vtes.json population (D5), cache rules (Appendix B), apt origins for cloudflared/tailscale (H5). Next: H3 smoke.*
+*Status: **DECIDED 17 July 2026 — D1–D7 all locked (the owner took every recommendation, D2 = elysium.cards). H1 ✅ + uncertainty round ✅ (srv-2.6.19 is the deploy version); H2+ unblocked.** The domain's availability is finally confirmed only at registration — fallback ladder in §6/D2. Extended the same evening after the final "anything I've missed?" sweep: meta-account hardening (H2 step 0 + threat-model row), the soft launch (H3), OG tags / password placeholder / best-effort About (H4), and the restore drill + bus-factor items (H5). **Del A executed 24 July 2026: elysium.cards REGISTERED at Cloudflare** (first attempt bounced, cause unrecorded — resolved on retry); the availability caveat and fallback ladder are retired, kept for history. **H2 WENT LIVE 24 July 2026, evening: box hardened (zero open ports), srv-2.6.20 under systemd, dashboard-managed tunnel up, elysium.cards serving — byte-identity receipt IDENTISK (edge bytes = origin file).** Remaining H2 tail: EO toggle confirmation, images/vtes.json population (D5), cache rules (Appendix B), apt origins for cloudflared/tailscale (H5). Next: H3 smoke.*
 
 ---
 
@@ -127,7 +127,7 @@ Design notes:
 - **Self-host `images/` + `vtes.json` on the VPS (D5, recommended yes):** ~0.5–1 GB disk, served through the existing whitelisted route, edge-cached — guests get instant art on a stable origin and static.krcg.org is spared the load. Refresh manually/quarterly (documented one-liner in the runbook). If declined, the client's krcg-tier fallback continues to work unchanged.
 - **Bots as a consequence, not a scope item:** Trainbots are ws-only and can run ON the VPS against loopback — public bot-filled tables become a `systemd` unit away once the bot track wants it. Noted for the horizon; nothing in this plan depends on it.
 
-## 6. Decisions — LOCKED 17 July 2026 ("kör på allt som rekommenderas" + D2 chosen)
+## 6. Decisions — LOCKED 17 July 2026 (every recommendation taken, D2 chosen)
 
 | # | Decision | DECIDED |
 |---|---|---|

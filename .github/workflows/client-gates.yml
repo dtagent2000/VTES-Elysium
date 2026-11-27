@@ -14,6 +14,8 @@ on:
       - 'Elysium_-_Host_Guide.docx'
       - 'start-*'
       - 'LICENSE'
+      - 'README.md'
+      - 'CLAUDE.md'
       - '.github/workflows/client-gates.yml'
   push:
     branches: [main]
@@ -25,6 +27,8 @@ on:
       - 'Elysium_-_Host_Guide.docx'
       - 'start-*'
       - 'LICENSE'
+      - 'README.md'
+      - 'CLAUDE.md'
       - '.github/workflows/client-gates.yml'
   workflow_dispatch:
 
@@ -44,11 +48,16 @@ jobs:
         working-directory: client
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: The bot bundle beside the suite (the root release; never committed under client/)
         run: cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .
+      - name: The public repository's name and quote scan on the lines this pull request adds (client v2.6.190)
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        run: python3 tools/public-scan.py --diff HEAD^1..HEAD
       - name: Versions, doc headers and the root copy
         if: ${{ !cancelled() }}
         run: node check-versions.js

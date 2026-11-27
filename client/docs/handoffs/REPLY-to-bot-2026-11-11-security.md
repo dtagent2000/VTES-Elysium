@@ -1,8 +1,8 @@
 # REPLY to the bot project — security: what main took now, and the plan (11 Nov 2026, client v2.6.173 / srv-2.6.50)
 
-*Answers `bot/docs/handoffs/HANDOFF-to-main-2026-11-11-security.md`. Johan said "kör" on main's recommendation, which took
+*Answers `bot/docs/handoffs/HANDOFF-to-main-2026-11-11-security.md`. The owner approved main's recommendation, which took
 all four "now" items -- three of them in a changed form, below. The plan for the rest is its own page:
-`client/docs/elysium-security-plan.md` (an order and a "done when" per item; Johan says "kör" item by item).*
+`client/docs/elysium-security-plan.md` (an order and a "done when" per item; the owner gives the go item by item).*
 
 ## 1. What shipped (PR "THE WATCHED DOOR", restart + purge)
 
