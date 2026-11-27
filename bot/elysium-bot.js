@@ -1459,6 +1459,7 @@ class Bot {
         if(this._standing && m.mode !== 'block'){   // v0.6.245 (11.11): the counter left block mode -- the attempt that stood is over: withdrawn (closed), or a combat began (it succeeded with no verdict line, as two humans may play it)
           const s0 = this._standing, p0 = this.pending; this._standing = null;
           if(m.mode === 'combat' && p0 && !p0.blockerVamp && !p0.routeVamp && s0.at >= (p0.annAt || 0) && !this.out) this._verdictAsTarget(true);   // another seat blocked the action: my record of it ends, no combat of mine
+          else this._standingEnded();   // withdrawn (the counter closed): a window it held opens again
         }
         if(this._phaseWait && m && m.mode === 'combat' && m.who && m.who !== this.o.name) this._phaseNudge(m.who, m.ph, 'tally');   // v0.6.165: a human stepping ph past the step answers it
         if(m && m.who !== this.o.name) this._fTallyAt = Date.now();   // v0.6.147: a counter written by SOMEBODY ELSE reached me -- the relay carries tally, the net below stands down
@@ -8878,7 +8879,7 @@ class Bot {
     if(!this.pending || this.out) return;
     const p = this.pending;
     if(p.passTimer) clearTimeout(p.passTimer);
-    { const sa = this._standingFor(p); if(sa){ this.o.log('react window: ' + sa.who + '’s block attempt (' + (sa.vamp || 'a minion') + ') stands -- nothing of mine until its verdict'); return; } }   // v0.6.245 (11.11, part 1): one attempt at a time -- its verdict line reopens this window (_verdictAsTarget), its success ends my record
+    { const sa = this._standingFor(p); if(sa){ p._held = sa.who; this.o.log('react window: ' + sa.who + '’s block attempt (' + (sa.vamp || 'a minion') + ') stands -- nothing of mine until its verdict'); return; } p._held = null; }   // v0.6.245 (11.11, part 1): one attempt at a time -- its verdict line reopens this window (_verdictAsTarget), its success ends my record, an end with no verdict reopens it too (_standingEnded)
     if(p.lateWait) this._lateWordEnd(p, 'answer');   // v0.6.237: the human actor's modifier ended the wait for their word -- here, before the early returns (the egress review, pass 2: a Pass below left the wait live, and it swallowed the actor's It resolves)
     p._lateGen = (p._lateGen | 0) + 1;              // and a late bounce already on its beat (_lateWordGo) is void: this evaluation decides
     if(this._blockBar && this._blockBar.who === p.who && this._blockBar.bar !== 'allies' && !p.declined){ p.declined = true; p.barred = this._blockBar.card; this.o.log('react window: ' + this._blockBar.card + ' \u2014 my vampires cannot block this action (reactions only)'); this._emit('block-barred', { by: p.who, card: this._blockBar.card }); }   // v0.6.127 (L12.blockBar): every blocker I have is a vampire -- the block is off the table, a bounce or a reducer is not
@@ -8938,7 +8939,7 @@ class Bot {
     p.passTimer = setTimeout(() => {
       p._thinkQ = false;   // v0.6.204 (F6): my answer goes out now -- a thinking line after it would be out of order
       if(this.pending !== p || this.out) return;
-      { const sa = this._standingFor(p); if(sa){ this.o.log('react window: ' + d.why + ' -- but ' + sa.who + '’s block attempt (' + (sa.vamp || 'a minion') + ') stands: nothing of mine until its verdict'); return; } }   // v0.6.245 (11.11, part 1): it came in my react delay
+      { const sa = this._standingFor(p); if(sa){ p._held = sa.who; this.o.log('react window: ' + d.why + ' -- but ' + sa.who + '’s block attempt (' + (sa.vamp || 'a minion') + ') stands: nothing of mine until its verdict'); return; } }   // v0.6.245 (11.11, part 1): it came in my react delay
       if(this._archonFor(p)){ this._maybeArchon(p); return; }   // v0.6.215 (V5 wave 3): a bleed of 4+ at me and Archon Investigation in hand -- I decline the block (only my minions may block a bleed at me) and burn the bleeder: worth more than a bounce (the 4+ goes nowhere) and than a block (no combat to win)
       if(d.bounce && bounce && this.o.lateBounce !== 0 && p.declined && !actorP.bot){
         if(p.lateDue && p._lateWord){ this.o.log('react window: ' + d.why + ' \u2192 ' + p.who + ' gave the word in my react delay (' + p._lateWord + '): the bounce on the total now'); this._lateBounceNow(p); }   // the egress review, pass 2: the word came while I weighed the modifier -- it stands
@@ -10802,11 +10803,12 @@ class Bot {
       if(v && !v.locked){ v.locked = true; this._emit('relock', { vamp: v.name, card: rl.card, why: reason }); this.note(v.name + ' locks again: it did not block this action (' + rl.card + ').'); this.push(); } });
   }
   _expiredNote(p){                   // v0.6.245 (the sweep register 11.12): the turn-end note names what expired -- a bleed is a bleed; any other action with my pool at stake says whose action it was
-    const n = p.amount | 0;
-    if(p.kind === 'bleed') return 'Note: an unresolved bleed at me expired with the turn — if it landed, tell me "bleed ' + n + '".';
-    const pol = p.sub === 'political' || !!p.political;
-    return 'Note: ' + p.who + '’s ' + (pol ? 'referendum' : 'action') + (p.card ? ' (' + p.card + ')' : '') + ' was still unresolved when the turn ended, with ' + n + ' pool at stake for me — if it cost me pool, tell me "' + (pol ? 'vote ' : 'bleed ') + n + '".';
+    const n = p.amount | 0, pol = p.sub === 'political' || !!p.political;
+    const say = (this.seatName(this.predSeat()) === p.who ? '' : '@' + this.o.name + ' ') + (pol ? 'vote ' : 'bleed ') + n;   // (the egress review, finding 5) an unnamed 'bleed N' reaches the sender's prey bot only: any other seat is named
+    if(p.kind === 'bleed') return 'Note: an unresolved bleed at me expired with the turn — if it landed, tell me "' + say + '".';
+    return 'Note: ' + p.who + '’s ' + (pol ? 'referendum' : 'action') + (p.card ? ' (' + p.card + ')' : '') + ' was still unresolved when the turn ended, with ' + n + ' pool at stake for me — if it cost me pool, tell me "' + say + '".';
   }
+
   _closeZeroRecord(p){               // v0.6.245 (11.12): my decline of a HUMAN's undirected action that costs me nothing ends my part in it -- nothing lands on my pool at its resolution, so the record closes now, silently (it lingered to the turn's end and said 'bleed 0', and a lingering record kept me from the next 'Any blocks?'). A bot actor always says It resolves: unchanged
     if(!p || this.pending !== p || p.kind !== 'undirected' || (p.amount | 0) > 0 || !this._isHumanName(p.who) || (p.relock && p.relock.length)) return;   // an Eyes of the Wild relock waits for the action's resolution
     this._clearPending('declined, nothing at stake');
@@ -11143,6 +11145,7 @@ class Bot {
         if(reAim){ bleedOf.targetSeat = targetSeat || bleedOf.targetSeat; bleedOf.line = t; bleedOf.directed = this._actDirected(m[2], null, oseat, bleedOf.targetSeat); this._obs = bleedOf; } else {
         this._obs = { who, seat: oseat, vamp: m[1], verb: m[2], card: m[4] || null, line: t, at: Date.now(), poolLoss: null, targetSeat: targetSeat || null, directed: this._actDirected(m[2], m[4] || null, oseat, targetSeat) };
         if(!m[4]){ const bo = this._bleedOpen = this._bleedOpen || {}; if(m[3]) bo[oseat] = { vamp: m[1], obs: this._obs, at: Date.now() }; else delete bo[oseat]; }   // v0.6.237: an action row -- a bleed opens the seat's bleed (its re-announce is the same action), any other action closes it
+        if(!m[4]) this._standing = null;   // v0.6.245 (11.11; the egress review, finding 2): another seat's action ROW is a new action -- an attempt no line ended stood at the last one
         if(!m[4] && oseat === this.turnSeat) this._turnActN = (this._turnActN | 0) + 1;   // v0.6.215: an action ROW (bleeds / hunts / calls / takes … action / attempts …), not a card play line -- a card action's row follows its play line, so each action counts once
         if(this._blockBar){ if(this._blockBar.who === who && this._blockBar.fresh) this._blockBar.fresh = false; else if(this._blockBar.who !== who) this._blockBar = null; }   // v0.6.127: the bar belongs to the announce that follows it; another Methuselah's action ends it
         /* v0.6.118: the per-minion ledger the forecast reads -- flush the previous action's stealth first */
@@ -11266,7 +11269,7 @@ class Bot {
       return;
     }
     if((m = t.match(L12.cancel))){
-      if(this._standing && this._standing.who === m[3]) this._standing = null;   // v0.6.245 (11.11): the attempt that stood died outright
+      if(this._standing && this._standing.who === m[3]){ this._standing = null; if(m[3] !== this.seatName(this.seat)) this._standingEnded(); }   // v0.6.245 (11.11): the attempt that stood died outright -- a window of mine it held opens again
       /* fas C (16 July): my block attempt was CANCELLED (Elder Impersonation-class).
          m[3] names ME (the blocking player). The failed minion is already in
          pending.attempted (registered at attempt time, fas A+), so this is exactly
@@ -11493,7 +11496,7 @@ class Bot {
     if((m = t.match(L12.attempt)) || (m = t.match(L12.attemptIcp)) || (m = t.match(L12.interceptPlay)) || (m = t.match(L12.blockAct))){   // v0.6.106 (#14): another seat's block attempt -- the blocker's vampire name (latest attempt wins) + the table climate counter; v0.6.110 (R2, #12): + the client's `NAME blocks.`
       { const st = this._seatOfName(who); if(st && st !== this.seat){ const oo = this._opp(st); const ip = t.match(L12.interceptPlay); if(ip) oo.icpSum = (oo.icpSum | 0) + (parseInt(ip[3], 10) | 0); else oo.blockTries = (oo.blockTries | 0) + 1; } }   // v0.6.129: oppIntercept's writers -- an attempt line counts the try, an intercept line adds to it
       if(who !== this.o.name) this._noteStanding(who, m[1]);   // v0.6.245 (11.11): another seat's attempt stands until its verdict
-      { const a2 = this._ask; if(a2 && a2.contested && a2.attemptBy && who !== this.o.name && who !== a2.attemptBy){ this._refuseAttempt(a2, who, m[1]); return; } }   // v0.6.245 (11.11, part 1): a second seat's attempt line while one stands at my action -- not taken up, and it renames no blocker (the verdict's combat is the standing attempt's: at the C1b playtest it went to the second blocker)
+      { const a2 = this._ask; if(who !== this.o.name && this._attemptStands(a2, who)){ this._refuseAttempt(a2, who, m[1]); return; } }   // v0.6.245 (11.11, part 1): a second seat's attempt line while one stands at my action -- not taken up, and it renames no blocker (the verdict's combat is the standing attempt's: at the C1b playtest it went to the second blocker)
       this._noteBlockAttempt(m[1], false, this._seatOfName(who));
       /* v0.6.110 (R2, #12, the project owner): when the player runs the Block action BEFORE the
          Block! phrase, it is the block, and the bot does not wait for the phrase. The
@@ -11661,11 +11664,27 @@ class Bot {
      it through _standingFor (an attempt seen since the pending's own action was announced, p.annAt). */
   _noteStanding(who, vamp){
     if(!who || who === this.o.name) return;
-    const s = this._standing;
+    let s = this._standing;
+    if(s && this.pending && s.at < (this.pending.annAt || 0)){ this._standing = s = null; }   // (the egress review, finding 2) an earlier action's attempt that no line ended is not this action's
     if(s && s.who !== who) return;   // the attempt that stands stays the one; a second seat's line while it does is no attempt of its own
     this._standing = { who, vamp: vamp || (s && s.vamp) || null, at: s ? s.at : Date.now() };
   }
-  _standingFor(p){ const s = this._standing; return (s && p && s.who !== this.o.name && s.at >= (p.annAt || 0)) ? s : null; }
+  _standingFor(p){                   // another seat's attempt at this pending's action -- only a seat that may block it holds anything (the egress review, finding 3): an undirected action's prey or predator
+    const s = this._standing; if(!s || !p || s.who === this.o.name || s.at < (p.annAt || 0)) return null;
+    if(!(p.kind === 'undirected' || (p.kind === 'asked' && (p.role === 'prey' || p.role === 'predator')))) return null;   // a directed action is its target's to block: no other seat's attempt holds mine
+    const st = this._seatOfName(s.who), ac = p.actorSeat || this._seatOfName(p.who);
+    return (st && ac && (st === this.nextLive(ac) || st === this.prevLive(ac))) ? s : null;
+  }
+  _standingEnded(){                  // (finding 3) the attempt that held my window ended with no verdict line (withdrawn, cancelled): my window opens again
+    const p = this.pending; if(!p || !p._held || this.out) return;
+    p._held = null; if(!(p.role === 'predator' && p.waitingFor)) this._reactWindow();
+  }
+  _obsIsAction(o){                   // (finding 4) is a remembered line an ACTION (a new one, after the last) -- an action row, or a card played as an action -- and not a modifier, reaction or combat card
+    if(!o) return false;
+    if(!o.card) return /^(bleeds for|hunts|calls a political action|attempts to rescue|takes an undirected action|takes a card action|commits diablerie)/.test(o.verb || '');
+    const mm = String(o.card).match(/^(.+?) \[[a-zA-Z]+\]$/), h = this.fxLookup(mm ? mm[1] : o.card);
+    return !h || h.kind !== 'lib' || (h.e.t || []).some(t => t === 'action' || t === 'political' || t === 'ally' || t === 'equip' || t === 'retainer');
+  }
   _preyDeclined(who, via){           // the prey's word at an undirected action I am the predator of: a decline opens my window; inside the prey's own standing attempt it resolves that attempt (B: everybody passed), and I go on waiting
     const p = this.pending; if(!p || !p.waitingFor || p.waitingFor !== who) return false;
     const sa = this._standingFor(p);
@@ -11682,6 +11701,11 @@ class Bot {
     if(this._isHumanName(who)) this.chat('Trainbot: ' + this._spoken(sv) + '’s block attempt is still standing — one block attempt at a time.');   // the owner's go-ahead (D-149): an instruction to a human (the tier rule)
   }
   _attemptOver(a){ if(a){ a.attemptBy = null; a._refused = null; } }   // the standing attempt at my action is resolved (a verdict, a cancel, the counter withdrawn)
+  _attemptStands(a, who){             // (the egress review, finding 3) another seat's attempt stands at my action and holds this one -- a seat that may block it: the undirected window's prey and predator (and a seat Hold on promoted), a directed action's target
+    if(!a || !a.contested || !a.attemptBy || a.attemptBy === who) return false;
+    if(a.undirected) return !!(a.eligible && a.eligible.has(a.attemptBy));
+    return a.attemptBy === this.seatName((this._actingVamp && this._actingVamp.target) || a.target || this.preySeat());
+  }
   _noteBlockAttempt(vamp, own, seat){   // v0.6.202: + the attempt line's sender seat (the actor's handshake asks whether its blocker is a bot even when the name chain broke). v0.6.106 (#14): one site for both readers -- others' attempts arrive as frozen log lines, my own are noted at _commitBlock. The name is what the actor's handshake filter keys on (_expectedOppVamp); the counter is v0.6.93's table block climate (READ = BASE; consumers are documented, not built)
     if(!own && vamp){ this._lastBlockerName = vamp; this._lastBlockerAt = Date.now(); this._lastBlockerSeat = seat | 0; this._condStealthAdjust(); this._condStealthLook(); }   // v0.6.110 (R2, #12): the stamp is what the Who-blocks grace compares against. v0.6.228: a conditional stealth of my action follows the new blocker (_condStealthAdjust), and a card that counts only against a named blocker gets its look (_condStealthLook)
     this._tableBlockAttempts = (this._tableBlockAttempts | 0) + 1;
@@ -11873,7 +11897,7 @@ class Bot {
            never stalls the table. If the line came first (above), the shout is
            the same attempt and the handler must not run twice. */
         if(a._lineBlockFrom === m.who){ if(a._whoT){ clearTimeout(a._whoT); a._whoT = null; } return; }
-        if(a.contested && a.attemptBy && a.attemptBy !== m.who) return this._refuseAttempt(a, m.who);   // v0.6.245 (11.11, part 1): one attempt at a time -- before the shout's own bookkeeping (the Who-blocks grace, _sayBlockFrom)
+        if(this._attemptStands(a, m.who)) return this._refuseAttempt(a, m.who);   // v0.6.245 (11.11, part 1): one attempt at a time -- before the shout's own bookkeeping (the Who-blocks grace, _sayBlockFrom)
         a._sayBlockFrom = m.who; a._sayBlockAt = Date.now();
         if(a._whoT) clearTimeout(a._whoT);
         const hp2 = (this.players || []).find(q => q && q.name === m.who);
@@ -11972,6 +11996,10 @@ class Bot {
      uncertainty (B). Readable AND steppable in status()/step(): the timeout
      body is _pqTimeout, the same rule as _askTimeout. */
   _onAnyBlocks(who, phrase){
+    { const o0 = this._obs, p0 = this.pending;   /* v0.6.245 (11.11; the egress review, finding 4): a record of a human's EARLIER action (no It resolves came) is superseded by
+         the new action this prompt asks about, as a new announce line supersedes one (_parseUndirected) -- a prey bot that kept it answered nothing, and the
+         predator now waits for the prey's word (the owner's decision A of 15 Sep: the next action overwrites the memory) */
+      if(p0 && !this._ask && !this._pq && o0 && o0.who === p0.who && this._isHumanName(o0.who) && (o0.at || 0) > (p0.annAt || 0) && this._obsIsAction(o0)){ this._clearPending('superseded by a new action'); this._obs = o0; } }
     if(!this.started || this.out || this._ask || this.pending || this._pq) return;
     const o = this._obs;
     if(!o || o.seat === this.seat || Date.now() - o.at > 120000) return;   // nothing on record: silence, not a guess
@@ -12406,7 +12434,7 @@ class Bot {
         return;
       } }
     const a = this._ask; if(!a) return;
-    if(a.contested && a.attemptBy && a.attemptBy !== who) return this._refuseAttempt(a, who);   // v0.6.245 (11.11, part 1): one attempt at a time
+    if(this._attemptStands(a, who)) return this._refuseAttempt(a, who);   // v0.6.245 (11.11, part 1): one attempt at a time (a stray attempt by a seat that may not block holds nothing)
     a.attemptBy = who;   // v0.6.245: the seat whose attempt this contest is (its Pass resolves it: part 3)
     this._combatArmed = true;   // v0.6.103 (#1): somebody attempts to block MY action -- their early strike line may legitimately arrive before my Blocked branch enters _resolveCombat
     const av = this._actingVamp;
@@ -12635,7 +12663,7 @@ class Bot {
       }
       return;
     }
-    if(!this._ask && !this.pending && /^\s*any (blocks?|reactions?)\??\s*$/i.test(txt)) return this._onAnyBlocks(who, 'Any blocks?');
+    if(!this._ask && /^\s*any (blocks?|reactions?)\??\s*$/i.test(txt)) return this._onAnyBlocks(who, 'Any blocks?');   // v0.6.245 (the egress review, finding 4): with a record too -- _onAnyBlocks supersedes an earlier action's, as the quick phrase reaches it
     /* v0.6.152 (the project owner's design, 22 Sep): INTERCEPT BY CHAT during a block against MY action. A bare number N = the blocker's total
        intercept right now (Sport Bike + Bowl = "2"), +N = intercept added since ("+1" -> 3). I book it on the shared counter for the
        human (b is theirs, but they said the number) and judge the real counter. Only while my action is contested, only from the

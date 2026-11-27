@@ -13366,9 +13366,10 @@ async function connectWithRetry(client, tries = 30){
         const before = u.hand.includes('Perfect Paragon');
         u._noteBlockAttempt('Nik Sikko', false, 2);   // the attempt line names the minion
         const played = !u.hand.includes('Perfect Paragon'), aAfter = u._actStealthRaw;
-        u._ask.contested = false; u._ask.attemptBy = null;   // v0.6.245 (11.11, one attempt at a time): Viktor's attempt has its failed verdict first -- a shout while it stood is not taken up (section 189f)
-        u._lastBlockerAt -= 1000; u._onBlockAttempt('Nora'); const aShout = u._actStealthRaw;   // Nora's shout a second later, no line yet
-        ok(before && played && aAfter === 1 && aShout === 0, '173b2 a bot blocker’s counter before its line: the name brings the look (Paragon +1); a later shout takes it off (got ' + JSON.stringify({ before, played, aAfter, aShout, L: logs(u) }) + ')'); }
+        u._lastBlockerAt -= 1000; u._onBlockAttempt('Nora'); const aHeld = u._actStealthRaw;   // v0.6.245 (11.11, one attempt at a time): Nora's shout while Viktor's attempt stands is not taken up -- the +1 stays
+        u._ask.contested = false; if(typeof u._attemptOver === 'function') u._attemptOver(u._ask);   // Viktor's attempt has its failed verdict (the L12.block fails branch's own two steps)
+        u._onBlockAttempt('Nora'); const aShout = u._actStealthRaw;   // Nora's shout, the next attempt, no line yet
+        ok(before && played && aAfter === 1 && aHeld === 1 && aShout === 0, '173b2 a bot blocker’s counter before its line: the name brings the look (Paragon +1); a shout while that attempt stands leaves it; the next attempt’s shout takes it off (got ' + JSON.stringify({ before, played, aAfter, aHeld, aShout, L: logs(u) }) + ')'); }
 
       // c) Versailles: +1 vote for EACH ready titled Camarilla vampire of mine (two princes: +2); none titled, or a titled Anarch: no lock
       { const u = mk173('Hanna'); const vers = { id: 'm1', name: 'Elysium: The Palace of Versailles', kind: 'lib', zone: 'ready', locked: false };
@@ -17183,7 +17184,11 @@ async function connectWithRetry(client, tries = 30){
        stands is not taken up, said once, and renames no blocker; (g) part 1, the blocking side: another seat's attempt line in my react
        delay holds my block until its verdict; (h) 4.25: a human's quick 'No' answers a block question, directed and undirected, and at
        a bot actor's question it opens a bot predator's window; (i) 11.12: a human's 0-pool undirected record closes at my own decline,
-       the turn-end note is silent for a 0-pool record and names the action otherwise.
+       the turn-end note is silent for a 0-pool record and names the action otherwise. The egress review, pass 1: (j) an attempt no
+       line ended stood at an earlier action, not at the next one; (k) a window an attempt held opens again when that attempt is withdrawn
+       (the counter closed); (l) only a seat that may block holds anything -- a cross-table seat's shout holds neither the target's window
+       nor, at the acting bot, the target's attempt; (m) a record of a human's earlier action is superseded by the next 'Any blocks?';
+       (n) the note names me when the actor is not my predator (an unnamed 'vote N' reaches the actor's prey bot only).
        LAST LINE OF 189 is the closing brace below. */
     {
       console.log('\n[189] v0.6.245 -- one block attempt at a time (11.11), a human’s No (4.25), the turn-end note (11.12)');
@@ -17338,6 +17343,63 @@ async function connectWithRetry(client, tries = 30){
         const note = W.chats.find(c => /unresolved/.test(c)) || '';
         ok(closed.pass && !closed.pending && silent && /^Note: Claude’s referendum \(Kine Resources Contested\) was still unresolved when the turn ended, with 2 pool at stake for me/.test(note) && /tell me "vote 2"\.$/.test(note),
            '189i 11.12: my decline closes a human’s 0-pool undirected record; at the turn’s end a 0-pool record is silent and a staked one names the action (got ' + JSON.stringify({ closed, silent, note }) + '; v0.6.244: "an unresolved bleed at me … bleed 0")');
+        quiet9(W); }
+
+      // j) the egress review, finding 2: an attempt no line ended (two humans settled it by word) stood at the last action, not at the next
+      { const Q = mk9('Lisa', 4, PA); Q.board = [V9('q9', 'Ayelech', 4)]; Q.hand = []; blocks9(Q, true);
+        Q.table = { 1: { pub: { pool: 20, cards: [{ id: 'b2', name: 'Belinde (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }, { id: 'b3', name: 'Sully', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }] } } };
+        const PJ = [{ seat: 1, name: 'Claude', online: true }, { seat: 2, name: 'Bob', online: true }, { seat: 3, name: 'Viktor', online: true, bot: true }, { seat: 4, name: 'Lisa', online: true, bot: true }]; Q.players = PJ.map(x => Object.assign({}, x));
+        Q._onLog('Claude', 'Belinde (G6) hunts.'); Q._onSay({ who: 'Bob', i: SI('Block!') }); Q._onLog('Bob', 'Nora blocks.');   // action 1: Bob blocks; the two humans settle it by word
+        quiet9(Q); await sleep(5);
+        Q._onLog('Claude', 'Sully hunts.');   // action 2: a new action row
+        const born = Q.pending && Q.pending.waitingFor;
+        Q._onLog('Bob', 'Nora blocks.'); Q._onSay({ who: 'Bob', i: SI('Pass') }); await sleep(80);
+        ok(born === 'Bob' && Q.pending && Q.pending.waitingFor === 'Bob' && !Q.says.includes('Block!'),
+           '189j an attempt no line ended stood at the last action: at the next, the prey’s attempt holds me again and its Pass declines nothing (got ' + JSON.stringify({ born, wf: Q.pending && Q.pending.waitingFor, said: Q.says }) + '; pass 1: its old stamp let the predator attempt over it)');
+        quiet9(Q); }
+
+      // k) finding 3: a window an attempt held opens again when the attempt is withdrawn (the counter closed with no verdict)
+      { const P = mk9('Hanna', 2, PA); P.board = [V9('p3', 'Colette', 4)]; P.hand = []; actorPub9(P); blocks9(P, true);
+        P._onLog('Claude', 'Belinde (G6) takes an undirected action.');
+        P._onLog('Lisa', 'Ayelech attempts to block.'); await sleep(100);
+        const held = !P.says.includes('Block!');
+        P._dispatch({ t: 'tally', who: 'Lisa', mode: null }); await sleep(100);
+        ok(held && P.says.includes('Block!'),
+           '189k a window an attempt held opens again when that attempt is withdrawn -- the counter closed, no verdict line (got ' + JSON.stringify({ held, said: P.says }) + '; pass 1: it stayed silent to the action’s end)');
+        quiet9(P); }
+
+      // l) finding 3: only a seat that may block holds anything -- a cross-table seat's shout at a directed bleed holds neither the target's window ...
+      { const P = mk9('Hanna', 2, PA); P.board = [V9('p4', 'Colette', 4)]; P.hand = []; actorPub9(P); blocks9(P, true);
+        P._onLog('Claude', 'Belinde (G6) bleeds for 2.');   // directed at Claude's prey (Hanna): hers to block
+        P._onSay({ who: 'Viktor', i: SI('Block!') }); P._onLog('Viktor', 'Kim attempts to block.'); await sleep(100);
+        const tgt = P.says.includes('Block!'); quiet9(P);
+        // ... nor, at the acting bot, the target's attempt
+        const V = mk9('Viktor', 3, PB); const cv = V9('c4', 'Chelsea Blake (G6)', 4, { locked: true }); V.board = [cv]; V.hand = [];
+        V._actingVamp = { v: cv, n: 2, played: new Set(), target: 1, kind: 'bleed' }; V._askBlock('Chelsea Blake bleeds Claude for 2. Block?');
+        V._onSay({ who: 'Hanna', i: SI('Block!') }); V._onLog('Hanna', 'Donny Kowalczyk attempts to block.');   // a stray attempt by a seat the bleed is not aimed at
+        V._onSay({ who: 'Claude', i: SI('Block!') }); V._onLog('Claude', 'Wauneka (G6) blocks.');   // the target's shout and line
+        const act = { by: V._ask && V._ask.attemptBy, opp: V._lastBlockerName, refused: V.rows.filter(x => x.ty === 'second-attempt').length };
+        ok(tgt && act.by === 'Claude' && act.opp === 'Wauneka (G6)' && act.refused === 0,
+           '189l only a seat that may block holds anything: a cross-table shout leaves the bleed’s target free to block, and at the acting bot the target’s attempt is taken up over a stray one (got ' + JSON.stringify({ tgt, act, said: P.says }) + '; pass 1: the stray shout froze the only legal blocker)');
+        quiet9(V); }
+
+      // m) finding 4: a record of a human's earlier action (no It resolves) is superseded by the next "Any blocks?" -- the prey answers again
+      { const P = mk9('Hanna', 2, PA); P.board = [V9('p5', 'Colette', 4)]; P.hand = []; actorPub9(P); blocks9(P, false);
+        P._onLog('Claude', 'Belinde (G6) bleeds for 2.'); await sleep(100);   // a bleed at me, passed; Claude never says It resolves
+        const stale = !!P.pending; await sleep(5);
+        P._onLog('Claude', 'Belinde (G6) plays Creeping Sabotage.'); P._onSay({ who: 'Claude', i: SI('Any blocks?') });
+        const asked = !!P._pq && P.chats.some(c => /lose pool/.test(c));
+        ok(stale && asked && !P.pending,
+           '189m a record of a human’s earlier action is superseded by the next "Any blocks?" -- the prey asks its pool question again (got ' + JSON.stringify({ stale, asked }) + '; pass 1: it answered nothing, and the predator waited for it)');
+        quiet9(P); }
+
+      // n) finding 5: the note names me when the actor is not my predator (an unnamed "vote N" reaches the actor's prey bot only)
+      { const W = mk9('Lisa', 4, PA); W.turnSeat = 1;
+        W.pending = { who: 'Claude', amount: 2, kind: 'asked', sub: 'asked', T: 'T1', role: 'predator', actorSeat: 1, actorUnlocked: 0, actingVampName: 'Belinde (G6)', contested: false, reacted: new Set(), blockerVamp: null, declined: true, attempted: new Set(), waitingFor: null, annAt: Date.now(), card: 'Kine Resources Contested', political: true };
+        W._dispatch({ t: 'turn', seat: 3 });
+        const note = W.chats.find(c => /unresolved/.test(c)) || '';
+        ok(/tell me "@Lisa vote 2"\.$/.test(note),
+           '189n the note names me when the actor is not my predator, as the damage grammar needs (got ' + JSON.stringify(note) + '; pass 1: the unnamed phrase reached the actor’s prey bot)');
         quiet9(W); }
     }
 
