@@ -1,0 +1,14 @@
+# doc-budgets.txt -- the standing pages' byte budgets, read by tools/doc-budget.sh (RULINGS D-145, 27 Nov 2026). A ceiling, one in,
+# one out: a page that runs out borrows from another (one budget down, one up) or moves a line to docs/history/archive-<page>.md;
+# `total` and `bootstrap` rise only with a D-line the base's RULINGS does not have (the owner's yes), named on their line, and
+# the pages' budgets together rise no further than the total. Their history is git's and the CHANGELOG's.
+total      207000  D-145
+bootstrap   50000
+bot/CLAUDE.md             14500
+bot/docs/STATUS.md         5000
+bot/docs/BOARD.md         19000
+bot/docs/RULINGS.md       84000
+bot/docs/LESSONS.md       21500
+bot/docs/ARCHITECTURE.md  29500
+bot/docs/HARNESS.md       14500
+bot/docs/HOWTO.md         25000

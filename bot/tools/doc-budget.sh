@@ -1,96 +1,33 @@
 #!/bin/bash
-# doc-budget.sh -- the standing pages' check (spec-cleanup-2026-10-20.md §5.3). Run from anywhere; exit 1 on any failure.
-#   1. each standing page within its byte budget; the bootstrap (root CLAUDE.md + bot/CLAUDE.md + STATUS + BOARD) <= 50 KB;
-#      every standing page together <= 186 KB;
+# doc-budget.sh -- the standing pages' check (RULINGS D-145; HARNESS "One place for each fact"). Run from anywhere; exit 1 on any
+# failure. Usage: bash bot/tools/doc-budget.sh [--base REF]   (tools/gates.sh passes the merge base, CI a pull request's base)
+#   1. each standing page within its budget, the bootstrap (root CLAUDE.md + bot/CLAUDE.md + STATUS + BOARD) and every standing page
+#      together within theirs (tools/doc-budgets.txt: a ceiling, one in, one out); with --base, a rise of the total or the
+#      bootstrap names a D-line the base's RULINGS does not have (the owner's yes), and the pages' budgets together rise no
+#      further than the total;
 #   2. every repo path named (in backticks) in a standing page, and every bot/ path in the root CLAUDE.md, exists;
 #   3. every version STATUS.md names agrees with the code: BOT_VERSION, the arena, the sim, the cardfx compiler, the hotseat
 #      tool, the coverage tool, the read-only client / protocol / server copies in bot/ and the root's client / server (with
-#      DOC_BUDGET_ROOT_DRIFT=warn, as CI sets it outside pull requests, a root newer than STATUS's line is a warning, not a failure).
-# Portable to bash 3.2 (macOS): no associative arrays.
+#      DOC_BUDGET_ROOT_DRIFT=warn, as CI sets it outside pull requests, a root newer than STATUS's line is a warning, not a failure);
+#   4. the round record's copies (STATUS's gates block, the CHANGELOG entry's gate line) and every CHANGELOG entry's template
+#      and cap: tools/round.py check.
+# The budgets' history is git's and the CHANGELOG's. Portable to bash 3.2 (macOS): no associative arrays.
 set -u
-B=$(cd "$(dirname "$0")/.." && pwd); D="$B/docs"; R="$B/.."; fail=0
+B=$(cd "$(dirname "$0")/.." && pwd); D="$B/docs"; R="$B/.."; fail=0; base=""
+while [ $# -gt 0 ]; do
+  case "$1" in --base) base="${2:-}"; shift ;; *) echo "doc-budget.sh: unknown argument $1" >&2; exit 2 ;; esac
+  shift
+done
 ok(){ printf 'ok    %s\n' "$*"; }
 bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 
-# 1. budgets (bytes). RULINGS: the spec said 25 KB; 42 KB from C1 (PR #39) -- the register came to 171 lines, and the 20 Oct audit's
-#    split of the owner's words from Claude's thresholds costs words; 60 KB and the total 160 KB since 29 Oct (the owner, RULINGS D-101: when a
-#    page needs room the ceiling is raised -- the register grows with every round's rulings); BOARD 15 -> 18 KB the same day (it stood
-#    15 bytes under its ceiling; the bootstrap's 50 KB stays the real guard); BOARD 18 -> 18.5 KB on 12 Nov (crypt wave A's egress
-#    review found three asks no line held, with no history left to cut -- HARNESS; STATUS gave the bootstrap its bytes back); the
-#    total 160 -> 165 KB on 13 Nov (bot v0.6.220: the owner's D-112 and D-113 and the riders' two found lines -- the register grows);
-#    BOARD 18.5 -> 19 KB the same day (bot v0.6.221: the Jack round's three found asks, the bootstrap's 50 KB still the guard);
-#    HOWTO 20 -> 21 KB the same day (bot v0.6.222: the tokens-in-browser diagnostic; the page stood 23 bytes under its ceiling).
-#    ARCHITECTURE 15 -> 15.5 KB on 14 Nov (bot v0.6.225: a human's Grand Ball reader and the memo row; round B's Jack row had left
-#    the page 1 byte under its ceiling). RULINGS 60 -> 62 KB and the total 165 -> 167 KB the same day (bot v0.6.226: the owner's D-115
-#    and the open question it uncovered, O-41; the register stood 90 bytes under its ceiling after round C's compression).
-#    RULINGS 62 -> 64 KB and the total 167 -> 170 KB on 15 Nov (bot v0.6.229: the owner's D-118, the bench round's answers; the register
-#    stood 675 bytes under its ceiling and the total 591 bytes over it with the line).
-#    HOWTO 21 -> 21.5 KB the same day (bot v0.6.229: the guide check's reader, ana-guide-check.py; the page stood 1 byte under its ceiling).
-#    RULINGS 64 -> 65 KB, ARCHITECTURE 15.5 -> 16 KB and the total 170 -> 173 KB on 18 Nov (bot v0.6.233: the owner's D-123, the wave 6a
-#    decisions, after the fold of five retired stubs; the register stood 287 bytes under its ceiling, the table 11, the total 258).
-#    RULINGS 65 -> 66 KB and the total 173 -> 174 KB the same day (a docs round on bot v0.6.234: the owner's D-125, the V5 sweep's
-#    method, after D-98's and D-102's card lists and the BOARD line's waves-done list were cut as history; the register stood 92 bytes
-#    under its ceiling and the total 3).
-#    RULINGS 66 -> 67 KB, HOWTO 21.5 -> 22.5 KB and the total 174 -> 177 KB on 19 Nov (the V5 sweep's step A1, bot v0.6.234, no bot
-#    change). spec-card-sweep 4.1 planned 2 KB of room under the total and 1 KB under RULINGS "by cutting history the specs keep";
-#    the read found 0.5 KB of history (D-101's first raises, D-108's wave count, D-109's lint story; HOWTO's bench controls and its
-#    v3 note; two asides in CLAUDE.md), because the register holds rulings and HOWTO holds how-tos. The rest is this raise. HOWTO
-#    stood 235 bytes under its ceiling and takes the sharing register now, zero-vtes's fetch line and the review sheet in step A2.
-#    HARNESS 8 -> 8.5 KB, HOWTO 22.5 -> 23 KB and the total 177 -> 179 KB on 19 Nov (the sweep's step A2, bot v0.6.234, no bot
-#    change): the charter's T2 sentence, the review sheet's how-to with zero-vtes's clone line, the dry run's lesson (L-97);
-#    HARNESS stood 53 bytes under its ceiling, HOWTO 206 and the total 566. The total keeps 1.4 KB of room for B and C (spec-card-
-#    sweep 4.1); STATUS gave the bootstrap the root CLAUDE.md's zero-vtes line and the finished decks' BOARD line.
-#    RULINGS 67 -> 67.5 KB on 20 Nov (a docs round on bot v0.6.235; the total stays): the owner's D-128 and D-129. Cut first: O-47
-#    and D-127's built story; the egress review then found the short D-129 said more than the owner had (a No for the owner's not now),
-#    and his hedges cost 0.2 KB the register did not have (it stood 39 bytes under its ceiling).
-#    RULINGS 67.5 -> 68 KB and the total 179 -> 180 KB the same day (a docs round on bot v0.6.235, the library by effect):
-#    the owner's D-130 and D-131 and the open O-48. Cut first: 0.9 KB of the register's built stories and measurements (D-17,
-#    D-81, D-89, D-105, D-108, D-110, D-111, D-113, D-114, D-117, D-118, D-125; the CHANGELOG and the specs keep them) and
-#    BOARD's done steps; the register stood 268 bytes over its ceiling and the total about 0.5 KB over it, and the
-#    caller's read then gave back a reason the cut had taken (D-118: why the losing knob lost), which the 179.5 KB step had no room for.
-#    RULINGS 68 -> 70 KB, HARNESS 8.5 -> 9 KB and the total 180 -> 182 KB the same day (a docs round on bot v0.6.235, before the
-#    pilot): the owner's D-132 and D-133 and HARNESS's review until clean. Cut first: BOARD's card-reading asks folded into the V5
-#    sweep's C riders (1.5 KB; their words in spec-v5-wave6 §8, spec-v5-wave2 §4, spec-card-sweep §11.10 and O-21) and D-123's measurement; the bootstrap's
-#    50 KB stays. The register stood 1.4 KB over its ceiling, HARNESS 0.4 KB and the total 0.7 KB; the rest is the pilot's room.
-#    RULINGS 70 -> 72 KB, LESSONS 20 -> 20.5 KB, ARCHITECTURE 16 -> 17 KB, HOWTO 23 -> 23.5 KB and the total 182 -> 186 KB the same
-#    day (bot v0.6.236, the Banu Haqim pilot): D-134, R-46's readings, O-49, L-98, the rush / combat / set-up / action rows and the
-#    suite's 6 GB heap. Nothing cut: the round before had cut the history there was and left the pilot 1.3 KB of the total, which
-#    its record took; at the release the register stood 1.6 KB over its old ceiling, ARCHITECTURE 0.7, LESSONS 0.3, HOWTO 0.2 and the
-#    total 3.1 KB (185,140 bytes).
-#    RULINGS 72 -> 73 KB and the total 186 -> 187 KB on 24 Nov (bot v0.6.237, the playtest round): the owner's D-136 and the open O-50,
-#    BOARD's chat round. Nothing cut: the register's history went in the rounds of 20 Nov; RULINGS stood 0.97 KB over, the total 14 bytes.
-#    RULINGS 73 -> 73.5 KB the same day (bot v0.6.238, Dreams of the Sphinx): the owner's partial answer on O-50, his words; the register
-#    stood 4 bytes under its ceiling (its egress review, pass 1: STATUS said it while RULINGS said "not answered").
-#    RULINGS 73.5 -> 74.5 KB, LESSONS 20.5 -> 21 KB, HOWTO 23.5 -> 24 KB and the total 187 -> 190 KB on 25 Nov (bot v0.6.240, the
-#    chat round): O-51 (the ruling doc's lines and R1-R9) and O-36's measurement, L-99, the chat tools, D-137 in CLAUDE.md's tier and
-#    event-log rules. Cut first: the round's own lines (HOWTO's chat tools 0.7 -> 0.4 KB, L-99, BOARD's found line; O-36 and O-51
-#    compacted); the register stood 0.8 KB over its ceiling, LESSONS 0.1, HOWTO 0.1 and the total 2.0 KB (the egress review's pass 1).
-#    RULINGS 74.5 -> 76.5 KB, LESSONS 21 -> 21.5 KB, ARCHITECTURE 17 -> 17.5 KB and the total 190 -> 193 KB on 25 Nov (bot v0.6.241, the
-#    exactness round): D-138 (the exact measure, the owner's words), O-52 (the pool floor, a proposal), O-53 (the playtests' table questions,
-#    the egress review's pass 2), L-100, HOWTO's fidelity lines, ARCHITECTURE's rider and knob. Cut first: the round's own lines (D-138
-#    2.0 -> 1.0 KB, O-52, L-100 and the HOWTO paragraph halved); the register stood 1.5 KB over its ceiling, LESSONS 0.1,
-#    ARCHITECTURE 0.1 and the total 1.8 KB with the release's gate line in STATUS.
-#    HARNESS 9 -> 10 KB, RULINGS 76.5 -> 77.5 KB and the total 193 -> 195 KB on 26 Nov (W1, the workflow round, no bot change):
-#    the owner's D-139 and HARNESS's roles, sessions and scripts. Cut first: the sandbox habits and the release ritual's steps that the
-#    scripts now carry, HOWTO's frozen-suite recipe (tools/gates.sh --suite), the data commands (tools/setup.sh) and D-109's x3; HARNESS
-#    stood 1.0 KB over its ceiling, RULINGS 0.6 KB and the total 1.5 KB after the round's review passes.
-#    HARNESS 10 -> 11 KB, RULINGS 77.5 -> 79.5 KB and the total 195 -> 198 KB the same day (W1b, no bot change): D-140 and D-141
-#    (the owner's follow-ups to W1: the review of a round without a bot change, O-48's answer, the match question, the play notes,
-#    the project's docs; then a public repository without chat quotes or names, and a verdict for every unsure item), HARNESS's
-#    steps 9 and 10 and its unsure items. Cut first: the handshake's copy list (ARCHITECTURE has it), a repeated ci-status note, the
-#    upkeep's docs-change line (CLAUDE.md and step 7 carry it), D-139's replaced reading, O-48's line and CLAUDE.md's repeated
-#    design-question sentence; at the round's end HARNESS stood 0.8 KB over its old ceiling, RULINGS 2.0 KB and the total 2.7 KB.
-#    CLAUDE.md 25 -> 14.5 KB, ARCHITECTURE 17.5 -> 29.5 KB, HARNESS 11 -> 14.5 KB, RULINGS 79.5 -> 82 KB and the total 198 -> 205 KB
-#    on 26 Nov (the cleanup round, no bot change; D-141, D-142): the binding rules of one area moved from CLAUDE.md to ARCHITECTURE
-#    "Binding rules by area" and the measurement rules to HARNESS "Measurements" (the bootstrap from 49,953 bytes to under 40 KB), HARNESS's
-#    "One place for each fact" and the narrower review passes, and RULINGS by role: "the owner" is four bytes longer than the name it
-#    replaced on about 200 places, and D-142 is new; the quotes it paraphrased gave some back. Nothing binding was cut.
-#    HOWTO 24 -> 25 KB on 27 Nov (C1, the cross-check tool, rebased onto the cleanup round): its how-to; the page stood 21 bytes
-#    under its ceiling, with nothing left there that is history. RULINGS 82 -> 84 KB and the total 205 -> 207 KB the same day (C1,
-#    bot v0.6.243): D-144 (the owner's four answers on C1's card) on a page that stood 49 bytes under its ceiling, its lines rulings,
-#    not history; and the cross-check's how-to.
-PAGES="$B/CLAUDE.md:14500 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:84000 $D/LESSONS.md:21500
-       $D/ARCHITECTURE.md:29500 $D/HARNESS.md:14500 $D/HOWTO.md:25000"
+# 1. budgets (bytes), from tools/doc-budgets.txt
+BUD="$B/tools/doc-budgets.txt"
+[ -f "$BUD" ] || { echo "FAIL  no tools/doc-budgets.txt"; echo "doc-budget: FAIL"; exit 1; }
+lim(){ awk -v k="$1" '!/^#/ && $1 == k {print $2; exit}' "${2:-$BUD}"; }            # lim KEY [FILE]
+pagesum(){ awk '!/^#/ && NF >= 2 && $1 != "total" && $1 != "bootstrap" {s += $2} END {print s + 0}' "${1:-$BUD}"; }
+total_lim=$(lim total); boot_lim=$(lim bootstrap)
+PAGES=$(awk -v R="$R" '!/^#/ && NF >= 2 && $1 != "total" && $1 != "bootstrap" {print R "/" $1 ":" $2}' "$BUD")
 total=0
 for pb in $PAGES; do
   f=${pb%:*}; lim=${pb##*:}
@@ -99,8 +36,34 @@ for pb in $PAGES; do
   if [ "$n" -gt "$lim" ]; then bad "$(basename "$f") is $n bytes, budget $lim"; else ok "$(basename "$f") $n / $lim"; fi
 done
 boot=0; for f in "$R/CLAUDE.md" "$B/CLAUDE.md" "$D/STATUS.md" "$D/BOARD.md"; do boot=$((boot + $(wc -c < "$f" | tr -d ' '))); done
-if [ "$boot" -gt 50000 ]; then bad "bootstrap is $boot bytes, budget 50000"; else ok "bootstrap $boot / 50000"; fi
-if [ "$total" -gt 207000 ]; then bad "standing pages total $total bytes, budget 207000"; else ok "standing pages $total / 207000"; fi
+if [ "$boot" -gt "$boot_lim" ]; then bad "bootstrap is $boot bytes, budget $boot_lim"; else ok "bootstrap $boot / $boot_lim"; fi
+if [ "$total" -gt "$total_lim" ]; then bad "standing pages total $total bytes, budget $total_lim"; else ok "standing pages $total / $total_lim"; fi
+# ... and their rise against the base (one in, one out)
+if [ -z "$base" ]; then
+  echo "note  no --base: the budgets' rise is checked by tools/gates.sh and CI"
+elif ! git -C "$R" rev-parse -q --verify "$base^{commit}" > /dev/null; then
+  bad "--base $base is not a commit here"
+else
+  old=$(mktemp); git -C "$R" show "$base:bot/tools/doc-budgets.txt" > "$old" 2>/dev/null || : > "$old"
+  if [ ! -s "$old" ]; then
+    ok "the base has no tools/doc-budgets.txt: this change brings it (the rise check starts with the next)"
+  else
+    newids=$(comm -13 <(git -C "$R" show "$base:bot/docs/RULINGS.md" 2>/dev/null | grep -oE '^- \*\*D-[0-9]+\*\*' | grep -oE 'D-[0-9]+' | sort -u) \
+                      <(grep -oE '^- \*\*D-[0-9]+\*\*' "$D/RULINGS.md" | grep -oE 'D-[0-9]+' | sort -u))
+    for k in total bootstrap; do
+      o=$(lim "$k" "$old"); n=$(lim "$k"); id=$(awk -v k="$k" '!/^#/ && $1 == k {print $3; exit}' "$BUD")
+      [ -n "$o" ] && [ -n "$n" ] || { bad "the $k budget is missing (base '$o', now '$n')"; continue; }
+      if [ "$n" -gt "$o" ]; then
+        if [ -n "$id" ] && printf '%s\n' "$newids" | grep -qx "$id"; then ok "the $k budget rises $o -> $n with $id, a ruling the base does not have"
+        else bad "the $k budget rises $o -> $n without a new ruling: name a D-line the base's RULINGS does not have (the owner's yes, D-145), or archive something"; fi
+      fi
+    done
+    os=$(pagesum "$old"); ns=$(pagesum); ot=$(lim total "$old"); nt=$(lim total); room=$(( nt > ot ? nt - ot : 0 ))
+    if [ "$((ns - os))" -gt "$room" ]; then bad "the pages' budgets together rise $os -> $ns: a page borrows from another (one down, one up), or the total rises with a ruling"
+    else ok "the budgets against the base: the pages together $os -> $ns, the total $ot -> $nt"; fi
+  fi
+  rm -f "$old"
+fi
 
 # 2. paths named in the standing pages: a backticked token that looks like a file or a folder
 missing=0
@@ -112,7 +75,7 @@ for pb in $PAGES; do
       http*|*\**|*'<'*|*'>'*|*NNNN*|serie-*|bench-*|sim-*|snap-*|lab-*|/tmp/*|../*|client/*|.github/*|bot-history/*|-*|.*) continue ;;   # bot-history/: the private data repo's (D-142)
       twda.json|twda-vdb.json|vtes.json|vtes-v5.json|expansions.json|twd_decks.json|SUMMARY.md|PREDICTIONS.md|REPORT.md|design.txt|progress.txt) continue ;;
       suite.log|ev.jsonl|snap-suite.sh|runsec.sh|launch.sh|chain.sh|poll-home.sh|poll-seed.sh|poll-bal2.sh|run-smoke2.sh) continue ;;
-      run-null4.sh|test-bot-sim-boundary.js|elysium-knowledge.json) continue ;;
+      run-null4.sh|test-bot-sim-boundary.js|elysium-knowledge.json|record.json|summary.md) continue ;;
       client-old.html|old-bot.js|elysium-soak-hotseat.js|elysium-test-harness.js|check-versions.js|bot-gates.yml) continue ;;
       timing-windows.md|card-text-parsing.md|elysium-history-2026-09-09.md) continue ;;
     esac
@@ -164,6 +127,10 @@ case "$st" in
      else bad "STATUS names $sl, a release the root cannot have had (the root is $rw)"; fi ;;
 esac
 want "bot/'s read-only copies" "copies in bot/ are client v$(v "$B/elysium-vtes-bord.html" "const VERSION='[0-9.]+'") / protocol v$(v "$B/ELYSIUM-PROTOCOL.md" "reflects client \*\*v[0-9.]+") / srv-$(v "$B/elysium-server.js" "const VERSION = '[0-9.]+'")"
+
+# 4. the round record's copies and the CHANGELOG's template (tools/round.py check, D-145)
+out4=$(python3 "$B/tools/round.py" check 2>&1) || fail=1
+printf '%s\n' "$out4"
 
 [ "$fail" = 0 ] && echo "doc-budget: PASS" || echo "doc-budget: FAIL"
 exit $fail
