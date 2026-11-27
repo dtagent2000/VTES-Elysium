@@ -3,7 +3,7 @@
  "tool": "tools/gates.sh",
  "date": "2026-11-27",
  "branch": "docs-diet",
- "head": "fb92225",
+ "head": "eb0f3c8",
  "dirty": false,
  "base": "origin/main",
  "merge_base": "77c5ded",
@@ -22,25 +22,25 @@
    "gate": "check",
    "result": "PASS",
    "count": "35 of 35 scripts parse",
-   "seconds": 1
+   "seconds": 2
   },
   {
    "gate": "lint",
    "result": "PASS",
    "count": "lint: clean",
-   "seconds": 6
+   "seconds": 5
   },
   {
    "gate": "canary",
    "result": "PASS",
    "count": "235/0",
-   "seconds": 2
+   "seconds": 1
   },
   {
    "gate": "canary-root",
    "result": "PASS",
    "count": "235/0",
-   "seconds": 2
+   "seconds": 1
   },
   {
    "gate": "cardfx",
@@ -58,13 +58,13 @@
    "gate": "ledger-self",
    "result": "PASS",
    "count": "81/0",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "sheet-self",
    "result": "PASS",
    "count": "23/0",
-   "seconds": 1
+   "seconds": 0
   },
   {
    "gate": "cross-self",
@@ -76,19 +76,19 @@
    "gate": "ana-gates-self",
    "result": "PASS",
    "count": "35/0",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "hb1",
    "result": "PASS",
    "count": "11/0 (0 skip)",
-   "seconds": 2
+   "seconds": 1
   },
   {
    "gate": "doc-budget",
    "result": "PASS",
-   "count": "bootstrap 39238 / 50000 · standing pages 183430 / 184000",
-   "seconds": 0
+   "count": "bootstrap 39238 / 50000 · standing pages 183455 / 184000",
+   "seconds": 1
   },
   {
    "gate": "public-scan-self",
@@ -106,13 +106,13 @@
    "gate": "public-scan",
    "result": "PASS",
    "count": "0 hits in 0 files",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "test-doc-budget",
    "result": "PASS",
    "count": "test-doc-budget: every case red, the baseline and the allowed moves green",
-   "seconds": 13
+   "seconds": 14
   }
  ],
  "totals": {
@@ -121,6 +121,6 @@
   "SKIPPED": 0,
   "NOT RUN": 0
  },
- "seconds": 31,
- "egress": "(the review's pass 3 is running)"
+ "seconds": 34,
+ "egress": "12 findings (rule-missed 4, half-done 4, stale-doc 4) in 3 passes (Fable 11, Fable 1, Fable clean), 12 fixed, 0 listed"
 }

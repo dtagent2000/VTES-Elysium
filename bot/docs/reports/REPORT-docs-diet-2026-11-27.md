@@ -67,3 +67,10 @@ the egress line's classes.
 
 ## The last round's predictions; zero-vtes
 C1's predictions (spec-card-sweep §11.7) were read in its own entry: both held. This round changed no play and read no cards.
+
+## The review (three passes on Fable; the egress line has the counts)
+Pass 1 found the RULINGS rewrite's slips (a ruling's exception, Claude's part read as the owner's, dropped conditions and
+defaults, a source the old line did not carry), the tools' gaps (a budget line could leave the ceiling unseen, the versions block
+and a hand-typed egress line passed unchecked) and the pages' (the template's shape, step 7's order, a typed count, "save
+commits"). Pass 2 confirmed them fixed and found that a later save dropped the run's note; pass 3 was clean. Each fix is in the
+branch's history; the weapon nullifier's first strike, which pass 3 noted, is SWEEP-REGISTER 12.6 already.
