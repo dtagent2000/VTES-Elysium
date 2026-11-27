@@ -434,7 +434,7 @@
   the starters' playable copies 1,126 → 1,124, the library's static playable 603 → 576. `elysium-bot.js`: `BOT_VERSION` only; the
   guide's chip and footer. Reports: `reports/REPORT-c1-2026-11-27.md` and, for zero-vtes, `reports/zero-vtes-readings-c1-2026-11-27.md`
   (none of their readings contradicted). A handoff to main (`handoffs/HANDOFF-to-main-2026-11-27-v0.6.243.md`: re-embed the guide;
-  the two additive shapes in a mode's `fx`). Riding: main's client v2.6.191 (#117) merged into the branch; budgets by D-101,
+  the two additive shapes in a mode's `fx`). Riding: main's client v2.6.191 (#117) and v2.6.192 (#118) merged into the branch; budgets by D-101,
   HOWTO 24 → 25 KB, RULINGS 82 → 84 KB, the total 205 → 207 KB. The owner's words behind D-144: the data repo's RULINGS-WORDS.md
   (its #7). *Predictions* (§11.7, registered 20 Nov): (1) held, 144 of 201 modifier and reaction cards agree level by level (71.6 %,
   the floor 71.4 %), seven of them wrongly (a value sold for blood or pool, read as free by both: a limit of the measure); (2) held,
@@ -447,7 +447,8 @@
   on the same seed. The smokes against main's bytes in the nine decks with a changed card: SAME-PLAY in seven, salubri DIVERGED 3 of
   12 and pathpower 1 of 12, each first at a starter bot's block-as-target (the actor's corrected stealth). The first bytes (cardfx
   `f509d7bf`, 7039850) gave the same play numbers. CI's suite 2841/0 ×3 with `bot-gates` green on 86d02f6; the commits
-  after it are docs only (doc-budget and public-scan again). *Egress:* 10 findings (stale-doc 6, half-done 2, unproven 1,
+  after it are docs only (doc-budget and public-scan again) and the merge of main's v2.6.192 (b4dc558), after which the fast gates
+  PASS 16 again (canary-root 235/0 on v2.6.192). *Egress:* 10 findings (stale-doc 6, half-done 2, unproven 1,
   rule-missed 1) in 3 passes (Opus 6, Fable 4, Fable clean), 10 fixed, 0 listed; pass 3's note on Mole's Tunneling's card cost
   dropped (KRCG: Cost: 1 blood). No match in the human seat: the owner's choice on the round's second card (D-144 (5); D-140 (3)).
 - **v0.6.242 (26 Nov 2026; PR #114)** — The bundle's cleanup release (BOARD's first Product line; RULINGS D-141, D-142 (4),

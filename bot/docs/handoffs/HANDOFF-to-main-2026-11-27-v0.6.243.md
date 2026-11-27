@@ -2,7 +2,7 @@
 
 The V5 sweep's first family (bot RULINGS D-144): the stealth, intercept and bleed values of the whole card-effect library, checked
 card by card against zero-vtes's definitions and read by hand against KRCG's text where they differed. Built on main `055a8d7`,
-with your v2.6.191 (#117, `3a4c794`) merged in (the read-only copies in `bot/` stay at v2.6.179 until the bot consumes your replies). No wire change,
+with your v2.6.191 (#117, `3a4c794`) and v2.6.192 (#118, `026a640`) merged in (the read-only copies in `bot/` stay at v2.6.179 until the bot consumes your replies). No wire change,
 no new line. In play: the 240-match sim is the same as v0.6.242's once the version is put back (no starter card changed); the
 bots read some other decks' cards differently (the V5 smokes: salubri and pathpower).
 
@@ -19,4 +19,4 @@ bots read some other decks' cards differently (the V5 smokes: salubri and pathpo
 ## 2. Asks
 1. Re-embed the guide (your embed test compares the whole of it).
 2. If your client or its tests read a mode's `fx` of `elysium-cardfx.json`, check that the two new shapes in section 1 pass where an
-   unknown key should be ignored; the bot's canary passes against your v2.6.179 copies and your v2.6.191 release (235/0 ×2).
+   unknown key should be ignored; the bot's canary passes against your v2.6.179 copies and your v2.6.192 release (235/0 ×2).
