@@ -4643,7 +4643,7 @@
      "at": null,
      "fx": {
       "stealth": null,
-      "actStealth": 1,
+      "actStealth": 2,
       "plusIf": {
        "add": {
         "stealth": 1
@@ -4655,7 +4655,7 @@
      }
     }
    ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the equip action is at +1 stealth (its own); the bearer's +1 holds only on hunt, recruit and employ actions."
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the equip action is at 2 stealth in all (an equip's +1, R-14, and the card's additional +1); the bearer's +1 holds only on hunt, recruit and employ actions."
   },
   "Charnas the Imp": {
    "merge": true,

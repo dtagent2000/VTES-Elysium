@@ -17,7 +17,7 @@
    ],
    "round": "bot v0.6.243, 27 Nov 2026",
    "witness": "zero-vtes f9f227f (2026-11-25)",
-   "tool": "gen-cross-check.js v1.1.0, cross-check-pairing.json"
+   "tool": "gen-cross-check.js v1.2.0, cross-check-pairing.json"
   }
  },
  "states": {
@@ -2363,7 +2363,7 @@
    }
   },
   "Unlicensed Taxicab": {
-   "stealth": "explained"
+   "stealth": "corrected"
   },
   "Unwholesome Bond": {
    "stealth": "agree"

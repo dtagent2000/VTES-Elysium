@@ -510,7 +510,7 @@ ok(fx.counts.libLock >= 140,
   const nm = mode('Night Moves', 'obf');
   ok(nm && nm.fx.actStealth === 3 && nm.fx.bleedAct === true, 'Night Moves [obf]: bleed action with built-in actStealth 3 (announce-side tally booking, bot v0.6.11, reads actStealth||stealth)');
   let nAct = 0; for(const n in fx.lib) for(const m of fx.lib[n].modes || []) if(m.fx && m.fx.actStealth) nAct++;
-  ok(nAct >= 385 && nAct <= 400, 'actStealth volume sane (' + nAct + ', 393 expected -- v1.5.5\'s known-but-empty STOP rule pruned 24 redundant-true header inheritances (Putrescent/Children of Stone-class): a discipline mode of a "+N stealth action" card no longer re-carries the header\'s actStealth; v1.12.0 (C1): 429 -> 393, a granted action\'s stealth is not the card\'s own, and the conditional ones sit on plusIf)');
+  ok(nAct >= 385 && nAct <= 400, 'actStealth volume sane (' + nAct + ', 393 expected -- v1.5.5\'s known-but-empty STOP rule pruned 24 redundant-true header inheritances (Putrescent/Children of Stone-class): a discipline mode of a "+N stealth action" card no longer re-carries the header\'s actStealth; v1.12.0 (C1): 430 -> 393 (the old bytes counted 430, one above the 429 this line said), a granted action\'s stealth is not the card\'s own, and the conditional ones sit on plusIf)');
 
   /* keyword-sentence scan: trifle (colon + combination forms) and archetype */
   ok(fx.lib['Dabbler'].trifle === true && fx.lib['Dabbler'].archetype === true, 'Dabbler: "Archetype. Trifle." combination — both keywords tagged (line-start anchors defeated by combos)');

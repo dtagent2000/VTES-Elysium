@@ -1,6 +1,6 @@
 {
  "fxv": 1,
- "generated": "2026-11-27T07:14:28.925Z",
+ "generated": "2026-11-27T07:45:04.564Z",
  "source": "vtes.json — 4212 cards (KRCG, Dark Pack)",
  "counts": {"crypt":1822,"lib":2391,"libWithFx":1654,"libPersistent":1238,"libLock":163,"curated":301,"alias":5021,"formats":{"v3":4212,"v5":0}},
  "crypt": {
@@ -4077,7 +4077,7 @@
   "Unleash Hell's Fury": {"t":["action"],"cost":{"pool":2},"req":{"disc":["dai"]},"persistent":true,"modes":[{"at":null,"fx":{"actStealth":1}},{"at":"dai","fx":{"intercept":2,"aggr":true}},{"at":"DAI","fx":{"intercept":2,"aggr":true,"unlock":true}}],"src":"auto"},
   "Unleash the Hounds": {"t":["mod"],"req":{"disc":["dom","vis"]},"limited":true,"modes":[{"at":"dom","fx":{"bleed":1}},{"at":"vis","fx":{"bleed":1}},{"at":"VIS","fx":{"bleed":"X"}}],"onlyBleed":true,"note":"C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [VIS]: +1 bleed for each ready vampire of the enslaving clan you control (X).","src":"hand","merged":true,"handKeys":["bleed"]},
   "Unleashing the Bestial Soul": {"t":["mod"],"cost":{"blood":1},"req":{"disc":["dom"],"clan":["Salubri"]},"src":"auto"},
-  "Unlicensed Taxicab": {"t":["equip"],"persistent":true,"modes":[{"at":null,"fx":{"actStealth":1,"plusIf":{"add":{"stealth":1},"if":{"unread":"the bearer, on hunt, recruit and employ actions"}}}}],"note":"C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the equip action is at +1 stealth (its own); the bearer's +1 holds only on hunt, recruit and employ actions.","src":"hand","merged":true,"handKeys":["actStealth","plusIf"]},
+  "Unlicensed Taxicab": {"t":["equip"],"persistent":true,"modes":[{"at":null,"fx":{"actStealth":2,"plusIf":{"add":{"stealth":1},"if":{"unread":"the bearer, on hunt, recruit and employ actions"}}}}],"note":"C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the equip action is at 2 stealth in all (an equip's +1, R-14, and the card's additional +1); the bearer's +1 holds only on hunt, recruit and employ actions.","src":"hand","merged":true,"handKeys":["actStealth","plusIf"]},
   "Unnatural Disaster": {"t":["master"],"cost":{"pool":2},"src":"auto"},
   "Unseen Hibernation": {"t":["react"],"cost":{"blood":1},"req":{"disc":["abo"]},"src":"auto"},
   "Unthinkable Humiliation": {"t":["mod"],"req":{"disc":["pot","pre"]},"src":"auto"},

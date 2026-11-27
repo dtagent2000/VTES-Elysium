@@ -6,10 +6,14 @@ commit `f9f227f` (2026-11-25): the stealth, intercept and bleed values of every 
 the names of the effect types it pairs with ours, `bot/cross-check-pairing.json`). KRCG's card text and the rulings decide; zero-vtes
 was the witness, our compiler the second opinion.
 
-**Result.** 1,290 rows on 873 cards before our corrections; 976 agreed outright. The 263 rows of 215 cards that did not agree, or that
-the tool could not compare, were read by hand against KRCG's text and its rulings (KRCG's MCP for the rulebook). **None showed a
-reading of zero-vtes's that the text or a ruling contradicts.** 128 of the rows were ours: we corrected them in bot v0.6.243 (a
-granted action's stealth booked as the card's own, a conditional value read as flat, a paid value read as free, a count read as 1).
+**Result.** Before our corrections the tool's v1.1.0 compared 1,290 rows on 873 cards and 976 agreed outright (its v1.2.0, which
+sets an action a card grants apart on both sides, counts 1,282 rows and 898 agreements on the same bytes: 78 rows where both readings
+had booked a granted action's stealth as the card's own). The 263 rows of 215 cards that v1.1.0 left (not agreeing, or not comparable)
+were read by hand against KRCG's text and its rulings (KRCG's MCP for the rulebook). **None showed a reading of zero-vtes's that the
+text or a ruling contradicts.** 128 of the rows were ours: 107 are corrected in bot v0.6.243 (a granted action's stealth booked as the
+card's own, a conditional value read as flat, a count read as 1) and 21 are recorded as gaps our entries leave (a blocking minion's
+malus and the like). Eight more of ours sold a value for blood or pool as if it were free; both readings agreed on the number, so the
+comparison could not see it.
 
 **Where the two models differ** (both true; nothing to fix on either side):
 - a political action's +1 stealth comes from the rulebook in zero-vtes, from the card's own "+1 stealth political action" in ours;

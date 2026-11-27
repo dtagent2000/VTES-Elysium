@@ -593,12 +593,12 @@ count may differ, and then the bands are read as shares of its count.
 
 **Read (C1, 27 Nov 2026, v0.6.243; zero-vtes `f9f227f`).** (1) **Held.** Of the modifier and reaction cards that carry a value, 146 of
 202 agree level by level on the tool's first version (72 %) and 144 of 201 on v1.1.0, the bytes before the corrections (71.6 %);
-the floor was 125 of 175 (71.4 %). (2) **Over the band.** Of the 57 modifier and reaction cards that differ (v1.1.0), the readers
-found a reading of ours wrong on 24: 14 with a value KRCG's text contradicts (a flat number where the text conditions it, a free
-one it sells, a granted burn's stealth booked on the play) and 10 with a value missing (the blocking minion's malus:
-SWEEP-REGISTER 10.20). The lead then found 7 more that sell their value for blood or pool (Ears of the Hare [pro], Stone Travel
-[obt] and five others), which the tool's cost flag missed: 21 contradicted, more than 15, so the family takes a second round. Its
-second pass rides in C1b: the 29 "extra cost" flags the pairing's blood token now finds. The round's numbers (§11.5):
+the floor was 125 of 175 (71.4 %). Seven of the agreements were wrong all the same: a value the card sells for blood or pool, read as
+free by both sides (Ears of the Hare [pro], Stone Travel [obt] and five others, found by the lead after the readers): a limit of this
+measure. (2) **Held.** Of the 57 modifier and reaction cards that differ (v1.1.0), the readers found 14 with a reading of ours KRCG's
+text contradicts (a flat number where the text conditions it, a free one it sells, a granted burn's stealth booked on the play),
+inside 5 to 15; 10 more lacked a value (9 the blocking minion's malus, SWEEP-REGISTER 10.20; Peacemaker's, 10.21). The family's second
+pass rides in C1b on the 29 "extra cost" flags the pairing's blood token now finds. The round's numbers (§11.5):
 `docs/reports/REPORT-c1-2026-11-27.md`.
 
 ### 11.8 The concentrated sweep (the owner, 20 Nov 2026; RULINGS D-132, D-133)

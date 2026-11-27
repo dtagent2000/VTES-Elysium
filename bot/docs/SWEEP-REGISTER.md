@@ -210,7 +210,9 @@ A value the text conditions or caps, compiled as a plain number.
   Travel [obt], Siren's Lure [cel], Psalm of the Damned [pre], Pentex™ Loves You!, Samuel Haight); and one each (Abbot, Achilles'
   Heel, Bear-Baiting, Communal Haven: Temple, Form of Mist [PRO]: 9.8, Gravebound Drone [OBL], Guinea-Bissau Carnival, Hexaped,
   Mithraic Cultist, Pallid, Phased Motion Detector, Sunset Strip, Unlicensed Taxicab, Charigger's hunt stealth; Baltimore Purge's
-  `selfClan` Ravnos, which the actStealth path does not read). [C1's readers and the lead] · missed (Protection Racket: 7.5,
+  `selfClan` Ravnos, which the actStealth path does not read). And the bought intercept `interceptPaid` on a hand reaction or a
+  location (Ears of the Hare [pro], Voices of the Castle [tha], Speak with Spirits [SPI], The Rumor Mill): `_equipPaidIntercept`
+  reads it on equipment and `_bestUnlockReactFor` on an unlock reaction only. [C1's readers and the lead] · missed (Protection Racket: 7.5,
   active; Abbot: pathcaine ×1, Gravebound Drone: pathdeath) / latent (the rest: no deck) · a reader per condition kind where the
   number is summed, the price paid where the bot plays the card; the cross-check compares the condition (`plusIf`) with theirs.
 
