@@ -10,10 +10,10 @@ the root's release is client v2.6.191 / srv-2.6.54 (the canary's second run).
 cross-check tool, the family's corrections, `cardfx-exact.json`; D-144), with the private data repo's #7 (D-144's words).
 
 ## Last gates (v0.6.243's release bytes, `14d48ac8`, cardfx `c4b9545e`; the suite file `bae2970e`)
-27 Nov, on 86d02f6: `tools/gates.sh --sim --smokes` PASS 17 (canary 235/0 ×2, the root's v2.6.191 · cardfx 516/0 · hotseat 12/0 ·
-HB1 11/0 · lint clean · precon 18 · cross-check 19/0 · doc-budget · public-scan 0 hits) · the 240 against v0.6.242 SAME-PLAY 240,
-IDENTICAL 240 with the version put back, `ana-gates.py` PASS 6/6 · the V5 smokes 13 of 14 (banuhaqim's ledger fault is main's too,
-same seed). CI's suite ×3: the PR.
+27 Nov, on 86d02f6: `tools/gates.sh --sim --smokes` PASS 17 · FAIL 1 (canary 235/0 ×2, the root's v2.6.191 · cardfx 516/0 ·
+hotseat 12/0 · HB1 11/0 · lint clean · precon 18 · cross-check 19/0 · doc-budget · public-scan 0 hits · the 240 against v0.6.242
+SAME-PLAY 240, IDENTICAL 240 with the version put back, `ana-gates.py` PASS 6/6); the FAIL is the V5 smokes, 13 of 14: banuhaqim's
+ledger fault, main's bytes give it too on the same seed. CI's suite ×3: the PR.
 
 ## Next (the owner's order of 26 Nov and D-144)
 1. **C1b**: the fidelity pass of the other 13 V5 decks reads their flagged cards (D-138, D-144 (1)), with the family's second pass:
