@@ -3837,13 +3837,13 @@
         "intercept": 1
        },
        "if": {
-        "unread": "the acting minion is titled"
+        "actorTitled": true
        }
       }
      }
     }
    ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the additional +1 intercept holds only against a titled acting minion (SWEEP-REGISTER 7.5)."
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): the additional +1 intercept against a titled acting minion (plusIf actorTitled; C1 kept it unread)."
   },
   "Form of Mist": {
    "merge": true,
@@ -4090,13 +4090,13 @@
         "stealth": 1
        },
        "if": {
-        "unread": "the action is undirected"
+        "actUndirected": true
        }
       }
      }
     }
    ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): +1 stealth, +2 when the action is undirected."
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): +1 stealth, +2 when the action is undirected (plusIf actUndirected; C1 kept it unread)."
   },
   "Ministry": {
    "merge": true,
@@ -4109,13 +4109,13 @@
         "intercept": 1
        },
        "if": {
-        "unread": "the acting vampire is Sabbat"
+        "actorSect": "Sabbat"
        }
       }
      }
     }
    ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): +2 intercept, +3 against a Sabbat acting vampire."
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): +2 intercept, +3 against a Sabbat acting vampire (plusIf actorSect; C1 kept it unread)."
   },
   "Mirror's Visage": {
    "merge": true,
@@ -4129,13 +4129,13 @@
         "stealth": 1
        },
        "if": {
-        "unread": "the action is undirected"
+        "actUndirected": true
        }
       }
      }
     }
    ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [CHI]: +1 stealth on a directed action, +2 on an undirected one."
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): [CHI]: +1 stealth on a directed action, +2 on an undirected one (plusIf actUndirected; C1 kept it unread)."
   },
   "Sense the Sin": {
    "merge": true,
@@ -4282,13 +4282,13 @@
         "intercept": 1
        },
        "if": {
-        "unread": "against directed actions"
+        "actDirected": true
        }
       }
      }
     }
    ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [VIC]: the +1 intercept holds only against directed actions."
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): [VIC]: the employer's +1 intercept holds only during directed actions (plusIf actDirected; C1 kept it unread)."
   },
   "Giuseppe, Gravedigger": {
    "merge": true,
@@ -5062,14 +5062,21 @@
    "modes": [
     {
      "at": "SPI",
+     "drop": true
+    },
+    {
+     "at": "SPI",
+     "add": true,
+     "use": "react",
+     "when": "lockedBlock",
      "fx": {
-      "intercept": null,
+      "unlock": true,
       "interceptPaid": 1,
       "interceptPaidBlood": 1
      }
     }
    ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [SPI]: the +1 intercept costs 1 blood, once per action."
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): [SPI]: \"Only usable by a locked vampire. This vampire unlocks and attempts to block. Once this action, this vampire can burn 1 blood to get +1 intercept.\" -- the locked-block route (when lockedBlock, as Eyes of the Wild), its paid +1 once per action."
   },
   "The Rumor Mill, Tabloid Newspaper": {
    "merge": true,
@@ -5103,114 +5110,6 @@
     }
    ],
    "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): two uses: +1 intercept to a minion a directed action targets, or a dodge in combat."
-  },
-  "Ears of the Hare": {
-   "merge": true,
-   "modes": [
-    {
-     "at": "pro",
-     "fx": {
-      "intercept": null,
-      "interceptPaid": 1,
-      "interceptPaidBlood": 1
-     }
-    }
-   ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [pro]: the +1 intercept costs 1 blood."
-  },
-  "Voices of the Castle": {
-   "merge": true,
-   "modes": [
-    {
-     "at": "tha",
-     "fx": {
-      "intercept": null,
-      "interceptPaid": 1,
-      "interceptPaidBlood": 1
-     }
-    }
-   ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [tha]: the +1 intercept costs 1 blood."
-  },
-  "Mole's Tunneling": {
-   "merge": true,
-   "modes": [
-    {
-     "at": "SPI",
-     "fx": {
-      "stealth": null,
-      "plusIf": {
-       "add": {
-        "stealth": 2
-       },
-       "if": {
-        "unread": "paid with 1 blood"
-       }
-      }
-     }
-    }
-   ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [SPI]: the +2 stealth costs 1 blood; the [ani] blocker malus is not modelled."
-  },
-  "Pocket Out of Time": {
-   "merge": true,
-   "modes": [
-    {
-     "at": "obt",
-     "fx": {
-      "stealth": null,
-      "plusIf": {
-       "add": {
-        "stealth": 1
-       },
-       "if": {
-        "unread": "paid with 1 blood"
-       }
-      }
-     }
-    }
-   ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [obt]: the +1 stealth costs 1 blood."
-  },
-  "Stone Travel": {
-   "merge": true,
-   "modes": [
-    {
-     "at": "obt",
-     "fx": {
-      "stealth": null,
-      "plusIf": {
-       "add": {
-        "stealth": 1
-       },
-       "if": {
-        "unread": "paid with 1 blood"
-       }
-      }
-     }
-    }
-   ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [obt]: the +1 stealth costs 1 blood."
-  },
-  "Siren's Lure": {
-   "merge": true,
-   "modes": [
-    {
-     "at": "cel",
-     "fx": {
-      "stealth": null,
-      "plusIf": {
-       "add": {
-        "stealth": 1
-       },
-       "if": {
-        "unread": "paid with 2 blood"
-       }
-      }
-     }
-    }
-   ],
-   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [cel]: the +1 stealth costs 2 blood."
   },
   "Psalm of the Damned": {
    "merge": true,
@@ -5251,6 +5150,176 @@
     }
    ],
    "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): locked, it lets the chosen Sabbat vampire buy +1 bleed for 1 blood, once during the action."
+  },
+  "Polaris Coach": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "the bearer burns a counter from the Coach (a blood moved from it at each unlock phase), while acting"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): the +1 stealth is bought with a counter of the Coach's, not free."
+  },
+  "Changeling Skin Mask": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "OBF",
+     "drop": true
+    },
+    {
+     "at": null,
+     "add": true,
+     "fx": {
+      "plusIf": {
+       "add": {
+        "intercept": 2
+       },
+       "if": {
+        "unread": "the bearer burns the mask, for the current action"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): the +2 intercept is a one-shot bought by burning the mask, at no level; the superior Obfuscate the mask gives its bearer is not modelled."
+  },
+  "Gifts From Hereafter": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "dom",
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "unread": "the acting minion is a wraith or zombie ally; played by another ready unlocked vampire you control"
+       }
+      }
+     }
+    },
+    {
+     "at": "obl",
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "unread": "the acting minion is a wraith or zombie ally; played by another ready unlocked vampire you control"
+       }
+      }
+     }
+    },
+    {
+     "at": "DOM",
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "unread": "the acting minion is a wraith or zombie ally; played by another ready unlocked vampire you control"
+       }
+      }
+     }
+    },
+    {
+     "at": "OBL",
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "unread": "the acting minion is a wraith or zombie ally; played by another ready unlocked vampire you control"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): the +1 bleed goes to an acting wraith or zombie ally, the card played by another ready unlocked vampire (SWEEP-REGISTER 10.24): never the bot's own vampire's bleed."
+  },
+  "Revelation of Desire": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "SER",
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 3
+       },
+       "if": {
+        "unread": "burn 1 of your corruption counters from a minion controlled by the target Methuselah"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): [SER]: the +3 bleed is bought with a corruption counter, not free."
+  },
+  "WMRH Talk Radio": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "lock it; burn 1 pool after resolution if that minion does not block the action"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): the +1 intercept costs 1 pool when that minion does not block."
+  },
+  "Heart of the City": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "pre",
+     "fx": {
+      "bleed": null,
+      "bearerStat": {
+       "bleed": 1
+      }
+     }
+    },
+    {
+     "at": "PRE",
+     "fx": {
+      "bleed": null,
+      "bearerStat": {
+       "bleed": 2
+      }
+     }
+    }
+   ],
+   "note": "C1b (27 Nov 2026, the family's second pass, the agreeing rows' sample and the fidelity pass of the 13 other V5 decks): the +1 / +2 bleed is the bearer's after the card is put on it (\"This vampire gets +1 bleed\"), not this action's."
   }
  },
  "crypt": {

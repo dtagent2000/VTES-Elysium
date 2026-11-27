@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-reader-gate.js v1.0.0 (27 Nov 2026) -- THE READER GATE: the card chain's static link from the card data to the code (RULINGS D-147).
+/* gen-reader-gate.js v1.1.0 (27 Nov 2026, C1b: the readers bot v0.6.244 adds -- a bleed card's header and its discipline lines, a stealth
+   mode's own bleed, the 'or' option's bleed alone, a price (payBlood: read only by a reader that pays it), the plusIf conditions on the
+   action and its actor, a retainer's conditional intercept; v1.0.0 27 Nov 2026) -- THE READER GATE: the card chain's static link from the card data to the code (RULINGS D-147).
 
    Why: the sweep checks the card data well, but a corrected value no code reads is half-done -- right data, not right play (C1's
    lesson: SWEEP-REGISTER 7.6). This gate makes it show at once, not in the register.
@@ -31,7 +33,7 @@
                                                              condition, a type with no reader) each caught
    Needs elysium-bot.js, elysium-cardfx.json, cardfx-exact.json, cross-check-pairing.json and gen-deck-coverage.js beside it.     */
 const fs = require('fs'), path = require('path');
-const GATE_VERSION = '1.0.0';
+const GATE_VERSION = '1.1.0';
 const here = f => path.join(__dirname, f);
 const COV = require(here('gen-deck-coverage.js'));
 const SRC = fs.readFileSync(here('elysium-bot.js'), 'utf8');
@@ -47,17 +49,19 @@ const BODIES = methodBodies(SRC);
 
 const T = e => (e && e.t) || [];
 const has = (e, ...ts) => T(e).some(t => ts.includes(t));
+const bleedCard = e => (e.modes || []).some(m2 => m2 && m2.fx && m2.fx.bleedAct);              // v1.1.0: a card with a bleed mode
+const lfBleed = e => (e.modes || []).some(m2 => m2 && !m2.at && m2.fx && m2.fx.bleedAct);      // v1.1.0: a level-free bleed whose discipline lines add to it (9.13)
 /* READERS: key -> [{ fn, reads, take(e, mo) }]. `fn` is the method that reads the key on that shape; `reads` the property names its body
    must contain (the source check); take(e, mo) is the shape, mirrored from the method (its type filter, its mode filter). */
 const READERS = {
   stealth: [
-    { fn: '_bestStealthFor', reads: ['mod', '_modeStealth'], take: (e, mo) => has(e, 'mod') && typeof mo.fx.stealth === 'number',
-      why: 'a hand action modifier (type-filtered to mod)' },
+    { fn: '_bestStealthFor', reads: ['mod', '_modeStealth', 'payBlood'], take: (e, mo) => has(e, 'mod') && typeof mo.fx.stealth === 'number',
+      why: 'a hand action modifier (type-filtered to mod), its price paid with the card' },
     { fn: '_modeStealth', reads: ['stealth'], take: (e, mo) => has(e, 'mod') && typeof mo.fx.stealth === 'number', why: 'its stealth value' }],
   actStealth: [
-    { fn: '_bestBleedCardFor', reads: ['actStealth', 'bleedAct'], take: (e, mo) => has(e, 'action') && !!mo.fx.bleedAct,
-      why: 'a bleed action card: the announce books it' },
-    { fn: '_cardActStealth', reads: ['actStealth'], take: (e, mo) => has(e, 'action') && !mo.fx.bleedAct && !(!mo.at && (e.modes || []).some(m2 => m2.fx && m2.fx.bleedAct))   // a header on a card with a bleed mode is unread: _bestBleedCardFor announces the bleed without it (Fleetness, 9.13)
+    { fn: '_bestBleedCardFor', reads: ['actStealth', 'bleedAct', '_cardActStealth'], take: (e, mo) => has(e, 'action') && (!!mo.fx.bleedAct || (!mo.at && bleedCard(e)) || (!!mo.at && lfBleed(e))),
+      why: 'a bleed action card: the announce books its mode\'s stealth, its header\'s (v1.1.0, 9.13) and its discipline lines\' on a level-free bleed' },
+    { fn: '_cardActStealth', reads: ['actStealth'], take: (e, mo) => has(e, 'action') && !mo.fx.bleedAct
         && (e.modes || []).some(m2 => { const v = COV.modeConsumed(m2, e); return v && v.ok && /^actStealth@|^rush$|^attach|^employ|^maneuverEach$/.test(v.via || ''); }),
       why: 'a card action whose finder books the header (the rush, the attach, the employ: the coverage tool\'s pairing)' },
     { fn: '_bestBloodStockFor', reads: ['actStealth', 'bloodAdd'], take: (e, mo) => has(e, 'action') && mo.fx.bloodAdd > 0 && mo.fx.bloodAddTo === 'unc',
@@ -65,19 +69,23 @@ const READERS = {
     { fn: '_bestStrengthFor', reads: ['actStealth'], take: (e, mo) => has(e, 'action') && mo.fx.strengthBonus !== undefined,
       why: 'the strength action' },
     { fn: '_bestFetchFor', reads: ['actStealth', 'fetchEquip'], take: (e, mo) => !!mo.fx.fetchEquip, why: 'the fetch action' },
-    { fn: '_bestCreepFor', reads: ['actStealth'], take: (e, mo) => mo.fx.preyBurnPerCopy !== undefined, why: 'Creeping Sabotage\'s action' }],
+    { fn: '_bestCreepFor', reads: ['actStealth'], take: (e, mo) => mo.fx.preyBurnPerCopy !== undefined, why: 'Creeping Sabotage\'s action' },
+    { fn: '_bestPoolDmgActionFor', reads: ['poolDmg', '_cardActStealth'], take: (e, mo) => has(e, 'action') && !mo.at && (e.modes || []).some(m2 => m2 && m2.fx && m2.fx.poolDmg > 0),
+      why: 'a pool-damage action card: the announce books its header (v1.1.0, 9.13)' }],
   intercept: [
-    { fn: '_bestInterceptFor', reads: ['intercept'], take: (e, mo) => has(e, 'react', 'mod') && typeof mo.fx.intercept === 'number' && mo.when !== 'lockedBlock',
-      why: 'a hand reaction or modifier (type-filtered to react / mod)' },
+    { fn: '_bestInterceptFor', reads: ['intercept', 'payBlood'], take: (e, mo) => has(e, 'react', 'mod') && typeof mo.fx.intercept === 'number' && mo.when !== 'lockedBlock',
+      why: 'a hand reaction or modifier (type-filtered to react / mod), its price paid with the card' },
     { fn: '_equipIntercept', reads: ['intercept'], take: (e, mo) => has(e, 'equip', 'retainer') && typeof mo.fx.intercept === 'number', why: 'borne equipment or a retainer' },
-    { fn: '_bestUnlockReactFor', reads: ['intercept', 'unlock'], take: (e, mo) => has(e, 'react') && !!mo.fx.unlock && !!mo.when, why: 'an unlock reaction with its window (`when`)' }],
+    { fn: '_bestUnlockReactFor', reads: ['intercept', 'unlock', 'payBlood'], take: (e, mo) => has(e, 'react') && !!mo.fx.unlock && !!mo.when, why: 'an unlock reaction with its window (`when`), its price paid (Second Tradition: Domain)' }],
   interceptPaid: [
     { fn: '_equipPaidIntercept', reads: ['interceptPaid'], take: (e, mo) => has(e, 'equip'), why: 'borne equipment' },
     { fn: '_bestUnlockReactFor', reads: ['interceptPaid'], take: (e, mo) => has(e, 'react') && !!mo.fx.unlock && !!mo.when, why: 'an unlock reaction with its window (`when`)' }],
   bleed: [
-    { fn: '_bestBleedModifierFor', reads: ['bleed', 'bleedAct'], take: (e, mo) => has(e, 'mod') && typeof mo.fx.bleed === 'number' && !mo.fx.bleedAct && mo.fx.stealth === undefined,
-      why: 'a hand bleed modifier (no bleedAct, no stealth in the mode: the window after the block skips a stealth mode)' },
-    { fn: '_bestBleedCardFor', reads: ['bleed', 'bleedAct'], take: (e, mo) => has(e, 'action') && !!mo.fx.bleedAct, why: 'a bleed action card: its amount' }],
+    { fn: '_bestBleedModifierFor', reads: ['bleed', 'bleedAct', 'stealthOpt', 'payBlood'], take: (e, mo) => has(e, 'mod') && typeof mo.fx.bleed === 'number' && !mo.fx.bleedAct && (mo.fx.stealth === undefined || !!mo.fx.stealthOpt),
+      why: 'a hand bleed modifier (no bleedAct; a mode with stealth only when the stealth is optional, stealthOpt: the window after the block plays the bleed alone)' },
+    { fn: '_bestStealthFor', reads: ['bleed', 'limited'], take: (e, mo) => has(e, 'mod') && typeof mo.fx.bleed === 'number' && typeof mo.fx.stealth === 'number' && !mo.fx.bleedAct,
+      why: 'a stealth modifier\'s own bleed, booked with its stealth and its limited slot (v1.1.0, 10.17: Bonding [DOM])' },
+    { fn: '_bestBleedCardFor', reads: ['bleed', 'bleedAct'], take: (e, mo) => has(e, 'action') && (!!mo.fx.bleedAct || (!!mo.at && lfBleed(e))), why: 'a bleed action card: its amount, and a discipline line\'s on a level-free bleed (v1.1.0, 9.13)' }],
   lockStealth: [ { fn: '_lockStealthFor', reads: ['lockStealth'], take: (e, mo) => has(e, 'master'), why: 'a location locked for stealth' }],
   lockStealthClan: [ { fn: '_lockStealthFor', reads: ['lockStealthClan'], take: (e, mo) => has(e, 'master'), why: 'its clan gate' }],
   lockStealthSect: [ { fn: '_lockStealthFor', reads: ['lockStealthSect'], take: (e, mo) => has(e, 'master'), why: 'its sect gate' }],
@@ -89,9 +97,10 @@ const READERS = {
   hostIntercept: [ { fn: '_hostedIntercept', reads: ['hostIntercept'], take: (e, mo) => has(e, 'master'), why: 'a master on its host' }]
 };
 /* plusIf: _plusIf(mo, key, vamp) is asked for these keys by these methods only (its callers, mirrored); the conditions it reads. */
-const PLUSIF_CALLERS = { bleed: { fns: ['_bestBleedModifierFor'], take: (e, mo) => has(e, 'mod') && !mo.fx.bleedAct && mo.fx.stealth === undefined },
-                         intercept: { fns: ['_bestInterceptFor', '_interceptStack'], take: (e, mo) => has(e, 'react', 'mod') && mo.when !== 'lockedBlock' } };
-const PLUSIF_READ = ['selfClan', 'selfTitled'];
+const PLUSIF_CALLERS = { bleed: { fns: ['_bestBleedModifierFor'], take: (e, mo) => has(e, 'mod') && !mo.fx.bleedAct && (mo.fx.stealth === undefined || !!mo.fx.stealthOpt) },
+                         intercept: { fns: ['_bestInterceptFor', '_interceptStack', '_equipIntercept'], take: (e, mo) => (has(e, 'react', 'mod') && mo.when !== 'lockedBlock') || has(e, 'equip', 'retainer') },   // v1.1.0: + borne equipment and retainers (Corpse Balloon [VIC])
+                         stealth: { fns: ['_modeStealth'], take: (e, mo) => has(e, 'mod') } };   // v1.1.0: a hand stealth modifier's (High Aye, Mirror's Visage [CHI])
+const PLUSIF_READ = ['selfClan', 'selfTitled', 'actorTitled', 'actorSect', 'actDirected', 'actUndirected'];   // v1.1.0: the bot's PLUSIF_CONDS (its source check below)
 
 function sourceProblems(readers, callers, bodies){
   const P = [];
@@ -144,8 +153,9 @@ function judgeRow(e, famKeys, lvl, ctx){
       if(mo.fx[k] === undefined) continue;
       const rs = R[k];
       if(!rs){ vals.push({ at: mo.at || null, key: k, read: null, why: 'no READERS entry for ' + k, unknown: true }); continue; }
-      const r = rs.find(x => x.take(e, mo, played));
-      vals.push({ at: mo.at || null, key: k, read: r ? r.fn : null, why: r ? r.why : 'no reader for a ' + (T(e).join('+') || '?') + ' card of this shape' });
+      const priced = (mo.fx.payBlood | 0) > 0;   // v1.1.0 (C1b): a value sold for blood is read only by a reader that pays the price
+      const r = rs.find(x => x.take(e, mo, played) && (!priced || x.reads.includes('payBlood')));
+      vals.push({ at: mo.at || null, key: k, read: r ? r.fn : null, why: r ? r.why : (priced && rs.some(x => x.take(e, mo, played)) ? 'a price (payBlood) no reader of this shape pays' : 'no reader for a ' + (T(e).join('+') || '?') + ' card of this shape') });
     }
     const pi = mo.fx.plusIf;
     if(pi && pi.add) for(const k of Object.keys(pi.add)){
@@ -212,7 +222,7 @@ function selfTest(){
   let pass = 0, fail = 0; const ok = (c, m) => { if(c) pass++; else fail++; console.log((c ? 'PASS ' : 'FAIL ') + m); };
   const sp = sourceProblems(READERS, PLUSIF_CALLERS, BODIES);
   ok(!sp.length, 'the source check: every READERS function exists and reads its keys, every plusIf caller asks _plusIf for its key' + (sp.length ? ': ' + sp.join('; ') : ''));
-  const bogus = { stealth: [{ fn: '_noSuchMethod', reads: ['stealth'], take: () => true }], bleed: [{ fn: '_bestStealthFor', reads: ['bleedAct'], take: () => true }] };
+  const bogus = { stealth: [{ fn: '_noSuchMethod', reads: ['stealth'], take: () => true }], bleed: [{ fn: '_bestStealthFor', reads: ['poolDmg'], take: () => true }] };
   ok(sourceProblems(bogus, {}, BODIES).length === 2, 'planted: a method that does not exist, and a method that does not read the key it is listed for, are each reported');
   const pairing = { family: { stealth: { ours: ['stealth', 'actStealth'] }, intercept: { ours: ['intercept', 'interceptPaid'] }, bleed: { ours: ['bleed'] } } };
   const lib = {
@@ -235,6 +245,22 @@ function selfTest(){
   const lib3 = Object.assign({}, lib, { 'Mod New': { t: ['mod'], modes: [{ at: 'obf', fx: { stealth: 1, newKey: 2 } }] } });
   const r4 = runGate({ cards: { 'Mod New': { stealth: 'corrected' } } }, lib3, { family: { stealth: { ours: ['stealth', 'newKey'] } } }, {});
   ok(r3.problems.length === 0 && r4.problems.some(p => /no READERS entry for newKey/.test(p)), 'planted: a family key READERS does not know stops the gate');
+  /* v1.1.0 (C1b): the readers of bot v0.6.244, each with its counter-case */
+  const lib5 = {
+    'Mod Priced': { t: ['mod'], modes: [{ at: 'obt', fx: { stealth: 1, payBlood: 1 } }] },                                   // Stone Travel's shape: read (the stealth finder pays)
+    'Equip Priced': { t: ['equip'], modes: [{ at: null, fx: { intercept: 1, payBlood: 1 } }] },                               // no equipment reader pays a price: unread
+    'Mod Both': { t: ['mod'], limited: true, modes: [{ at: 'DOM', fx: { stealth: 1, bleed: 1 } }] },                           // Bonding [DOM]: the bleed read with the stealth
+    'Mod Opt': { t: ['mod'], limited: true, modes: [{ at: 'CEL', fx: { stealth: 1, bleed: 1, stealthOpt: true } }] },          // Subversion [CEL]: read
+    'React Titled': { t: ['react'], modes: [{ at: null, fx: { intercept: 1, plusIf: { add: { intercept: 1 }, if: { actorTitled: true } } } }] },   // Protection Racket: read
+    'Mod Undir': { t: ['mod'], modes: [{ at: null, fx: { stealth: 1, plusIf: { add: { stealth: 1 }, if: { actUndirected: true } } } }] },        // High Aye: read
+    'Bleed Header': { t: ['action'], modes: [{ at: null, fx: { actStealth: 1 } }, { at: 'cel', fx: { bleedAct: true } }] },  // Cat Burglary: the header read
+    'Bleed Lines': { t: ['action'], modes: [{ at: null, fx: { bleedAct: true } }, { at: 'ani', fx: { bleed: 1 } }] } };    // Break the Bonds: the line's bleed read
+  const pair5 = { family: { stealth: { ours: ['stealth', 'actStealth'] }, intercept: { ours: ['intercept'] }, bleed: { ours: ['bleed'] } } };
+  const ex5 = { cards: { 'Mod Priced': { stealth: 'corrected' }, 'Equip Priced': { intercept: 'corrected' }, 'Mod Both': { bleed: 'corrected' }, 'Mod Opt': { bleed: 'corrected' },
+    'React Titled': { intercept: 'corrected' }, 'Mod Undir': { stealth: 'corrected' }, 'Bleed Header': { stealth: 'corrected' }, 'Bleed Lines': { bleed: 'corrected' } } };
+  const r5 = runGate(ex5, lib5, pair5, {}), un5 = r5.unread.map(x => x.card).sort().join(', ');
+  ok(r5.read === 7 && un5 === 'Equip Priced' && /payBlood/.test(r5.unread[0].unreadVals.join(' ')),
+    'planted (v1.1.0): a priced stealth, a stealth mode\'s bleed, the or-option\'s bleed, actorTitled and actUndirected, a bleed card\'s header and a discipline line\'s bleed are read; a price no reader pays is not (got ' + r5.read + ' read, unread: ' + un5 + ')');
   console.log('reader gate ' + GATE_VERSION + ' self-test: ' + pass + '/' + fail);
   return fail;
 }
