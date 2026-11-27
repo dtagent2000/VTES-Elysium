@@ -1,4 +1,4 @@
-# LESSONS — the ~300 learnings distilled (20 Oct 2026). Numbered L-n (never renumbered; a new line takes the next number). Each line names its dated story in the private data repo's `bot-history/elysium-bot-learnings-2026-10-20.md` (the date is the key there). Read before building anything with timing, tests or measurements. A new line only for a new CLASS of lesson.
+# LESSONS — the ~300 learnings distilled (20 Oct 2026). Numbered L-n (never renumbered; a new line takes the next number). Each line names its dated story: up to 20 Oct in the private data repo's `bot-history/elysium-bot-learnings-2026-10-20.md` (the date is the key there), later ones in the CHANGELOG (to v0.6.243: `history/`). Read before building anything with timing, tests or measurements. A new line only for a new CLASS of lesson.
 
 ## Before you build
 - L-1 **Find the general measure before writing the deck rule** (19 Sep): "two superior-Animalism vampires first" was a special case of "raise the vampire that can play your library" (`_deckFit`).
@@ -13,10 +13,10 @@
 - L-10 **A tie-break is where a card's second job lives**; when two keep-rules can meet on one tie, say which wins and tell the owner (19 Oct).
 - L-11 **Keep the rejected alternative as a document, not a code path** (16 Sep, the helper gate).
 - L-12 **Ask what the bot CANNOT do, not only which cards are inert** (18 Sep: a rule about a card's cost usually needs an action the bot lacks).
-- L-93 **A card that gets its consumer leaves the rules that held it** (18 Nov, 5b): Sudden Reversal got `_srFor`, but v0.6.215's dead-card rule (an out-of-turn master with no consumer is dead) still named only Archon Investigation's key, so the discard phase cycled it at once: the suite was green, the lasombra smoke showed no cancel. When a held card plays, grep every rule that names it or its class as held, dead or skipped (the finder, `_deadHandIndex`, the coverage verdict) and watch it fire in a sim.
-- L-96 **A ledger's FULL is about modes, not conditions** (18 Nov, 6a): Eyes of Argus and The Warrens read FULL, every mode consumed, while their printed 'Only usable during an action directed at you' was read nowhere: 568 of their 829 intercept plays in the 240 were at undirected actions. A condition sentence is a class: tag it in the compiler, ask it in every finder, and give the ledger the class so a card with the sentence and no tag is PARTIAL.
-- L-100 **Reach is not fidelity** (25 Nov, the exactness round): 77/77 playable held a missing rider (Mirror Walk [THA]), two dropped +1s, an unpaid cost (Creeping Sabotage) and a play with no target (Life in the City): the coverage tool sees the keys an entry carries, never a clause it leaves out. Count fidelity apart (`cardfx-fidelity.json`, CARDS.md's exact).
-- L-98 **A pattern that finds an effect's words also finds them negated** (20 Nov, the pilot): "cannot strike: combat ends" compiled as the player's own combat-ends strike on four cards, "the opposing minion cannot dodge" (or maneuver, press) as the player's own on more; the second pass found the same words as a time ("during the press step") and as the opponent's cost. Read a sentence's subject and its "cannot" before its verb; a pattern refuses what it does not read whole. Removing a misread key can expose a card it had hidden from a finder: re-read what the key kept out.
+- L-93 **A card that gets its consumer leaves the rules that held it** (18 Nov): Sudden Reversal got `_srFor`, but the dead-card rule still held it dead and the discard phase cycled it, with the suite green. When a held card plays, grep every rule that names it or its class as held, dead or skipped, and watch it fire in a sim.
+- L-96 **A ledger's FULL is about modes, not conditions** (18 Nov): two cards read FULL while their 'Only usable during an action directed at you' was read nowhere, and most of their intercept plays were illegal. A condition sentence is a class: tag it in the compiler, ask it in every finder, and let the ledger mark a card with the sentence and no tag PARTIAL.
+- L-100 **Reach is not fidelity** (25 Nov): 77/77 playable held a missing rider, two dropped +1s, an unpaid cost and a play with no target: the coverage tool sees the keys an entry carries, never a clause it leaves out. Count fidelity apart (`cardfx-fidelity.json`, CARDS.md's exact).
+- L-98 **A pattern that finds an effect's words also finds them negated** (20 Nov): "cannot strike: combat ends" compiled as the player's own strike, and the same words appeared as a time and as the opponent's cost. Read a sentence's subject and its "cannot" before its verb; a pattern refuses what it does not read whole; removing a misread key can expose a card it hid from a finder.
 
 ## Tests that lie
 - L-13 **A hook called by a unit test proves the hook, not its call site** (16 Oct, twice in one release: Arcane Library's lock, the probe reservation). Test a phase effect through the phase.
@@ -31,18 +31,18 @@
 - L-22 **A section that calls a brand-new method throws on the old bytes** — a destructive proof that the method is new, nothing more; name it as such (16 Sep).
 - L-23 **A two-sided effect needs a test from BOTH sides** (22 Sep, the steal); a unit test of each half is not a test of the wire (18 Sep, give / given).
 - L-24 **Source-shape assertions are tripwires for insertion order** (18 Sep, 80e) and the suite guards the docs too (15 Sep).
-- L-85 **A value compared with itself passes for every value but NaN** (11 Nov, round C2): 66b and 92b had asserted `x === x` since before the monorepo (12 Oct) until the lint's `no-self-compare` found them; an assertion that reads nothing the change decides is the same class one level up (69b, BOARD).
+- L-85 **A value compared with itself passes for every value but NaN** (11 Nov): two sections had asserted `x === x` for a month until the lint's `no-self-compare` found them; an assertion that reads nothing the change decides is the same class one level up (69b, BOARD).
 - L-90 **A destructive check proves only the difference it ran against** (14 Nov, round B): 169f was red on v0.6.223 but green
   on bytes whose hard-coded gate left `burnBy` unread; run a new assertion against bytes that lack exactly the change, or a mutant.
 
 ## Timing
 - L-25 **No await between a line and the window it opens** (17 Oct): a 150 ms sleep before the window lost answers at pace 0 for four weeks (v0.6.144 → v0.6.206; the pacing sleeps after a window stay); two windows in three ran out their clock.
 - L-26 **A guard about what the table has seen keys on the line the answer answers, not on my queue** (17 Oct).
-- L-92 **A send can deliver before it returns** (14 Nov, round E): the hotseat bridge hands a line to the other bots inside the actor's `ws.send`, and a target with nothing to play answered at once — before the drain's `finally` marked the line sent; the guard took the Pass for stale and the window ran out (50 of 53 at the real clock). A flag flipped after a send misses what the send itself triggers: ask the state (the line has left the queue) at the answer's time, and do not send inside a send (`_drain` re-entered and nested a frame before the line it answered). The other order (a line delivered inside its own `send()`, before `_askBlock` opens the window) is moot since client v2.6.177's queued bridge: at pace 0 the windows that ran out fell from 112 of 491 to 0 of 502. It stays open only on a synchronous relay at pace 0 (the suite's, a client before v2.6.177); `_draining` stops only a send inside a send. Main's macrotask arm failed the block and ledger gates at pace 0 (main's reading: our 0 ms timers ran between the hops): a microtask is the order the bots need.
+- L-92 **A send can deliver before it returns** (14 Nov): the hotseat bridge handed a line to the other bots inside the actor's `ws.send`, so an answer came before the line was marked sent and was taken for stale. Ask the state (the line has left the queue) at the answer's time, and never send inside a send (`_drain`). Since client v2.6.177's queued bridge it stays open only on a synchronous relay at pace 0; a microtask, not a macrotask, is the order the bots need.
 - L-27 **A wait's clock starts when its question reaches the wire; a send queue is not a timeline** (15–16 Oct).
 - L-28 **Time the whole flow, not the wait you changed** (9 Oct); a shortened wait that was somebody's only window becomes an asked step.
 - L-29 **Pace the thing the rule is about** (17 Oct, the chat beat): the beat was separating everything, not two bubbles.
-- L-99 **A bubble is the bots' transport too** (25 Nov, the floor): a rule for the humans' eyes held the bots' answers; the 240 had 8 ledger faults and a 95 % handshake until acts, windows and clocks learned it. Run the sim's gates on a chat change, and list every clock that waits on what it holds (askSecs, the tempo: two egress passes found one each).
+- L-99 **A bubble is the bots' transport too** (25 Nov): a rule for the humans' eyes held the bots' answers and broke the ledger and the handshake until acts, windows and clocks learned it. Run the sim's gates on a chat change, and list every clock that waits on what it holds.
 - L-30 **A race at human pace is invisible at paceMs 0** (15 Oct); reproduce it on the 300 ms relay. A synchronous spin cannot be raced in-process.
 - L-31 **A wait that guards a race must wait for an EVENT, not for time** (16 Oct); two clocks with no coupling means the longer one always wins (16 Sep).
 - L-32 **Two pause mechanisms are one rule only where they agree** (12 Oct, the hold): a pause outliving the release hung the poll.
@@ -51,7 +51,7 @@
 - L-35 **A flag about a FUTURE step dies where its scope ends** (16 Oct, a final-round Grapple leaked into the next combat).
 - L-36 **A pause measured from your own last act is invisible after a long wait** (22 Sep): anchor the beat on the table's last event.
 - L-37 **`null` means two things in the same field; count the arm sites against the restart sites** before shipping a timing change (16 Sep).
-- L-83 **A fix that removes a wait must keep the decision the wait served** (30 Oct, v0.6.214): skipping Taste of Vitae's wait after a clean dodge skipped the card itself; section 37g (v0.6.21's) caught it only when the whole suite ran on the release bytes — the review's fixes had been checked section by section (L-18).
+- L-83 **A fix that removes a wait must keep the decision the wait served** (30 Oct): skipping Taste of Vitae's wait after a clean dodge skipped the card itself; the whole suite on the release bytes caught it, section-by-section checks had not (L-18).
 
 ## Reading traces and measurements
 - L-38 **"Never seen" means "never emitted" until the emit is proven** (20 Sep): eleven play sites wrote no row; every per-card reading of that week was redone. Guessed emit fields lie; the trace is the judge.
@@ -72,16 +72,11 @@
 - L-53 **Sanity-check a classifier against one known case before reporting its list** (21 Sep: the "no fx" list named cards the bots play).
 - L-54 **A smoke is not a pattern; 100 % is a finding too; restraint is a finding too** (Sep).
 - L-82 **A design that never changes the table cannot see a rule that only bites at another table** (29 Oct): Chantry's last-pool rescue never fired in 240 four-seat matches and showed in the first 168 five-seat ones. Vary the table size and the decks, not only the seats and the deals.
-- L-86 **An explanation that lives only in a report leaves its row a fault in every later gate** (11 Nov, round C2): the 225 bleeds that no seat took were all after the game's end (the Toreador report, 6 Nov), yet the ledger still printed them as faults, so no zero gate could stand on it; write the explanation into the audit as a row of its own.
+- L-86 **An explanation that lives only in a report leaves its row a fault in every later gate** (11 Nov): bleeds no seat took were explained in a report, yet the ledger still printed them as faults; write the explanation into the audit as a row of its own.
 - L-91 **A mirror bench cannot fire a knob's half that needs two seats on it** (14 Nov, round B): the owner's defence needs the
   owner and a burner both at 1; a bench pinned to the owner's deck measured it. Ask which seats each half needs.
-- L-94 **On the sim table a moved clone moves the draws** (18 Nov, 5b): the window sent the master's fx clone a beat earlier and a held master no longer spent a beat; the client bridge's fx queue then delivered the next draws at other moments, and 28 of the 240 matches DIVERGED with no decision rule changed for the starters (an ablation split them 16 / 12). Predict a timing change as DIVERGED; ablate before reading one as a decision.
-- L-97 **A card shares a key only through the path that would play it** (19 Nov, the sweep's dry run): zero-vtes's definitions
-  share an effect's building block; our single-card keys carry the actor, the window and the terms in their consumer. Of 220
-  candidates (185 cards) that shared a sample card's effect, 8 were carried by the key as it is read, 42 needed the consumer made
-  general or a rider key, 110 play the effect another way. The ledger's FULL reads a key's name, not the path: Wrong and
-  Crosswise's [DEM] votes, Monastery of Shadows' lock for stealth and Priority Contract's pool gain are read by no path that would
-  play them, and the three are FULL (L-96's case, by type). Count reach on the path, then grade by text.
+- L-94 **On the sim table a moved clone moves the draws** (18 Nov): an fx clone sent a beat earlier shifted the bridge's later draws and 28 of 240 matches DIVERGED with no decision changed. Predict a timing change as DIVERGED; ablate before reading one as a decision.
+- L-97 **A card shares a key only through the path that would play it** (19 Nov): zero-vtes's definitions share building blocks, while our single-card keys carry the actor, the window and the terms in their consumer; of 220 candidates 8 were carried as read. The ledger's FULL reads a key's name, not the path (L-96's case, by type): count reach on the path, then grade by text.
 
 ## Contracts, parsers and state
 - L-55 **A parser and its phrase are one contract; move the phrase's tier and the parser goes deaf** (22 Sep: six days of series with no combat handshake).
@@ -98,14 +93,9 @@
 - L-66 **A comment that explains a bug is still a bug; a clever loop condition is a comment that did not get written** (16–18 Sep).
 - L-67 **A name variant in the curated layer is a silent miss for the other spelling** (19 Oct, Pentex); a comment that says "client-identical" is a claim — pin it with a test against the client's own code (19 Oct).
 - L-68 **A trailing `//` comment is a statement killer** (26 Sep); never tail-append to a line ending in a comment.
-- L-88 **What one mechanism keeps about a card belongs in the bot's own map, keyed by the card's id, not on the card** (13 Nov, the Jack round): the failed blocker's fix first stored the combat's opponent on the vampire (`myVamp._combatOpp`), and 236 of 240 matches came back SAME-PLAY with no decision changed — the card rides in every decide row that names it, and the pub is built from it; `_combatOppOf`, a Map by id, gave IDENTICAL 236. The tokens keep the rule from the other side: derived from the fields the rules read at every push (`_memoMap`), never written onto the card.
-- L-89 **A flow that can be superseded stops at every await, not at one step** (13 Nov, the Jack round's second review): v0.6.221
-  checked a combat's token in its press step; the round it waited on (40 awaits) and its helpers still spoke, wrote the tally, took
-  damage and registered waits that took the live combat's lines (a replaced waiter wakes with null). Read the token at entry and
-  check it after EVERY await, before the next line, write, card or wait; end the old flow's pending waits when the new one starts
-  (a waiter registered before still takes the new flow's line: 166i); prove it by superseding the real flow at each wait it passes
-  (166e), since a check proven at one hold point is one check proven.
-- L-95 **New per-game state is reset in `started` in the same commit** (18 Nov; the egress class five rounds running: v0.6.215, 217, 224, 230, 232 -- the ratchet): a flag or map a feature adds lives on into the next game at the table (5b's nightmare counters showed on a new game's Ravnos). Add it to the `started` reset beside its first use, and check that a new game starts clean.
+- L-88 **What one mechanism keeps about a card belongs in the bot's own map, keyed by the card's id, not on the card** (13 Nov): a field stored on the vampire rode into every decide row and the pub and changed the footprint; a Map by id gave IDENTICAL. Tokens likewise derive from the fields the rules read (`_memoMap`).
+- L-89 **A flow that can be superseded stops at every await, not at one step** (13 Nov): a combat checked its token in one step while its other awaits still spoke, wrote and waited. Read the token at entry and check it after EVERY await; end the old flow's pending waits when the new one starts; prove it by superseding the real flow at each wait it passes (166e, 166i).
+- L-95 **New per-game state is reset in `started` in the same commit** (18 Nov; the egress class five rounds running): a flag a feature adds lives on into the next game at the table. Add it to the `started` reset beside its first use, and check that a new game starts clean.
 
 ## Tools and ways of working
 - L-69 **The smoke of the release is part of the release** (16 Oct): every R2–R4 release's own smoke found a bug its suite did not.
@@ -121,5 +111,5 @@
 - L-79 **Seat and deck attribution comes from manifests, never from names or emission order** (4 Aug, bitten twice).
 - L-80 **Split by OWNERSHIP, then consume releases** (9 Sep); never share files between two projects again.
 - L-81 **Three brains is the disease, not the bots** (carried in from main): one source of truth per fact.
-- L-84 **A stacked PR still targets `main`; the order goes in its body ("merge #N first")** (3 Nov, round C3): #49 was opened on #47's branch `bot-v5-wave4`; the base stayed when #47 merged, so #49 merged 39 s later into that branch, not `main`, and #50 had to carry it over. Check the base before handing a PR over.
-- L-87 **A figure a page repeats moves with the change** (12 Nov, crypt wave A: 6 of its 12 egress findings were stale-doc, the class three rounds running -- the ratchet): before each review pass, grep the standing pages, the register, the PR draft, the handoff and the curated notes for every figure the change (or the last pass's fix) moved -- a count, a version, a sha, an owed list, a ruling, a sentence on what the code does (v0.6.239: 6 of 15). L-73 is the rename case.
+- L-84 **A stacked PR still targets `main`; the order goes in its body ("merge #N first")** (3 Nov): a PR opened on another's branch merged into that branch, not `main`. Check the base before handing a PR over.
+- L-87 **A figure a page repeats moves with the change** (12 Nov; the stale-doc class, the ratchet): write a figure once (the round record, D-145) and let the tools render its copies; a figure still typed by hand (a count, a version, an owed list, a sentence on what the code does) is grepped on every page before each review pass. L-73 is the rename case.

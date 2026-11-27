@@ -575,7 +575,7 @@ distance from 980 to 1,543, and two days of new definitions the rest.
 - **#92's three compile failures beyond §4.4's letter** (the near miss on a mode's `when`, an added mode without `fx`, a half
   opt-in): each turns a silent mistake into a compile error. The owner's word is pending; none blocks the pilot.
 - **Their wrong readings.** Claude's proposal, not ruled: the noted ones are kept as a list in each round's PR, for the owner to pass
-  to zero-vtes's maintainer if he wishes. Answered 27 Nov (D-144 (3)): a report per round in `docs/reports/`.
+  to zero-vtes's maintainer if he wishes. Answered 27 Nov (D-144 (3)): reported each round, a section of the round's report since D-145.
 
 ### 11.7 Predictions for the first family (registered before its tool exists; D-93, L-44)
 A scratch scan on 20 Nov (appendix C; action modifiers and reactions only, the levels joined crudely): 443 entries, 376 with a

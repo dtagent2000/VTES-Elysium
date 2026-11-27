@@ -1,7 +1,7 @@
-# HOWTO — running, debugging, analysing (20 Oct 2026)
+# HOWTO — running, debugging, analysing (20 Oct 2026; the round record 27 Nov 2026)
 
 Everything runs from inside `bot/`. Third-party data (`vtes.json`, the TWDA) is fetched or copied from the private data repo first
-(root `CLAUDE.md`): `bash tools/setup.sh` (D-139) fetches KRCG's v5 dump and writes the v3-shaped `vtes.json` every tool reads with
+(root `CLAUDE.md`): `bash tools/setup.sh` fetches KRCG's v5 dump and writes the v3-shaped `vtes.json` every tool reads with
 `krcg-v5.js` (`--compare OLD.json` prints the field diff against a v3 file by card id), clones zero-vtes at its pin outside the
 repository, and with `--twda` fetches KRCG's v5 TWDA as `twda.json` (`twda.py` refuses the old list). When the network policy blocks
 it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo and copy the two dump files in. KRCG's v3 file
@@ -17,8 +17,8 @@ it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo
   DIVERGED with the first differing decision): before / after a change, or version against version (copy `bot/` to scratch with
   the other `elysium-bot.js`). Two versions' traces differ in the result row's `bot` at least: for a clean-up release, `sed` the
   new version to the old in a copy of its traces and expect IDENTICAL. Traces are arena-shaped (`match-NNNN.jsonl`, a `result` row), ~0.5 MB each: keep them in scratch.
-  SUMMARY.md lists post-game ousts and the `zeroPool` count (a bot deciding at pool ≤ 0 before its own oust = a rules fault; a payment
-  of the last pool that ousts at once leaves no decision at 0 and is not counted — BOARD). When a footprint shows DIVERGED, check whether
+  SUMMARY.md lists post-game ousts and the `zeroPool` count (a bot deciding at pool ≤ 0 before its own oust = a rules fault;
+  BOARD has its blind spot). When a footprint shows DIVERGED, check whether
   the two decision sequences realign once one missing row is dropped. A `--decks` key the bot does not embed plays `deck-<key>.json`
   beside the sim (a test input: the client's menu offers `ARCHETYPES` only). A deck's deal is fixed by its seat and the deal seed, so
   `--seatings all --seeds K` gives each deck K × seats deals, the same one in every seating of a seat: enough for version against
@@ -38,38 +38,37 @@ it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo
   the crypt readers that read them: modelled only when they cover every sentence) and the crypt class map. Its self-test runs before
   every page (`--self-test` prints it); a classifier miss or a curated crypt key with no class in `FX_CLASS` fails the run, so a round
   adds its new keys' classes there.
-  Fidelity (v1.3.0, D-138): `cardfx-fidelity.json` names the cards read clause by clause against KRCG's text and each one's register
+  Fidelity (D-138): `cardfx-fidelity.json` names the cards read clause by clause against KRCG's text and each one's register
   gaps (`id@state`: a compound entry's half; not a mention, another card's reading of it, class 13: its `about`); the page prints per deck `text-checked` and `exact` and fails (as `test-cardfx.js`
   does) on a gap the register no longer lists.
-  Regenerate it from the release bytes' runs: the 240 and the V5 smoke (each of the 14 new keys:
-  `node elysium-bot-sim.js --decks KEY,malkavian,tremere,nosferatu,ventrue --seatings random --matches 12 --seed 1 --trace /tmp/v5/KEY`). All 12
-  deal from seed 1: a single copy deep in a library is never drawn ('unseen' is then the deal, not the bot) — add `--seeds 4`
-  to see one played.
-- **The local gates and the suite** — `bash tools/gates.sh` runs the fixed local gates (the hotseat gate and test-doc-budget when the
-  diff touches them) and writes OUT/summary.md, the PR's table (`--sim` the 240's footprint against the base's bundle, both sides
-  frozen, `--smokes` the 14 V5 smokes; run those in the background and poll).
-  The suite ×3 is CI's, the release gate (D-139): `bash tools/ci-status.sh` prints each run's count and the sha256 it ran. When CI
-  cannot run, `tools/gates.sh --suite N` runs it here, each run in a frozen snapshot (`bot/` copied to scratch with the root's client
-  one level up for 154f, the sha beside the log, `timeout 900`, ~300–600 s a run), so the next edit cannot leak into a run. The heap
-  flag is not optional: at 4 GB the suite dies out of memory in section 180 since v0.6.236 (C6: each `new Bot` parses its own
-  cardfx, ~2.9 MB of heap -- a likely share, not profiled).
+  Regenerate it from the release bytes' runs: the 240 and the V5 smokes (`tools/gates.sh --sim --smokes` keeps both in its OUT).
+  The smokes deal from seed 1: a single copy deep in a library is never drawn ('unseen' is then the deal, not the bot) — add
+  `--seeds 4` to see one played.
+- **The local gates and the suite** — `bash tools/gates.sh --out DIR` runs the fixed local gates (the hotseat gate and
+  test-doc-budget when the diff touches them) and writes the PR's table and the round record in DIR (`--sim` the 240's footprint
+  against the base's bundle, both sides frozen, `--smokes` the 14 V5 smokes; run those in the background and poll).
+  The suite ×3 is CI's, the release gate: `bash tools/ci-status.sh` prints each run's count and the sha256 it ran. When CI cannot
+  run, `tools/gates.sh --suite N` runs it here, each run in a frozen snapshot (`bot/` copied to scratch with the root's client one
+  level up for 154f, `timeout 900`, ~300–600 s a run). The heap flag is not optional: at 4 GB the suite dies in section 180 (C6).
+- **The round record** (D-145) — after the round's last gates, with CI green on their head and the round's CHANGELOG entry
+  written (`*Gates:* (pending)`, `*Egress:* (pending)`): `python3 tools/round.py save DIR --ci --egress "<line>"` (`--note "<why>"`
+  for a FAIL the round explains) commits `docs/round-record.json` and renders STATUS's blocks and the entry's two lines; a later
+  save on the same branch renders them again. `round.py render pr DIR` prints the PR's gate section, `round.py status` re-renders
+  STATUS's versions and deploy blocks (after a release or a refresh of the copies), `round.py check` is doc-budget's section 4.
+  A budget that runs out: borrow in `tools/doc-budgets.txt` (one down, one up) or archive (HARNESS "Upkeep").
 - **CI** (`.github/workflows/bot-gates.yml`, D-109): every PR that touches `bot/` or the bundle, every such push to `main` and a
-  daily run on `main` (03:17 UTC) run the gates that need no person and no previous bytes (the step list is the file) and the suite
-  ×3 in parallel jobs; `bot-gates`, the required check, is green only when all are. On any other PR the checks and the suite are
-  skipped and `bot-gates` succeeds. A gate that skips fails
-  its step, and the root's bundle must equal `bot/`'s (a bundle change ships as a release). A red daily run is the bot's to
-  answer; a mail may reach nobody (GitHub mails the cron line's last editor), so look:
+  daily run on `main` run the gates that need no person and no previous bytes (the step list is the file) and the suite ×3;
+  `bot-gates`, the required check, is green only when all are. A red daily run is the bot's to answer; look:
   `gh api 'repos/dtagent2000/vtes-elysium/actions/workflows/bot-gates.yml/runs?branch=main&per_page=1' --jq '.workflow_runs[0] | {event, conclusion}'`
   Still the round's: the sim footprint (`tools/gates.sh --sim`), the arena smoke and
   the audits, a new section's destructive check, main's client suite when the wire changes (red by design until main re-embeds a
   new guide). A red the PR did not cause: the suite's 78c flake -- re-run the failed job once (`gh run rerun <id> --failed`) and
   say so in the PR; `test-cardfx` / `gen-precon --check` red with no card change -- KRCG's data moved, a round of its own; a
-  doc-budget version line on a PR -- main released (a scheduled run or a push only warns), refresh STATUS in the PR. The correctness lint by
-  hand, from `bot/`: `npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .`
-  -- every finding fails; the suppressions file is `{}` and only shrinks (never `--suppress-all` / `--suppress-rule`:
-  CI fails a PR that adds one).
-- **The canary against main's release** (the second canary run; `tools/gates.sh`'s canary-root): a scratch dir with `bot/test-bot-canary.js`, `bot/elysium-bot.js`,
-  `bot/elysium-cardfx.json` (the human-Ball memo checks), the root's `elysium-vtes-bord.html` and `client/ELYSIUM-PROTOCOL.md`; `node test-bot-canary.js` there.
+  doc-budget version line on a PR -- main released, re-render STATUS (`tools/round.py status`). The correctness lint by hand, from
+  `bot/`: `npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json .` -- every
+  finding fails; the suppressions only shrink (CI fails a PR that adds one).
+- **The canary against main's release** (`tools/gates.sh`'s canary-root): a scratch dir with `bot/test-bot-canary.js`,
+  `bot/elysium-bot.js`, `bot/elysium-cardfx.json`, the root's `elysium-vtes-bord.html` and `client/ELYSIUM-PROTOCOL.md`; run it there.
 - **Main's client suite beside the release bytes** (when the wire or the timing changed): a scratch copy of `client/` (never the
   real one — THE RULE), the bot bundle from `bot/` copied into it (`elysium-bot.js`, `elysium-cardfx.json/.js`,
   `elysium-twd-profile.json/.js`, `elysium-twd-archetypes.json/.js`, `START-HERE-BOTS.html`), then `node test-client-logic.js`
@@ -97,8 +96,8 @@ it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo
   read at the arm's variant seat, so it doubles as a pinned control. Read: `python3 ana-bench.py DIR...` (each arm's edge: the
   variant seat's VP minus the table's mean) and `python3 ana-sim-diff.py --vp CONTROL ARM` (the claim: per-match differences, a
   paired SE, VP and win share; about ±0.27 VP at 96, ±0.15 at ~300). Prove the knob FIRES first (a trace row, a counter, a test —
-  a manifest shows only that it is set): an arm with no DIVERGED match is inert, its +0.00 no no-loss result (`--vp` says so). The
-  arena's inert-arm check is moot here: an inert arm is IDENTICAL to its control. A 12-match series supports mechanism counts only.
+  a manifest shows only that it is set): an arm with no DIVERGED match is inert, its +0.00 no no-loss result (`--vp` says so). A
+  12-match series supports mechanism counts only.
 - **The probe lab** — `node lab-probe.js N SEED ARMS > lab-SEED.jsonl` then `python3 ana-lab.py lab-*.jsonl`: N random tables, one
   minion phase per arm, the same table in every arm (~2 s per table and arm); measures decisions, never the wire's timing.
   Pattern for any once-a-match decision.
@@ -153,24 +152,19 @@ it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo
   byte for byte by the old script (O-37); a new share is APPENDED.
 
 ## Analysing a series (sim or arena)
-- `ana-gates.py DIR` (the gate after a series: one PASS / FAIL line per audit below and for the matches and `zeroPool`, exit 1 on a
-  FAIL; its header is the policy -- the leads and, on the sim table, the windows are information; `--self-test` plants a fault per gate) ·
-  `ana-sim-diff.py A B` (footprint) · `ana-ledger.py` (bleed pairing both ways — `VANISHED` = 0; steal pairs equal, a `STOLE >
-  VICTIM LOST` row is a lead; dealt vs taken; `LESS, UNEXPLAINED`) · `ana-block.py` (0 violations) · `ana-inv.py` (invariants;
-  ~1 flag in 3 matches is the baseline; a new flag kind or a jump = a line the log cannot type (add its kind) or a real bookkeeping
-  difference; `ELY_POOL_TRACE=1` names the code line behind a pool change) · `ana-windows.py` (the actor's reactions-only windows: ran out
-  and went through = 0 — past 2.5 s plus the bots' pace, with the table quiet that long inside the window; a slower window
-  of paced answers is 'answered at the pace'; contests at the clock split blocked / failed; every `stale-answer` row read) · `ana-rare.py` (the rare paths a section proves:
-  superseded combats, held / released turns, rush complies by path, fizzles, resolutions at an ousted seat) · `ana-jack.py` (Smiling Jack's
-  plays, how each left play, its rounds in play; the burns the knob `jackBurn` picked, by deck, and how many were blocked) · `ana-guide-check.py DIR [DECK]`
-  (a deck's guide-check situations: the Ball's turn, the referendum's place, the first influence, Scalpel Tongue, the bleed windows, Villein;
-  `--json` to compare two arms) · `ana-wait.py` (tempo) ·
-  `ana-probe.py` (`probe-order` / `probe-hold` rows) · `ana-cards.py` (uses per card, never-played, untitled plays) ·
-  `ana-combat.py` + `ana-combat2.py` (handshake integrity 100 % on a bot-only table, agreement, `hsMiss`) · `ana-rush.py` ·
-  (`ana-windows.py`'s gate of 0 is the arena's; on the sim it informs: a few flagged, none lost) ·
-  `ana-home.py A B` (paired home / blocks / damage / VP) · `ana-open.js` (the opening) · `gen-match-dossier.js <trace>` (one
-  reviewable file per match; read Manifests → Endgame / VP → pool trajectories → then hunt) · `gen-trace-harvest.js <dir>`
-  (metrics + the price referee: printed vs paid cost; a MISMATCH voids the series) · `gen-batch-review.js` · `gen-null-review.js`.
+- `ana-gates.py DIR` (the gate after a series: one PASS / FAIL line per audit below, the matches and `zeroPool`; its header is the
+  policy; `--self-test` plants a fault per gate) · `ana-sim-diff.py A B` (the footprint) · `ana-ledger.py` (bleed pairing both
+  ways, `VANISHED` = 0; steal pairs equal, a `STOLE > VICTIM LOST` row a lead; dealt vs taken) · `ana-block.py` (0 violations) ·
+  `ana-inv.py` (invariants; ~1 flag in 3 matches is the baseline, a new kind or a jump is a line the log cannot type or a real
+  bookkeeping difference; `ELY_POOL_TRACE=1` names the code line behind a pool change) · `ana-windows.py` (the actor's
+  reactions-only windows: ran out and went through = 0 on the arena, information on the sim; every `stale-answer` row read) ·
+  `ana-rare.py` (the rare paths a section proves) · `ana-jack.py` (Smiling Jack's plays and burns) · `ana-guide-check.py DIR [DECK]`
+  (a deck's guide-check situations; `--json` to compare two arms) · `ana-wait.py` (tempo) · `ana-probe.py` · `ana-cards.py` (uses
+  per card, never-played, untitled plays) · `ana-combat.py` + `ana-combat2.py` (handshake integrity 100 % on a bot-only table,
+  `hsMiss`) · `ana-rush.py` · `ana-home.py A B` (paired home / blocks / damage / VP) · `ana-open.js` (the opening) ·
+  `gen-match-dossier.js <trace>` (one reviewable file per match: Manifests → Endgame / VP → pool trajectories → then hunt) ·
+  `gen-trace-harvest.js <dir>` (metrics + the price referee: printed vs paid cost; a MISMATCH voids the series) ·
+  `gen-batch-review.js` · `gen-null-review.js`.
 - **Emit vocabulary**: `manifest` (seat / deck / persona / strategy / axes / knobs, once at dealt — deck and seat come from HERE,
   never from a name) · `snapshot` (unlock | react: pool, edge, handN, ready, torpor, pubs) · `decide` (q / ctx / out: pick, why,
   scores, tag) · `play` (card / window / vamp) · `plan` · `influence-pick` (intent) · `raise` (reality) · `block-eval` /
@@ -195,7 +189,7 @@ it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo
 - **Prototype instrumentation**: wrap `Bot.prototype` methods in a scratch script to tag stashes and log every consumption; the
   same script is the post-fix proof.
 - **The guilt experiment**: disarm a suspect condition with `&& false`, rerun — green = guilty, everything else exonerated.
-- **Feed a classifier the SENT text** (a note's `NAME (bot)`; a chat without it since v0.6.240), never the template; specific shapes first.
+- **Feed a classifier the SENT text** (a note's `NAME (bot)`; a chat has no prefix), never the template; specific shapes first.
 - **A peek is not a take**: `_awaitOppStrikePeek` leaves the line pending; `_awaitOppStrike` consumes it.
 - **e2e waits**: `waitFor` walks and consumes, `waitAny` is cursorless — two messages with no causal order need `waitAny`; the
   server never echoes a sender's own log lines (prove the attacker's note in the DEFENDER's inbound).
