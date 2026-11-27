@@ -54,7 +54,7 @@ it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo
   (`*Gates:* (pending)`, `*Egress:* (pending)`), before committing: `python3 tools/round.py save DIR --egress "<line>"` (`--note
   "<why>"` for a FAIL the round explains) writes `docs/round-record.json` and renders STATUS's blocks and the entry's two lines.
   Push; when CI is green on HEAD, `round.py save DIR --ci` adds CI's suite runs (a later save on the branch keeps the egress
-  line unless a new one is given). `round.py render pr DIR` prints the PR's gate section, `round.py status` re-renders
+  line unless a new one is given, and the same run's note). `round.py render pr DIR` prints the PR's gate section, `round.py status` re-renders
   STATUS's versions and deploy blocks (after a release or a refresh of the copies), `round.py check` is doc-budget's section 4.
   A budget that runs out: borrow in `tools/doc-budgets.txt` (one down, one up) or archive (HARNESS "Upkeep").
 - **CI** (`.github/workflows/bot-gates.yml`, D-109): every PR that touches `bot/` or the bundle, every such push to `main` and a
