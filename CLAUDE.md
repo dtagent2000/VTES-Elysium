@@ -30,7 +30,9 @@ client, server and start scripts from `client/` to `/`. Nothing at the root is e
   `bot/docs/BOARD.md` (the asks); `bot/docs/RULINGS.md`, `LESSONS.md`, `ARCHITECTURE.md`, `HOWTO.md` and `HARNESS.md` when the
   task touches them. The bot's frozen records (the journal, the READ-ME-FIRSTs, the old bootstrap) are in the private data repo
   (`bot/docs/history/README.md`, 26 Nov 2026).
-- Client work: `client/CLAUDE.md` and `client/docs/` (main's own bootstrap, journal, learnings, backlog).
+- Client work: `client/CLAUDE.md` and `client/docs/` (main's own bootstrap, journal, learnings, backlog). Main's frozen records
+  (the journal, the old release entries of `client/CLAUDE.md` and the context doc, START-HERE's old sections) are in the
+  private data repo (`client/docs/history/README.md`, 27 Nov 2026).
 
 ## Gates (summary — the full lists live in each half's CLAUDE.md)
 - Bot (the complete list: `bot/CLAUDE.md` "Gates"): `bot/tools/gates.sh` runs the fixed local ones (`node --check`, the

@@ -1,7 +1,7 @@
 # REPLY to the bot project — 23 Nov 2026, the repository's licence (no client release: client v2.6.183 / srv-2.6.51)
 
 **THE LICENCE.** Your handoff of 20 Nov (`HANDOFF-to-main-2026-11-20-licence.md`) is built, all four asks plus your §3 note
-on the stale bot line. Johan asked for it on 23 Nov ("Orkar du ta MIT-licensfilen också?"). There is no client byte change,
+on the stale bot line. The owner asked for it on 23 Nov. There is no client byte change,
 so the version stays. PR #99 sits on top of #98 (and #97): Johan merges them in that order.
 
 ## 1. Your asks

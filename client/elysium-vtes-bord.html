@@ -1576,7 +1576,7 @@ body.touchui #board.l2dockopen #l2dockClose{ display:flex; }
    v2.6.146 (Johan): it sits in the PANEL'S top right corner (a child of #board, above the dock's zone boxes at z 4600), inside
    the 14px strip the panel keeps above its boxes -- so it never meets the POOL label, the count badges or a card, at any width.
    The same height formula as #l2dockbg places it. The button shows 'pinned' in gold, so the panel's edge can stay calm.
-   v2.6.147 (Johan: 'more discreet'): the button is the NEEDLE alone. It LIES while the panel is loose and STANDS when the panel
+   v2.6.147 (the owner asked for a quieter button): the button is the NEEDLE alone. It LIES while the panel is loose and STANDS when the panel
    is pinned -- it looks stuck in -- and the words moved to the tooltip ('Not pinned' / 'Pinned', set by setDockPin). An inline
    SVG, not the pushpin emoji: that glyph's own tilt differs from font to font, and a turn has to start from a known angle. */
 #l2dockPin{ display:none; position:absolute; right:12px; bottom:calc(1.5% + (var(--ch) + 34px) * var(--dock-s) + 14px - 17px); z-index:4610; align-items:center; justify-content:center; width:22px; height:16px; padding:0; border:1px solid rgba(176,141,79,.4); border-radius:8px; background:#1a140d; color:var(--brass); cursor:pointer; }
@@ -1598,7 +1598,7 @@ body.touchui #board.l2dockopen #l2dockClose{ display:flex; }
 #l2dockMode:hover{ border-color:var(--brass); color:var(--bone); }
 #l2dockMode .dm-rim{ display:none; } #l2dockMode.on .dm-rim{ display:inline; } #l2dockMode.on .dm-dock{ display:none; }
 @media (prefers-reduced-motion:reduce){ #l2dockPin svg{ transition:none } }
-#l2dockbg.pinned{ box-shadow:0 -2px 8px rgba(232,201,106,.12), inset 0 1px 0 rgba(232,201,106,.42); }   /* v2.6.146 (Johan: 'a little less marked'): a thin gold line and a faint breath of light -- it was a 16px glow at .45 and a 2px line at .6. box-shadow still, to stay out of the border-top-color specificity fight with the #board.l2mode/.l3mode base rules (2 IDs each) */
+#l2dockbg.pinned{ box-shadow:0 -2px 8px rgba(232,201,106,.12), inset 0 1px 0 rgba(232,201,106,.42); }   /* v2.6.146 (the owner asked for a softer edge): a thin gold line and a faint breath of light -- it was a 16px glow at .45 and a 2px line at .6. box-shadow still, to stay out of the border-top-color specificity fight with the #board.l2mode/.l3mode base rules (2 IDs each) */
 /* ---------- Counter stepper (v2.5.40 · T2) ---------- */
 #ctStepper{ display:none; position:fixed; z-index:8030; background:linear-gradient(#1c150d,#161009); border:1px solid var(--brass2); border-radius:10px; box-shadow:0 12px 36px rgba(0,0,0,.65); padding:8px 10px; }
 .ctstep{ display:flex; flex-direction:column; gap:6px; }
@@ -3387,7 +3387,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.189';   // v2.6.189 (26 Nov 2026, THE HANDOFFS ANSWERED, pure client -- purge; srv-2.6.53 unchanged, no wire change; bot v0.6.241 beside): consumes bot v0.6.237-241 and answers the bot project's eight open handoffs (19-25 Nov). Help ▸ Bots embeds bot v0.6.241's guide (main's client suite was red on its embed check since bot v0.6.237's merge). Bot v0.6.237's new rung resolve-late -- a human bleeds a bot; after No block the bot asks for the bleed modifiers and waits for the actor's word on the total -- reads Close modifiers on its row (it read Step), and the bot ring lights It resolves and No for it; the play button already gave that word. Nothing else in the client changes. PROTOCOL section 12 records the bots' lines owed since 20 Nov (bot v0.6.236: the rush line opened to any rush card with its level, Priority Contract placed, rushed through and burned for its pool, a card put on a minion, Biothaumaturgic Experiment's employ, a granted maneuver or press naming its card; bot v0.6.241: the 'if blocked' line that locks the blocker and ends the action, and a rider mode's level in the stealth line), and canary v1.7.0 pins them (section 12); without elysium-cardfx.json beside it the canary now skips the checks that need the bots' card library, each line saying SKIPPED.
+const VERSION='2.6.190';   // v2.6.190 (27 Nov 2026, THE PUBLIC REPOSITORY, comments only -- purge; ships with srv-2.6.54, comments only too; no wire change; bot v0.6.241 beside): the repository is public, and it carries no chat quotes and no names of private persons. Only comments change: where one quoted the owner, it now says the same in our own words, and the players whose questions or files reached us through the owner are no longer named (a player's case, a player's file). Every script's tokens are v2.6.189's but this line's.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3521,7 +3521,7 @@ try{
   const _raw=localStorage.getItem(CONV_KEY);                       // v2.6.74: null = a FIRST visit (no settings ever saved) -- the Lite/Full first-run rule reads it below
   const s=JSON.parse(_raw||'{}');
   if(typeof s.cardDB==='boolean') conv.cardDB=s.cardDB;
-  if(s.dbDefault!==true) conv.cardDB=true;                        // v2.6.74 (Johan: "3 MB is nothing"): the card database is ON by default -- a one-time migration turns it on for installs that predate the flag; the Settings checkbox still turns it off afterwards (dbDefault rides every save from here on, so this never fires twice)
+  if(s.dbDefault!==true) conv.cardDB=true;                        // v2.6.74 (the owner: its size is no reason to keep it off): the card database is ON by default -- a one-time migration turns it on for installs that predate the flag; the Settings checkbox still turns it off afterwards (dbDefault rides every save from here on, so this never fires twice)
   if(s.uiMode==='lite'||s.uiMode==='full') conv.uiMode=s.uiMode;  // v2.6.74: the Lite/Full interface mode -- whatever you had last time
   if(s.uiProf&&typeof s.uiProf==='object'){ conv.uiProf={}; for(const k of ['lite','full']) if(s.uiProf[k]&&typeof s.uiProf[k]==='object') conv.uiProf[k]=uiProfPick(s.uiProf[k]); }   // per-mode memory of the anim/pco/sfx trio (uiProfPick is a hoisted declaration; it reads only its argument)
   if(typeof s.modeHintDone==='boolean') conv.modeHintDone=s.modeHintDone;
@@ -7118,7 +7118,7 @@ function parseDeck(text){
     if(!m){ out.skipped++; if(out.skippedLines.length<12) out.skippedLines.push(line); blankRun=false; continue; }
     let name=m[2].split(/\t|\s{2,}/)[0].trim();
     if(!name){ out.skipped++; if(out.skippedLines.length<12) out.skippedLines.push(line); blankRun=false; continue; }
-    const qty=Math.min(parseInt(m[1],10),90);   // v2.6.55 amend (Johan/Stolas case): VTES has NO per-card copy limit -- the old 30-cap silently shrank '90x Computer Hacking' into a 12/30 deck the tournament gate then refused. 90 = the library ceiling, so no single line can legitimately need more; ghost-inflation (VDB description lines) now lands at 90 and is CAUGHT by the >90 gate instead of being silently softened. Server expandDeck moves in lockstep.
+    const qty=Math.min(parseInt(m[1],10),90);   // v2.6.55 amend (a player's case, passed on by the owner): VTES has NO per-card copy limit -- the old 30-cap silently shrank '90x Computer Hacking' into a 12/30 deck the tournament gate then refused. 90 = the library ceiling, so no single line can legitimately need more; ghost-inflation (VDB description lines) now lands at 90 and is CAUGHT by the >90 gate instead of being silently softened. Server expandDeck moves in lockstep.
     if(mode==='crypt') out.crypt.push({qty, name:name.replace(/\s+\d+$/,'')});
     else if(mode==='library') out.library.push({qty, name});
     else unknown.push({qty, name, line, afterBlank:blankRun});   // no Crypt:/Library header this far in -- resolve below
@@ -7128,11 +7128,11 @@ function parseDeck(text){
     // BOTH section headers exist, so every card has a home under one of them -- a qty-line BEFORE
     // the first header is description prose ("9 times out of 10 you want to pay the upkeep...",
     // "90 cards of pure aggro"): the B-53 battery's ghost-card class, dead at the root and
-    // DB-independent (v2.6.57, Johan/Tim's Hecata file). Lackey (only "Crypt:") and headerless
+    // DB-independent (v2.6.57, a player's Hecata file). Lackey (only "Crypt:") and headerless
     // pastes keep the resolution below untouched -- their pre-header entries ARE the cards.
     // These lines LOOKED like cards -- put them FIRST in the receipt sample (a long preamble can
     // fill the 12-line cap with boring header/prose skips, hiding exactly the line that explains
-    // why the count dropped; seen live on Tim's file: 28 prior skips buried the ghost line).
+    // why the count dropped; seen live on that file: 28 prior skips buried the ghost line).
     out.skipped += unknown.length;
     out.skippedLines = unknown.map(e=>e.line).concat(out.skippedLines).slice(0,12);
   } else if(unknown.length){
@@ -7179,7 +7179,7 @@ function deckLegalText(p){                                         // hard verdi
   if(t.crypt>=12 && t.library>=60 && t.library<=90) return null;
   return 'This deck is '+t.crypt+' crypt / '+t.library+' library \u2014 a legal deck needs at least 12 crypt and 60\u201390 library. Turn off \u2018Legal deck only\u2019 in Settings to play intro decks (First Blood / New Blood) or house formats.';
 }
-function deckUnknownNames(p, db){                                   // v2.6.57 (Johan/Tim's Hecata file): names the card database does not know -- misspellings AND any prose ghost that slipped a single-header format. db overrides for tests; default = the live cardTypes. Absent/empty DB => [] (quiet, no false alarms -- the receipt's own convention)
+function deckUnknownNames(p, db){                                   // v2.6.57 (a player's Hecata file): names the card database does not know -- misspellings AND any prose ghost that slipped a single-header format. db overrides for tests; default = the live cardTypes. Absent/empty DB => [] (quiet, no false alarms -- the receipt's own convention)
   const ct=(db!==undefined) ? db : ((typeof cardTypes!=='undefined') ? cardTypes : null);
   if(!ct || !ct.size) return [];
   const u=[]; (p.crypt||[]).concat(p.library||[]).forEach(e=>{ if(!ct.get(norm(e.name))) u.push(e.name); });
@@ -7962,7 +7962,7 @@ function newEmptyDeck(){                                              // start a
 $('#labNew').addEventListener('click', newEmptyDeck);
 $('#catHelp').addEventListener('click',()=>{ const b=$('#catHelpBox'); if(b) b.hidden=!b.hidden; });
 $('#labSave').addEventListener('click',saveDeckTxt);
-/* v2.5.98 (Johan: "Load .txt disappeared from Deck Lab, folks can't bring in VDB decks") --
+/* v2.5.98 (the owner's report: Load .txt had gone from the Deck Lab, so nobody could bring in a VDB deck) --
    restores an in-lab paste-to-load action. Deliberately NOT routed through openImport()/
    importModal: that modal's Cancel/Import wiring carries the lobbyReturn ticket + duo
    bookkeeping for a DIFFERENT job (import displacing a lobby). Re-using it here would risk
@@ -8754,7 +8754,7 @@ function bindL4GlobeDrag(glob){
 }
 
 /* ----- The Edge, as a token in the family ----- */
-function l4EdgeSpot(){                                             // v2.6.181 (Johan): "ovanför spelarens glob på brädet om det går" -- the free Edge token's first spot in L4, in pub units: centred ABOVE your pool globe; BELOW it when the globe sits at the top edge (the top row of the suggested setup); null without a globe
+function l4EdgeSpot(){                                             // v2.6.181 (the owner: above the player's globe on the board, where there is room) -- the free Edge token's first spot in L4, in pub units: centred ABOVE your pool globe; BELOW it when the globe sits at the top edge (the top row of the suggested setup); null without a globe
   const g=l4Globes.get(mySeat()); if(!g) return null;
   const k=L4_TOKEN_S, ts=TOKEN_DEFS.edge.size*k, T=pubBox();         // globe and token both draw at l2pub.s*L4_TOKEN_S: in pub units each is its CSS size times k
   const gw=((g.el && g.el.offsetWidth)||64)*k, gh=((g.el && g.el.offsetHeight)||100)*k;   // the whole globe: name, circle, seat chip (the harness has no layout: the circle's 64 and a typical 100)
@@ -11272,8 +11272,8 @@ let pushTimer=null, pushDue=0;   // cli-2.6.165: pushDue = the latest moment the
    Online the server broadcasts each board push and hands a joiner every existing
    pub, so a bot reads pool, ready minions and the Edge across the table; that is
    the input behind _tableThreat (who is the table threat), _rushCandidates (what
-   there is to rush) and _checkAshurTableWide -- Johan's own July ask, "trigger the
-   bot's behaviour when a HUMAN plays something". Offline none of it had a source:
+   there is to rush) and _checkAshurTableWide -- the owner's own July ask: the bots should
+   react when a HUMAN plays something. Offline none of it had a source:
    schedulePush/pushNow return early when not inRoom(), and v2.6.95's bus carried
    log/say/chat/fx but not board. So the bots played their own hand well and were
    blind to the table. Same debounce as the online path (600 ms) -- buildPub() is
@@ -11742,10 +11742,10 @@ function renderOfflineSeats(){
     const o0=document.createElement('option'); o0.value='-1'; o0.textContent=decks.length?'— No deck —':'— No saved decks —'; sel.appendChild(o0);
     decks.forEach((d,di)=>{ const o=document.createElement('option'); o.value=String(di); o.textContent=deckLabel(d); sel.appendChild(o); });
     sel.value=String(pl.deckIdx);
-    sel.addEventListener('change',()=>offlineSeatSet(i,'deckIdx',+sel.value));   // v2.6.91 (Johan's 1v1 find): picking a deck never re-synced Start -- 'bot first, then your deck' left the button disabled and the hint stale until something re-rendered the seats (a second bot did)
+    sel.addEventListener('change',()=>offlineSeatSet(i,'deckIdx',+sel.value));   // v2.6.91 (the owner's 1v1 find): picking a deck never re-synced Start -- choosing the bot first and your deck second left the button disabled and the hint stale until something re-rendered the seats (a second bot did)
     row.appendChild(sel);
     }
-    {                                                             // v2.6.72 (Johan): the toggle lives on EVERY seat, seat 1 included -- offline seating is 'write the name where it sits', so the first turn may be a bot's; startHotseat activates the first HUMAN and the opening sweep plays the leading bots. v2.6.62 (HB2c.1): the toggle CYCLES off -> novice(green) -> grinder(yellow) -> shark(red) -> off, and a bot seat's deck list becomes the five bot-ready decks
+    {                                                             // v2.6.72 (the owner): the toggle lives on EVERY seat, seat 1 included -- offline seating writes each name where that player sits, so the first turn may be a bot's; startHotseat activates the first HUMAN and the opening sweep plays the leading bots. v2.6.62 (HB2c.1): the toggle CYCLES off -> novice(green) -> grinder(yellow) -> shark(red) -> off, and a bot seat's deck list becomes the five bot-ready decks
       const bt=document.createElement('button'); bt.type='button'; bt.textContent='\ud83e\udd16';
       const HOTP=[null].concat(HOT_BOT_PERSONAS.map(q=>q[0])), HOTC={novice:'95,211,138',experienced:'217,180,95',expert:'242,112,122'}, HOTL={}; HOT_BOT_PERSONAS.forEach(q=>{ HOTL[q[0]]=q[1]; });   // v2.6.122: Novice / Experienced / Expert (were novice / grinder / shark); the first click lands on Expert, the default
       const btSync=()=>{ const P=offlineCfg[i]&&offlineCfg[i].botP;
@@ -12569,8 +12569,8 @@ function botBoxPlace(box){                                         // beside the
   box.style.top=Math.max(8, Math.min(H-bh-8, c.y-28))+'px';
 }
 
-/* ======================= v2.6.187: THE BOT RING (Johan, 24 Nov 2026) ==========================
-   Johan: 'en effektiv och modern bott-kontrollpanel'. The robot stays, in a circle -- the hub -- and each player drags it
+/* ======================= v2.6.187: THE BOT RING (the owner, 24 Nov 2026) ======================
+   The owner asked for an efficient, modern bot control panel. The robot stays, in a circle -- the hub -- and each player drags it
    where it suits their own screen. Hover it (tap on a touch screen) and a segmented ring unfolds with what a player says to
    the bots most often; the robot turns into a gear, and the gear opens the bot box (the rows, the sweep and the tempo of
    v2.6.108 / v2.6.139). Decided with Johan over a sketch:
@@ -12585,7 +12585,7 @@ function botBoxPlace(box){                                         // beside the
    The ring reads what the table waits on -- the bots' status() where they run, a bleed aimed at a human at this screen
    (bleedIn, from the frozen lines), the player's own open bleed and the hold -- to light the answers that fit, and opens
    on the branch a bot asks about. Placement: the hub keeps BRING_EDGE from every edge, so ring 1 always opens around it
-   without moving it under the pointer (Johan: '90 px räcker'), and the rings turn toward the table in 15-degree steps
+   without moving it under the pointer (90 px, the owner's figure), and the rings turn toward the table in 15-degree steps
    -- the turn that keeps every ring inside the window, as close to facing the table as it can. */
 /* The icons are Tabler Icons 3.52 outline paths (24 x 24, stroked with currentColor). Tabler Icons: MIT License,
    Copyright (c) 2020-2026 Paweł Kuna. Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -13033,8 +13033,8 @@ function botRingGlobals(){                                          // once: a p
   document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) botTitleMark(false); });   // back in the tab: the dot goes at once (the loop runs slower in a background tab)
   window.addEventListener('resize', ()=>{ botRingClose(); botHubPlace(); const bx=document.getElementById('botBox'); if(bx && _botPanelOpen) botBoxPlace(bx); });
 }
-/* ---- v2.6.188: the ring at the pointer (Johan, 24 Nov: 'Skulle långklick kunna öppna bottpanelen ... (men kanske göra den
-   ombindbar också då i settings)'). Hold the right mouse button on the table and the ring opens where the pointer is; a
+/* ---- v2.6.188: the ring at the pointer (the owner, 24 Nov: a long right-click could open the bot panel, rebindable
+   in Settings). Hold the right mouse button on the table and the ring opens where the pointer is; a
    short right-click keeps every menu it had. The browsers disagree on WHEN the right button's contextmenu comes: at the
    PRESS on macOS and Linux, at the RELEASE on Windows. So while the button is down the first contextmenu is held back; a
    release before RHOLD_MS dispatches a genuine one at the press (every menu handler runs unchanged -- the touch long-press
@@ -15053,7 +15053,7 @@ function bindCard(el,c){
       if(l3on() && (c.zone==='hand' || PILES.includes(c.zone)) && (l3handOpen || board.classList.contains('l2dockopen'))){          // dragging a card OUT of the open dock (hand or pile) — v2.5.76: real L3 (non-L4) used to close the dock AND jump the card to felt scale unconditionally right here, ignoring conv.dockDrag/dockPinned entirely (the reported bug: Hand-zone drags always closed the dock in L2/L3, and pile-ghost cards always rendered at felt size — see the sibling fix in the library/crypt ghost drags below). It now sets the SAME defer flags L4 already used correctly; the per-move block below (was "L4: dock scale transitions", now generalized to l3on()) does the actual close/rescale once the card crosses the leave threshold, honouring the setting and the pin exactly like L4 always did.
         drag.l4DockDefer=true; drag.dockCloseNow=(conv.dockDrag==='close' && !dockPinned);   // keep dock open AND dock scale — deferred until the card exits the dock area; in Settings 'close' mode the one-shot dockCloseNow triggers that exit on the first move instead
       }
-      else if(l2on() && !l3on() && board.classList.contains('l2cols') && (c.zone==='hand' || PILES.includes(c.zone)) && board.classList.contains('l2dockopen')){   // L2 column dock: drag a card OUT -> defer close/rescale until the card actually exits the dock area (the per-move block below), honouring conv.dockDrag/dockPinned exactly like L3/L4 already do. v2.6.33 (Johan): this used to close the dock unconditionally right here, ignoring both settings -- the reported "bottom peek still closes in L2 as soon as you start dragging from hand" bug.
+      else if(l2on() && !l3on() && board.classList.contains('l2cols') && (c.zone==='hand' || PILES.includes(c.zone)) && board.classList.contains('l2dockopen')){   // L2 column dock: drag a card OUT -> defer close/rescale until the card actually exits the dock area (the per-move block below), honouring conv.dockDrag/dockPinned exactly like L3/L4 already do. v2.6.33 (the owner): this used to close the dock unconditionally right here, ignoring both settings -- the reported bug: the bottom peek closed in L2 as soon as a drag from the hand began.
         drag.l2colsDockDefer=true; drag.dockCloseNow=(conv.dockDrag==='close' && !dockPinned);   // keep dock open AND dock scale -- deferred until the card exits the dock area; in Settings 'close' mode the one-shot dockCloseNow triggers that exit on the first move instead
       }
       else if(l2on() && !l3on() && !board.classList.contains('l2cols') && c.zone==='hand' && board.classList.contains('l2dockopen')){   // L2 Home dock: drag a hand card OUT -> de-rotate the fan tilt so the grab point stays under the cursor as the card straightens (scale stays at 1, only rotation changes)
@@ -15353,7 +15353,7 @@ function dropZone(x,y){
   return 'ready';
 }
 
-/* ---------- v2.6.51 (Johan, 28 July): "bounce to the nearest free spot" ----------
+/* ---------- v2.6.51 (the owner, 28 July): a card bounces to the nearest free spot ----------
    A card that MATERIALISES on the felt out of a pile — the crypt/library drag-park and the fan of
    a multi-card reveal — has no attach gesture behind it. A hand/board drag that lands on another
    card lands there ON PURPOSE (attachTargetAt → attach(), which is how retainers and equipment get
@@ -15513,7 +15513,7 @@ function addRCard(host,c,x,y,zi,rot,ctx,scale){
     if(!img){ img=document.createElement('img'); img.addEventListener('error',()=>{ b.classList.remove('on'); b.innerHTML=''; }); b.innerHTML=''; b.appendChild(img); }   // v2.5.72 MERGE: A63's whole-badge error rule (an icon that fails to load hides the RING too)
     if(img.alt!==val){ img.src=url; img.alt=val; img.title=title; img.style.display=''; }
   };
-  const _rp=(c.kind==='crypt') ? (c.path||null) : null;         // v2.5.72 MERGE RECONCILIATION (flagged for Johan's veto): the B-branch computed PRINTED paths locally via krcgPath for opponent parity - but Johan's later A64 decision ("a printed path is already on the card art") applies equally to opponents (they see the same art), so remote badges are CHOSEN-only + crypt-only, matching updateBadges exactly
+  const _rp=(c.kind==='crypt') ? (c.path||null) : null;         // v2.5.72 MERGE RECONCILIATION (flagged for the owner's veto): the B-branch computed PRINTED paths locally via krcgPath for opponent parity - but the owner's later A64 decision (the card art already shows a printed path) applies equally to opponents (they see the same art), so remote badges are CHOSEN-only + crypt-only, matching updateBadges exactly
   _syncRB('.pathbadge', _rp, _rp?pathSymUrl(_rp):'', _rp||'');
   _syncRB('.supbadge', c.sup||null, c.sup?supSymUrl(c.sup):'',
           c.sup?('Superior '+(DISC_NAMES[c.sup]?DISC_NAMES[c.sup].charAt(0).toUpperCase()+DISC_NAMES[c.sup].slice(1):String(c.sup).toUpperCase())):'');
@@ -16056,7 +16056,7 @@ function updateL3Timer(){
 }
 function updateL3PanelInfo(){                                     // v2.5.47: Round+Timer, relocated to the top of the Table panel for L3 counts without a calibrated felt hole -- and v2.6.181: always in L4
   const row=$('#statsL3Info'); if(!row) return;
-  const show=l3on() && (l4on() || !l3centerOnFelt);                // v2.6.181 (Johan): "Bra i panelen" -- L4 shows it here (it said !l4on(): the felt's centre had it)
+  const show=l3on() && (l4on() || !l3centerOnFelt);                // v2.6.181 (the owner chose the panel) -- L4 shows it here (it said !l4on(): the felt's centre had it)
   row.hidden=!show;
   if(!show) return;
   const {clkTxt,turn}=l3TimerStrings();
@@ -17273,7 +17273,7 @@ function sfxHoldOn(){
        (into #fxDynStyle, which overrides the static CSS fallbacks of the same names).
    No ratios are retuned in this version — this is the infrastructure so future tweaks are one-number edits. */
 const FX_TIMING={
-  flip:       { dur:1.93, mid:0.298,   settle:0.596, fadeIn:0.072, fadeStart:0.855 },   // v2.5.72 MERGE: the A-branch's live-tested calibration (Johan: "Nu blev det perfekt") expressed in the B-branch's table — the ORIGINAL rotation absolutes survive exactly (mid*dur=575ms edge-on, settle*dur=1150ms flat == the old 50%/100% of 1.15s), then a 500ms static front hold, then the original-length ~280ms fade. The swap-at-mid derivation below lands on the same 575ms automatically.
+  flip:       { dur:1.93, mid:0.298,   settle:0.596, fadeIn:0.072, fadeStart:0.855 },   // v2.5.72 MERGE: the A-branch's live-tested calibration (the owner judged it right) expressed in the B-branch's table — the ORIGINAL rotation absolutes survive exactly (mid*dur=575ms edge-on, settle*dur=1150ms flat == the old 50%/100% of 1.15s), then a 500ms static front hold, then the original-length ~280ms fade. The swap-at-mid derivation below lands on the same 575ms automatically.
   rise:       { dur:1.50, mid:0.30,    settle:0.58, fadeIn:0.12, fadeStart:0.80 },
   handreveal: { dur:2.20, flipDur:0.72, mid:350/720, settle:0.22, fadeIn:0.12, fadeStart:0.74 }
 };
@@ -18026,7 +18026,7 @@ function syncWelcome(){
   uiSyncToggle();                                                             // v2.6.74: the Lite/Full pill's active half + the first-visit hint (the KRCG recommendation block is gone -- the database is on by default, images live under Settings -> Files)
 }
 syncWelcome();
-/* ---------- Interface mode: Lite / Full (v2.6.74, Johan: "the client can feel like a bit too much") ----------
+/* ---------- Interface mode: Lite / Full (v2.6.74: the owner found that the full client can feel like too much) ----------
    Lite = the website-facing, Lackey-comparable client: online play on a Classic table under tournament
    conditions, Import deck for decks, nothing extra. Full = everything (offline hotseat, bots, the Deck
    Lab, animations, the whole Play-online dialog). ONE file, ONE lineage: the presentation is body.lite
@@ -18140,7 +18140,7 @@ $('#impOk').addEventListener('click', async ()=>{                          // v2
     const _warn=deckSanityText(parsed);                            // B-53 layer 1 (casual): informed consent instead of a wall
     if(_warn && !(await uiConfirm(_warn, 'Small deck'))) return;
   }
-  const _unk=deckUnknownNames(parsed);                             // v2.6.57 (Johan/Tim's Hecata file): misspellings and leftover import prose; v2.6.58: gated by 'Legal cards only'
+  const _unk=deckUnknownNames(parsed);                             // v2.6.57 (a player's Hecata file, passed on by the owner): misspellings and leftover import prose; v2.6.58: gated by 'Legal cards only'
   if(_unk.length){
     if(conv.legalCards){ await uiAlert(deckUnknownText(_unk, true), 'Legal cards only'); return; }
     if(!(await uiConfirm(deckUnknownText(_unk, false), 'Unknown cards'))) return;
@@ -18838,7 +18838,7 @@ function vtesCached(){                 // v2.6.76: the IndexedDB copy ({json, ts
 function loadCardDB(){
   if(cardTypes || cardDBLoading) return;
   cardDBLoading=true;
-  /* v2.6.76 (Johan: "we all run this as volunteers -- the load always lands on somebody"): CACHE FIRST. With the
+  /* v2.6.76 (the owner: hosts are volunteers, and every download costs one of them): CACHE FIRST. With the
      database on by default (v2.6.74) and Auto-sync on by default, every boot of every client used to fetch the
      3 MB catalog again (the IndexedDB copy was only a fallback for sync-off or a failed fetch). Now the cached
      copy is used immediately whenever it exists, and the network (local folder first, then KRCG) is asked only
@@ -18861,7 +18861,7 @@ function _loadCardDBFetch(){         // v2.6.76: the fetch chain, unchanged from
      modes; a double-clicked file:// client silently falls through here and keeps relying on the
      IndexedDB-cached copy (which the fallback chain below already provides). Images differ
      because <img src> IS allowed on file:// -- that asymmetry is the browser's, not ours. */
-  if(conv.localImg || localImgAuto){   // v2.6.48 (Johan: "can the server carry the database by default too?"): the 2.6.47 auto tier now reaches the DATABASE as well -- on the hosted instance, vtes.json loads from /images/ (edge-cached) with zero settings. Benign race accepted: a boot-path loadCardDB can fire before the async probe flips the flag; that one load takes the old chain (IndexedDB copy or KRCG) and the local tier simply wins next time.
+  if(conv.localImg || localImgAuto){   // v2.6.48 (the owner asked whether the server could carry the database by default too): the 2.6.47 auto tier now reaches the DATABASE as well -- on the hosted instance, vtes.json loads from /images/ (edge-cached) with zero settings. Benign race accepted: a boot-path loadCardDB can fire before the async probe flips the flag; that one load takes the old chain (IndexedDB copy or KRCG) and the local tier simply wins next time.
     fetch(LOCAL_IMG_DIR+'/vtes.json')
       .then(r=>{ if(!r.ok) throw 0; return r.text(); })
       .then(raw=>{

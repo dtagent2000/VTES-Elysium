@@ -1,8 +1,31 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.189 / server v2.6.53 / bot v0.6.241 tested beside the suite, last updated 26 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.190 / server v2.6.54 / bot v0.6.241 tested beside the suite, last updated 27 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**27 Nov 2026 (THE PUBLIC REPOSITORY — v2.6.190):**
+- **A nested CLAUDE.md is loaded whole when a session starts work in its folder.** `client/CLAUDE.md` had grown to 463 KB
+  of release entries, and the first 76 lines alone (150 KB) arrived in the context before any work began. Keep the
+  bootstrap's entries short: the release record belongs in the CHANGELOG, the narrative in the journal.
+- **Freeze a cumulative log rather than rewrite it.** Some 80 % of the quotes sat in the history of four files. Moving that
+  history verbatim to the private repository was mechanical and lossless; the judgment went into the 70 spans that stayed
+  public. Measure where the hits sit before choosing between the two.
+- **A Swedish-quote detector misses English renderings of the owner's words.** Earlier sessions often translated a request
+  into English inside quote marks. Look for a quoted span shortly after the owner's name, the role or a private name, then
+  run a second, broader pass with cue words (asked, said, report). The second pass found five quotes the first one missed, and the scan's review list of the whole tree four more.
+- **Find private names by subtraction, then read each in context.** Capitalised words that are not card names (KRCG's dump)
+  and never appear in lower case elsewhere in the corpus left a list short enough to read. In context, a name could be the
+  client's own demo seat (`DEMO_NAMES`), an invented test name or a licence credit, and all of those stay.
+- **A touched line is new text.** `--diff` reads every added line whole, so rewriting one quote in a one-line release entry
+  turns the whole entry into new text, and every mention of the owner on it must name the owner by role.
+- **Take the words file's text from the commit the round started from.** Two edit batches touched the same line, so the
+  file on disk no longer held the original. The log keeps file and line; the text comes from `git show <base>:path`.
+- **Prove a comments-only release by tokens, not by reading the diff.** acorn's tokenizer over every script, with the
+  comments removed from styles and markup, gives one difference per file (the VERSION string) or a list of real changes.
+  The previous client against the new suite with identical per-test lines is the second half of the proof.
+- **Guard a rewrite keyed by line number with an automatic invariant.** The translated title index kept its `code` spans
+  and its heading level line for line, so a misnumbered line would have stopped the script instead of landing in the file.
 
 **26 Nov 2026, evening (THE HANDOFFS ANSWERED — v2.6.189):**
 - **A new bot rung has three readers on our side.** A rung the bot's `status()` names shows up in the bot box's row (its
@@ -789,7 +812,7 @@
 
 **v2.6.130 (23 Sep 2026, THE ROUND THAT SKIPPED MY LINE):**
 - **A transition detector must survive the sender's coalescing (23 Sep, v2.6.130).** `cmbWatch` recognised "the table passed Damage" as a step 4 → 5 in the SAME round. But the sender coalesces steps (a 120 ms debounce), and its round wrap is sent at once and clears that debounce. A fast clicker's `ph 5` never left their screen, so every other screen saw `ph 4` then `rd 2` and waited for a crossing that could not come. When one side batches or debounces, detect STATE ("the damage round is behind us"), not the one intermediate message you expected to see. Reproduce the coalesced sequence in a test.
-- **Review your own fresh code before it deploys, and say what you find (23 Sep, v2.6.130).** Johan's standing "anything you're unsure of?" found two faults in v2.6.129 that every gate had passed. Gates test what you thought of; the review is where you look for what you did not. Also check the other side: the bot never writes combat damage, which turns the best-looking new feature into "Incoming 0" at the table it was built for.
+- **Review your own fresh code before it deploys, and say what you find (23 Sep, v2.6.130).** The owner's standing question about what I am unsure of found two faults in v2.6.129 that every gate had passed. Gates test what you thought of; the review is where you look for what you did not. Also check the other side: the bot never writes combat damage, which turns the best-looking new feature into "Incoming 0" at the table it was built for.
 
 **v2.6.129 / srv-2.6.39 (23 Sep 2026, THE COMBAT STEPS CARRY STATE):**
 - **Check the rulebook before redesigning around a list of steps (23 Sep, v2.6.129).** Johan listed seven combat steps from memory (Additional strikes as a step, no Damage resolution) and I built a first proposal on it — merging Damage into Strike. VEKN's 4. Detailed Turn Sequence showed the code's `AVR_PHASES` had been exactly right since v2.6.17: additional strikes are extra choose/resolve pairs INSIDE Strike, and damage is resolved once, after every pair. Keeping the rulebook's seven also kept `ph` meaning the same on the wire, which saved the bot a change. When a design is shaped by a rule sequence, read the rule at its source first; the existing code may already encode it.
@@ -801,7 +824,7 @@
 - **A bot-dependent test written without the bot beside it can be wrong in the dark (23 Sep, v2.6.129).** v2.6.126's LIVE test waited for the bot's "is burned" note on `chat`; bot v0.6.114 had moved notes to the `log` tier two weeks earlier. It shipped as "NOT RUN" and was red the first time it ran. Run every `testB` once with the released bot before the test's assumptions become part of the record.
 
 **v2.6.114 (15 Sep 2026, THE TIERS NEVER CROSS):**
-- **Do not write the user's assumption into the record as a fact (15 Sep, v2.6.114).** Johan said quick phrases "have their own setting"; I repeated it in a VERSION note. They have none at all. He was recalling `conv.anim`'s three-way over CARD animations — the right pattern at the wrong layer, which is exactly the kind of near-miss that sounds verified. A claim about the code goes in the living docs only after it has been read in the code, no matter who said it first or how plausible it is.
+- **Do not write the user's assumption into the record as a fact (15 Sep, v2.6.114).** The owner remembered quick phrases as having a setting of their own; I repeated it in a VERSION note. They have none at all. He was recalling `conv.anim`'s three-way over CARD animations — the right pattern at the wrong layer, which is exactly the kind of near-miss that sounds verified. A claim about the code goes in the living docs only after it has been read in the code, no matter who said it first or how plausible it is.
 - **Answer a "can X also do Y?" question with a test, not a reading (15 Sep, v2.6.114).** The question was reasonable and the answer was no; a reply alone would have left the next person to re-derive it, and left nothing to fail if someone later gives `showSay` a variant. A question worth asking about the code is usually worth an assertion.
 - **A shared visual means a shared gate — name the sources before designing the control (15 Sep, v2.6.114).** The loud tier has two producers, quick phrases and resolver verdicts, pulsing through one bubble. Any future "hide quick phrases" setting has to decide whether verdicts follow, and that decision is invisible if you only look at the renderer. Count a component's CALLERS before adding a switch to it.
 
@@ -968,7 +991,7 @@
 - **A one-time hint needs a permanent way back (10 Sep, v2.6.77).** The first-visit bubble explained Lite once and vanished with 'Got it'; anyone who clicked past it — or arrived in Full — had no way to read it again. Johan's `?` beside the pill turns the same bubble into an on-demand explainer, and the first-visit text shrinks to a welcome (his wording) with a link into the fuller one. Rule: onboarding copy is two things, a greeting you see once and a reference you can always reopen; do not make one bubble do both.
 
 **v2.6.76 (9 Sep 2026, CACHE-FIRST CATALOG):**
-- **Flipping a feature on by default multiplies its cost by the user base — re-read the fetch policy the day you flip it (9 Sep, v2.6.76).** The catalog's 'Auto-sync every start' was written for opt-in users; the moment v2.6.74 made the database default-on, every client everywhere would have pulled 3 MB from a volunteer-run KRCG on every boot. Johan's framing is the durable one: *"the load always lands on somebody"* — cache-first with a weekly freshness window keeps new sets flowing at one fetch per client per week. Rule: a default flip is also a review of every network call behind it.
+- **Flipping a feature on by default multiplies its cost by the user base — re-read the fetch policy the day you flip it (9 Sep, v2.6.76).** The catalog's 'Auto-sync every start' was written for opt-in users; the moment v2.6.74 made the database default-on, every client everywhere would have pulled 3 MB from a volunteer-run KRCG on every boot. The owner's framing is the durable one: some volunteer always carries the load — cache-first with a weekly freshness window keeps new sets flowing at one fetch per client per week. Rule: a default flip is also a review of every network call behind it.
 - **An 'auto' version of a manual action inherits the manual action's latent bugs at a higher rate (9 Sep, v2.6.76).** Auto-listing rooms on Join replays exactly what List rooms does — including replacing a half-open rejoin socket during a reconnect, which nobody hit by hand because nobody clicks that button in the two-second window. Automate, then re-audit the states the manual path could reach.
 
 **v2.6.75 (9 Sep 2026, TUTORIAL = FULL):**
@@ -1028,7 +1051,7 @@
 
 **A count gate can be satisfied by the very corruption it guards (7 Aug, v2.6.57):** the "9 times out of 10…" description line became a 9x ghost card and landed the deck at 12/72 — INSIDE the 60–90 band — so the legality gate passed BECAUSE of the ghost, not despite it. Gates that read aggregates (counts, sizes, sums) need a companion that reads identities whenever the input pipeline can inject entries. And an informative surface (the receipt's "1 unknown name", the Deck Lab ⚠) is not a guard: if the flow proceeds regardless, the corruption ships.
 
-**A structural format rule beats a content heuristic, and the battery is the proof (7 Aug, v2.6.57):** "both section headers present ⇒ pre-header qty-lines are prose" is a rule about the FORMAT, verifiable against a format battery in minutes; "names longer than X are prose" is a guess about CONTENT, unverifiable without vtes.json on disk, and exactly the protective-cap anti-pattern that already bit at the 30-qty cap. When hardening a parser, prefer invariants of the format family over statistics of the payload — and run the battery BEFORE building, so the design is measured rather than argued. And the fixture is not the finish line: run the REAL trigger file through the shipped build — Tim's 28 preamble skips buried the ghost line under the receipt's 12-line sample cap, a UX gap no compact fixture could show (preamble lines now list first). Bonus fact worth keeping: because decks are stored as TEXT and re-parsed by every consumer, a parser fix retro-heals every saved deck for free.
+**A structural format rule beats a content heuristic, and the battery is the proof (7 Aug, v2.6.57):** "both section headers present ⇒ pre-header qty-lines are prose" is a rule about the FORMAT, verifiable against a format battery in minutes; "names longer than X are prose" is a guess about CONTENT, unverifiable without vtes.json on disk, and exactly the protective-cap anti-pattern that already bit at the 30-qty cap. When hardening a parser, prefer invariants of the format family over statistics of the payload — and run the battery BEFORE building, so the design is measured rather than argued. And the fixture is not the finish line: run the REAL trigger file through the shipped build — the real file's 28 preamble skips buried the ghost line under the receipt's 12-line sample cap, a UX gap no compact fixture could show (preamble lines now list first). Bonus fact worth keeping: because decks are stored as TEXT and re-parsed by every consumer, a parser fix retro-heals every saved deck for free.
 
 **An affordance reachable only THROUGH a bug is a hard dependency on that bug (7 Aug, v2.6.56):** the roomBar's 📋 invite sits under the modal backdrop (z 20000) — the only way to reach the invite link while the lobby was up was to accidentally dismiss the lobby, i.e. exactly the bug being removed. Making the lobby dismiss-proof WITHOUT first moving an invite button into the lobby would have severed the whole invitation flow. The rule: before removing a "misbehaviour", inventory what users actually REACH via it — walk the affordances that are only accessible in the state the bug creates, and move them in first.
 
@@ -1200,7 +1223,7 @@ arena v1.1.5; both workdir and outputs held only v1.0.0.)
 
 **New bug class (bot v0.5.0): an early-exit (`continue`/`return`) added to ONE branch of a loop can skip shared cleanup code the OTHER branches still rely on.** The minion loop's bleed branch ends by draining `_drawOwed` (cards owed a replacement); adding a NEW branch (Hunt) that `continue`s past that point left a master-phase draw silently un-flushed whenever the acting vampire hunted instead of bleeding that turn — not wrong forever, just deferred indefinitely if no LATER vampire's bleed branch happened to reach the drain first. Caught by a live integration test, not by inspection, which is itself the lesson: a bug that only manifests as "state carries over silently, doesn't crash" won't show up in an offline unit that checks one function in isolation — it needs something that actually walks the whole turn. Fix pattern: extract the shared cleanup into its own method (`_flushDraws()`) and call it from EVERY branch that can leave the debt behind, not just the one that happened to be there first. Same family as "L4 dispatch chain drift" and "Vy-läges-syskondrift" — a new branch added to existing multi-path code needs the same audit: what does every OTHER branch already do before/after this point that the new one might be silently skipping?
 
-**New working principle (bot v0.5.0): when asked to make the bot mimic a human-facing "helper" or convenience feature, check whether the feature ALSO encodes a real mechanical benefit, not just presentation.** Asked to make the bot "click the phase-bar buttons like a human," the buttons themselves turned out to be cosmetic (just a `log()` line) — but the SAME investigation into what the Unlock button's helper actually does turned up that it also offers +1 pool for holding the Edge, which the bot had never once claimed despite tracking Edge possession correctly since M2. The client-side `hx('...')`-gated helpers are a mix of pure UX narration and actual optional rules mechanics a human has to remember to use — don't assume "it's just a helper" means "it's just cosmetic" without checking the helper's own code for a state mutation (a `bumpPool`, a zone move) alongside the `log()`/`uiConfirm()` call.
+**New working principle (bot v0.5.0): when asked to make the bot mimic a human-facing "helper" or convenience feature, check whether the feature ALSO encodes a real mechanical benefit, not just presentation.** Asked to make the bot use the phase-bar buttons the way a human does, the buttons themselves turned out to be cosmetic (just a `log()` line) — but the SAME investigation into what the Unlock button's helper actually does turned up that it also offers +1 pool for holding the Edge, which the bot had never once claimed despite tracking Edge possession correctly since M2. The client-side `hx('...')`-gated helpers are a mix of pure UX narration and actual optional rules mechanics a human has to remember to use — don't assume "it's just a helper" means "it's just cosmetic" without checking the helper's own code for a state mutation (a `bumpPool`, a zone move) alongside the `log()`/`uiConfirm()` call.
 
 **New technical fact (bot v0.5.0): `cardfx-compile.js`'s curated overlay (`cardfx-curated.json` → `elysium-cardfx.json`) is a whole-entry `Object.assign` passthrough with NO field whitelist.** Adding a brand-new key to a curated entry (here: a `phase` field on a mode) needs zero compiler changes to survive a real recompile — verified by reading `compile()`'s `overlay()` function directly rather than assuming, then confirmed for real once `vtes.json` became available same-day (a hand-mirrored hand-edit of the compiled JSON, made while `vtes.json` was still missing, matched a genuine recompile byte-for-byte in content — different whitespace only). Separately: this environment can lack `vtes.json` (the real card database `cardfx-compile.js`/`test-cardfx.js` need) — a curated-only change then has to be hand-mirrored into the shipped `elysium-cardfx.json` and `test-cardfx.js` cannot be run; flag this honestly rather than skip the gate silently, and re-run the real compiler + gate the moment the database is available.
 
@@ -1413,7 +1436,7 @@ a `src` argument that is not a mode at all).
 
 - **L4/Classic render-path drift, sub-class 2 (v2.5.35, from A1/A2).** Beyond the documented "missing `'l4'` dispatch branch" class, the branch can exist but call a THINNER parallel implementation: `renderL4OppCards`/`updateL4Opponents` had silently skipped opponent-visible fields that `buildMat` handles (non-pool tokens; the clan-icon refresh after the first pub). **Checklist: when adding/changing any opponent-visible state in `buildPub`/`buildMat`, also handle it in `renderL4OppCards`/`updateL4Opponents`; durable fix = consolidate L4 onto `buildMat`'s logic (pairs with the A3b reconcile).**
 
-- **Python `\b` i strängar = backspace, inte regex word boundary.** I en Python heredoc-sträng () tolkas  som ASCII 0x08 (backspace), inte den bokstavliga texten . Resultatet i JS-filen blir  som aldrig matchar. Fix: använd raw strings () eller dubbla backslash (). Denna bugg drabbade sect-deriveringen — alla fem regex-tester returnerade null, och  var alltid false, vilket gömde hela Follow Path-menyn.
+- **Python `\b` in a string is a backspace, not a regex word boundary.** In a Python heredoc string `\b` is read as ASCII 0x08 (backspace), not as a backslash and a b, so the JS file got a pattern that never matches. Fix: raw strings or a doubled backslash. This bug hit the sect derivation: all five regex tests returned null and the flag stayed false, which hid the whole Follow Path menu.
 - **The `\u` / `\U` backslash trap** - inside a `'PYEOF'` heredoc, a single backslash produces the character; a double backslash produces literal `\u...` text in the file. This caused a literal-escape bug twice (the trophy emoji). After any edit that adds special characters, grep the output to confirm the real character landed.
 - **Line-number drift** - every edit shifts subsequent line numbers. Re-grep before the next edit; never trust a remembered line number.
 - **Fragile find-anchors** - don't put smart quotes, em-dashes or arrows in find-strings; pick plain-ASCII substrings that are unique, and keep the fancy characters in the replacement only.
@@ -1567,41 +1590,41 @@ Quick rule: when something is "buried", find its band below, then check the **st
 - **Per-channel sliders in a 2-column CSS grid via `sfx-adv-row:nth-child(even)` for the right-column indent.**
 - **Gain multiplication applies to every individual value in the synthesis, not a master GainNode.**
 
-## v1.18 learnings (lokal tournament mode)
-- **Tournament mode är online-only i grunden — `conv.tournament` är ett lokalt lager ovanpå.**
-- **`!inRoom()` är rätt guard för "lokal policy gäller".**
-- **Greya ut lokala inställningar när online-policy gäller — visa inte motstridiga kontroller.**
+## v1.18 learnings (local tournament mode)
+- **Tournament mode is online-only at heart — `conv.tournament` is a local layer on top.**
+- **`!inRoom()` is the right guard for "the local policy applies".**
+- **Grey out the local settings while an online policy applies — never show contradictory controls.**
 
-## v1.17 learnings (hand zone contextmenu — djupare fix)
-- **Alla kort-element är barn till `#board`, inte till `#z-hand`.**
-- **`e.stopPropagation()` i capture stoppar inte andra capture-lyssnare på samma nod.**
-- **Kortets `contextmenu`-bubble-lyssnare anropar `stopPropagation` — men det hindrar inte document-capture.**
-- **`_menuPinnedHover` som global mutex för "meny öppen på handkort".**
-- **Docken (L2/L3) stängs av `pointermove` på board + rview.**
-- **`pointerout` på board tar bort `handhover` när musen lämnar kortets yta.**
-- **`hideMenu()` är den enda stängningspunkten för alla menyer.**
+## v1.17 learnings (hand zone contextmenu — a deeper fix)
+- **Every card element is a child of `#board`, not of `#z-hand`.**
+- **`e.stopPropagation()` in capture does not stop other capture listeners on the same node.**
+- **The card's `contextmenu` bubble listener calls `stopPropagation` — but that does not stop the document's capture.**
+- **`_menuPinnedHover` as a global mutex for "a menu is open on a hand card".**
+- **The dock (L2/L3) is closed by `pointermove` on the board and rview.**
+- **`pointerout` on the board removes `handhover` when the mouse leaves the card's area.**
+- **`hideMenu()` is the one closing point for every menu.**
 
 ## v1.16 learnings (hand zone contextmenu)
 - **`_lastHandHover` = implicit "selected card".**
-- **`_requireSelected(fn)` som guard-wrapper är renare än inline-null-checks.**
-- **Tre-nivå undermenydjup fungerar i `showMenu`.**
-- **`pushUndo()` ska anropas av anroparen, inte av `move()`/`burnCard()`.**
-- **Ellipsis-konventionen är viktig att hålla.**
-- **`net.isHost` sätts sent.**
-- **Solo = `openImport()`, inte `openOffline()`.**
-- **`pointermove` döljer `#hoverCard` vid `!ctrlKey` — dela den inte med logPeek.**
-- **`s=2.619` i `logInspectRender` ger ~220×309px.**
-- **Shift+scroll = horisontell scroll i webbläsaren.**
-- **`pointer-events:none` ärvs inte "bakåt" via CSS-klass på förälder.**
-- **`openSayMenu` är högerklicksmenyn för hela filten.**
+- **`_requireSelected(fn)` as a guard wrapper is cleaner than inline null checks.**
+- **A three-level submenu depth works in `showMenu`.**
+- **`pushUndo()` is called by the caller, not by `move()`/`burnCard()`.**
+- **The ellipsis convention matters; keep it.**
+- **`net.isHost` is set late.**
+- **Solo = `openImport()`, not `openOffline()`.**
+- **`pointermove` hides `#hoverCard` on `!ctrlKey` — do not share it with logPeek.**
+- **`s=2.619` in `logInspectRender` gives ~220×309px.**
+- **Shift+scroll = horizontal scroll in the browser.**
+- **`pointer-events:none` is not inherited "backwards" through a CSS class on the parent.**
+- **`openSayMenu` is the right-click menu for the whole felt.**
 
-## v1.19 learnings (conv TDZ-krasch)
-- **`let`/`const` i temporal dead zone kraschar även med `typeof`-skydd.**
-- **`applyHelper()` anropas top-level tidigt (fas-bar-bygg).**
-- **Rätt fix: flytta deklarationen, inte skydda call-sites.**
-- **`animMode=conv.anim; applyPco();` ska INTE följa med.**
-- **Felet gav inga knappar alls — men Target och asideTab verkade fungera.**
-- **`localStorage.clear()` hjälper inte vid JavaScript-krasch.**
+## v1.19 learnings (the conv TDZ crash)
+- **`let`/`const` in the temporal dead zone crash even behind a `typeof` guard.**
+- **`applyHelper()` is called at top level, early (the phase bar's build).**
+- **The right fix: move the declaration, do not guard the call sites.**
+- **`animMode=conv.anim; applyPco();` must NOT come along.**
+- **The fault gave no buttons at all — yet Target and asideTab seemed to work.**
+- **`localStorage.clear()` does not help against a JavaScript crash.**
 
 ## v1.19–v1.20 learnings (reveal, menus, log hover)
 - **The context menu system was only 2 levels deep — one shared `#submenu` panel.**
@@ -1723,20 +1746,20 @@ Quick rule: when something is "buried", find its band below, then check the **st
 - **The `else`-branch split pattern (burn / ash / burned) mirrors the library/crypt split.**
 
 ## v1.50 learnings (cardFx actor mode)
-- **`opts.actor` reversar visuell ordning i `cardFx`, inte ett nytt `kind`-värde.**
-- **`row.insertBefore` i omvänd ordning för att prependa två element.**
-- **Caption i actor-mode bör visa vampyrnamn + kortnamn, inte spelarnamn + "plays".**
-- **`qrPhasePlayed.add(c.id)` ska anropas vid drag-to-ready med aktör.**
-- **Actor-mode caption kräver att varken `actor.name` eller `c.name` är tomma.**
+- **`opts.actor` reverses the visual order in `cardFx`; it is not a new `kind` value.**
+- **`row.insertBefore` in reverse order, to prepend two elements.**
+- **A caption in actor mode shows the vampire's name + the card's name, not the player's name + "plays".**
+- **`qrPhasePlayed.add(c.id)` is called on a drag to ready with an actor.**
+- **An actor-mode caption needs neither `actor.name` nor `c.name` to be empty.**
 
 ## v1.30 learnings (Ctrl+hover in browse modal)
-- **`cardRef`/`cardRefCap` för face-down-kort**
-- **Klick/hover på "a face-down card" i loggen**
-- **Ctrl+hover på brädet**
-- **`groupFlipUp` loggar med `cardRefCap(c)` efter att `faceDown=false` satts**
+- **`cardRef`/`cardRefCap` for face-down cards**
+- **Click/hover on "a face-down card" in the log**
+- **Ctrl+hover on the board**
+- **`groupFlipUp` logs with `cardRefCap(c)` after `faceDown=false` is set**
 - **`findInspect`-guard:**
 
-## v1.62–v1.67 learnings (stack-drag, sortering, torpor-bounce, KRCG-typer)
+## v1.62–v1.67 learnings (stack drag, sorting, torpor bounce, KRCG types)
 
 ## v1.56–v1.61 learnings (session 14)
 
@@ -1746,18 +1769,18 @@ Quick rule: when something is "buried", find its band below, then check the **st
 - **Graceful fallback when DB is absent.**
 - **Crypt cards in hand get priority -1**
 
-## v1.51–v1.54 learnings (cardFx caption-system + interaktion)
-- **`tagPlayed(c, actor)` är den enda rätta platsen att skicka aktör från alla play-vägar.**
-- **`playFromHand` och `dropCard` måste båda skicka `a || undefined` till `tagPlayed`.**
-- **Dubbelklick ska vara konsekvent med övriga play-vägar.**
-- **`#cardFx` har `pointer-events:none` av god anledning**
-- **Caption-blocket bör ha en gren per situation, inte ett generiskt `verb`-system.**
-- **`toName` i handreveal-broadcast.**
-- **Face-down-fallbacks i captions ska vara kontextspecifika.**
+## v1.51–v1.54 learnings (the cardFx caption system + interaction)
+- **`tagPlayed(c, actor)` is the one right place to pass the actor from every play path.**
+- **`playFromHand` and `dropCard` must both pass `a || undefined` to `tagPlayed`.**
+- **A double click must be consistent with the other play paths.**
+- **`#cardFx` has `pointer-events:none` for a good reason**
+- **The caption block should have one branch per situation, not a generic `verb` system.**
+- **`toName` in the handreveal broadcast.**
+- **Face-down fallbacks in captions should depend on the context.**
 
-## v1.68 learnings (#poolHelp, delad overlay)
+## v1.68 learnings (#poolHelp, a shared overlay)
 
-## v1.68 learnings (#poolHelp positionering)
+## v1.68 learnings (#poolHelp positioning)
 
 ## v1.69 learnings (sfxSilent guards)
 
@@ -1767,13 +1790,13 @@ Quick rule: when something is "buried", find its band below, then check the **st
 
 ## v1.74 learnings (KRCG clan-data, verifierat mot OpenAPI)
 
-## v1.77 learnings (publik loggning + paths-faktum)
+## v1.77 learnings (public logging + the paths fact)
 
-## v1.78 learnings (badge-mall + offset + paths-faktum bekräftat)
+## v1.78 learnings (the badge template + offset + the paths fact confirmed)
 
-## v1.79 learnings (vektorisering av symbol)
+## v1.79 learnings (vectorising the symbol)
 
-## v1.80–v1.82 learnings (Edge-token: vad som INTE funkar + Token-familjen)
+## v1.80–v1.82 learnings (the Edge token: what does NOT work + the token family)
 
 ## v1.83 learnings (Give control submenu)
 
@@ -1799,55 +1822,55 @@ Quick rule: when something is "buried", find its band below, then check the **st
 - **Lift UI confirms OUT of pure data functions.**
 - **`keepLog` must gate `turnLogs` in BOTH `clearTable` AND `restoreGame`.**
 
-## Fas 2 learnings (löv/feature-extraktion, helpers-registry, core-sömmar)
-- **Registry-mönstret (HELPER_DEFS) — driv data + wiring från en array, lämna gating ifred.**
-- **Klient↔server-uppräkningsdrift är exakt det registret ska fånga — och den fanns redan.**
-- **Koden är skriven i ANVÄNDNINGS-ordning, inte modul-ordning.**
-- **Relokering (att flytta funktioner för att gruppera) är säkrare än det låter — risken sitter i top-level, inte funktionerna.**
-- **Byte-identitet och relokering är ömsesidigt uteslutande.**
-- **Byggarens "(N bytes)"-utskrift är TECKEN, inte byte.**
-- **Splitter-disciplin för flera fragment:**
-- **Färsk dead-code-scan: funktioner som bara förekommer 1 gång = död.**
-- **Dead-code-borttagning är beteende-neutral → ingen versionsbump, men en riktig filändring.**
-- **State-kontrakt-testerna är relokeringens skyddsnät — pinna det en omflyttning kan bryta i tysthet.**
+## Phase 2 learnings (leaf/feature extraction, the helpers registry, core seams)
+- **The registry pattern (HELPER_DEFS) — drive data + wiring from one array, leave the gating alone.**
+- **Client↔server enumeration drift is exactly what the registry should catch — and it was already there.**
+- **The code is written in USE order, not module order.**
+- **Relocation (moving functions to group them) is safer than it sounds — the risk sits at top level, not in the functions.**
+- **Byte identity and relocation exclude each other.**
+- **The builder's "(N bytes)" output counts CHARACTERS, not bytes.**
+- **Splitter discipline for several fragments:**
+- **A fresh dead-code scan: a function that appears only once is dead.**
+- **Removing dead code is behaviour-neutral → no version bump, but a real file change.**
+- **The state-contract tests are the relocation's safety net — pin what a move could break in silence.**
 
-## Relokeringslearnings (concern-gruppering av monoliten)
-- **Brace-counting-parsern måste hantera default-param-braces.**
-- **`async function`-deklarationer hissas identiskt med `function`-deklarationer.**
-- **Input-concernen är ihålig under disciplinregeln.**
-- **`drag`/`giveDrag`/`tdrag` är `let`-satser, inte funktioner.**
-- **Splitter-ankare som pekar på funktioner som relokeras bryts — planera bytet FÖRE flytten.**
-- **Tre oberoende utvärderingar > en.**
-- **Escrow → net.js är TDZ-säkert trots att `let escrowTimer` stannar efter.**
+## Relocation learnings (grouping the monolith by concern)
+- **The brace-counting parser must handle default-parameter braces.**
+- **`async function` declarations are hoisted exactly like `function` declarations.**
+- **The input concern is hollow under the discipline rule.**
+- **`drag`/`giveDrag`/`tdrag` are `let` statements, not functions.**
+- **Splitter anchors that point at functions being relocated break — plan the switch BEFORE the move.**
+- **Three independent evaluations > one.**
+- **Escrow → net.js is TDZ-safe even though `let escrowTimer` stays behind.**
 
 ## Board Mode learnings (L4 Classic / Structured)
-- **Board Mode är ett spelläge, inte en vy.**
-- **"Classic" = Lackey-spelarens perspektiv.**
-- **`freeBoard()` är gate-funktionen — inte `l4on()`.**
-- **L4 + Tournament Mode = ren Lackey-upplevelse.**
-- **Server validerar boardMode strikt.**
-- **`cycleView()` och `stepLevel()` är no-ops i Classic**
-- **L4 bygger PÅ L3, inte bredvid.**
-- **`l3myslot` = hela filtet i L4.**
-- **Pool-globerna är INTE tokens.**
-- **I L4 delas bara library ut — crypt stannar i högen.**
-- **`layoutZone('torpor'/'uncontrolled')` i L4 = fri placering.**
-- **`pcoHome` skippar i L4 — `conv.pco` räcker.**
-- **`poolGradient(hex)` skapar en konsekvent sfärisk gradient.**
-- **L4 piggybackar `l3mode` → alla `l3on()` guards som triggar `renderL3()` måste ha `!l4on()`.**
-- **L4 element scaling kräver konsekvent `L4_CARD_S`/`L4_TOKEN_S` överallt i drag-pipelinen.**
-- **Zoom-clamp fångade initialt vår L4-zoom.**
-- **Ghost-element (position:fixed) måste skalas med `fitScale × l2pub.s × L4_CARD_S`**
-- **`dropZone()` i L4 måste bypassas**
-- **Dock tvångsstängning var onödig**
-- **`c.converted` flag behövs för revert-meny.**
-- **KRCG Path-fält (PR #830, OPEN):**
-- **Path vs Clan prioritet för pool-globikon:**
-- **Sabbat-detektion i VTES: deriverad vid laddning, inte vid varje menyöppning.**
-- **En meny för glob-ikon, inte två.**
-- **`updateMyClan()` hanterar nu BÅDE klan och path-detektion.**
-- **`displaySymbol()` är vad pool-globen visar; `activeClan()` är fortfarande den rena klan-detektionen.**
-- **pathBlood helper gates till phase 3 (Influence).**
+- **Board Mode is a game mode, not a view.**
+- **"Classic" = the Lackey player's perspective.**
+- **`freeBoard()` is the gate function — not `l4on()`.**
+- **L4 + Tournament Mode = a pure Lackey experience.**
+- **The server validates boardMode strictly.**
+- **`cycleView()` and `stepLevel()` are no-ops in Classic**
+- **L4 builds ON L3, not beside it.**
+- **`l3myslot` = the whole felt in L4.**
+- **The pool globes are NOT tokens.**
+- **In L4 only the library is dealt — the crypt stays in its pile.**
+- **`layoutZone('torpor'/'uncontrolled')` in L4 = free placement.**
+- **`pcoHome` is skipped in L4 — `conv.pco` is enough.**
+- **`poolGradient(hex)` makes a consistent spherical gradient.**
+- **L4 piggybacks on `l3mode` → every `l3on()` guard that triggers `renderL3()` must have `!l4on()`.**
+- **L4 element scaling needs `L4_CARD_S`/`L4_TOKEN_S` consistently everywhere in the drag pipeline.**
+- **The zoom clamp first caught our L4 zoom.**
+- **A ghost element (position:fixed) must be scaled by `fitScale × l2pub.s × L4_CARD_S`**
+- **`dropZone()` must be bypassed in L4**
+- **Forcing the dock shut was unnecessary**
+- **A `c.converted` flag is needed for the revert menu.**
+- **KRCG's Path field (PR #830, OPEN):**
+- **Path vs Clan priority for the pool globe's icon:**
+- **Sabbat detection in VTES: derived at load, not at every menu opening.**
+- **One menu for the globe's icon, not two.**
+- **`updateMyClan()` now handles BOTH clan and path detection.**
+- **`displaySymbol()` is what the pool globe shows; `activeClan()` is still the plain clan detection.**
+- **The pathBlood helper is gated to phase 3 (Influence).**
 
 ## v2.2 learnings (Path of Enlightenment, L4 polish)
 - **Pile drag target functions are separate from `dropZone()`.**
@@ -2266,7 +2289,7 @@ Quick rule: when something is "buried", find its band below, then check the **st
 ## v2.5.77 hotfix learning (the defensive fallback shipped one call site too late)
 - **Defending a lookup against a bad parameter doesn't help if a DIFFERENT parameter, one hop upstream, is the one actually wrong.**
 - **`state.playerName` vs. `net.you` is a recurring solo/hotseat identity fork already documented at three other call sites (`clanLogName()`, the pool-oust log line, the stats row) — a fourth, brand-new call site (`saySend`) used the wrong one on first write despite the pattern being established elsewhere in the same file.**
-- **A live-test report phrased as a question ("does it only work online?") is often more precise than it sounds — take the phrasing literally as a diagnostic clue.**
+- **A live-test report phrased as a question (whether something works only online) is often more precise than it sounds — take the phrasing literally as a diagnostic clue.**
 
 ## v2.5.78 learning (a decorative pattern that works at one scale can fail when reused at another)
 - **A "watermark behind a large surface" treatment (`.clansym-pool`: faint icon + tinted circle, both sized to the ELEMENT itself) doesn't transplant cleanly onto "decoration behind a much bigger neighbour."**
@@ -2278,8 +2301,8 @@ Quick rule: when something is "buried", find its band below, then check the **st
 
 ## v2.5.80 learning (two sibling elements sized in different units against different reference frames are never guaranteed proportional)
 - **A percentage size is only meaningful relative to ITS OWN containing block — two sibling elements sized as "90%" and a fixed "190px" are not proportional to EACH OTHER unless their containing blocks happen to match.**
-- **v2.5.79's fix (bump the percentage and opacity) treated the symptom (icon looks small) without diagnosing the mechanism (percentage-of-the-wrong-box) — it happened to look better on whatever test phrase was tried, but Johan's report ("still only fills about half") on a real, probably-shorter phrase re-exposed the same unit mismatch at a new pair of numbers.**
-- **When a person says "same as before, just recoloured," the safest implementation is a literal diff against the pre-feature rule, not a fresh restyle that merely evokes the old look.**
+- **v2.5.79's fix (bump the percentage and opacity) treated the symptom (icon looks small) without diagnosing the mechanism (percentage-of-the-wrong-box) — it happened to look better on whatever test phrase was tried, but the owner's report, that it still filled only about half, on a real, probably-shorter phrase re-exposed the same unit mismatch at a new pair of numbers.**
+- **When someone asks for the old behaviour with new colours, the safest implementation is a literal diff against the pre-feature rule, not a fresh restyle that merely evokes the old look.**
 
 ## v2.5.81 learning (colour-coding the same identity twice on one surface can cancel itself out)
 - **Applying the same colour signal to two overlapping/adjacent elements doesn't reinforce it — a same-hued foreground can visually merge into a same-hued background instead of standing out against it.**
@@ -2461,44 +2484,44 @@ Quick rule: when something is "buried", find its band below, then check the **st
 
 ## cardfx-v1.1 learning: a data-format version question is a data-quality audit in disguise — and the client's parser is the contract to mirror, not re-derive
 
-## Servern STÄNGER anslutningen över RATE_N — headless klienter behöver utbounds-pacing (12 juli 2026)
+## The server CLOSES the connection above RATE_N — headless clients need outbound pacing (12 July 2026)
 
-## Cursor-baserad waitFor: vänta i KAUSAL ankomstordning (12 juli 2026)
+## A cursor-based waitFor: wait in CAUSAL arrival order (12 July 2026)
 
-## Timer-debounce omordnar wiren — kö-koalescera i stället (12 juli 2026)
+## A timer debounce reorders the wire — coalesce in a queue instead (12 July 2026)
 
-## Flaky failure-punkt som VANDRAR = mättnad, inte logikfel (12 juli 2026)
+## A flaky failure point that WANDERS = saturation, not a logic fault (12 July 2026)
 
-## __dirname-förankrad persistens besegrar cwd-isolering — testa mot en KOPIA (12 juli 2026)
+## Persistence anchored at __dirname defeats cwd isolation — test against a COPY (12 July 2026)
 
-## Väntor måste knytas till LIVHET — och tracelagret betalade sig dag ett (12 juli 2026)
+## Waits must be tied to LIVENESS — and the trace layer paid for itself on day one (12 July 2026)
 
-## B1-falsk-pass, token bucket och skuggade handlers — tre snabba (12 juli 2026)
+## A B1 false pass, a token bucket and shadowed handlers — three quick ones (12 July 2026)
 
-## Stora spann patchas med index-kirurgi mot filens egna bytes (12 juli 2026)
+## Large spans are patched by index surgery against the file's own bytes (12 July 2026)
 
-## Rekognoscera med användarens vokabulär och UI-strängarna — inte begreppssynonymer (12 juli 2026)
+## Reconnoitre with the user's vocabulary and the UI strings — not synonyms of the concept (12 July 2026)
 
-## Verifiera regeltext mot källa, inte minne — särskilt när symmetrin ser för enkel ut (13 juli 2026)
+## Check rules text against the source, not memory — above all when the symmetry looks too simple (13 July 2026)
 
-## Cursor-baserad waitFor: skriv testets väntor i SÄNDNINGSORDNING, inte önskad läsordning (13 juli 2026)
+## A cursor-based waitFor: write the test's waits in SENDING order, not the order you would like to read them in (13 July 2026)
 
-## Ett rimligt regelantagande kan ändå vara farligt om exekveringen inte kollar sitt eget facit (13 juli 2026)
+## A reasonable rules assumption can still be dangerous if the execution does not check its own answer key (13 July 2026)
 
-## Beslut och exekvering måste läsa samma facit (13 juli 2026)
+## The decision and the execution must read the same answer key (13 July 2026)
 
-## Kodkommentarer är inte dokumentation — journalposten ÄR ritualen (13 juli 2026)
+## Code comments are not documentation — the journal entry IS the ritual (13 July 2026)
 
-## Regelboks-bokföring (lås, kostnader) granskas separat från lyckliga-vägen-logik (13 juli 2026)
+## Rulebook bookkeeping (locks, costs) is reviewed apart from the happy-path logic (13 July 2026)
 
-## Ett "read-only" system kan vara en outnyttjad generisk mekanism, inte ett nytt behov (13 juli 2026)
+## A "read-only" system can be an unused generic mechanism, not a new need (13 July 2026)
 
-## Vy-läges-syskondrift: en fix till L3/L4 som aldrig speglades till L2 (13 juli 2026)
+## View-mode sibling drift: a fix to L3/L4 that was never mirrored to L2 (13 July 2026)
 
-## Bot-mot-bot-handshakes löser på SVAR — och en pacing-hypotes fälls billigast i källan (24 juli 2026)
+## Bot-to-bot handshakes resolve on the ANSWER — and a pacing hypothesis is cheapest to kill at the source (24 July 2026)
 
-## En patch vars GAMLA sida är dina NUVARANDE filer är en omvänd överskrivning, inte ett delta (27 juli 2026, merge-sessionen)
+## A patch whose OLD side is your CURRENT files is a reverse overwrite, not a delta (27 July 2026, the merge session)
 
-## Uppladdningskatalogen ACKUMULERAR — en blank-kopia därifrån är en tidsmaskin bakåt (27 juli 2026, botsynk-sessionen)
+## The upload folder ACCUMULATES — a blank copy from there is a time machine backwards (27 July 2026, the bot sync session)
 
-## Ett föråldrat MÄTINSTRUMENT rapporterar regression som aldrig hänt (27 juli 2026, vtes.json-körningen)
+## An outdated MEASURING INSTRUMENT reports a regression that never happened (27 July 2026, the vtes.json run)

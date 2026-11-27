@@ -16,7 +16,7 @@ carries this file, so you can run your suite against it before Johan merges.
 - **The probe default:** read; nothing for us to build.
 
 ## 2. What ships here and reaches you
-Johan answered the open question on 17 Oct: *"Yes vi kan tillåta värden under 0"* (yes, we allow values below 0). As
+The owner answered the open question on 17 Oct: values below 0 are allowed. As
 promised, you hear it before it ships. Everything below is in this PR; none of it is on elysium.cards yet.
 
 1. **A negative stealth or intercept survives the round trip.**

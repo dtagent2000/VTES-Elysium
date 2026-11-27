@@ -739,7 +739,7 @@ test('dismissRoute: a LIVE online lobby answers stay; a dead room closes; every 
     eq(API.dismissRoute(false, m, false, true), 'close', 'inLobby but another modal shown (' + m + '): that modal still dismisses');
 });
 
-/* === v2.6.57: B-53 follow-up -- preamble prose + the unknown-name gate (Johan/Tim's Hecata file) === */
+/* === v2.6.57: B-53 follow-up -- preamble prose + the unknown-name gate (a player's Hecata file) === */
 if (!API.deckUnknownNames || !API.deckUnknownText) throw new Error('deckUnknownNames/deckUnknownText not exposed (harness needs updating)');
 
 test('parseDeck: with BOTH section headers, a qty-line before the first header is prose, not a card (the "9 times out of 10" ghost)', () => {
@@ -4983,7 +4983,7 @@ testB('v2.6.162 LIVE: a REAL bot\'s verdict clock (v0.6.204+) starts when its qu
     assert(vl.t - q.t >= 2800, 'not before its 3 s were up (' + (vl.t - q.t) + ' ms after the question)');
   } finally { delete A.hotBots[2]; b.close(); A.localTable = false; HB.reset([]); A.MP_HANDLERS.log = log0; A.MP_HANDLERS.chat = chat0; A.net.roster = []; A.net.hot = null; }
 });
-/* === v2.6.163 (the 16 Oct code review, finding 1; Johan: 'kör A'): another player's name, clan and cards are escaped in attributes too === */
+/* === v2.6.163 (the 16 Oct code review, finding 1; group A, on the owner's go): another player's name, clan and cards are escaped in attributes too === */
 test('v2.6.163 escapeHtml escapes " and \' as well as & < > (and still takes null)', () => {
   eq(API.escapeHtml('a"b\'c<d>&e'), 'a&quot;b&#39;c&lt;d&gt;&amp;e');
   eq(API.escapeHtml(null), ''); eq(API.esc(undefined), '');
@@ -6697,7 +6697,7 @@ testA('v2.6.180 the bot sweep leaves the helicopter view alone (Johan: in L3 not
     eq(gone.end, '3', 'no camera move after the table went away (the sweep used to switch home onto whatever view came next)');
   } finally { A.localTable = false; A.net.roster = []; HB.reset([]); }
 });
-testA('v2.6.180 your own seat moves pan (Johan: "even when I switch table view myself, with the arrows or Tab, so I clearly see the view change") -- the arrows, Tab, a seat and Home run the switch INSIDE a View Transition: the next seat comes in from the right, a step back from the left (html.camback); a level change and a move with a dialog open switch at once; without the API nothing pans (v2.6.179: no transition at all)', async () => {
+testA('v2.6.180 your own seat moves pan (the owner asked for the pan on every view switch of your own too, with the arrows or Tab) -- the arrows, Tab, a seat and Home run the switch INSIDE a View Transition: the next seat comes in from the right, a step back from the left (html.camback); a level change and a move with a dialog open switch at once; without the API nothing pans (v2.6.179: no transition at all)', async () => {
   const A = loadClient(CLIENT), D = A.__doc;
   const cls = new Set(), vts = [];
   const de = { classList: { add: (...c) => c.forEach(x => cls.add(x)), remove: (...c) => c.forEach(x => cls.delete(x)), toggle: (c, on) => { if (on) cls.add(c); else cls.delete(c); return !!on; }, contains: c => cls.has(c) }, style: { setProperty(){} } };
@@ -6800,7 +6800,7 @@ test('v2.6.181 the Classic board (L4) keeps the felt\'s centre free (Johan: the 
   assert(html.indexOf("const show=l3on() && (l4on() || !l3centerOnFelt);") > 0, 'L4 always shows the panel row');
   assert(html.indexOf("l3centerOnFelt=(N===5);") > 0, 'the helicopter view is as it was: the 5-seat pentagon keeps the centrepiece, other counts use the panel');
 });
-test('v2.6.182 the Edge button on the Classic board sits in the bottom panel\'s pool zone (Johan: "i globzonen i bottenpanelen precis som L2" -- v2.6.181 had put it on the globe on the board): mirrored like #edgeChrome, a click takes or releases it; the board globes carry the Edge icon as a mark for every seat alike, yours included (v2.6.151\'s rule: holding it, no Edge token of your own out); the Classic tutorial points at the button, or at the panel\'s bar while the panel is shut', () => {
+test('v2.6.182 the Edge button on the Classic board sits in the bottom panel\'s pool zone (the owner: in the bottom panel, as in L2 -- v2.6.181 had put it on the globe on the board): mirrored like #edgeChrome, a click takes or releases it; the board globes carry the Edge icon as a mark for every seat alike, yours included (v2.6.151\'s rule: holding it, no Edge token of your own out); the Classic tutorial points at the button, or at the panel\'s bar while the panel is shut', () => {
   const A = loadClient(CLIENT), D = A.__doc;
   A.net.ws = { readyState: 1, send(){} };
   A.MP_HANDLERS.joined({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(3), boardMode: 'classic', lobby: false, srv: '2.6.45', myPub: { cards: [] } });
@@ -6856,7 +6856,7 @@ test('v2.6.182 the pool globe on the board keeps the circle\'s width whatever th
   const A = loadClient(CLIENT);
   eq(A.l4SeatGeo().gw, 64 * A.L4_TOKEN_S, 'the seat spots count the same 64 px circle');
 });
-test('v2.6.181 the free Edge token\'s first spot in L4 is above your pool globe (Johan: "ovanför spelarens glob på brädet om det går"), below it when the globe sits at the top edge, inside the table at the sides; the button takes it there; outside L4, and with a position that came with the Edge, as before', () => {
+test('v2.6.181 the free Edge token\'s first spot in L4 is above your pool globe (the owner: above the globe where there is room), below it when the globe sits at the top edge, inside the table at the sides; the button takes it there; outside L4, and with a position that came with the Edge, as before', () => {
   const A = loadClient(CLIENT);
   A.net.ws = { readyState: 1, send(){} };
   A.MP_HANDLERS.joined({ room: 'r', token: 't', you: 'Johan', seat: 1, players: ROSTER146(3), boardMode: 'classic', lobby: false, srv: '2.6.45', myPub: { cards: [] } });
@@ -6881,7 +6881,7 @@ test('v2.6.181 the free Edge token\'s first spot in L4 is above your pool globe 
   A.l4Globes.clear(); l4mode149(A, true);
   try { eq(A.l4EdgeSpot(), null, 'no globe on the board: no spot, the ready default stands'); } finally { l4mode149(A, false); }
 });
-test('v2.6.181 the middle button pans the table from anywhere (Johan: "enkelklick+håll med mittknappen ... oavsett om man hade musen ovanför något annat element") -- over a card or a globe, in the helicopter view and the Classic board; the press, its moves and its release are the pan\'s; it ends when the middle button lets go, even with another still down; L2, a finger, the other buttons, the panels beside the table and the empty-table card are left alone', () => {
+test('v2.6.181 the middle button pans the table from anywhere (the owner: a middle-button press and hold pans whatever the mouse is over) -- over a card or a globe, in the helicopter view and the Classic board; the press, its moves and its release are the pan\'s; it ends when the middle button lets go, even with another still down; L2, a finger, the other buttons, the panels beside the table and the empty-table card are left alone', () => {
   const A = loadClient(CLIENT), T = A.__stubEl.classList._t, dims = A.__stubEl._dims;
   dims.clientWidth = 1004; dims.clientHeight = 616; dims.getBoundingClientRect = () => ({ left: 0, top: 0, right: 1004, bottom: 616, width: 1004, height: 616, x: 0, y: 0 });
   const inBoard = { closest: sel => (sel === '#board' ? {} : null) }, inEmpty = { closest: () => ({}) }, beside = { closest: () => null };
@@ -6949,7 +6949,7 @@ test('v2.6.181 the first click on the TABLE tab at a new table opens the panel (
   } finally { delete D._ids.statsDock; delete D._ids.statsArrow; }
 });
 
-test('v2.6.183 a long name on the board globe wraps inside a 92 px window and grows upward from the globe (Johan: "staplas inom ett fönster som radbryter texten ... expanderar uppåt från poolgloben") -- two lines at most, then an ellipsis; the slot stays one line high, so the circle and the seat spots do not move; the full name is the globe\'s tooltip; the Edge token above a globe clears a second line', () => {
+test('v2.6.183 a long name on the board globe wraps inside a 92 px window and grows upward from the globe (the owner: a wrapping window that grows upward from the pool globe) -- two lines at most, then an ellipsis; the slot stays one line high, so the circle and the seat spots do not move; the full name is the globe\'s tooltip; the Edge token above a globe clears a second line', () => {
   const A = loadClient(CLIENT);
   const fresh = { firstChild: null, innerHTML: '', title: '', querySelector(){ return null; } };
   A.updateL4GlobeHTML({ seat: 2, el: fresh, mine: false }, 'Johan Svensson-Lindqvist', 30);
@@ -6988,7 +6988,7 @@ test('v2.6.183 a long name on the board globe wraps inside a 92 px window and gr
   assert(lblRule.indexOf('filter:drop-shadow(0 2px 4px #000)') > 0 && lblRule.indexOf('text-shadow') < 0, 'the shadow is a filter on the slot, so the clamped window does not cut it');
 });
 
-/* === v2.6.184 THE SAVES HOLD (srv-2.6.52; HeySteev through Johan, 24 Nov 2026) === */
+/* === v2.6.184 THE SAVES HOLD (srv-2.6.52; a player's questions, passed on by the owner, 24 Nov 2026) === */
 function savesDom184(A){
   const el = () => ({ hidden:false, innerHTML:'', value:'', placeholder:'', textContent:'', classList:{ add(){}, remove(){}, toggle(){}, contains:()=>false } });
   const ids = { saveNew: el(), savesHint: el(), savesList: el(), saveName: el() };
@@ -7056,7 +7056,7 @@ testA('v2.6.184 the Saved matches dialog: a room without a password says so inst
   assert(html.indexOf('The server stores the hand only as a blob it cannot read') < 0, 'and Help > Local server no longer says the server cannot read the hand (About was corrected in v2.6.173)');
 });
 
-/* === v2.6.185 THE SEARCH IS TOLD (srv-2.6.53; Johan's 'kör G') === */
+/* === v2.6.185 THE SEARCH IS TOLD (srv-2.6.53; item G, on the owner's go) === */
 testA('v2.6.185 on a server from srv-2.6.53 the client writes no line of its own for a search, a fetch from it or a park from the top -- the server tells the table, which would otherwise read it twice -- and an older server still gets the client\'s lines', async () => {
   const A = loadClient(CLIENT);
   if (typeof A.srvLogsPiles !== 'function') throw new Error('srvLogsPiles missing (v2.6.184)');
@@ -7235,7 +7235,7 @@ test('v2.6.186: the hotseat points at the Table panel, where seats are switched 
   assert(/Pick <b>New deal<\/b>/.test(rec), 'a deck loaded on its own still points at New deal: ' + rec);
 });
 
-/* ---------- v2.6.187: THE BOT RING (Johan, 24 Nov 2026: 'en effektiv och modern bott-kontrollpanel') ---------- */
+/* ---------- v2.6.187: THE BOT RING (the owner, 24 Nov 2026: an efficient, modern bot control panel) ---------- */
 function ringTable(A, extra){   // a hotseat: You, Viktor (a bot), Hanna (a bot) [, more]; a bleed can be aimed and the ring read
   const T = parityTable(A, [['You'], ['Viktor', true], ['Hanna', true]].concat(extra || []));
   A.net.turnSeat = 1; A.bleedIn = null; A.clearTable({});
@@ -7253,7 +7253,7 @@ test('v2.6.187 THE BOT RING: ring 1 is Hold on / Yes / No / Block and reaction /
   eq(A.BRING.act.kids.join(','), 'blk,ablk,nblk,nrx,arx', 'Block and reaction: Block! (and who blocks), Any blocks?, No block, No reaction, Any reaction?');
   eq(A.BRING.bld.kids.join(','), 'bl,add,red,bnc', 'Johan: Bleed, +Bleed, Reduce and Bounce under the blood drop');
   for (const k of ['bl', 'add', 'red']) eq(A.botRingKids(k).join(','), ['1', '2', '3', 'X'].map(v => k + ':' + v).join(','), k + ': 1 / 2 / 3 / X');
-  eq(A.BRING.res.ic.join(), 'gavel'); eq(A.BRING.bnc.label, 'Bounce', 'Johan: "bounces", never "redirects" (Redirection is a card)');
+  eq(A.BRING.res.ic.join(), 'gavel'); eq(A.BRING.bnc.label, 'Bounce', 'the owner chose "bounces", never "redirects" (Redirection is a card)');
   eq(A.BLEED_LINE.bounce('B', 'C'), 'B bounces the bleed to C.'); assert(!/redirect/i.test(html.slice(html.indexOf('const BRING={'), html.indexOf('const BRING_ROOT='))), 'no "redirect" in the ring');
   Object.values(A.BRING).forEach(n => (n.ic || []).forEach(ic => assert(A.BOT_ICON[ic] && A.BOT_ICON[ic].length, 'icon ' + ic)));
   ['robotFace', 'gear', 'play'].forEach(ic => assert(A.BOT_ICON[ic] && A.BOT_ICON[ic].length, 'the hub draws ' + ic));
@@ -7628,7 +7628,7 @@ test('v2.6.188 a ring at the pointer leaves the hub a robot; its centre gear ope
     assert(/\['Hold the right button \(tables with bots\)'/.test(html), 'the Controls list says it');
   } finally { done(); H.done(); }
 });
-test('v2.6.188 the bot box can hide the hub (Johan: "toggla i bottkugghjulet om man vill dölja ikonen ... så man bara kör på långklicket") -- hidden it takes no pointer and no Tab and the ring opens at the pointer; it comes out by itself while the table waits on this screen (a bot asks you, a bleed at you, Turn-based\'s play button) and while its own ring is open; never on a touch screen, nor with the hold off and no key bound; saved with the settings', () => {
+test('v2.6.188 the bot box can hide the hub (the owner: a switch in the bot gear hides the icon, and the long press is the way in) -- hidden it takes no pointer and no Tab and the ring opens at the pointer; it comes out by itself while the table waits on this screen (a bot asks you, a bleed at you, Turn-based\'s play button) and while its own ring is open; never on a touch screen, nor with the hold off and no key bound; saved with the settings', () => {
   const A = loadClient(CLIENT), html = require('fs').readFileSync(CLIENT, 'utf8'); const H = holdTable(A);
   const { hub, done } = fakeHubBox(A);
   try {

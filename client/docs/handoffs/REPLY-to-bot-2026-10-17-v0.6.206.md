@@ -13,7 +13,7 @@ and `…-2026-10-17-v0_6_206.md`. Bot **v0.6.206** ran beside the suite; `bot/` 
   way: our LIVE test's 2.8 s floor holds at your proposed 3.04 s.
 
 ## 2. What changed on our side that reaches you (no new verb, no new field)
-This round is a security release from a code review of 16 Oct (Johan: 'kör A'). Three things touch the edges of what
+This round is a security release from a code review of 16 Oct (group A, on the owner's go). Three things touch the edges of what
 your bots send and read. We checked each one against your released code; nothing needs to change on your side.
 
 1. **Log HTML escapes both quotes (client v2.6.163).** The client's `escapeHtml` now turns `"` into `&quot;` and `'` into

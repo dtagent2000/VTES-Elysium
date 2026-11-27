@@ -27,8 +27,8 @@ The B-54 telemetry loop is live end to end: client crash hook + "Report a proble
 Johan's first real report). The first real morning exposed the next friction: reports carry a
 40-line ring + a small summary, which answers *what happened just before* but not *what the
 table actually looked like*. B-53 was solved from a screenshot decode of exactly the numbers a
-dump would carry machine-readably. Johan asked for "ALL data points the player can see,
-formatted optimally for Claude review" — this spec is that feature.
+dump would carry machine-readably. The owner asked for every data point the player can see, laid out
+for Claude to review — this spec is that feature.
 
 ## 2. Locked decisions (Johan approved, 8 Aug)
 
@@ -91,7 +91,7 @@ Extend the existing report payload — no new kind:
 
 ```json
 { "kind":"report", "ver":"2.6.56", "note":"…", "ua":"…",
-  "ring":[{"t":1723100000000,"m":"Stolas dealt 7 cards …"}, …],
+  "ring":[{"t":1723100000000,"m":"Mara dealt 7 cards …"}, …],
   "summary":{ …unchanged… },
   "dump":{ "game":{…}, "env":{…} } }
 ```

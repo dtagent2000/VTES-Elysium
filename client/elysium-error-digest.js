@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 /* ============================================================
-   Elysium - elysium-error-digest.js (ops companion, v1.5, 11 Nov 2026)
+   Elysium - elysium-error-digest.js (ops companion, v1.5.1, 27 Nov 2026)
+   v1.5.1 (27 Nov 2026): comments only, the public repository's cleanup round -- the box's v1.5
+   behaves the same and needs no copy.
    v1.5 (THE WATCHED DOOR, client v2.6.173 / srv-2.6.50): the page's
    Content-Security-Policy is report-only for a week or more, and each
    report reaches the log as kind 'csp'. They get ONE line of their
@@ -9,7 +11,7 @@
    line, so a policy that still needs a host or a hash cannot hide a
    real crash. Silence on that line for the week is the plan's signal
    to enforce (client/docs/elysium-security-plan.md).
-   v1.4 (Johan: 'so I stop wondering whether it is players or Cloudflare'):
+   v1.4 (the owner wanted players' trouble and Cloudflare's apart at a glance):
    crash rows thrown by FOREIGN scripts are folded into one line -- a
    src under /cdn-cgi/ is Cloudflare's own injected beacon/challenge/
    Rocket Loader crashing in the player's browser, and the bare
@@ -20,7 +22,7 @@
    says how many there were. The v2.6.64 client's crash notice uses
    the same two tests, so player and ops see one consistent rule.
    v1.3 = v1.1 + v1.2 merged. Lineage: v1.1 (8 Aug, built the same
-   morning Johan asked "where are the logs?") renders REPORTS as
+   morning the owner asked where the logs were) renders REPORTS as
    inline detail blocks -- note + deck/counts + mode + the last ring
    lines, newest first, at most 3 per digest; crashes stay
    aggregated (that is where volume lives). The v1.1 delivery was
