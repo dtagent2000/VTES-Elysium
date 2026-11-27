@@ -567,13 +567,15 @@ distance from 980 to 1,543, and two days of new definitions the rest.
 - **D-126 under the new order.** It put the finished decks first in the harvest; §11.3 reads that as first within a family.
   Claude's reading, for the owner to confirm.
 - **How the bundle tells the bot that an effect is exact** (a field of the entry, or a list beside the library): the first
-  family's round designs it. The canary's cardfx checks are main's: a shape they read differently is a handoff first.
+  family's round designs it. The canary's cardfx checks are main's: a shape they read differently is a handoff first. Answered
+  27 Nov (D-144 (2)): outside the bundle for now, `cardfx-exact.json` (each cross-check row's state); the bundle's field is the first
+  readers' round's design.
 - **The first reader's design** goes to the owner before it is built: who moves the counter when a human plays a stealth card
   (the human, as today, or the bot from the card), and how a number entered both ways is not counted twice.
 - **#92's three compile failures beyond §4.4's letter** (the near miss on a mode's `when`, an added mode without `fx`, a half
   opt-in): each turns a silent mistake into a compile error. The owner's word is pending; none blocks the pilot.
 - **Their wrong readings.** Claude's proposal, not ruled: the noted ones are kept as a list in each round's PR, for the owner to pass
-  to zero-vtes's maintainer if he wishes.
+  to zero-vtes's maintainer if he wishes. Answered 27 Nov (D-144 (3)): a report per round in `docs/reports/`.
 
 ### 11.7 Predictions for the first family (registered before its tool exists; D-93, L-44)
 A scratch scan on 20 Nov (appendix C; action modifiers and reactions only, the levels joined crudely): 443 entries, 376 with a
@@ -588,6 +590,16 @@ or a condition.
 
 The counts and their verdicts are written here when the first family is built. The 175 is the scan's own number: the tool's
 count may differ, and then the bands are read as shares of its count.
+
+**Read (C1, 27 Nov 2026, v0.6.243; zero-vtes `f9f227f`).** (1) **Held.** Of the modifier and reaction cards that carry a value, 146 of
+202 agree level by level on the tool's first version (72 %) and 144 of 201 on v1.1.0, the bytes before the corrections (71.6 %);
+the floor was 125 of 175 (71.4 %). (2) **Over the band.** Of the 57 modifier and reaction cards that differ (v1.1.0), the readers
+found a reading of ours wrong on 24: 14 with a value KRCG's text contradicts (a flat number where the text conditions it, a free
+one it sells, a granted burn's stealth booked on the play) and 10 with a value missing (the blocking minion's malus:
+SWEEP-REGISTER 10.20). The lead then found 7 more that sell their value for blood or pool (Ears of the Hare [pro], Stone Travel
+[obt] and five others), which the tool's cost flag missed: 21 contradicted, more than 15, so the family takes a second round. Its
+second pass rides in C1b: the 29 "extra cost" flags the pairing's blood token now finds. The round's numbers (§11.5):
+`docs/reports/REPORT-c1-2026-11-27.md`.
 
 ### 11.8 The concentrated sweep (the owner, 20 Nov 2026; RULINGS D-132, D-133)
 **What was said.** At 09:43 the owner wanted to push the alignment with zero-vtes through at some pace and asked what exactly the
@@ -616,7 +628,7 @@ each round is a release with a sim footprint. Point 1 would amend D-127, point 4
 **How C runs** (C: Claude's setup, which the owner left to Claude, D-132; the rest of §11 stands):
 1. **Rounds by families.** C1: the cross-check tool (a family's keys against zero-vtes's effect types over the whole library, the
    disagreements listed per card, the pairing committed with the tool since O-48's answer, D-140) and `stealth` / `actStealth`,
-   `intercept`, `bleed`. C2: combat. C3 (and C4): the rest of §11.4's horizon. Then the numbers are measured again and the owner says
+   `intercept`, `bleed` (built: v0.6.243, D-144; C1b, next, reads the 13 other V5 decks' flagged cards and the family's second pass). C2: combat. C3 (and C4): the rest of §11.4's horizon. Then the numbers are measured again and the owner says
    whether the sweep goes on by effect or turns to D (§11.4).
 2. **Inside a round.** The tool lists the disagreements; agents read them in parallel batches against KRCG's text and the
    rulings, each from a written brief; each card is corrected, noted or explained (§11.2 (5)); a separate agent reviews, until
