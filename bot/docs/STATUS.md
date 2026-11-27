@@ -9,9 +9,11 @@ the root's release is client v2.6.191 / srv-2.6.54 (the canary's second run).
 **Deploy state:** `main` carries v0.6.242 (#114), client v2.6.190 (#116, comments only) and v2.6.191 (#117, merged into C1's branch). **Open:** v0.6.243, C1 (#112: the
 cross-check tool, the family's corrections, `cardfx-exact.json`; D-144), with the private data repo's #7 (D-144's words).
 
-## Last gates (v0.6.243's release bytes, `14d48ac8`, cardfx `f509d7bf`; the suite file `bae2970e`)
-27 Nov, on d0e3955: `tools/gates.sh` the fast gates PASS 14 (canary 235/0 ×2 · cardfx 516/0 · hotseat 12/0 · HB1 11/0 · lint clean ·
-precon 18 · cross-check 19/0 · public-scan 0 hits); doc-budget with this page. The 240 and the V5 smokes, CI's suite ×3: the PR.
+## Last gates (v0.6.243's release bytes, `14d48ac8`, cardfx `c4b9545e`; the suite file `bae2970e`)
+27 Nov, on 86d02f6: `tools/gates.sh --sim --smokes` PASS 17 (canary 235/0 ×2, the root's v2.6.191 · cardfx 516/0 · hotseat 12/0 ·
+HB1 11/0 · lint clean · precon 18 · cross-check 19/0 · doc-budget · public-scan 0 hits) · the 240 against v0.6.242 SAME-PLAY 240,
+IDENTICAL 240 with the version put back, `ana-gates.py` PASS 6/6 · the V5 smokes 13 of 14 (banuhaqim's ledger fault is main's too,
+same seed). CI's suite ×3: the PR.
 
 ## Next (the owner's order of 26 Nov and D-144)
 1. **C1b**: the fidelity pass of the other 13 V5 decks reads their flagged cards (D-138, D-144 (1)), with the family's second pass:
@@ -32,5 +34,5 @@ and pool moves, no wire change; its reply to v0.6.242 relays the owner's answer 
 (`client/docs/handoffs/REPLY-to-bot-2026-11-26-v0.6.241.md`) answers eight handoffs (the queued bridge, v0.6.235, the guide for
 v2.6.179, the licence, v0.6.236, v0.6.237, v0.6.240, v0.6.241): to consume in a bot round (its items built or declined, the
 handoffs moved to history, the copies refreshed to v2.6.191 / canary v1.7.0, `bot/README.md` to point at the root `LICENSE`).
-Open: the public repository (main set its own scope, the reply's §6) and v0.6.242's (re-embed the guide; the sewer deck's new
-name); v0.6.243's guide (301 curated) to re-embed.
+Open: the public repository (main set its own scope, the reply's §6); v0.6.243's guide (301 curated) to re-embed. v0.6.242's
+asks were answered in v2.6.191's reply (the guide embedded, the deck's name needs nothing).

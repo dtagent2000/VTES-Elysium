@@ -212,7 +212,9 @@ A value the text conditions or caps, compiled as a plain number.
   Mithraic Cultist, Pallid, Phased Motion Detector, Sunset Strip, Unlicensed Taxicab, Charigger's hunt stealth; Baltimore Purge's
   `selfClan` Ravnos, which the actStealth path does not read). And the bought intercept `interceptPaid` on a hand reaction or a
   location (Ears of the Hare [pro], Voices of the Castle [tha], Speak with Spirits [SPI], The Rumor Mill): `_equipPaidIntercept`
-  reads it on equipment and `_bestUnlockReactFor` on an unlock reaction only. [C1's readers and the lead] · missed (Protection Racket: 7.5,
+  reads it on equipment and `_bestUnlockReactFor` on an unlock reaction only, and Speak with Spirits [SPI] is an unlock reaction by
+  its text (a locked vampire unlocks and attempts to block) whose mode carries no `unlock` or `when`, as Eyes of the Wild's does.
+  Unlicensed Taxicab's own `actStealth` 2: the equip announce books the basic +1 only (`_bestEquipActionFor`'s stealth is 0). [C1's readers and the lead] · missed (Protection Racket: 7.5,
   active; Abbot: pathcaine ×1, Gravebound Drone: pathdeath) / latent (the rest: no deck) · a reader per condition kind where the
   number is summed, the price paid where the bot plays the card; the cross-check compares the condition (`plusIf`) with theirs.
 
