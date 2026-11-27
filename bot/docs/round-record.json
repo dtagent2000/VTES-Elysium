@@ -1,23 +1,22 @@
 {
  "schema": 1,
  "tool": "tools/gates.sh",
- "date": "2026-11-27",
- "branch": "c1b",
- "head": "6ebc0e8",
+ "date": "2026-11-28",
+ "branch": "r11-11",
+ "head": "58cb57d",
  "dirty": true,
  "base": "origin/main",
- "merge_base": "8271308",
+ "merge_base": "60c59e8",
  "flags": [
-  "sim",
-  "smokes"
+  "sim"
  ],
  "changed": {
-  "all": 26,
-  "bot": 22
+  "all": 17,
+  "bot": 14
  },
  "bytes": {
-  "elysium-bot.js": "41d04006",
-  "test-bot-logic.js": "f67335d4",
+  "elysium-bot.js": "421f5256",
+  "test-bot-logic.js": "c92475b9",
   "elysium-cardfx.json": "21ef103f"
  },
  "gates": [
@@ -31,7 +30,7 @@
    "gate": "lint",
    "result": "PASS",
    "count": "lint: clean",
-   "seconds": 8
+   "seconds": 5
   },
   {
    "gate": "canary",
@@ -43,19 +42,19 @@
    "gate": "canary-root",
    "result": "PASS",
    "count": "235/0",
-   "seconds": 2
+   "seconds": 1
   },
   {
    "gate": "cardfx",
    "result": "PASS",
    "count": "524/0",
-   "seconds": 3
+   "seconds": 2
   },
   {
    "gate": "precon",
    "result": "PASS",
    "count": "18 precons, no problems",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "ledger-self",
@@ -78,20 +77,20 @@
   {
    "gate": "table-self",
    "result": "PASS",
-   "count": "abstract table 1.0.0: 6/0 (550 ms)",
+   "count": "abstract table 1.0.0: 6/0 (416 ms)",
    "seconds": 1
   },
   {
    "gate": "reader",
    "result": "PASS",
    "count": "871 rows, 363 gated, 286 read, 65 unread (65 listed, 0 new), 0 stale, 12 no value · self-test 8/0",
-   "seconds": 1
+   "seconds": 0
   },
   {
    "gate": "bench",
    "result": "PASS",
    "count": "821 kept rows, 235 with a scenario, 306 scenarios, 306 played right, 0 rows wrong (0 listed, 0 new), 0 stale · self-test 5/0",
-   "seconds": 17
+   "seconds": 13
   },
   {
    "gate": "ana-gates-self",
@@ -114,7 +113,7 @@
   {
    "gate": "doc-budget",
    "result": "PASS",
-   "count": "bootstrap 39221 / 50000 · standing pages 186443 / 187000",
+   "count": "bootstrap 39337 / 50000 · standing pages 186898 / 187000",
    "seconds": 1
   },
   {
@@ -133,37 +132,30 @@
    "gate": "public-scan",
    "result": "PASS",
    "count": "0 hits in 0 files",
-   "seconds": 1
+   "seconds": 0
   },
   {
    "gate": "sim-240",
    "result": "PASS",
-   "count": "240 matches: DIVERGED 115, SAME-PLAY 125 · 0.6.243 -> 0.6.244, with the version put back: 240 matches: DIVERGED 115, SAME-PLAY 125 · ana-gates PASS (6 of 6) · bytes 41d04006 f67335d4 21ef103f",
-   "seconds": 378
-  },
-  {
-   "gate": "v5-smokes",
-   "result": "FAIL",
-   "count": "13 of 14 smokes PASS · banuhaqim:FAIL (5 of 6)",
-   "seconds": 194
+   "count": "240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 421f5256 c92475b9 21ef103f",
+   "seconds": 323
   }
  ],
  "totals": {
   "PASS": 20,
-  "FAIL": 1,
+  "FAIL": 0,
   "SKIPPED": 0,
   "NOT RUN": 0
  },
- "seconds": 662,
+ "seconds": 403,
  "ci": {
-  "head": "71d4cf1",
+  "head": "cf2cf29",
   "runs": [
-   "2854/0",
-   "2854/0",
-   "2854/0"
+   "2878/0",
+   "2878/0",
+   "2878/0"
   ],
   "gates": "success"
  },
- "egress": "12 findings (stale-doc 4, half-done 3, unproven 3, rule-missed 2) in 4 passes (Opus 6, Fable 4, Fable 2, Fable clean), 12 fixed, 0 listed",
- "note": "v5-smokes: banuhaqim's steal pair is on v0.6.243's bytes too, the same seed (re-run)"
+ "egress": "26 findings (half-done 20, unproven 3, stale-doc 3) in 6 passes (Opus 5, Fable 4, Fable 5, Fable 5, Fable 3, Fable 4), 22 fixed, 4 listed"
 }

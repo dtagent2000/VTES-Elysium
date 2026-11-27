@@ -24,7 +24,7 @@ board       push() → buildPub at drain time (the cards; a card's named counter
 pacing      _pace(kind) / _afterBeat ; the tempo (_waitPlan) ; the hold (_holdFreeze / _holdThaw) ; status() / step() for the
             Bot button
 trace       emit(kind, data) → the arena's / sim's match-NNNN.jsonl (manifest, snapshot, decide, play, plan, through, blocked,
-            block-made, combat-round, wait, game-over, combat-superseded, fizzled, game-resumed, memo, contract, …; 116 kinds)
+            block-made, combat-round, wait, game-over, combat-superseded, fizzled, game-resumed, memo, contract, second-attempt, …)
 ```
 The three rules that keep the layers apart: tactics READ the plan and never recompute it; every read about an opponent goes
 through `this.opp[seat]` (public evidence only); a decision knob gates decisions only (CLAUDE.md, binding rules).
@@ -84,6 +84,8 @@ through `this.opp[seat]` (public evidence only); a decision knob gates decisions
   `<vamp> currently has N stealth — …` once per (blocker, a, b) and waits for the counter. The first look against a human runs
   AFTER the reaction beat; second-look stealth, the blocker's intercept card and cancel-block land after the beat and are re-checked
   against the counter. Intercept by chat (bare `N` = total, `+N` = added) only while my action is contested.
+- **One attempt at a time.** [D-149] While a seat that may block has an attempt standing (`_standingFor`) my window waits, the
+  acting bot takes up one (`_attemptStands`), and a predator weighs after its prey's decline (`_preyDeclined`).
 ### Timing
 - **The window rule.** [L-25, L-26] A window opens in the SAME tick as the line it opens on — never an `await` between sending that
   line and `_askBlock`. A guard about what the table has SEEN keys on the line the answer answers (`_openLine`), not on my queue.

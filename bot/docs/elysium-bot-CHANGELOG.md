@@ -14,6 +14,17 @@ The two pending lines are `tools/round.py save`'s to render, from `docs/round-re
 The entries of 9 Sep – 27 Nov 2026 (bot v0.1 to v0.6.243 and the rounds without a release to C1) are frozen in
 `history/elysium-bot-CHANGELOG-to-v0.6.243.md`.
 
+- **v0.6.245, 11.11 (27 Nov 2026, bot v0.6.245; PR #122)** — D-149. One block attempt at a time (the rulebook): no bot attempts
+  while another seat's attempt stands (only a seat that may block holds one) and the acting bot takes up one (a human who tries is
+  told); an undirected action's predator weighs after its prey's decline, the pool question's window included (a record of a human's
+  earlier action superseded by the next "Any blocks?" of a new action, noted when pool was at stake); a human blocker's Pass
+  resolves the human's own attempt (no decline); a later attempt keeps the actor's booked stealth. Riders (D-92): a human's No
+  answers a block question (4.25); the turn-end note is silent at 0 pool and names the action otherwise, a human's 0-pool record
+  closing at the bot's decline (11.12). Register 11.13–11.17 new. Section 189.
+  *Gates:* `tools/gates.sh --sim` on `r11-11` `58cb57d` + the working tree (28 Nov; bytes `421f5256` / `c92475b9` / cardfx `21ef103f`): PASS 20 · FAIL 0 · SKIPPED 0 (sim-240 240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 421f5256 c92475b9 21ef103f). CI's suite 2878/0 ×3, `bot-gates` success on `cf2cf29`.
+  *Egress:* 26 findings (half-done 20, unproven 3, stale-doc 3) in 6 passes (Opus 5, Fable 4, Fable 5, Fable 5, Fable 3, Fable 4), 22 fixed, 4 listed
+  *Report:* `reports/REPORT-11-11-2026-11-27.md`.
+
 - **C1b (27 Nov 2026, bot v0.6.244; PR #121)** — D-148 (the owner's card). The card chain's gaps fixed:
   a bleed card's header stealth (9.13); a stealth mode's bleed and its limited slot (10.17), said once the blocks are
   declined, a reduction before it read off the actor's total; at the same stealth a stealth card's bleed wins unless a limited

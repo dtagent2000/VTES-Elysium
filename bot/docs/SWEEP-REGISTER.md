@@ -161,9 +161,6 @@ is a handoff first. Bot-to-bot gaps are marked.
   takes the human's hand strike for 3 as damage (torpor); "Most strikes are effective only at close range" (rulebook, resolve
   strike), and the bot's own fist at long deals 0 (`longFist`). [the C1b playtest, 27 Nov, 5717.9 → 5728.4] · human · a human's
   hand strike (and its boosts) reads as 0 when the range is long, said in the bot's damage line.
-- **4.25 A human's "No" to a block question is not read** — the bot's prompt says `say "block" or "no"`, but the decline parser
-  takes "No" only for a reactions-only question (`No block`, `No reaction` and `Pass` work): the bot waits on. [the C1b playtest,
-  27 Nov, 2343.6 → 2364.5 and 3487.0] · human · read "No" as a decline at a block question too, or the prompt names "Pass".
 
 ## 5. Maneuvers: direction and source
 Which way a maneuver goes, and where a maneuver comes from (a card, equipment, a grant).
@@ -490,18 +487,37 @@ Who may answer an action or a card, and in which window; a line read after its w
   changes, a human who has not passed gets the vote clock again. [w4] · human.
 - **11.10 Frontal Assault's +1 pool and the loss rates** read the prey's pub pushes; Tension in the Ranks can oust a bot outside
   its turn (`_oust`). [w5 §10] · reachable (brujah, banuhaqim, pathcaine).
-- **11.11 A second blocker of an undirected action** — "the prey getting the first opportunity to block", and "a minion can
-  attempt to block as many times as they wish as long as another minion is not already blocking" (rulebook, who may attempt to
-  block). At a human's undirected action both bots attempted: the prey's minion at 1 vs 1, then the predator's, whose counter
-  write (a=0) dropped the action's +1 stealth; both declared the block and two combats ran. At a bot's undirected action the human
-  prey's minion blocked at 1 vs 1, the human's Pass counted as an eligible seat's pass, and the bot predator's minion attempted and
-  took the verdict and the combat. [the C1b playtest, 27 Nov, 529.3–670.4 and 4718.4–4810.0] · human (v0.6.244's 240: of 1,969
-  undirected windows where both eligible bots weighed a block, none had two attempts) · no attempt while a block attempt stands;
-  the predator weighs only after the prey has declined; a human blocker's Pass resolves that blocker's attempt.
-- **11.12 The turn-end note on a human's undirected action** — both eligible bots passed a human's 0-pool undirected action (an
-  employ), the human never said "It resolves", and at the turn's end each bot's note called it a bleed ("an unresolved bleed at
-  me … bleed 0"). [the C1b playtest, 27 Nov, 3077–3083 → 3130.0, 3136.8] · human · the note names the action's kind, and a 0-pool
-  record closes at the last eligible pass with nothing said.
+- **11.13 The pool question's window seeds 0 stealth for an undirected action** -- a blocker bot seeds an untouched counter with the
+  rulebook's default (`_commitBlock`, `baseSt`), but the window a human's play line and "Any blocks?" open (`kind: 'asked'`) seeds 0
+  whatever the action: a basic undirected action carries +1 (R-14: hunt, equip, employ, recruit, political, own rescue), a card its
+  printed stealth (Creeping Sabotage's "+1 stealth action"). [the 11.11 round, from the C1b playtest's 528.9: "stealth 0 vs
+  intercept 0"] · human · the default from the remembered verb and card (`o.verb`, `o.card`, cardfx `actStealth`).
+- **11.14 A human's action card with no Ⓓ the bot reads is "unknown"** -- `_actDirected` returns null for a play line whose mode
+  has no `dir`, so the pool question's window keeps a cross-table bot's block step (at the C1b playtest's Creeping Sabotage Viktor
+  weighed it); the rulebook: a card without Ⓓ is undirected. Two cardfx gaps first: Inside Dirt's `dir` sits on the row, not its
+  mode, and Revelations' inside `fx`. [the 11.11 round] · human · null becomes false once every Ⓓ of KRCG's text is a `dir` (a check beside the
+  compiler's).
+- **11.15 A reaction card's line drops the pool question's answer** -- `_pqAnswer` drops an answer once the short-term memory has
+  moved on (`q.obs !== this._obs`; the owner's decision A of 15 Sep: the next action overwrites it), and any play line replaces
+  that memory: a human prey's intercept card, played while a bot predator waits for the actor's answer, leaves the predator with no
+  window, and it says nothing; the action's own menu row after its card does the same when it lands while the question is open
+  (every bot's answer dropped: no window, nothing deducted at It resolves). [the 11.11 round, a probe on v0.6.244 and v0.6.245;
+  the row: its review's pass 5, the base too] · human (the row with one human; the card with two) · the answer is `q.obs`'s unless
+  a newer action replaced it, the record's own minion's row being none (`_newerAction`).
+- **11.16 A cross-table block attempt never stands** -- Eagle's Sight [AUS]: "This vampire attempts to block the current action,
+  ignoring the normal prey, predator or target restrictions" (KRCG; RTR 20020501), but the bot takes every attempt by a seat that is
+  neither the actor's prey nor predator (nor a directed action's target) as a stray one that holds nothing (the 11.11 round's
+  egress review: a stray shout froze the only legal blocker), so a bot may attempt while such an attempt stands; the acting bot
+  counts one only from a seat a "Hold on…" promoted. [the 11.11 round] · human (salubri holds 2: a test precon) · that minion's
+  Eagle's Sight [AUS] line makes its attempt stand.
+- **11.17 An action's menu row after its card line is a second record** -- the row the client's Actions menu writes for an undirected
+  card action (`takes an undirected action`, `calls a political action`: the protocol, v2.6.137) opens a record of its own
+  (`_parseUndirected`, its announce now), so after the human's card, "Any blocks?" and the pool answer it replaces the asked record
+  (the stake dropped: amount 0 at T6), and a block attempt made between the card and the row is older than the new announce, so the
+  prey's Pass inside it reads as a decline and the bot predator attempts over it (D-149 broken in that order; v0.6.244 let it
+  attempt anyway). [the 11.11 round's review, pass 6; the stake: the base too] · human (one human: the card, "Any blocks?", then
+  the menu row) · one record per action across its card line, its row and the pool question -- the earliest announce, the row's
+  direction, the answer's stake -- with 11.15's remembered action in a field of its own.
 
 ## 12. Combat's steps
 - **12.1 Additional strikes, v2** — one source a round per side (Quickness [CEL]'s outside-the-limit rider never stacks); no impulse

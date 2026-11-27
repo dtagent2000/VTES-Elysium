@@ -103,7 +103,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
   <li><a href="#setup">Setting up a table</a></li>
   <li><a href="#play">How a bot plays</a></li>
   <li><a href="#controls">Controls</a></li>
-  <li class="ver">bot v0.6.244 · client v2.6.179</li>
+  <li class="ver">bot v0.6.245 · client v2.6.179</li>
 </ul></nav>
 
 <header class="hero">
@@ -259,7 +259,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
         <li><b>Modifiers.</b> After blocks are declined the bot may pump the bleed (<em>Conditioning</em>, <em>Leverage</em>): each modifier is a new log line and a new question — <span class="bot"><b>Name:</b> Colette adds +2 bleed — now 4 on You. Any reaction?</span> This window takes <em>reactions only</em> (a bounce or reduction); the rules do not reopen blocks. Answer <span class="phrase">No reaction</span> or <span class="phrase">Pass</span> to let it through, <span class="phrase">Yes</span> or <span class="phrase">❗ Hold on…</span> to say “wait, I am reacting” and play your Deflection.</li>
         <li><b>Resolve.</b> <span class="phrase">It resolves</span>, then a log line: <em>“The bleed goes through: You, −4 pool (adjust yours).”</em> Adjust your own pool: the line tells the table what you took. The client never changes your pool, blood or Edge for you — you manage your own values, the bots manage theirs. A successful bleed (1 pool or more) gives the bot the Edge; your client clears your own Edge when the bot takes it (online, and at an offline table from client v2.6.159). A bleed you reduce to 0 is said as such — <em>“The bleed goes through at 0”</em> — and moves no Edge. The bot knows the reduction cards it plays itself; for any other, tell it the amount after your card with your vampire’s <span class="menu">Actions ▸ Bleed ▸ Reduce bleed −1 / −2 / −X…</span> (client v2.6.159+; it writes <em>“Lisa reduces the bleed by 1.”</em>), and the bot bleeds for the rest. At a hotseat the camera shows the acting bot’s board while it acts: press <span class="menu">⌂ Home</span> first to reach your vampire — a <span class="phrase">❗ Hold on…</span> gives you the time. With an older client the bot’s line states the full amount: adjust your own pool by what actually landed.</li>
       </ol>
-      <p>Undirected actions (hunt, equip, recruit, a political action, rescue from torpor) are announced the same way and both the bot's prey and predator are asked; the window closes when both have declined. A political action is announced with a machine-readable <em>terms</em> line before the frozen action line, so a bot voter at the table can weigh it.</p>
+      <p>Undirected actions (hunt, equip, recruit, a political action, rescue from torpor) are announced the same way and both the bot's prey and predator are asked; the window closes when both have declined. The prey blocks first and the predator once the prey has declined, and one block attempt stands at a time: while one minion's attempt is open no other is taken up (the bot says so to a human who tries), and your <span class="phrase">Pass</span> inside your own attempt asks for its verdict — after a failed one, block again or <span class="phrase">Pass</span> once more to let the other seat answer. A political action is announced with a machine-readable <em>terms</em> line before the frozen action line, so a bot voter at the table can weigh it.</p>
     </div>
   </details>
   <details>
@@ -366,7 +366,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
     <tr><td><span class="phrase">No reaction</span></td><td>Declines everything on the bot's action: no block, no bounce, no reduction. Closes the window at once. Also releases a hold.</td></tr>
     <tr><td><span class="phrase">It resolves</span></td><td>Says the table has moved on. Ends the bot's current action window, ends its vote poll (it announces the result), <strong>releases any hold</strong>, and — when it is <em>your</em> action — tells the bot to apply your resolved bleed or damage to its pool. While a bot's block on your action is open it first declares the verdict from the counter; when the block fails, your action lands at once.</td></tr>
     <tr><td><span class="phrase">Yes</span></td><td>Answers the bot's pool question (“Will this action cause me to lose pool?”). On a reactions-only question (“Any reaction?” after a bleed total) it means <em>“wait, I am reacting”</em> — the bot holds until you play and say <span class="phrase">It resolves</span> or <span class="phrase">No reaction</span>.</td></tr>
-    <tr><td><span class="phrase">No</span></td><td>Answers the pool question with “no”. On a reactions-only question it closes the window at once.</td></tr>
+    <tr><td><span class="phrase">No</span></td><td>Answers the pool question with “no”. At the bot's <span class="phrase">Block?</span> it declines your block, as <span class="phrase">Pass</span> does; on a reactions-only question it closes the window at once.</td></tr>
     <tr><td><span class="phrase">Pass</span></td><td>“Nothing more from me.” Declines a block, ends your intercept adds in a live contest — or your stealth adds when a bot blocks you — (the bot then declares the verdict from the counter), and means “no votes from me” during a bot's referendum. Also releases a hold.</td></tr>
     <tr><td><span class="phrase">Any blocks?</span></td><td>Prompts the bot about <em>your</em> action. If it can read the action it answers with its block decision; if it cannot, it asks the pool question.</td></tr>
     <tr><td><span class="phrase">Any reaction?</span></td><td>Same prompt after blocks are declined — invites its bounce or reduction.</td></tr>
@@ -418,7 +418,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
     <tr><th>Menu item</th><th>Line written</th><th>The bot…</th></tr>
     <tr><td>Actions → Bleed 1 / 2 / 3 / X…</td><td>“Lisa bleeds for 2. Target: Name's pool.”</td><td>opens its block decision as the target (or as predator on an undirected read); remembers the action</td></tr>
     <tr><td>Actions → +X bleed…</td><td>“Lisa adds +2 bleed (= 4).”</td><td>reopens its reaction window on the new total; this is the moment it bounces</td></tr>
-    <tr><td>Actions → Vote → Political action</td><td>“Lisa calls a political action.”</td><td>opens the block step for prey and predator, then asks the pool question</td></tr>
+    <tr><td>Actions → Vote → Political action</td><td>“Lisa calls a political action.”</td><td>asks the pool question, then opens the block step: the prey first, the predator once the prey has declined</td></tr>
     <tr><td>Actions → Vote → Cast votes → For/Against…</td><td>“Lisa casts 2 votes for.”</td><td>counts them in a bot-called referendum</td></tr>
     <tr><td>Actions → Block</td><td>“Lisa blocks.”</td><td>names Lisa as the blocker of its action</td></tr>
     <tr><td>Actions → Hunt / Rescue from torpor / Diablerie / Card action</td><td>“Lisa hunts.” etc.</td><td>opens the prey/predator window for hunt and rescue; remembers the rest so a later <span class="phrase">Any blocks?</span> has something to ask about</td></tr>
@@ -475,7 +475,7 @@ footer{max-width:960px;margin:0 auto;padding:20px;color:var(--ink-mute);font-siz
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.244</b>, client <b>v2.6.179</b> / server srv-2.6.51, cardfx 301 curated / 1,654 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 27 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.245</b>, client <b>v2.6.179</b> / server srv-2.6.51, cardfx 301 curated / 1,654 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 27 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 
 <script>

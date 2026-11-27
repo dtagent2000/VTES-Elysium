@@ -31,8 +31,8 @@ later game contradicts a note, change it and say so; never delete it silently.
   or a permanent (Guardian Angel, Raven Spy). The bots read only what is on the counter.
   - Reasoned: set the counter after each of your own cards, and check the range before a hand strike (Claude struck at long range
     and the bot booked it: register 4.24).
-- Seen: a bot's block question takes "Pass" or "No block"; "No" is not read (register 4.25). A chat "Any blocks?" in place of the
-  client's action menu makes every bot ask the pool question [C1b match].
+- Seen: a bot's block question took "Pass" or "No block" but not "No" (register 4.25; v0.6.245 reads "No" too). A chat "Any
+  blocks?" in place of the client's action menu makes every bot ask the pool question [C1b match].
 - Reasoned, not yet tried:
   - Two games with a different starter in the human seat may show more than one long game; each report lists the chairs it did
     not see.
@@ -101,11 +101,13 @@ later game contradicts a note, change it and say so; never delete it silently.
   - Register class 4: the entries for Carrion Crows (4.21), The Dowager (4.22) and the strike-step Pass (4.23) come with C1. Play
     such cards in a match to test the readers.
   - Seen: Carrion Crows [ANI] was not applied again on v0.6.244 (4264.0) [C1b match].
-- **Undirected blocks at a human table** (register 11.11).
+- **Undirected blocks at a human table** (register 11.11; one attempt at a time since v0.6.245, RULINGS D-149).
   - Seen: two bots blocked one of Claude's undirected actions and two combats ran (529.3–670.4); a bot predator took over Claude's
-    standing block of a bot's referendum (4718.4–4810.0) [C1b match]. The 240 shows no such pair: it needs a human seat.
-  - Reasoned: until it is fixed, expect a second block after the first at any undirected action with a human seat; a human
-    blocker's Pass does not settle the attempt.
+    standing block of a bot's referendum (4718.4–4810.0) [C1b match, v0.6.244]. The 240 shows no such pair: it needs a human seat.
+  - To watch (the 11.11 report's prediction 3): no undirected action gets two attempts at once or two combats; your Pass inside
+    your own attempt declares its verdict; a bot predator says nothing until its prey has declined; your "No" ends a bot's
+    block question. A bot predator behind a human prey waits for the prey's word with no clock of its own, so decline aloud
+    when you do not block (the actor's It resolves also ends the wait).
 - **Good bot play to keep when tuning.**
   - Seen: Viktor's bounces onto his own prey, and his oust [game 2].
   - Seen: Tobias's lethal Aire of Elation, and his Perfect Paragon read against a younger blocker [game 1, #14].
