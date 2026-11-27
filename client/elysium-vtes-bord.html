@@ -1813,7 +1813,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
     </div>
   </aside>
 
-  <div id="tableArea"><div id="l1zoomWrap"><div id="l1zoomCtl" aria-label="Board zoom"><button id="l1zoomMinus" title="Zoom out">−</button><input id="l1zoomSlider" type="range" min="0.45" max="1" step="0.01" value="1"><button id="l1zoomPlus" title="Zoom in (fit)">+</button><span id="l1zoomVal">100%</span><button id="l1zoomReset" title="Fit to window">⛶</button></div><button id="edgeChrome" title="The Edge — grants +1 pool at Unlock" aria-label="The Edge" hidden></button><button id="l3resetBtn" title="Reset view" aria-label="Reset view" hidden>⛶</button><button id="l1zoomToggle" title="Zoom" aria-label="Toggle zoom"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="10" y1="10" x2="14" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button id="helpToggle" title="Controls & help" aria-label="Help">?</button></div><div id="helpOverlay" hidden><div class="helpHd">Controls<button id="helpClose" aria-label="Close" title="Close">×</button></div><div class="helpBody"><kbd>Drag</kbd> move · <kbd>Double-click</kbd> lock · <kbd>Right-click</kbd> menu<br><kbd>Click</kbd> select / set active minion · <kbd>Drag on felt</kbd> box-select (<kbd>Shift</kbd> adds)<br><kbd>Scroll</kbd> on a card · <kbd>Ctrl+click</kbd> +1 · <kbd>Shift+click</kbd> −1 &mdash; adjust the token under the pointer (blood / blue / green) · <kbd>+/−</kbd> adjust blood on the selected card (or pool if none selected)<br><kbd>D</kbd> draw · <kbd>Ctrl+click library</kbd> undo last draw<br><kbd>Ctrl</kbd> (panel hidden) preview the card at the pointer<br><kbd>Middle button</kbd> hold + drag = pan the table from anywhere (Helicopter · Classic)<br><kbd>Touch</kbd> long-press = menu · pinch = zoom · drag felt = pan (L4) · tap ± / badges = counters</div><div id="helpActionFlow" hidden style="margin-top:9px;border-top:1px solid #2a2216;padding-top:8px;font:12px 'Spectral',Georgia,serif;line-height:1.7;color:#7a7058"><span style="color:var(--brass2);font:600 9px 'Cinzel',serif;letter-spacing:.25em;text-transform:uppercase">Played tab · Action flow — what closes the batch</span><br>Bleed · Hunt · Rescue · Diablerie · Card action<br>&#128172; “It resolves” quick phrase · a <b>Vote/Combat Resolve</b><br>New action card played (card DB on)<br>Phase advance &mdash; all batches<br><span style="color:#4a4238">Block · other phrases: do NOT close the batch</span></div></div><div id="board">
+  <div id="tableArea"><div id="l1zoomWrap"><div id="l1zoomCtl" aria-label="Board zoom"><button id="l1zoomMinus" title="Zoom out">−</button><input id="l1zoomSlider" type="range" min="0.45" max="1" step="0.01" value="1"><button id="l1zoomPlus" title="Zoom in (fit)">+</button><span id="l1zoomVal">100%</span><button id="l1zoomReset" title="Fit to window">⛶</button></div><button id="edgeChrome" title="The Edge — grants +1 pool at Unlock" aria-label="The Edge" hidden></button><button id="l3resetBtn" title="Reset view" aria-label="Reset view" hidden>⛶</button><button id="l1zoomToggle" title="Zoom" aria-label="Toggle zoom"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="10" y1="10" x2="14" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button id="helpToggle" title="Controls & help" aria-label="Help">?</button></div><div id="helpOverlay" hidden><div class="helpHd">Controls<button id="helpClose" aria-label="Close" title="Close">×</button></div><div class="helpBody"><kbd>Drag</kbd> move · <kbd>Double-click</kbd> lock · <kbd>Right-click</kbd> menu<br><kbd>Click</kbd> select / set active minion · <kbd>Drag on felt</kbd> box-select (<kbd>Shift</kbd> adds)<br><kbd>Scroll</kbd> on a card · <kbd>Ctrl+click</kbd> +1 · <kbd>Shift+click</kbd> −1 &mdash; adjust the token under the pointer (blood / blue / green) · <kbd>+/−</kbd> adjust blood on the selected card (or pool if none selected)<br><kbd>Shift+scroll</kbd> on a card = move blood between it and your pool (Settings ▸ Table picks the key)<br><kbd>D</kbd> draw · <kbd>Ctrl+click library</kbd> undo last draw<br><kbd>Ctrl</kbd> (panel hidden) preview the card at the pointer<br><kbd>Middle button</kbd> hold + drag = pan the table from anywhere (Helicopter · Classic) · <kbd>double-click</kbd> = reset the view<br><kbd>Touch</kbd> long-press = menu · pinch = zoom · drag felt = pan (L4) · tap ± / badges = counters</div><div id="helpActionFlow" hidden style="margin-top:9px;border-top:1px solid #2a2216;padding-top:8px;font:12px 'Spectral',Georgia,serif;line-height:1.7;color:#7a7058"><span style="color:var(--brass2);font:600 9px 'Cinzel',serif;letter-spacing:.25em;text-transform:uppercase">Played tab · Action flow — what closes the batch</span><br>Bleed · Hunt · Rescue · Diablerie · Card action<br>&#128172; “It resolves” quick phrase · a <b>Vote/Combat Resolve</b><br>New action card played (card DB on)<br>Phase advance &mdash; all batches<br><span style="color:#4a4238">Block · other phrases: do NOT close the batch</span></div></div><div id="board">
     <div class="zone" id="z-uncontrolled"><span class="zlabel">Uncontrolled</span></div>
     <div class="zone" id="z-torpor"><span class="zlabel">Torpor</span></div>
     <div class="zone" id="z-ready"><span class="zlabel">Ready Region</span></div>
@@ -2119,6 +2119,10 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
         <div class="set-row">
           <span class="sl" title="At a table with bots: hold the right mouse button on the table and the quick answers open where the pointer is; a short right-click opens the card's or the table's menu as before. A key can open it too: Keys, Bot ring at the pointer.">Bot ring at the pointer (tables with bots).</span>
           <select id="convBotRingHold"><option value="right">Hold the right mouse button</option><option value="off">Off</option></select>
+        </div>
+        <div class="set-row">
+          <span class="sl" title="Scroll up on a card moves 1 from your pool onto it, scroll down moves 1 back; an empty pool or a card with no blood stops it. In the Influence phase with the helpers on, an uncontrolled vampire's blood comes from your pool as transfers anyway. With Ctrl, a touchpad pinch over a card moves blood too. With Shift, keep Hold Shift to peek at the log off (Fixed controls). Shortcuts can do the same move: Shortcuts, Show advanced.">Move blood between a card and your pool: scroll with this key held.</span>
+          <select id="convXferWheel"><option value="shift">Shift + scroll</option><option value="ctrl">Ctrl + scroll</option><option value="alt">Alt + scroll</option><option value="off">Off</option></select>
         </div>
         <label class="set-row">
           <span class="sl">Show the welcome card (&ldquo;The table is set&rdquo;) on an empty table.</span>
@@ -2654,7 +2658,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <li><a href="#hb-setup">Setting up a table</a></li>
   <li><a href="#hb-play">How a bot plays</a></li>
   <li><a href="#hb-controls">Controls</a></li>
-  <li class="ver">bot v0.6.241 · client v2.6.179</li>
+  <li class="ver">bot v0.6.242 · client v2.6.179</li>
 </ul></nav>
 
 <header class="hero">
@@ -2684,7 +2688,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
   <p class="lead">The short version: a bot is a fifth player who knows the rules of the actions it takes, plays a fixed deck it has been taught, and asks you when it cannot see what your card does.</p>
 
   <h3>What a bot knows about cards</h3>
-  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>218 are hand-curated</strong> (167 library, 51 crypt) — checked card by card so the bot plays them exactly right. Every master in the four V5 starters is among them: The Labyrinth locks for +1 stealth for a Nosferatu, Guardian Angel sits on the bot's sturdiest ready vampire (+1 intercept against your bleeds, 1 damage prevented each combat, gone when that vampire goes to torpor), Wasserschloss Anif banks blood from a ready Tremere for the next Tremere to come out, and Haven Uncovered goes on an opponent's vampire the bot means to rush — after that any minion, yours included, may enter combat with that vampire as a +1 stealth directed action. The other cards of the seven decks in the menu all have a modelled effect, most of them compiled rather than curated. So do their vampires' own abilities: Catalina Vega bleeds for one more, The Dowager intercepts better against directed actions, Flávio Gonçalves dodges once in each combat.</p>
+  <p>A bot does not read card text at the table. It plays from a <em>card database</em> (the cardfx library) that describes what each card mechanically does: cost, stealth, intercept, bleed, damage, prevention, income, votes. Today that database holds roughly 2,400 library and 1,800 crypt cards compiled automatically from the printed text, of which about 1,700 library cards have a usable effect and <strong>221 are hand-curated</strong> (170 library, 51 crypt) — checked card by card so the bot plays them exactly right. Every master in the four V5 starters is among them: The Labyrinth locks for +1 stealth for a Nosferatu, Guardian Angel sits on the bot's sturdiest ready vampire (+1 intercept against your bleeds, 1 damage prevented each combat, gone when that vampire goes to torpor), Wasserschloss Anif banks blood from a ready Tremere for the next Tremere to come out, and Haven Uncovered goes on an opponent's vampire the bot means to rush — after that any minion, yours included, may enter combat with that vampire as a +1 stealth directed action. The other cards of the seven decks in the menu all have a modelled effect, most of them compiled rather than curated. So do their vampires' own abilities: Catalina Vega bleeds for one more, The Dowager intercepts better against directed actions, Flávio Gonçalves dodges once in each combat.</p>
   <p>This shapes three things you will notice:</p>
   <ul>
     <li><strong>Its own deck it plays well.</strong> Every card in a bot deck has a modelled effect, so the bot never holds a card it cannot use. A card it genuinely cannot play with its current vampires is treated as dead and cycled in the discard phase.</li>
@@ -2694,7 +2698,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 
   <h3>How a bot generally behaves</h3>
   <p>A bot plays a full turn in the rulebook order — unlock, master, minion, influence, discard — and announces each phase like a human saying “unlock” aloud. Between every visible step it takes a short breath (about three seconds at a human table; a phase announcement takes about one) so you can follow what it does. When it acts it asks the table for blocks with a quick phrase and waits; when you act against it, it answers with the same phrases. It counts stealth, intercept, votes and combat on the shared resolver counters and reads the numbers you put there.</p>
-  <p>Its play is <em>statistical, not scripted</em>: it tracks what each opponent has shown (bleed sizes, stealth, intercept, damage, blocks) and weighs its own hand against that picture. It knows its own deck's composition exactly, so its odds about its own next draws are real. Its picture of <em>your</em> deck starts from the tournament-winning decks archive (TWDA, about 4,700 decks): from your crypt's clan and every library card you have shown, it expects how much combat, stealth, intercept and bounce your deck runs, and sharpens that as you play. Public evidence only — never your hand. Once it is confident, one bot writes once in the log what it reads your deck as (“Viktor (bot) reads Johan's deck as Lawfirm (7 of 8 cards typical).”) — one bot speaks for the table, and it waits until no block, vote or combat is open; that line is explanation, it does not steer the bot's play.</p>
+  <p>Its play is <em>statistical, not scripted</em>: it tracks what each opponent has shown (bleed sizes, stealth, intercept, damage, blocks) and weighs its own hand against that picture. It knows its own deck's composition exactly, so its odds about its own next draws are real. Its picture of <em>your</em> deck starts from the tournament-winning decks archive (TWDA, about 4,700 decks): from your crypt's clan and every library card you have shown, it expects how much combat, stealth, intercept and bounce your deck runs, and sharpens that as you play. Public evidence only — never your hand. Once it is confident, one bot writes once in the log what it reads your deck as (“Viktor (bot) reads Hanna's deck as Lawfirm (7 of 8 cards typical).”) — one bot speaks for the table, and it waits until no block, vote or combat is open; that line is explanation, it does not steer the bot's play.</p>
 
   <h3>Decks and archetypes</h3>
   <p>Each bot plays one of seven fixed decks. The deck decides not only the cards but the <em>posture</em> — how eagerly it goes forward, how many bodies it keeps home, and what it builds first.</p>
@@ -3026,7 +3030,7 @@ html.helpPage{scroll-padding-top:calc(64px + env(safe-area-inset-top,0px));scrol
 </main>
 
 <footer>
-  Elysium bots — start here · bot <b>v0.6.241</b>, client <b>v2.6.179</b> / server srv-2.6.51, cardfx 221 curated / 1,696 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 25 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
+  Elysium bots — start here · bot <b>v0.6.242</b>, client <b>v2.6.179</b> / server srv-2.6.51, cardfx 221 curated / 1,696 modelled library effects, TWDA profile of 4,672 decks and 42 archetype signatures · 26 November 2026. Bots are pre-alpha; report what looks wrong through <em>Report a problem</em> or the Tools feedback channel on the V:TES Discord.
 </footer>
 <!-- @@/HELP:bots -->
 </template>
@@ -3387,7 +3391,7 @@ if(!String.prototype.at) Object.defineProperty(String.prototype, 'at', {value:_a
    Elysium — a digital VTES table (solo sandbox)
    Vanilla JS, no dependencies. Card images: static.krcg.org
    ============================================================ */
-const VERSION='2.6.190';   // v2.6.190 (27 Nov 2026, THE PUBLIC REPOSITORY, comments only -- purge; ships with srv-2.6.54, comments only too; no wire change; bot v0.6.241 beside): the repository is public, and it carries no chat quotes and no names of private persons. Only comments change: where one quoted the owner, it now says the same in our own words, and the players whose questions or files reached us through the owner are no longer named (a player's case, a player's file). Every script's tokens are v2.6.189's but this line's.
+const VERSION='2.6.191';   // v2.6.191 (27 Nov 2026, BLOOD ON THE WHEEL, pure client -- purge; srv-2.6.54 unchanged, no wire change; bot v0.6.242 beside, its guide embedded): three controls the owner asked for. (1) A key held while scrolling on a card moves blood between the card and your pool: up moves 1 from the pool onto the card, down moves 1 back. Settings > Table picks the key (Shift by default, Ctrl, Alt or Off). The move stops at an empty pool or a card with no blood. In the Influence phase with the helpers on, an uncontrolled vampire's blood already comes from the pool as transfers, and the move counts them the same way. One undo point and one log line per scroll: the line waits 1 s after the last notch, the board goes to the table at once. Shift turns the wheel horizontal in Chrome and on macOS, so the step is read from deltaX too. While the key is held only a card takes the wheel (the felt does not zoom, the pool globes do not move), except with Ctrl, a touchpad's pinch. (2) Two shortcuts for the same move, unbound: Move 1 pool -> blood and Move 1 blood -> pool (Shortcuts, advanced). They act on the selected card, else on the card under the pointer; bind + and - there and the Pool/Blood +-1 rows give them up. (3) Two presses of the middle button within 0.5 s, without moving, reset the view as the reset button does (Helicopter, Classic); the second press pans nothing. Help > Bots embeds bot v0.6.242's guide.
 /* ---------- Touch capability & UI mode (v2.5.39 · T0) ----------
    Two distinct gates, never conflated: body.touchui / touchUI() drives PRESENTATION
    (bigger targets, extra menu rows - consumed from T2 on); e.pointerType==='touch'
@@ -3403,7 +3407,7 @@ const net={ ws:null, status:'off', addr:'', sec:false, room:null, token:null, yo
 /* Convenience helpers — opt-in and off by default, except auto-lock
    which preserves the original behavior and defaults to on */
 const CONV_KEY='elysium.convenience';
-let conv={cardDB:true, dbDefault:true, uiMode:'full', uiProf:{}, modeHintDone:false, poolToPredator:true, autoLock:true, anim:'on', animSpeed:1.0, sayDur:1.0, chatDur:1.0, sayText:'normal', chatText:'crisp', drawClick:'double', pco:'mine', pcoNeutral:false, qrView:true, l3shape:'square', l3collapseOusted:false, cardTip:true, defaultView:'normal', sfxVol:0, sfxIndiv:{unlock:150,lock:150,logEvent:125}, tournament:true, legalDeck:true, legalCards:true, edgeToken:true, poolPlayerColor:false, hoverPreview:'key', chatBubbles:'others', imgFmt:'webp', imgCache:false, localImg:false, jsonSync:true, imgSync:false, showWelcome:true, debug:false, tutDone:[], playedSort:'new', avrResolveClear:'off', shiftPeek:false, touchUI:'auto', dockDrag:'leave', handRim:'dock', errPing:true, botRingHold:'right', botHubHide:false};
+let conv={cardDB:true, dbDefault:true, uiMode:'full', uiProf:{}, modeHintDone:false, poolToPredator:true, autoLock:true, anim:'on', animSpeed:1.0, sayDur:1.0, chatDur:1.0, sayText:'normal', chatText:'crisp', drawClick:'double', pco:'mine', pcoNeutral:false, qrView:true, l3shape:'square', l3collapseOusted:false, cardTip:true, defaultView:'normal', sfxVol:0, sfxIndiv:{unlock:150,lock:150,logEvent:125}, tournament:true, legalDeck:true, legalCards:true, edgeToken:true, poolPlayerColor:false, hoverPreview:'key', chatBubbles:'others', imgFmt:'webp', imgCache:false, localImg:false, jsonSync:true, imgSync:false, showWelcome:true, debug:false, tutDone:[], playedSort:'new', avrResolveClear:'off', shiftPeek:false, touchUI:'auto', dockDrag:'leave', handRim:'dock', errPing:true, botRingHold:'right', botHubHide:false, xferWheel:'shift'};
 const SAY_TEXT_MODES=['soft','normal','crisp'];   // v2.6.120: the three text recipes a say/chat bubble can wear (.txt-<mode> on .sayb)
 const CONV_DEFAULTS=Object.freeze(JSON.parse(JSON.stringify(conv)));   // v2.6.91: the literal above, captured before localStorage is merged in -- settingsDefaults() reads the Settings-dialog subset of it (the two modes differ only in UI_PRESET's trio)
 const RING_MAX=200;   // B-63: the report ring depth (was an inline 40 in B-54); crash pings still send only the last 10
@@ -3541,6 +3545,7 @@ try{
   if(s.dockDrag==='leave'||s.dockDrag==='close') conv.dockDrag=s.dockDrag;
   if(s.handRim==='dock'||s.handRim==='rim') conv.handRim=s.handRim;   // v2.6.152: the free board's bottom edge -- the dock, or pockets tucked into the table rim
   if(s.botRingHold==='right'||s.botRingHold==='off') conv.botRingHold=s.botRingHold;   // v2.6.188: a held right button opens the bot ring at the pointer
+  if(s.xferWheel==='shift'||s.xferWheel==='ctrl'||s.xferWheel==='alt'||s.xferWheel==='off') conv.xferWheel=s.xferWheel;   // v2.6.191: the key that turns a card's scroll into a move between its blood and your pool
   if(typeof s.botHubHide==='boolean') conv.botHubHide=s.botHubHide;   // v2.6.188: the bot box can hide the hub (the ring at the pointer is the way in)
   if(s.touchUI==='auto'||s.touchUI==='on'||s.touchUI==='off') conv.touchUI=s.touchUI;
   if(typeof s.qrView==='boolean') conv.qrView=s.qrView;
@@ -4043,7 +4048,7 @@ function log(msg, localOnly, privateLine, opts){
 }
 log._sfxCool=false;
 const _pend=new Map();
-function logCo(key,fn){ clearTimeout(_pend.get(key)); _pend.set(key,setTimeout(()=>{ _pend.delete(key); fn(); },550)); }
+function logCo(key,fn,ms){ clearTimeout(_pend.get(key)); _pend.set(key,setTimeout(()=>{ _pend.delete(key); fn(); },ms||550)); }   // v2.6.191: ms -- the pool <-> blood move waits longer (XFER_LOG_MS)
 function zoneRect(z){
   const el=$('#z-'+z);
   return { x:el.offsetLeft, y:el.offsetTop, w:el.offsetWidth, h:el.offsetHeight };
@@ -4364,6 +4369,49 @@ async function bumpCounter(c,d,kind){
     if(c[key]!==c[kind] && !(_xfer && hx('on'))) log(cardRefCap(c)+': '+TOKEN_LABEL[kind]+' '+c[key]+' → <b>'+c[kind]+'</b>.');   // generic = fallback when the helper isn't logging the transfer
     c[key]=undefined;
   });
+}
+/* ---------- v2.6.191: BLOOD ON THE WHEEL -- a key held while scrolling on a card moves blood between it and your pool ----------
+   The owner asked for it. Scroll up on a card with the key held (Settings > Table: Shift by default, Ctrl, Alt or Off):
+   1 from your pool onto the card; scroll down: 1 back. What one side gains the other loses, so the move stops at an
+   empty pool or a card with no blood, and a toast says which. Two shortcuts do the same (Shortcuts, advanced; unbound):
+   the selected card, as + and - read it, else the card under the pointer. In the Influence phase with the helpers on,
+   an uncontrolled vampire's blood already comes from your pool and counts as transfers (bumpCounter -> trackTransfer):
+   there the move IS that scroll, so it counts the same and asks the same before a paid return. One undo point and one
+   log line per burst: the line waits XFER_LOG_MS after the last tick (one line per finished scroll, a slow one too),
+   while the board goes to the table at once (scheduleSave on every tick). Shift turns the wheel horizontal in Chrome and
+   on macOS (deltaY 0, the step in deltaX), so wheelStep reads both. While the key is held only a card takes the wheel:
+   the felt does not zoom and the pool globes do not move, so a scroll that slips off the card does nothing. Ctrl is the
+   exception: a touchpad's pinch arrives as Ctrl + wheel, so the felt keeps its zoom then. */
+const XFER_LOG_MS=1000;
+function xferWheelHeld(e){                                         // is the move's key held during this wheel event?
+  if(!e) return false;
+  const m=conv.xferWheel;
+  if(m==='shift') return !!e.shiftKey;
+  if(m==='ctrl') return !!(e.ctrlKey||e.metaKey);                  // Cmd on a Mac, as the Ctrl + click gestures read it
+  if(m==='alt') return !!e.altKey;
+  return false;                                                    // 'off'
+}
+function xferWheelSwallow(e){ return conv.xferWheel!=='ctrl' && xferWheelHeld(e); }   // the felt and the pool globes leave the wheel alone while the key is held (not Ctrl: the pinch)
+function wheelStep(e){ const v=(e && (e.deltaY||e.deltaX))||0; return v<0 ? 1 : (v>0 ? -1 : 0); }   // +1 up, -1 down, 0 no step; deltaX carries the step when Shift turned the wheel horizontal
+function xferWheelChip(){ return ({ shift:'Shift + scroll on a card', ctrl:'Ctrl + scroll on a card', alt:'Alt + scroll on a card' })[conv.xferWheel] || 'Off (Settings ▸ Table)'; }   // Settings > Fixed controls: the row follows the choice
+function poolBloodMove(c, d){                                      // d>0: pool -> the card's blood; d<0: the card's blood -> pool. true = something moved (or the helper took it)
+  if(!c || !d || !COUNTER_ZONES.includes(c.zone)) return false;
+  const s=d>0 ? 1 : -1;
+  if(s>0 && state.pool<=0){ toast('Your pool is empty.'); return false; }
+  if(hx('on') && c.zone==='uncontrolled' && state.phase===3){ bumpCounter(c, d, 'blood'); return true; }   // the Influence helper's transfer: it moves the pool, counts the transfers and asks before a paid return
+  const n=Math.min(Math.abs(d), s>0 ? state.pool : (c.blood||0));
+  if(n<=0){ toast(cardRefCap(c)+' has no blood to move.'); return false; }
+  if(c._mv===undefined){ pushUndo(); c._mv=0; }                    // one undo point per burst (cleared with the line)
+  c.blood=(c.blood||0)+s*n; state.pool-=s*n; c._mv+=s*n;
+  updateBadges(c); updatePool(); scheduleSave();                   // the board goes to the table now; only the line waits
+  logCo('mv'+c.id, ()=>{ const m=c._mv; c._mv=undefined; if(m) log(cardRefCap(c)+': moved <b>'+Math.abs(m)+'</b> blood '+(m>0?'from':'to')+' your pool (pool → <b>'+state.pool+'</b>).'); }, XFER_LOG_MS);
+  return true;
+}
+function xferKeyTarget(){ const c=singleSelectedCounter(); if(c) return c; const h=_lastBoardHover; return (h && COUNTER_ZONES.includes(h.zone)) ? h : null; }   // the selected card (the + / - rule), else the card under the pointer (the X rule)
+function xferKey(d){
+  const c=xferKeyTarget();
+  if(!c){ toast('Select a card in play, or point at one, to move blood between it and your pool.'); return false; }
+  return poolBloodMove(c, d);
 }
 /* ---------- Hold-to-repeat + counter stepper (v2.5.40 · T2) ----------
    bindHold: press = one step, hold 400 ms = repeat @90 ms. Pointer-based (replaces click
@@ -8150,10 +8198,11 @@ bindHold($('#pplus'),  ()=>bumpPool(1));                                        
 bindHold($('#pminus'), ()=>bumpPool(-1));
 bindHold($('#dpplus'), ()=>bumpPool(1));                                        // pointerdown already stopPropagations inside bindHold - the old click-level stopPropagation is inherited
 bindHold($('#dpminus'),()=>bumpPool(-1));
-$('#dockPool')?.addEventListener('wheel',e=>{ e.preventDefault(); e.stopPropagation(); const now=Date.now(); if(now-state.wlast<160) return; state.wlast=now; bumpPool(e.deltaY<0?1:-1); },{passive:false});   // v2.6.103: stopPropagation was missing here and on #pool -- the only two of six wheel consumers inside #board that lacked it
+$('#dockPool')?.addEventListener('wheel',e=>{ e.preventDefault(); e.stopPropagation(); if(xferWheelSwallow(e)) return; const now=Date.now(); if(now-state.wlast<160) return; state.wlast=now; bumpPool(e.deltaY<0?1:-1); },{passive:false});   // v2.6.103: stopPropagation was missing here and on #pool -- the only two of six wheel consumers inside #board that lacked it
 $('#dockPool')?.addEventListener('contextmenu',e=>{ e.preventDefault(); e.stopPropagation(); showMenu(selfPoolMenuItems(), e.clientX, e.clientY); });   // same right-click menu as the live pool
 $('#pool').addEventListener('wheel',e=>{
   e.preventDefault(); e.stopPropagation();   // v2.6.103: see #dockPool above
+  if(xferWheelSwallow(e)) return;              // v2.6.191: the move's key is held -- a scroll that slipped off a card does not touch the pool
   const now=Date.now();
   if(now-state.wlast<160) return;
   state.wlast=now;
@@ -8371,7 +8420,7 @@ function createL4Globe(seat, name, pool, mine){
   if(mine){
     bindL4GlobeDrag(glob);
     el.querySelectorAll('.l4pbtn').forEach(btn=>bindHold(btn, ()=>bumpPool(btn.classList.contains('l4pminus')?-1:1)));   // T2: hold-to-repeat (was a delegated click); globe drag already ignores .l4pbtn targets
-    el.addEventListener('wheel',e=>{ e.preventDefault(); e.stopPropagation(); const now=Date.now(); if(now-state.wlast<160) return; state.wlast=now; bumpPool(e.deltaY<0?1:-1); },{passive:false});
+    el.addEventListener('wheel',e=>{ e.preventDefault(); e.stopPropagation(); if(xferWheelSwallow(e)) return; const now=Date.now(); if(now-state.wlast<160) return; state.wlast=now; bumpPool(e.deltaY<0?1:-1); },{passive:false});
     el.addEventListener('contextmenu',e=>{ e.preventDefault(); e.stopPropagation(); showMenu(selfPoolMenuItems(), e.clientX, e.clientY); });
     bindPoolModClick(el, '.l4pbtn');
   } else {
@@ -15161,11 +15210,15 @@ function bindCard(el,c){
   el.addEventListener('wheel',e=>{
     if(!COUNTER_ZONES.includes(c.zone)) return;
     e.preventDefault(); e.stopPropagation();
-    const now=Date.now();
-    if(now-c.wlast<160) return;               // a little resistance
-    c.wlast=now;
-    bumpCounter(c, e.deltaY<0 ? 1 : -1, tokenKindAt(c,e));
+    cardWheel(c, e);                          // v2.6.191: the step itself is cardWheel (the suite drives it)
   },{passive:false});
+}
+function cardWheel(c, e){                     // one wheel tick on a card in play: the token under the pointer, or, with the move's key held, blood between the card and your pool
+  const now=Date.now();
+  if(now-c.wlast<160) return;               // a little resistance
+  c.wlast=now;
+  if(xferWheelHeld(e)){ const d=wheelStep(e); if(d) poolBloodMove(c, d); return; }   // v2.6.191: wherever on the card -- always its blood
+  bumpCounter(c, e.deltaY<0 ? 1 : -1, tokenKindAt(c,e));
 }
 
 function tap(c,d){
@@ -16257,6 +16310,7 @@ board.addEventListener('wheel', e=>{
   if(board.classList.contains('l2dockopen')) return;   // dock panel open → don't zoom; scroll goes to #dockPool / hand cards
   if(isBoardChrome(e.target)) return;   // v2.6.103 (Johan): chrome and cards swallow the wheel -- only open board zooms. This is the fix for the pool globe; the two missing stopPropagations below are now belt-and-braces, not the mechanism
   e.preventDefault();
+  if(xferWheelSwallow(e)) return;   // v2.6.191: the move's key is held -- a scroll that slipped off a card does not zoom (Shift + wheel reads deltaY 0 in Chrome, and zoomed out every time)
   const r=board.getBoundingClientRect(), bpx=board.clientWidth/r.width;   // board px per screen px (= 1/fitScale); converts the zoom-centre from screen coords to the 1004x616 design space
   const _dy = e.deltaMode===1 ? e.deltaY*16 : e.deltaMode===2 ? e.deltaY*(board.clientHeight||616) : e.deltaY;   // v2.5.43 audit fix: Firefox reports line-mode (deltaY ~3) - unnormalized, the ctrl branch barely zoomed there
   const _k = e.ctrlKey ? Math.exp(-_dy*0.0022) : (e.deltaY<0?1.12:1/1.12);   // T3d: precision-touchpad pinch arrives as ctrl-wheel with fine deltas - proportional factor = buttery zoom; plain wheel keeps the discrete mouse-notch step (ctrl+MOUSE-wheel now zooms ~20%/notch vs 12% - deliberate, it reads as "faster zoom")
@@ -16300,22 +16354,35 @@ board.addEventListener('pointerdown', e=>{
    The browser's own middle button (autoscroll on Windows, a paste on Linux) is refused over the table while these
    views are on; the panels beside it keep theirs. */
 let _mpan=null;
+/* v2.6.191 (the owner): A DOUBLE-CLICK OF THE MIDDLE BUTTON RESETS THE VIEW, as the reset button does (l3ResetView: zoom 1,
+   the table centred), where the middle button pans (the helicopter view and the Classic board). Browsers send dblclick for
+   the left button only, so the client counts it: a press released within MID_DBL_PX of where it went down, never having
+   moved further, is a click (_mclick); a second press within MID_DBL_MS of the first and MID_DBL_PX of its spot is the
+   double. The second press pans nothing; it still holds the pointer to its release, so nothing under it sees either. */
+let _mclick=null;
+const MID_DBL_MS=500, MID_DBL_PX=6;
+function midNow(e){ return (e && typeof e.timeStamp==='number' && e.timeStamp>0) ? e.timeStamp : Date.now(); }
 function midTableBtn(e){ const t=e.target; return e.button===1 && e.pointerType!=='touch' && l3on() && !!t && !!t.closest && !!t.closest('#board') && !t.closest('#empty'); }
 function midPanStart(e){
   if(!midTableBtn(e)) return;
   e.preventDefault(); e.stopPropagation();
   if(_mpan || drag||tdrag||pileDrag||giveDrag||mq) return;        // another gesture owns the pointer: the press is still the table's, but no pan starts
   hideMenu(); hideCtStepper(); if(_hoverPin){ _hoverPin=false; hideHoverCard(); }
+  const t=midNow(e), k=_mclick; _mclick=null;
+  const dbl=!!k && t-k.t>=0 && t-k.t<=MID_DBL_MS && Math.abs(e.clientX-k.x)<=MID_DBL_PX && Math.abs(e.clientY-k.y)<=MID_DBL_PX;   // v2.6.191: the second press of a double-click
+  if(dbl) l3ResetView();
   const r=board.getBoundingClientRect();
-  _mpan={ pid:e.pointerId, sx:e.clientX, sy:e.clientY, px0:l3pan.x, py0:l3pan.y, bpx:board.clientWidth/(r.width||1), lx:0, ly:0, raf:0 };   // bpx: board px per screen px -- l3pan lives in the design space
-  board.classList.add('l3panning');
+  _mpan={ pid:e.pointerId, sx:e.clientX, sy:e.clientY, t, dbl, moved:false, px0:l3pan.x, py0:l3pan.y, bpx:board.clientWidth/(r.width||1), lx:0, ly:0, raf:0 };   // bpx: board px per screen px -- l3pan lives in the design space; dbl: this press reset the view and pans nothing
+  if(!dbl) board.classList.add('l3panning');
   document.addEventListener('pointermove', midPanMove, true); document.addEventListener('pointerup', midPanEnd, true); document.addEventListener('pointercancel', midPanEnd, true);
 }
-function midPanApply(){ const m=_mpan; if(!m) return; m.raf=0; if(!l3on()) return; l3pan.x=m.px0+m.lx; l3pan.y=m.py0+m.ly; clampL3Pan(); applyL3Transform(); }
+function midPanApply(){ const m=_mpan; if(!m) return; m.raf=0; if(m.dbl || !l3on()) return; l3pan.x=m.px0+m.lx; l3pan.y=m.py0+m.ly; clampL3Pan(); applyL3Transform(); }
 function midPanMove(e){
   const m=_mpan; if(!m || e.pointerId!==m.pid) return;
   if(!(e.buttons & 4) || !l3on()){ midPanEnd(); return; }         // the middle button let go while another stayed down -- or the view left the panning levels mid-drag
   e.stopPropagation();
+  if(Math.abs(e.clientX-m.sx)>MID_DBL_PX || Math.abs(e.clientY-m.sy)>MID_DBL_PX) m.moved=true;   // v2.6.191: a press that moved is a pan, not a click
+  if(m.dbl) return;                                                // the double-click's second press: the view stays where the reset put it
   m.lx=(e.clientX-m.sx)*m.bpx; m.ly=(e.clientY-m.sy)*m.bpx;
   if(!m.raf) m.raf=requestAnimationFrame(midPanApply);
 }
@@ -16326,6 +16393,7 @@ function midPanEnd(e){
   if(m.raf) cancelAnimationFrame(m.raf);
   midPanApply(); _mpan=null;
   board.classList.remove('l3panning');
+  if(e && e.type==='pointerup' && !m.dbl && !m.moved && Math.abs(e.clientX-m.sx)<=MID_DBL_PX && Math.abs(e.clientY-m.sy)<=MID_DBL_PX) _mclick={ t:m.t, x:m.sx, y:m.sy };   // v2.6.191: a press that did not pan may be the first of a double-click
 }
 document.addEventListener('pointerdown', midPanStart, true);
 document.addEventListener('mousedown', e=>{ if(midTableBtn(e)) e.preventDefault(); }, true);   // belt and braces: a canceled pointerdown sends no mousedown, and the autoscroll hangs on that one
@@ -16390,8 +16458,9 @@ document.addEventListener('auxclick', e=>{ if(midTableBtn(e)) e.preventDefault()
 $('#l3zoomSlider')?.addEventListener('input', e=>{ l3zoomTo(parseFloat(e.target.value)); });
 $('#l3zoomMinus')?.addEventListener('click', ()=>l3zoomTo(l3zoom/1.2));
 $('#l3zoomPlus')?.addEventListener('click', ()=>l3zoomTo(l3zoom*1.2));
-$('#l3zoomReset')?.addEventListener('click', ()=>{ l3zoom=1; l3pan={x:0,y:0}; applyL3Transform(); });
-$('#l3resetBtn')?.addEventListener('click', ()=>{ l3zoom=1; l3pan={x:0,y:0}; applyL3Transform(); });
+function l3ResetView(){ l3zoom=1; l3pan={x:0,y:0}; applyL3Transform(); }   // v2.6.191: the reset buttons and the middle button's double-click
+$('#l3zoomReset')?.addEventListener('click', ()=>l3ResetView());
+$('#l3resetBtn')?.addEventListener('click', ()=>l3ResetView());
 document.addEventListener('pointerdown', e=>{
   if(!document.body.classList.contains('l3zoomopen')) return;
   const ctl=$('#l3zoomCtl'), tog=$('#l1zoomToggle');
@@ -18221,6 +18290,8 @@ const ACTIONS=[
   {id:'lockSel',     grp:'basic', def:'L', label:'Lock / unlock selected',           fn:toggleLockSelected},   // v2.6.88: basic
   {id:'ashHover',    grp:'basic', def:'X', label:'Discard hovered card to ash heap',  fn:discardHover},   // v2.6.88: basic
   {id:'poolMinus',   grp:'basic', def:'-', label:'Pool −1  (or Blood −1 if a card is selected)', fn:()=>{ const c=singleSelectedCounter(); c?bumpCounter(c,-1,'blood'):bumpPool(-1); }},
+  {id:'xferIn',      grp:'adv',   def:'',  label:'Move 1 pool → blood (the selected card, or the one under the pointer)', fn:()=>xferKey(1)},    // v2.6.191 (the owner): unbound -- bind + and - here and Pool/Blood ±1 give them up (one key, one action)
+  {id:'xferOut',     grp:'adv',   def:'',  label:'Move 1 blood → pool (the selected card, or the one under the pointer)', fn:()=>xferKey(-1)},
   {id:'influence',   grp:'adv',   def:'C', label:'Draw 1 crypt card (uncontrolled)', fn:influence},
   {id:'edge',        grp:'adv',   def:'E', label:'Toggle the Edge',                  fn:toggleEdge},
   {id:'phUnlock',    grp:'adv',   def:'F1', label:'Phase: Unlock',                    fn:()=>activatePhase(0)},
@@ -18260,6 +18331,7 @@ const MOUSE_FIXED=[
   ['Shift + click','−1 token (region under pointer)'],
   ['Double-click','Lock / unlock card'],
   ['Scroll on card / pool','Adjust token under pointer / pool'],
+  [()=>xferWheelChip(),'Move blood between the card and your pool (the key: Settings ▸ Table)'],   // v2.6.191: the chip follows the setting
   ['Ctrl + click on library','Undo last draw'],
   ['Drag on the felt','Box-select (replaces; Shift adds)'],
   ['⌖ Target button','Click it, then click a card in play — actions & plays log the target'],
@@ -18268,7 +18340,9 @@ const MOUSE_FIXED=[
   ['← / → (in a room)','Walk around the table, seat by seat (your seat = home)'],
   ['↑ / ↓ (in a room)','Zoom the view out / in (↑ toward the table, ↓ toward home)'],
   ['↑ ↓ → ← / Enter (menu open)','Move through an open menu and pick an item'],
-  ['Scroll on the felt (in a room)','Zoom between view levels'],
+  ['Scroll on the felt','Zoom the table toward the pointer (Helicopter · Classic)'],   // v2.6.191: said view levels -- the wheel stopped cycling them long ago
+  ['Middle button: hold + drag','Pan the table from anywhere (Helicopter · Classic)'],
+  ['Middle button: double-click','Reset the view, as the ⛶ button: the whole table, centred (Helicopter · Classic)'],
   ["Right-click a rival's card",'Set as target · Visit their board'],
   ['Double-click a card in hand','Play it — onto the selected card in play, if any'],
   ['❗ button','Quick “Hold on…” — ask for a beat before things resolve'],
@@ -18337,6 +18411,7 @@ function importSettings(){
           if(c.touchUI==='auto'||c.touchUI==='on'||c.touchUI==='off') conv.touchUI=c.touchUI;
           if(c.botRingHold==='right'||c.botRingHold==='off') conv.botRingHold=c.botRingHold;
           if(typeof c.botHubHide==='boolean') conv.botHubHide=c.botHubHide;
+          if(c.xferWheel==='shift'||c.xferWheel==='ctrl'||c.xferWheel==='alt'||c.xferWheel==='off') conv.xferWheel=c.xferWheel;   // v2.6.191
           if(c.pco==='on'||c.pco==='home'||c.pco==='mine'||c.pco==='all') conv.pco=c.pco;
           if(typeof c.pcoNeutral==='boolean') conv.pcoNeutral=c.pcoNeutral;
           if(typeof c.qrView==='boolean') conv.qrView=c.qrView;
@@ -18434,7 +18509,7 @@ function buildMouseRows(){
   MOUSE_FIXED.forEach(m=>{
     const row=document.createElement('div'); row.className='set-row';
     const sl=document.createElement('span'); sl.className='sl'; sl.textContent=m[1];
-    const chip=document.createElement('span'); chip.className='keychip fixed'; chip.textContent=m[0];
+    const chip=document.createElement('span'); chip.className='keychip fixed'; chip.textContent=(typeof m[0]==='function') ? m[0]() : m[0];   // v2.6.191: a computed chip (the move's key)
     row.appendChild(sl); row.appendChild(chip);
     host.appendChild(row);
   });
@@ -18492,6 +18567,7 @@ function openSettings(){
   $('#convDockDrag').value=conv.dockDrag;
   { const _hr=$('#convHandRim'); if(_hr) _hr.value=conv.handRim; }
   { const _rh=$('#convBotRingHold'); if(_rh) _rh.value=conv.botRingHold; }
+  { const _xw=$('#convXferWheel'); if(_xw) _xw.value=conv.xferWheel; }   // v2.6.191
   $('#convTouchUI').value=conv.touchUI;
   $('#convPco').value=conv.pco;
   $('#convPcoNeutral').checked=conv.pcoNeutral;
@@ -18561,7 +18637,7 @@ $('#keysReset').addEventListener('click',()=>{
    Reset is refused while a table or lobby is live (same guard as the Lite|Full switch): a hotseat
    overrides conv.tournament / helperAllOn for the session, and resetting under it would change
    the running table.                                                                             */
-const SETTINGS_CONV_KEYS=['anim','animSpeed','sayDur','chatDur','sayText','chatText','pco','pcoNeutral','poolPlayerColor','drawClick','cardTip','hoverPreview','chatBubbles','showWelcome','dockDrag','handRim','touchUI','playedSort','avrResolveClear','l3collapseOusted','errPing','tournament','autoLock','poolToPredator','legalDeck','legalCards','edgeToken','cardDB','imgCache','localImg','jsonSync','imgSync','imgFmt','sfxVol','shiftPeek','botRingHold','botHubHide'];
+const SETTINGS_CONV_KEYS=['anim','animSpeed','sayDur','chatDur','sayText','chatText','pco','pcoNeutral','poolPlayerColor','drawClick','cardTip','hoverPreview','chatBubbles','showWelcome','dockDrag','handRim','touchUI','playedSort','avrResolveClear','l3collapseOusted','errPing','tournament','autoLock','poolToPredator','legalDeck','legalCards','edgeToken','cardDB','imgCache','localImg','jsonSync','imgSync','imgFmt','sfxVol','shiftPeek','botRingHold','botHubHide','xferWheel'];
 function settingsDefaults(mode){                                  // pure: the profile a fresh install of `mode` would show
   mode=(mode==='lite')?'lite':'full';
   const c={}; for(const k of SETTINGS_CONV_KEYS) c[k]=CONV_DEFAULTS[k];
@@ -18611,6 +18687,7 @@ function settingsApplyProfile(p){                                 // assign + pe
   if(p.autosave==='minute'||p.autosave==='pass'||p.autosave==='off'){ autoSaveMode=p.autosave; try{ localStorage.setItem(AUTOSAVE_KEY, autoSaveMode); }catch(_e){} applyAutosaveMode(); }
   animMode=conv.anim; applyPco(); refreshPoolColor(); if(l4on()) renderL4Globes(); applyTouchUI();
   if(conv.hoverPreview!=='always') hideHoverCard();
+  buildMouseRows();                                                // v2.6.191: the move's key is on a fixed-controls row
   if(conv.edgeToken){ if(state.edge) ensureEdgeToken(); } else removeEdgeToken();
   if(net.view==='ov') renderL3();
   renderAltIfOpen();
@@ -19333,6 +19410,7 @@ $('#convAnim').addEventListener('change',e=>{
 $('#convDrawClick').addEventListener('change',e=>{ conv.drawClick=e.target.value; saveConv(); });
 $('#convDockDrag')?.addEventListener('change',e=>{ conv.dockDrag=e.target.value; saveConv(); });
 $('#convBotRingHold')?.addEventListener('change',e=>{ conv.botRingHold=(e.target.value==='off')?'off':'right'; saveConv(); });   // v2.6.188
+$('#convXferWheel')?.addEventListener('change',e=>{ const v=e.target.value; conv.xferWheel=(v==='ctrl'||v==='alt'||v==='off')?v:'shift'; saveConv(); buildMouseRows(); });   // v2.6.191
 $('#convHandRim')?.addEventListener('change',e=>{ conv.handRim=(e.target.value==='rim')?'rim':'dock'; saveConv(); if(l4on()){ rimSync(); layout(); if(typeof updateL4Opponents==='function') updateL4Opponents(); } else rimModeUI(); });   // v2.6.152: takes effect on the open table
 { const _dm=document.getElementById('l2dockMode'); if(_dm){ _dm.addEventListener('pointerdown', e=>e.stopPropagation()); _dm.addEventListener('click', e=>{ e.stopPropagation(); rimToggle(); }); } }   // v2.6.153: the design button (never a marquee, never a felt tap)
 rimModeUI();
