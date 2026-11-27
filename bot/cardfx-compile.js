@@ -98,7 +98,7 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.13.0';   // 27 Nov 2026 (C1b, SWEEP-REGISTER 10.25 and the agreeing rows' sample): `stealthOpt` -- a modifier's 'or' option, '+1 bleed (limited), or +1 stealth and +1 bleed (limited)' (and the reverse order: Virtuosa [mel]), the stealth optional on the mode (5 entries); `payBlood` on a line that sells its value ('Burn 1 blood to get +1 stealth.', 'This vampire burns 1 blood to get +1 intercept.': 9 entries); `notActorDisc` -- 'Not usable if the acting minion has Celerity [cel]' on the modes of its line, the token's case its level (Rooftop Shadow, The Mole [cel]). Every other entry compiles byte for byte as in v1.12.0
+const FXC_VERSION = '1.13.0';   // 27 Nov 2026 (C1b, SWEEP-REGISTER 10.25 and the agreeing rows' sample): `stealthOpt` -- a modifier's 'or' option, '+1 bleed (limited), or +1 stealth and +1 bleed (limited)' (and the reverse order: Virtuosa [mel]), the stealth optional on the mode (5 entries); `payBlood` on a line that sells its value ('Burn 1 blood to get +1 stealth.', 'This vampire burns 1 blood to get +1 intercept.': 9 entries); `unique` from a sentence of the header line ('+1 stealth action. Unique.': 45 entries the line-start reading missed); `notActorDisc` -- 'Not usable if the acting minion has Celerity [cel]' on the modes of its line, the token's case its level (Rooftop Shadow, The Mole [cel]). Every other entry compiles byte for byte as in v1.12.0
 // const FXC_VERSION_1120 = '1.12.0';   // 27 Nov 2026 (C1, the V5 sweep's first family: stealth, intercept, bleed against zero-vtes's definitions): a GRANTED action's stealth is not the card's own (GRANTED_STEALTH below)
 // const FXC_VERSION_1114 = '1.11.4';   // 20 Nov 2026 (the pilot's review, pass 3): 'As above, but for NR + X ranged damage' is strike N, the printed floor (Eldritch Glimmer [THA] 4R), as the compiler reads every 'N + X'
 /* v1.12.0 (C1, spec-card-sweep §11.8; the cross-check gen-cross-check.js): an action a card lets a minion take LATER is not the stealth
@@ -978,6 +978,8 @@ function libEntry(c, sink){
   if(Object.keys(req).length) e.req = req;
   const txt = c.card_text || '';
   if(/^unique\b/i.test(txt.trim())) e.unique = true;   // rulebook: unique library cards follow vampire uniqueness (one in play; a second contests)
+  { const first = txt.split('\n')[0] || '';   // v1.13.0 (C1b, the fidelity pass: Pit of Contemplation, The Gate of Acheron): 'Unique.' or 'Unique <type> with N life.' as a sentence of the header line, after '+1 stealth action.', a requirement or a 'Master:' keyword -- 45 entries read none (Gather, Under Siege, Constant Revolution, Dance of the Dead ...)
+    if(!e.unique && /(?:^|[.:]\s+)Unique\b/.test(first) && !/\bnon-unique\b/i.test(first)) e.unique = true; }
   /* v1.5.0 (17 July, fas B/C sweep): keyword-SENTENCE scan replaces v1.4.2's line-start
      regex. Two blind spots, both found the day after that sweep shipped: (1) the older
      "Master: trifle." templating puts the keyword after a COLON (Vessel and ~18 more --

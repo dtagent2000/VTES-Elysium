@@ -1651,7 +1651,10 @@ ok(fx.counts.libLock >= 140,
     ok(JSON.stringify(pb) === JSON.stringify(['Aura Absorption', 'Ears of the Hare', 'Falcon\'s Eye', 'Mole\'s Tunneling', 'Pocket Out of Time', 'Savannah Runner', 'Siren\'s Lure', 'Stone Travel', 'Voices of the Castle'])
       && mode('Stone Travel', 'obt').fx.stealth === 1 && mode('Stone Travel', 'obt').fx.payBlood === 1 && mode('Siren\'s Lure', 'cel').fx.payBlood === 2 && mode('Mole\'s Tunneling', 'SPI').fx.stealth === 2
       && mode('Ears of the Hare', 'pro').fx.intercept === 1 && mode('Ears of the Hare', 'pro').fx.interceptPaid === undefined && mode('Aura Absorption', 'myt').fx.payBlood === undefined,
-      'C1b: payBlood on a line that sells its value ("Burn 1 blood to get +1 stealth.", "This vampire burns 1 blood to get +1 intercept."): the nine, each value with its price, the free lines without (' + pb.length + ')'); }
+      'C1b: payBlood on a line that sells its value ("Burn 1 blood to get +1 stealth.", "This vampire burns 1 blood to get +1 intercept."): the nine, each value with its price, the free lines without (' + pb.length + ')');
+    const V5 = JSON.parse(fs.readFileSync(here('vtes.json'), 'utf8')), uq = V5.filter(c => L[c.name] && /(?:^|[.:]\s+)Unique\b/.test((c.card_text || '').split('\n')[0]) && !/^unique\b/i.test((c.card_text || '').trim())).map(c => c.name);
+    ok(uq.length === 46 && uq.every(n => L[n].unique === true) && ['Gather', 'Pit of Contemplation', 'The Gate of Acheron', 'Under Siege', 'Constant Revolution', 'Dance of the Dead'].every(n => L[n].unique === true),
+      'C1b: "Unique." as a sentence of the header line ("+1 stealth action. Unique.", "Requires a ready Seraph. Unique.") is unique -- the 46 whose header line carries it (45 the line-start reading missed; Carfax Abbey\'s hand entry had it), Gather and Under Siege among them (' + uq.filter(n => L[n].unique !== true).join(', ') + ')'); }
   /* the family's exactness record (cardfx-exact.json, a development file; RULINGS D-144): its states, its cards, its open gaps */
   let ex = null, exErr = '', regT2 = null;
   try { ex = JSON.parse(fs.readFileSync(here('cardfx-exact.json'), 'utf8')); } catch (e) { exErr = e.message; }
@@ -1709,9 +1712,13 @@ ok(fx.counts.libLock >= 140,
     for (const f of rfiles) { let D = null; try { D = JSON.parse(fs.readFileSync(path.join(rdir, f), 'utf8')); } catch (e) { RP.push(f + ': ' + e.message); continue; }
       nv += (D.verdicts || []).length; ns += (D.samples || []).length; readersProblems(D, ex, regE3, has3).forEach(q => RP.push(f + ': ' + q)); }
     ok(rfiles.length >= 1 && RP.length === 0, 'the readers\' data files: ' + rfiles.length + ' file(s), ' + nv + ' verdicts, ' + ns + ' sample(s); every disposition a register entry, every sample the draw of its seed' + (RP.length ? ': ' + RP.slice(0, 4).join('; ') : ''));
-    const D0 = JSON.parse(fs.readFileSync(path.join(rdir, rfiles[0]), 'utf8')), B0 = JSON.parse(JSON.stringify(D0));
+    const fS = rfiles.find(f => (JSON.parse(fs.readFileSync(path.join(rdir, f), 'utf8')).samples || []).length) || rfiles[0];   // v0.6.244: the file that holds a sample (C1b's holds none)
+    const D0 = JSON.parse(fs.readFileSync(path.join(rdir, fS), 'utf8')), B0 = JSON.parse(JSON.stringify(D0));
     B0.verdicts[0].verdict = 'maybe'; B0.verdicts[1].lead = 'registered: SWEEP-REGISTER 99.97'; if (B0.samples[0]) B0.samples[0].rows[0] = { card: 'Abbot', fam: 'stealth', lvl: 'all' };
     ok(readersProblems(B0, ex, regE3, has3).length === 3, 'planted: an unknown verdict, a disposition naming no register entry and a hand-picked sample row are each reported');
+    const X2 = JSON.parse(JSON.stringify(ex)), wa = Object.entries(X2.cards).find(([, ks]) => Object.values(ks).some(v => typeof v === 'string' && / was-agree c1-agree-1/.test(v)));
+    if (wa) for (const k of Object.keys(wa[1])) if (/ was-agree c1-agree-1/.test(String(wa[1][k]))) wa[1][k] = 'corrected';
+    ok(!!wa && readersProblems(D0, X2, regE3, has3).some(q => /not the draw of its seed/.test(q)), 'planted (C1b): a sampled row corrected without its was-agree marker breaks the draw (' + (wa ? wa[0] : 'no marked row') + ')');
   }
   const IFK = new Set(['selfClan', 'selfTitled', 'actorTitled', 'actorSect', 'actDirected', 'actUndirected', 'unread']), badIf = [];   // v0.6.244 (C1b): the bot's PLUSIF_CONDS and 'unread' (pinned below)
   { const m = /const PLUSIF_CONDS = (\[[^\]]*\])/.exec(fs.readFileSync(here('elysium-bot.js'), 'utf8')), bc = m ? JSON.parse(m[1].replace(/'/g, '"')) : null;
