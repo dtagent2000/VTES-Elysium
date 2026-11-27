@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""public-scan.py -- the public repository's name and quote scan (RULINGS D-141, D-142; HARNESS "Review until clean"). v1.1.0
+"""public-scan.py -- the public repository's name and quote scan (RULINGS D-141, D-142; HARNESS "Review until clean"). v1.1.1
 
 The repository is public: it carries no chat quotes and no names of private persons. The scan finds both without naming anyone
 itself. Three rules, each hit printed as its place and its kind only, never the words, so the output can go into a PR body:
@@ -24,8 +24,8 @@ Usage: python3 bot/tools/public-scan.py [--diff REF | --diff A..B | --tree] [--s
                REF..HEAD; the default is origin/main
   --diff A..B  the lines the commits A..B add and their messages (a reviewer's range; CI's HEAD^1..HEAD on a pull request's
                merge commit reads its lines and, at the checkout's depth, the head commit's message only)
-  --tree       every tracked file the scan reads, a count per file; the files WAITING lists (the bundle's cleanup release) are
-               reported apart and do not fail the scan
+  --tree       every tracked file the scan reads, a count per file; a file WAITING lists is reported apart and does not fail
+               the scan (none since the bundle's cleanup release, v0.6.242)
 Exit 1 on a hit (in --tree, a hit outside WAITING), 2 on a usage error.
 """
 import hashlib, os, re, subprocess, sys
@@ -55,10 +55,7 @@ PART = re.compile(r"[A-ZÀ-ÖØ-Þ]?[a-zß-öø-ÿ]+|[A-ZÀ-ÖØ-Þ]+(?![a-zß-�
 READ_ONLY = {'bot/elysium-server.js', 'bot/ELYSIUM-PROTOCOL.md', 'bot/elysium-vtes-bord.html', 'bot/elysium-hotseat-bots-plan.md',
              'bot/test-bot-canary.js'}   # main's release copies (ARCHITECTURE "Shared with main")
 THIRD_PARTY = re.compile(r'^bot/(vtes|vtes-v5|expansions|twda|twda-vdb)\.json$')
-WAITING = {   # the bundle and the sources it is compiled from: their comments and notes are the bundle's cleanup release (BOARD)
-    'bot/elysium-bot.js', 'bot/elysium-cardfx.json', 'bot/elysium-cardfx.js', 'bot/START-HERE-BOTS.html', 'bot/cardfx-curated.json',
-    'bot/deck-sewer.json',
-}
+WAITING = set()   # files whose hits may wait for a cleanup of their own; empty since the bundle's cleanup release (v0.6.242)
 SWEDISH_OK = re.compile(r'^bot/(docs/coverage/deck-coverage-.*\.md|docs/specs/cardfx-sweep-audit\.md|gen-deck-coverage\.js|'
                         r'gen-sweep-audit\.js|tools/public-scan\.py)$')   # Swedish written by a tool (the coverage and audit
                         # pages and their writers), and this file's own word list and test strings

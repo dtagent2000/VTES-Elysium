@@ -402,6 +402,37 @@
   (bot/'s copies and the root's release), HB1 11/11, hotseat 11/0.
 
 ## Bot
+- **v0.6.242 (26 Nov 2026; PR #114)** — The bundle's cleanup release (BOARD's first Product line; RULINGS D-141, D-142 (4),
+  D-143): the bundle names nobody and quotes nobody. `elysium-bot.js`: of its 311 mentions of the owner, 304 by role, "the project
+  owner" (in this file "the owner" is a card's owner), six in example table lines by invented names (Hanna, Lisa) and one in the
+  sewer deck's name; 70 quotes or renderings of the owner's words in our own words with no quote marks: the six Swedish quotes the
+  scan found, three short Swedish ones it cannot see (one listed word and no å/ä/ö, or the other way round), the go-ahead word in
+  quote marks and the English renderings (the handoff's Check first 4); rulebook, card and guide text, the bot's own lines and the
+  client's words keep their marks. The code changed in four strings only, each checked against the old file with comments removed
+  (TypeScript's printer): the sewer deck's name and the attribution inside three of `_decide`'s explanations (in its decide and
+  block-eval rows) (the bounce on a total; the master pick with no known income asset, curated and uncurated), which show only in
+  a debug table's ⚙ lines and in traces. The curated cardfx notes (43 mentions; one rendering repeated over 25 hunting-ground
+  entries; the go-ahead word) likewise, recompiled: the library is v0.6.241's apart from the notes and the stamp (221 curated,
+  1,696 modelled). The guide's archetype example names an invented player, and its body's count of hand-curated cards is the
+  footer's (221: 170 library, 51 crypt; it said 218, which main's v2.6.189 reply noticed). The sewer deck takes the client's menu
+  label as its name, Inside Dirt (Nosferatu), in `deck-sewer.json` and its embedded copy (D-143; `gen-precon.js --check` finds
+  their cards equal, the names compared by hand), the name the bot sends to the server. Riding (D-92): the master rule's wording
+  in quote marks in two of the suite's test names and on four lines of three specs, now without marks (no assertion changed).
+  `tools/public-scan.py` v1.1.1: `WAITING` is empty and `--tree` finds 0 hits. A handoff to main
+  (`handoffs/HANDOFF-to-main-2026-11-26-v0.6.242.md`: re-embed the guide; the deck's new name). The owner's words behind D-143:
+  the data repo's RULINGS-WORDS.md (its #5). No prediction: nothing in play changed, and the owner chose no match in the human
+  seat (D-143).
+  *Gates:* `tools/gates.sh --sim` PASS 15/15 on 279a3f1, the release bytes (check 34/34, lint clean, canary 235/0 ×2, cardfx
+  503/0, precon 18, the self-tests, HB1 11/0, hotseat 12/0, doc-budget, public-scan 35/0 and 0 hits): the 240 against v0.6.241
+  SAME-PLAY 240, and still SAME-PLAY 240 with the version put back (the attributions); with the version and the two attribution
+  patterns replaced by one token on both sides, IDENTICAL 240 (every row byte for byte but the results' wall and cpu times);
+  `ana-gates.py` PASS 6/6. CI's suite 2841/0 ×3 with `bot-gates` green on 279a3f1 (`0abee43c` / `bae2970e` / `52477ed1`); main's
+  client suite beside these bytes 430/1 (the guide's embed, as since v0.6.240); `tools/public-scan.py --tree` 0 hits. The first
+  bytes (bb857db, before the review's comment fixes) read the same in every gate. After the review, main's client v2.6.189 (#115)
+  was merged into the branch and the guide's count fixed (docs and the guide only): the fast gates PASS 14 again (canary-root
+  235/0 on v2.6.189), main's canary v1.7.0 283/0 and its client suite 432/1 (the guide's embed) beside these bytes. *Egress:* 7
+  findings (rule-missed 3, unproven 4) in 3 passes (Opus 5, Fable 2, Fable clean), 7 fixed, 0 listed; the 240's reading (the
+  version and the changed attribution normalized) is put to the owner at the PR's top.
 - **v0.6.241 (25 Nov 2026; PR #109)** — The exactness round (RULINGS D-138; the owner's go-ahead at 20:43 on Claude's proposal after his
   question at 20:38 whether 77/77 really means every card works): Claude's two playtest games against the bots on main's rig and a
   spot check of the base starters' auto entries (the project's docs of 25 Nov: claude/playtest-claude-game1, -game2 and

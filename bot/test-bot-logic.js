@@ -1830,7 +1830,7 @@ async function connectWithRetry(client, tries = 30){
       await h10.waitFor(m => m.t === 'turn' && m.seat === 1, 'turn back (r10 t1)', 20000);
 
       ok(h10.sawAny(m => m.t === 'log' && m.html.includes('plays <b>Ashur Tablets</b>')),
-         '"always play A master": Ashur Tablets (curated, but no recognized income fx) still gets played');
+         'the always-play-a-master rule: Ashur Tablets (curated, but no recognized income fx) still gets played');
       const at = bot10.board.find(c => c.name === 'Ashur Tablets');
       ok(!!at && !at.host, 'placed as its own STANDALONE permanent -- no host, a Location never attaches to a vampire');
       ok(at && at.zone === 'ready', 'v1.4.0: PERSISTENT (curated persistent:true) -- stays on the board, unlike a one-shot master (see the Effective Management test below)');
@@ -1925,7 +1925,7 @@ async function connectWithRetry(client, tries = 30){
       await h12.waitFor(m => m.t === 'turn' && m.seat === 1, 'turn back (r12 t1)', 20000);
 
       ok(h12.sawAny(m => m.t === 'log' && m.html.includes('plays <b>Effective Management</b>')),
-         'Effective Management gets played (curated, "always play A master")');
+         'Effective Management gets played (curated, the always-play-a-master rule)');
       ok(!bot12.board.some(c => c.name === 'Effective Management' && c.zone === 'ready'),
          'v1.4.0 FIX: NOT parked on the board as a standalone permanent -- the bug this whole branch exists to close (an uncurated one-shot used to sit there forever)');
       ok(bot12.board.some(c => c.name === 'Effective Management' && c.zone === 'ash'),

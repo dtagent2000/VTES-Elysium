@@ -1,15 +1,10 @@
-# BOARD — the open asks (26 Nov 2026, v0.6.241). A line is deleted when done; found work is added as a line (a card
+# BOARD — the open asks (26 Nov 2026, v0.6.242). A line is deleted when done; found work is added as a line (a card
 problem the sweep finds: an entry in `SWEEP-REGISTER.md`, D-135).
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. The owner orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for the owner are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (the owner's order, 19–20 Oct 2026; spec-cleanup §7)
-- **The bundle's cleanup release** (D-141, D-142): the bundle still names the owner and quotes the owner's words in
-  `elysium-bot.js`'s comments (about 300 lines), the cardfx notes (`cardfx-curated.json`, compiled into `elysium-cardfx.json/.js`),
-  the guide's example line and the sewer deck's name (embedded too); by role or an invented name, in a small release of its own
-  before C1's (`tools/public-scan.py --tree` lists them as WAITING). *Done when* the scan waits on nothing, the 240 is IDENTICAL
-  with the version normalized, and main has the guide to re-embed. Docs: D-141, D-142; the CHANGELOG.
 - **The chat round's rulings** (D-137, O-51): v0.6.240 built the floor, dropped the `(bot):` prefix and the human's tail to a
   bot, and brought the recorder (`tools/chat-record.js`, `tools/ana-chat.py`); the owner rules every line and the questions R1–R9
   in the ruling doc (O-51), the silent bot-vs-bot verdict wait among them (O-36). *Done when* each line has his ruling and

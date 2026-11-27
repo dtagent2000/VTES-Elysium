@@ -232,7 +232,7 @@ crypt stays whole. The compiled artifact is `elysium-cardfx.json`.
   which the type alone cannot distinguish since it's identical for both. Requires a
   recognized income fx key (`poolGain`/`bloodToPool`) alongside it, or `_bestMasterFor`
   won't treat the card as a modelled income asset at all (an untagged income-shaped card
-  still gets PLAYED under the "always play A master" rule below, just without an automatic
+  still gets PLAYED under the always-play-a-master rule below, just without an automatic
   effect — see `actGrant`/§7.6 for the closely related but distinct bonus-action question).
 - **`actGrant`** (curated-only, **ENTRY-LEVEL** — corrected 14 July 2026, was originally
   documented as per-mode but never actually implemented that way; `_recomputePhaseActs()`
