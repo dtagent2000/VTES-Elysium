@@ -11663,7 +11663,7 @@ class Bot {
      before right-clicking; a bot always sends its line, and a bot whose route failed after its shout says Pass with no line), until
      its verdict line, a cancel of it, the counter leaving block mode, 'It resolves', my own announce or the turn's end. A pending reads
      it through _standingFor (an attempt seen since the pending's own action was announced, p.annAt). */
-  _newerAction(o, p){ return !!(o && p && (o.at || 0) > (p.annAt || 0) && this._obsIsAction(o) && !(o.card && o.vamp === p.actingVampName)); }   // a remembered line that is an action after my record's -- not the record's own action's card (its minion's card after its row; the egress review, pass 2, C)
+  _newerAction(o, p){ return !!(o && p && (o.at || 0) > (p.annAt || 0) && this._obsIsAction(o) && !(o.vamp && o.vamp === p.actingVampName)); }   // a remembered line that is an action after my record's -- not the record's own acting minion's line: its card after its row (the egress review, pass 2, C), its row after its card (pass 4)
   _actNow(){                         // (the egress review, pass 2, B and D) the action an attempt line is at: my record's, else the pool question's, else a remembered action line (a reaction card's line is none)
     const p = this.pending, o = this._obs;
     if(p && !this._newerAction(o, p)) return { seat: p.actorSeat || this._seatOfName(p.who), at: p.annAt || 0 };   // (pass 3) a record no It resolves ended is overtaken by the next action's line, before "Any blocks?" supersedes it
@@ -11695,7 +11695,8 @@ class Bot {
     if(!o) return false;
     if(!o.card) return /^(bleeds for|hunts|calls a political action|attempts to rescue|takes an undirected action|takes a card action|commits diablerie)/.test(o.verb || '');
     const look = c => { const mm = c.match(/^(.+?) \[[a-zA-Z]+\]$/); return this.fxLookup(mm ? mm[1] : c); };
-    const raw = String(o.card), h = look(raw) || look(raw.replace(/\s*(?::|\u2014|--)\s.*$/, '').trim());   // a bot's play line names the card, then ': …' or ' — …' before its period (a human's ends at the card): the sim's 240 diverged on a bot's 'plays Eyes of Argus: may react as though unlocked.'
+    const raw = String(o.card); let h = look(raw) || look(raw.replace(/\s*(?::|\u2014|--)\s.*$/, '').trim());
+    if(!h && o.line){ const t = String(o.line).replace(/\s+Target:.*$/, '').replace(/^.*? plays /, '').trim(); h = look(t) || look(t.replace(/\.$/, '')); }   // (the egress review, pass 4) a name with a period in it (Mr. Winthrop, Praxis Seizure: Washington, D.C.): actObs ends the card at the first period   // a bot's play line names the card, then ': …' or ' — …' before its period (a human's ends at the card): the sim's 240 diverged on a bot's 'plays Eyes of Argus: may react as though unlocked.'
     return !!(h && h.kind === 'lib' && (h.e.t || []).some(t => t === 'action' || t === 'political' || t === 'ally' || t === 'equip' || t === 'retainer'));   // an unknown card is no action: no supersede and no overtaking, as before them
   }
   _preyDeclined(who, via){           // the prey's word at an undirected action I am the predator of: a decline opens my window; inside the prey's own standing attempt it resolves that attempt (B: everybody passed), and I go on waiting
@@ -12676,10 +12677,11 @@ class Bot {
     /* v0.6.110 (R2, #11): typed answers to MY pool question, and the typed form
        of the prompt itself -- the quick phrases are the fast path, chat is the
        fallback the feedback explicitly asked for (a quick phrase or typed chat). */
-    if(this._pq){
+    const dmgLine = /^\s*(?:@?\S+[,:!]?\s+)?(bleed|vote)\s+\d{1,2}\s*$/i.test(txt);   // (the egress review, pass 4) the damage grammar's form: the supersede note asks for it while my next pool question is open -- it goes on to the grammar below
+    if(this._pq && !dmgLine){
       if(this._pq.stage === 'yn'){
         if(/^\s*(yes|ja|yep|y)\b/i.test(txt))          return this._pqAnswer('yes', who);
-        if(/^\s*(no|nej|nope|n)\b/i.test(txt))         return this._pqAnswer('no', who);
+        if(/^\s*(no|nej|nope|n)\b(?!\s*(block|reaction))/i.test(txt)) return this._pqAnswer('no', who);   // (the egress review, pass 4) a typed 'no block' is a seat's decline (_noteDecline), not the actor's No
       } else {
         const nm = txt.match(/(\d+)/); if(nm)              return this._pqAnswer(nm[1], who);
       }

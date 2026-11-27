@@ -17194,7 +17194,9 @@ async function connectWithRetry(client, tries = 30){
        stays at its own action's card (the row first, then the minion's card); (r) a stray attempt by a seat that may not block shadows
        no legal one, at the blocking bot and at the acting bot. Pass 3: (s) the prey's decline while my pool question is open counts,
        typed too, and a record no It resolves ended takes no word on the next action; (m) a superseded staked record gets its note;
-       (t) a bot's reaction line is no newer action (the 240 after pass 3's first fix).
+       (t) a bot's reaction line is no newer action (the 240 after pass 3's first fix). Pass 4: (m) the note's "bleed N" lands while
+       the next pool question is open; (u) the record's own row after its card, a typed "no block" at the Yes / No stage, the note's
+       non-bleed form, a card whose name holds a period.
        LAST LINE OF 189 is the closing brace below. */
     {
       console.log('\n[189] v0.6.245 -- one block attempt at a time (11.11), a human’s No (4.25), the turn-end note (11.12)');
@@ -17396,9 +17398,16 @@ async function connectWithRetry(client, tries = 30){
         P._onLog('Claude', 'Sully plays Creeping Sabotage.'); P._onSay({ who: 'Claude', i: SI('Any blocks?') });   // pass 2, C: a new action is another minion's (the record's own minion's card is its own action's)
         const asked = !!P._pq && P.chats.some(c => /lose pool/.test(c));
         const noted = P.chats.some(c => c === 'Note: an unresolved bleed at me was overtaken by Claude’s next action — if it landed, tell me "bleed 2".');   // after pass 3: the bleed it held is not dropped unsaid
-        ok(stale && asked && !P.pending && noted,
-           '189m a record of a human’s earlier action is superseded by the next "Any blocks?" -- the prey asks its pool question again, and the bleed it held gets the expiry note (got ' + JSON.stringify({ stale, asked, noted, chats: P.chats }) + '; pass 1: it answered nothing, and the predator waited for it; after pass 3: the superseded bleed was dropped unsaid)');
-        quiet9(P); }
+        P.pool = 20; P._onChat('Claude', 'bleed 2');   // pass 4: the note's own phrase, said while the pool question is open (Yes / No)
+        const yn = { pool: P.pool, stage: P._pq && P._pq.stage }; quiet9(P);
+        const P2 = mk9('Hanna', 2, PA); P2.board = [V9('p9', 'Colette', 4)]; P2.hand = []; actorPub9(P2); blocks9(P2, false); P2.pool = 20;
+        P2._onLog('Claude', 'Belinde (G6) bleeds for 2.'); await sleep(100); await sleep(5);
+        P2._onLog('Claude', 'Sully plays Creeping Sabotage.'); P2._onSay({ who: 'Claude', i: SI('Any blocks?') }); P2._onSay({ who: 'Claude', i: SI('Yes') });
+        P2._onChat('Claude', 'bleed 2');   // ... and at "How much?": no pool answer of 2
+        const amt = { pool: P2.pool, stage: P2._pq && P2._pq.stage, pending: !!P2.pending };
+        ok(stale && asked && !P.pending && noted && yn.pool === 18 && yn.stage === 'yn' && amt.pool === 18 && amt.stage === 'amt' && !amt.pending,
+           '189m a record of a human’s earlier action is superseded by the next "Any blocks?" -- the prey asks its pool question again, the bleed it held gets the expiry note, and its "bleed 2" lands while the question is open (got ' + JSON.stringify({ stale, asked, noted, yn, amt, chats: P.chats }) + '; pass 1: it answered nothing, and the predator waited for it; after pass 3: the superseded bleed was dropped unsaid; pass 4: "bleed 2" was swallowed, or taken as the answer 2)');
+        quiet9(P2); }
 
       // n) finding 5: the note names me when the actor is not my predator (an unnamed "vote N" reaches the actor's prey bot only)
       { const W = mk9('Lisa', 4, PA); W.turnSeat = 1;
@@ -17529,6 +17538,40 @@ async function connectWithRetry(client, tries = 30){
         const r = { born, isAct: P._obsIsAction({ card: 'Eyes of Argus: may react as though unlocked' }), wf: P.pending && P.pending.waitingFor, said: P.says.slice() };
         ok(born === 'Lisa' && r.isAct === false && r.wf === null && r.said.includes('Block!'),
            '189t a bot’s reaction line (the card, then ": …") is no newer action: the bot prey’s decline opens the predator’s window (got ' + JSON.stringify(r) + '; 9461301: the line read as an unknown card, an action, and the predator never weighed -- the 240 diverged in 16 matches)');
+        quiet9(P); }
+
+      // u) the egress review, pass 4: the record's own action's row after its card; a prey's typed "no block" at the Yes / No stage; the note's non-bleed form and its "@<bot> bleed N"; a card whose name holds a period
+      { const PJ = [{ seat: 1, name: 'Claude', online: true }, { seat: 2, name: 'Bob', online: true }, { seat: 3, name: 'Viktor', online: true, bot: true }, { seat: 4, name: 'Lisa', online: true, bot: true }];
+        const pub2 = u => { u.table = { 1: { pub: { pool: 20, cards: [{ id: 'b2', name: 'Belinde (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }, { id: 'b3', name: 'Sully', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }] } } }; };
+        const asked = async (u, vamp, n) => { u._onLog('Claude', vamp + ' plays Creeping Sabotage.'); u._onSay({ who: 'Claude', i: SI('Any blocks?') }); u._onSay({ who: 'Claude', i: SI('Yes') }); await sleep(5); u._onChat('Claude', String(n)); };
+        // 1: the card, the pool question, then the minion's own action row; the prey's decline opens my window
+        const Q = mk9('Lisa', 4, PJ); Q.board = [V9('q18', 'Ayelech', 4)]; Q.hand = []; pub2(Q); blocks9(Q, true);
+        await asked(Q, 'Sully', 3); Q._onLog('Claude', 'Sully takes a card action.');
+        Q._onSay({ who: 'Bob', i: SI('No block') }); await sleep(150);
+        const row = { said: Q.says.slice() }; quiet9(Q);
+        // 2: the prey types "No block." while my Yes / No question is open: a decline, and the question stays open
+        const R = mk9('Lisa', 4, PJ); R.board = [V9('q19', 'Ayelech', 4)]; R.hand = []; pub2(R); blocks9(R, true);
+        R._onLog('Claude', 'Sully plays Creeping Sabotage.'); R._onSay({ who: 'Claude', i: SI('Any blocks?') });
+        R._onChat('Bob', 'No block.');
+        const open = { stage: R._pq && R._pq.stage, said: R.says.slice() };
+        R._onSay({ who: 'Claude', i: SI('Yes') }); await sleep(5); R._onChat('Claude', '3'); await sleep(150);
+        const typed = { open, wf: R.pending && R.pending.waitingFor, said: R.says.slice() }; quiet9(R);
+        // 3: a staked record of the pool question's window, superseded: the note's non-bleed form, and its "@Lisa bleed 3" lands while the next question is open
+        const S = mk9('Lisa', 4, PJ); S.board = [V9('q20', 'Ayelech', 4)]; S.hand = []; pub2(S); blocks9(S, false); S.pool = 20;
+        await asked(S, 'Belinde (G6)', 3); S._onSay({ who: 'Bob', i: SI('No block') }); await sleep(150);   // Lisa declines too; Claude never says It resolves
+        S._onLog('Claude', 'Sully plays Creeping Sabotage.'); S._onSay({ who: 'Claude', i: SI('Any blocks?') });
+        const note = S.chats.find(c => /^Note: /.test(c)) || '';
+        S._onChat('Claude', '@Lisa bleed 3');
+        const sup = { note, pool: S.pool, stage: S._pq && S._pq.stage }; quiet9(S);
+        // 4: a card whose name holds a period supersedes a stale record like any action card
+        const P = mk9('Hanna', 2, PA); P.board = [V9('p10', 'Colette', 4)]; P.hand = []; actorPub9(P); blocks9(P, false);
+        P._onLog('Claude', 'Belinde (G6) bleeds for 2.'); await sleep(100); await sleep(5);
+        P._onLog('Claude', 'Sully plays Mr. Winthrop.'); P._onSay({ who: 'Claude', i: SI('Any blocks?') });
+        const dot = { pending: !!P.pending, pq: !!P._pq };
+        ok(row.said.includes('Block!') && typed.open.stage === 'yn' && !typed.open.said.includes('No block') && typed.wf === null && typed.said.includes('Block!')
+           && sup.note === 'Note: Claude’s action (Creeping Sabotage) was still unresolved when their next action began, with 3 pool at stake for me — if it cost me pool, tell me "@Lisa bleed 3".' && sup.pool === 17 && sup.stage === 'yn'
+           && !dot.pending && dot.pq,
+           '189u the record’s own row after its card is no newer action; a typed "no block" is a decline, not the pool question’s No; the non-bleed note and its "@<bot> bleed N"; a name with a period (got ' + JSON.stringify({ row, typed, sup, dot }) + '; pass 4: the predator never weighed, the bot said No block for the actor, the phrase was swallowed, Mr. Winthrop read as no action)');
         quiet9(P); }
     }
 

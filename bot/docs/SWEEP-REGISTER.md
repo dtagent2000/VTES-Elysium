@@ -494,8 +494,8 @@ Who may answer an action or a card, and in which window; a line read after its w
   intercept 0"] · human · the default from the remembered verb and card (`o.verb`, `o.card`, cardfx `actStealth`).
 - **11.14 A human's action card with no Ⓓ the bot reads is "unknown"** -- `_actDirected` returns null for a play line whose mode
   has no `dir`, so the pool question's window keeps a cross-table bot's block step (at the C1b playtest's Creeping Sabotage Viktor
-  weighed it); the rulebook: a card without Ⓓ is undirected. Two cardfx gaps first: Inside Dirt's Ⓓ has no `dir`, Revelations'
-  sits inside `fx`. [the 11.11 round] · human · null becomes false once every Ⓓ of KRCG's text is a `dir` (a check beside the
+  weighed it); the rulebook: a card without Ⓓ is undirected. Two cardfx gaps first: Inside Dirt's `dir` sits on the row, not its
+  mode, and Revelations' inside `fx`. [the 11.11 round] · human · null becomes false once every Ⓓ of KRCG's text is a `dir` (a check beside the
   compiler's).
 - **11.15 A reaction card's line drops the pool question's answer** -- `_pqAnswer` drops an answer once the short-term memory has
   moved on (`q.obs !== this._obs`; the owner's decision A of 15 Sep: the next action overwrites it), and any play line replaces
