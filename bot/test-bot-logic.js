@@ -17139,16 +17139,29 @@ async function connectWithRetry(client, tries = 30){
         const stakes = hand => { const { u, v, av } = mkA(hand, 'l2'); u.tally = { mode: 'block', a: 0, b: 1 }; let ctx = null; const dec = u.decide.bind(u);
           u.decide = (q, c) => { if(q === 'spend-stealth'){ ctx = c; return { spend: false, tag: 'probe' }; } return dec(q, c); };
           const st = u._bestStealthFor(v, av.played, 2); u._stealthFirstLook('Viktor', av, { contested: true }, st); return ctx ? ctx.stakes : null; };
+        const second = hand => { const { u, av } = mkA(hand, 'l3'); u.tally = { mode: 'block', a: 0, b: 1 }; u._ask = { contested: true }; let ctx = null; const dec = u.decide.bind(u);
+          u.decide = (q, c) => { if(q === 'spend-stealth'){ ctx = c; return { spend: false, tag: 'probe' }; } return dec(q, c); };
+          u._stealthSecondLook(); return ctx ? ctx.stakes : null; };
+        const keepOf = (hand, cm) => { const { u, v, av } = mkA(hand, 'l5'); if(cm) u._combatMind = () => true; const st = u._bestStealthFor(v, av.played, 2); return st ? st.name : null; };
+        const hidden = () => { const { u, v, av } = mkA(['C1b Test Pump', 'Bonding', 'Lost in Crowds', 'Conditioning'], 'l4'); u.fx.lib['C1b Test Pump'] = { t: ['mod'], modes: [{ at: null, fx: { bleed: 3 } }] };
+          const st = u._bestStealthFor(v, av.played, 2); return st ? st.name : null; };   // a non-limited +3 (a stub: no printed one is that large) is the best modifier in hand and must not hide Conditioning's limited +3
         const got = { vn: !!vn, withCond: pickOf(['Bonding', 'Lost in Crowds', 'Conditioning']), withCond2: pickOf(['Lost in Crowds', 'Bonding', 'Conditioning']),
-                      noCond: pickOf(['Lost in Crowds', 'Bonding']), noCond2: pickOf(['Bonding', 'Lost in Crowds']), stakesBond: stakes(['Bonding', 'Conditioning']), stakesLic: stakes(['Lost in Crowds', 'Conditioning']) };
-        ok(got.vn && got.withCond === 'Lost in Crowds' && got.withCond2 === 'Lost in Crowds' && got.noCond === 'Bonding' && got.noCond2 === 'Bonding' && got.stakesBond === 2 && got.stakesLic === 4,
-           '188l at +1 stealth Lost in Crowds leaves the slot to Conditioning (+3), and Bonding [DOM] wins without it, in either hand order; the spend’s stakes: Bonding with Conditioning 1 + 1 (Conditioning refused), Lost in Crowds with it 1 + 3 (got ' + JSON.stringify(got) + '; the round’s first builds took the first card in hand and counted Conditioning after Bonding)'); }
+                      noCond: pickOf(['Lost in Crowds', 'Bonding']), noCond2: pickOf(['Bonding', 'Lost in Crowds']), stakesBond: stakes(['Bonding', 'Conditioning']), stakesLic: stakes(['Lost in Crowds', 'Conditioning']),
+                      secondBond: second(['Bonding', 'Conditioning']), secondLic: second(['Lost in Crowds', 'Conditioning']), hidden: hidden(),
+                      spyLast: keepOf(['Spying Mission', 'Bonding', 'Conditioning']), spyLast2: keepOf(['Bonding', 'Spying Mission', 'Conditioning']),
+                      dualKept: keepOf(['Swallowed by the Night', 'Bonding', 'Conditioning'], true), dualKept2: keepOf(['Bonding', 'Swallowed by the Night', 'Conditioning'], true) };
+        ok(got.vn && got.withCond === 'Lost in Crowds' && got.withCond2 === 'Lost in Crowds' && got.noCond === 'Bonding' && got.noCond2 === 'Bonding' && got.stakesBond === 2 && got.stakesLic === 4 &&
+           got.secondBond === 2 && got.secondLic === 4 && got.hidden === 'Lost in Crowds' && got.spyLast === 'Bonding' && got.spyLast2 === 'Bonding' && got.dualKept === 'Bonding' && got.dualKept2 === 'Bonding',
+           '188l at +1 stealth Lost in Crowds leaves the slot to Conditioning (+3), and Bonding [DOM] wins without it, in either hand order; the spend’s stakes at both looks: Bonding with Conditioning 1 + 1 (Conditioning refused), Lost in Crowds with it 1 + 3; a larger non-limited modifier does not hide the limited one; and the keep rules outrank the slot: Spying Mission still goes last (D-60), Swallowed by the Night is kept in a combat mind (D-24, O-8), Bonding spent instead (got ' + JSON.stringify(got) + '; the round’s first builds took the first card in hand and counted Conditioning after Bonding)'); }
 
       // m) the egress review: the block decision counts Corpse Balloon [VIC]'s +1 during a directed action, as the pick does
       { const vn = pick8(c => sup8(c.disc, 'vic') && !has8(c.disc, 'aus')), u = mk8(), v = V8('m1', vn, 4); const cb = { id: 'cb2', name: 'Corpse Balloon', kind: 'lib', zone: 'ready', host: 'm1' };
         v.attached = ['cb2']; u.board = [v, cb]; u.hand = [];
-        const got = { vn: !!vn, dir: u.interceptPotential(null, { kind: 'bleed', who: 'Viktor', actingVampName: 'Someone' }), und: u.interceptPotential(null, { kind: 'undirected', who: 'Viktor', actingVampName: 'Someone' }) };
-        ok(got.vn && got.dir === 1 && got.und === 0, '188m the block decision reads Corpse Balloon’s +1 intercept during a directed action and none during an undirected one, as the pick and the tally do (got ' + JSON.stringify(got) + '; the first build read 0: _equipIntercept without the action)'); }
+        const vl = pick8(c => sup8(c.disc, 'vic') && has8(c.disc, 'ani') && !has8(c.disc, 'aus')), u2 = mk8(), w = V8('m3', vl, 4, { locked: true }); const cb2 = { id: 'cb4', name: 'Corpse Balloon', kind: 'lib', zone: 'ready', host: 'm3' };
+        w.attached = ['cb4']; u2.board = [w, cb2]; u2.hand = ['Guard Dogs'];   // the locked route: no unlocked body, Guard Dogs [ani] unlocks this one on a bleed at me
+        const got = { vn: !!vn, vl: !!vl, dir: u.interceptPotential(null, { kind: 'bleed', who: 'Viktor', actingVampName: 'Someone' }), und: u.interceptPotential(null, { kind: 'undirected', who: 'Viktor', actingVampName: 'Someone' }),
+                      locked: u2.interceptPotential(null, { kind: 'bleed', who: 'Viktor', actingVampName: 'Someone' }) };
+        ok(got.vn && got.vl && got.dir === 1 && got.und === 0 && got.locked === 1, '188m the block decision reads Corpse Balloon’s +1 intercept during a directed action and none during an undirected one, as the pick and the tally do, on a ready body and on the locked route (got ' + JSON.stringify(got) + '; the first build read 0: _equipIntercept without the action)'); }
     }
 
 

@@ -2008,9 +2008,12 @@ class Bot {
         /* v0.6.244 (C1b, D-148): at the same stealth the mode that adds its bleed wins ('+1 stealth and +1 bleed (limited)': Bonding [DOM], Subversion
            [CEL], Fata Morgana [CHI], Virtuosa [mel]), within a card or across cards, unless a limited modifier in hand would use the action's slot for
            more (Conditioning after the blocks): then that mode loses to a card that leaves the slot free. val: the bleed added, -1 for a slot that
-           costs more than it adds, 0 for none; the older tie-breaks below decide between equal vals. */
+           costs more than it adds, 0 for none. The owner's keep rules outrank it (the egress review, pass 2): a card kept at a tie -- Spying
+           Mission goes last (D-60), a combat dual is kept in a combat mind (O-8) -- is never spent to spare the slot; the older tie-breaks below
+           decide whenever either side is one, and between equal vals. */
         const val = mb > 0 ? (this._limitedSlotWorthMore(vamp, played, h, mb) ? -1 : mb) : 0;
-        const eqS = !!best && typeof st === 'number' && st === best.s && best.idx != null, bval = eqS ? (best.val | 0) : 0;
+        const kept = (kl, cb) => !!kl || (!!cb && this._combatMind());
+        const eqS = !!best && typeof st === 'number' && st === best.s && best.idx != null && !kept(keepLast, hasCombat) && !kept(best.keepLast, best.combat), bval = eqS ? (best.val | 0) : 0;
         const moreBleed = eqS && val > bval, lessBleed = eqS && val < bval;
         if(typeof st === 'number' && this._modeUsableBy(mo, vamp) && this._actCondOk(h.e, mo, bl) && !lessBleed && (!best || st > best.s || moreBleed || (st === best.s && ble && this.o.riderTie !== 0 && best.idx === idx && !best.blockedLockEnd) || (st === best.s && this._combatMind() && best.combat && !hasCombat) || (st === best.s && best.keepLast && !keepLast && !(this._combatMind() && hasCombat && !best.combat)))){
           best = { idx, name: h.name, s: st, cost: pB ? { blood: pB } : null, combat: hasCombat, keepLast, val };
