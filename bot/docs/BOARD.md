@@ -25,7 +25,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
   `stealth` / `actStealth`, `intercept`, `bleed` over the whole library, `cardfx-exact.json`. Next C1b (below), the bots' first
   readers of a human's play (their rounds of their own, D-132), then C2 (combat), then the rest of §11.4's horizon; parallel
   readers of the differing cards against KRCG's text, a separate reviewer. C's riders: the title family; the ledger's grade column (spec §11.10);
-  Hunting the Quarry (`specs/spec-sweep-pilot-2026-11-20.md` §3.3). The problems the sweep finds, and its earlier riders, are in
+  Hunting the Quarry (`history/specs/spec-sweep-pilot-2026-11-20.md` §3.3). The problems the sweep finds, and its earlier riders, are in
   `SWEEP-REGISTER.md` (D-135; below). **D**, the starters' remainder where a starter needs it, with its strategy baseline.
   Crypt waves (D-108): B = the rest by class, the 13 partial copies first. A deck joins the menu by D-108; before the deck
   count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares them). The root README credits
@@ -38,7 +38,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
 - **Reads the bench round left** (D-118): my referendums' block rate at the table (proposal 2); a stealth bleeder read from
   its deck (proposal 7's loss); `keyLast`'s hold with two political cards; `engineW` only while no stock engine of mine is
   ready; the Ball's wait by expected payoff against punishment and risk (the owner, 17 Nov). *Done when* built and benched, or
-  ruled out. Docs: RULINGS D-118, O-43; `specs/spec-bench-round-2026-11-15.md`.
+  ruled out. Docs: RULINGS D-118, O-43; `history/specs/spec-bench-round-2026-11-15.md`.
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
   card only another seat held, a planted leak the positive control; `_twdExpect` agrees across observers), flip counts on `decide`
   rows, the knob registry (`KNOBS`: every decision knob with a 0-path, persona thresholds as overlays), and the off-by-default knobs
