@@ -16,28 +16,26 @@ Scripts: `tools/setup.sh` (KRCG's data, zero-vtes at its pin), `tools/gates.sh` 
 one where it keeps a big read out of the lead's context or where independent eyes are the point (the review).
 
 ## One place for each fact (D-142, D-145)
-- **The round record**, `docs/round-record.json`: a round's figures, written once. `tools/gates.sh` writes it beside its summary,
-  `tools/round.py save` commits it with CI's suite runs and the egress line and renders its copies: STATUS's gates block, the
-  round's CHANGELOG entry's *Gates:* and *Egress:* lines, the PR's gate section (`round.py render pr`). `round.py check`, which
-  `tools/doc-budget.sh` runs, fails when a copy differs: a figure is never typed by hand.
+- **The round record**, `docs/round-record.json`: a round's figures, written once by `tools/gates.sh`; `tools/round.py save` commits
+  it with CI's suite runs and the egress line and renders its copies (STATUS's gates block, the CHANGELOG entry's *Gates:* and
+  *Egress:* lines, the PR's gate section); `round.py check`, in `tools/doc-budget.sh`, fails on a copy that differs.
 - **STATUS** holds the state: its versions and deploy blocks are generated (`round.py status`), Next and Not yet consumed are
   written by hand.
 - **The CHANGELOG entry** says what the round changed and why, on its template, at most 1,500 bytes (`round.py check`).
 - **The round's report**, `docs/reports/REPORT-<round>-<date>.md`, holds the details: what was built and measured, the
   predictions registered and the last round's read (D-93), the zero-vtes readings when the round read cards (D-144 (3)). A
   tool's output that a later round reads (a readers' verdicts, say) is a data file beside it, from the start.
-- **The PR body** holds what the round needs from the owner, a few lines on the change, the rendered gate section and the unsure
-  items. **claude/HANDOFF.md** (the project's) holds only what is nowhere else: Check first and the chat's own notes.
+- **The PR body**: what the round needs from the owner, a few lines on the change, the gate section, the unsure items.
+  **claude/HANDOFF.md** (the project's): only what is nowhere else, Check first and the chat's own notes.
 - **A spec** changes only when its plan changes, never to record results; a delivered round spec moves to `docs/history/specs/`.
 None restates another: a copy written by hand is a stale-doc finding waiting to happen.
 
 ## Sessions
 One round a chat. Start: the bootstrap (CLAUDE.md), `bash tools/setup.sh`, a branch. The sandbox stops background work a few
-minutes after a reply ends: a long run finishes inside the turn (detached and polled, never under a foreground `timeout` that can
-cut a green run) or runs in CI. A series or a bench lives in scratch, never in `bot/` (a 240-match sim is ~120 MB); `pkill -f`
-never (kill by PID); third-party data is fetched, never committed. End: STATUS and the PR are the handoff; the claude.ai project
-keeps its instruction, START-HERE-BOTS-CHAT.md, claude/HANDOFF.md (rewritten by the lead with the Projects tool at the end of every
-round) and the owner's reviews of other projects.
+minutes after a reply ends: a long run finishes inside the turn (detached and polled) or runs in CI. A series or a bench lives in
+scratch, never in `bot/`; `pkill -f` never (kill by PID). End: STATUS and the PR are the handoff; the claude.ai project keeps its
+instruction, START-HERE-BOTS-CHAT.md, claude/HANDOFF.md (rewritten by the lead at the end of every round) and the owner's reviews
+of other projects.
 
 ## The round
 1. **Take a board line** (`BOARD.md`), or the owner's instruction; a red daily `bot gates` run on `main` comes first (HOWTO "CI"). Read

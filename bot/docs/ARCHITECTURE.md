@@ -185,13 +185,6 @@ releases beside it: "Shared with main" below.
   another seat's has left the screen; `_floorOn`: a 1.5 s pace, a 10 s ask clock, no clocked tempo with a human), one spokesbot, the debug hand. The arena never sees them
   (paceMs 0 zeroes every beat; bots never operate the hold); the sim's client profile (paceMs 3100) has the beats and the floor.
 
-## Running a game in three commands
-```
-node elysium-bot-sim.js --decks malkavian,tremere,nosferatu,ventrue --seeds 1 --trace /tmp/sim-x      # one seating set, ~1 s a match
-node elysium-bot-arena.js --matches 1 --bots 4 --decks malkavian,tremere,nosferatu,ventrue --start-pool 30 --seed 4003 --trace /tmp/serie-x
-node elysium-bot.js --server ws://HOST:8123 --room R --pass P [--persona expert] [--debug]              # seat one bot at a live table
-```
-
 ## Words a new session meets
 **kör** — the owner's go-ahead word. **§12** — the protocol's section of frozen bot lines (main's). **L12** — the bot's table of parsers
 for those lines. **HB1** — the browser battery (`elysium-bot-diag.html`). **R1–R4** — the rounds of the 14 Oct play-test review.

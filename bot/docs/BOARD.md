@@ -82,8 +82,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
 
 ## Known, not built (bot side)
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only
-  the merged decks' share; a few decks count twice. A v5 rebuild (scratch: 4,709 decks, Magnum under 10) drops a name the bot
-  records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
+  the merged decks' share; a few decks count twice. A v5 rebuild drops a name the bot records for two cards
+  (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
   (or they carry every cardfx name), every deck's library names hit a key, and the rebuild ships with a sim footprint.
   Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
 - **Hand names out of the console outside debug** (main, 11 Nov: the security plan's item 6): an online host can read a bot's
