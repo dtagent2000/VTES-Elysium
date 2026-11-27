@@ -13366,6 +13366,7 @@ async function connectWithRetry(client, tries = 30){
         const before = u.hand.includes('Perfect Paragon');
         u._noteBlockAttempt('Nik Sikko', false, 2);   // the attempt line names the minion
         const played = !u.hand.includes('Perfect Paragon'), aAfter = u._actStealthRaw;
+        u._ask.contested = false; u._ask.attemptBy = null;   // v0.6.245 (11.11, one attempt at a time): Viktor's attempt has its failed verdict first -- a shout while it stood is not taken up (section 189f)
         u._lastBlockerAt -= 1000; u._onBlockAttempt('Nora'); const aShout = u._actStealthRaw;   // Nora's shout a second later, no line yet
         ok(before && played && aAfter === 1 && aShout === 0, '173b2 a bot blocker’s counter before its line: the name brings the look (Paragon +1); a later shout takes it off (got ' + JSON.stringify({ before, played, aAfter, aShout, L: logs(u) }) + ')'); }
 
