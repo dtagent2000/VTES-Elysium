@@ -141,19 +141,29 @@ is a handoff first. Bot-to-bot gaps are marked.
 - **4.21 A human's Carrion Crows** — the environmental damage of a human's Crows (1R [ani], 2R [ANI], each round during normal strike
   resolution) is not applied to the bot's minion: the bot narrates the strike alone and does not read a later change on the counter.
   Not 12.3 (the bot's own prevention against Crows). [Claude's playtest game 2, 25 Nov, 1474.3 and 2817; the 26 Nov handoff's
-  check] · human · a reader of a human's Crows play line (its level) that adds the damage in each round's strike resolution.
+  check; the C1b playtest, 27 Nov, at [ANI], 4237.8–4264.0] · human · a reader of a human's Crows play line (its level) that adds
+  the damage in each round's strike resolution.
 - **4.22 A human's The Dowager (+1 intercept during directed actions)** — at Claude's playtest table the printed +1 was not counted
   on the block counter (game 2, the panel's point 4: Claude's own Dowager, in the human's Nosferatu starter, blocking). The
-  bot blocker writes its own crypt intercept (`_cryptIntercept`); which side missed it at that table is not traced. [Claude's
-  playtests, 25 Nov; D-111 (6), BOARD's measurement debt] · human · trace it at the next human table: a bot's Dowager blocking a
-  human's directed action, and a human's Dowager blocking a bot's (the bot could seed a human blocker's printed intercept into an
-  untouched counter, as it seeds a human actor's stealth).
+  bot blocker writes its own crypt intercept (`_cryptIntercept`); which side missed it at that table is not traced. The human
+  blocker's half is traced with two other permanents: after the human's blocks the counter held none of Guardian Angel's +1 (a
+  bleed at the human) or Raven Spy's +1 until the human set it (3639.9 a=1 b=0; 3868.2; 4503.6): neither the client nor a bot
+  seeds it. [Claude's playtests, 25 Nov; the C1b playtest, 27 Nov; D-111 (6), BOARD's measurement debt] · human · trace the
+  bot's half at the next human table (a bot's Dowager blocking a human's directed action); the bot could seed a human blocker's
+  printed and permanent intercept into an untouched counter, as it seeds a human actor's stealth.
 - **4.23 A human's Pass at the strike step** — the bot counts it as no strike (0 damage), but the rulebook makes the hand strike the
   default: "Each minion chooses their strike … by default from a hand strike" and "The default strike is a hand strike"
   (https://archon.vekn.net/help/rules#choose-strike, #hand-strike). Seen with a second gap: after a human's combat card the bot
   moves to the next step, so the human's next Pass answers one step later (Claude's strike step became a Pass, 2797.6 → 2816.8).
   [Claude's playtest game 2, 25 Nov] · human · a human's Pass, or no strike line by the step's end, reads as a hand strike (the
   minion's strength at close range, nothing at long range); the step waits for the human's answer to its own question.
+- **4.24 A human's hand strike at long range is booked** — the bot's vampire had maneuvered to long (Swallowed by the Night) and
+  takes the human's hand strike for 3 as damage (torpor); "Most strikes are effective only at close range" (rulebook, resolve
+  strike), and the bot's own fist at long deals 0 (`longFist`). [the C1b playtest, 27 Nov, 5717.9 → 5728.4] · human · a human's
+  hand strike (and its boosts) reads as 0 when the range is long, said in the bot's damage line.
+- **4.25 A human's "No" to a block question is not read** — the bot's prompt says `say "block" or "no"`, but the decline parser
+  takes "No" only for a reactions-only question (`No block`, `No reaction` and `Pass` work): the bot waits on. [the C1b playtest,
+  27 Nov, 2343.6 → 2364.5 and 3487.0] · human · read "No" as a decline at a block question too, or the prompt names "Pass".
 
 ## 5. Maneuvers: direction and source
 Which way a maneuver goes, and where a maneuver comes from (a card, equipment, a grant).
@@ -480,6 +490,18 @@ Who may answer an action or a card, and in which window; a line read after its w
   changes, a human who has not passed gets the vote clock again. [w4] · human.
 - **11.10 Frontal Assault's +1 pool and the loss rates** read the prey's pub pushes; Tension in the Ranks can oust a bot outside
   its turn (`_oust`). [w5 §10] · reachable (brujah, banuhaqim, pathcaine).
+- **11.11 A second blocker of an undirected action** — "the prey getting the first opportunity to block", and "a minion can
+  attempt to block as many times as they wish as long as another minion is not already blocking" (rulebook, who may attempt to
+  block). At a human's undirected action both bots attempted: the prey's minion at 1 vs 1, then the predator's, whose counter
+  write (a=0) dropped the action's +1 stealth; both declared the block and two combats ran. At a bot's undirected action the human
+  prey's minion blocked at 1 vs 1, the human's Pass counted as an eligible seat's pass, and the bot predator's minion attempted and
+  took the verdict and the combat. [the C1b playtest, 27 Nov, 529.3–670.4 and 4718.4–4810.0] · human (v0.6.244's 240: of 1,969
+  undirected windows where both eligible bots weighed a block, none had two attempts) · no attempt while a block attempt stands;
+  the predator weighs only after the prey has declined; a human blocker's Pass resolves that blocker's attempt.
+- **11.12 The turn-end note on a human's undirected action** — both eligible bots passed a human's 0-pool undirected action (an
+  employ), the human never said "It resolves", and at the turn's end each bot's note called it a bleed ("an unresolved bleed at
+  me … bleed 0"). [the C1b playtest, 27 Nov, 3077–3083 → 3130.0, 3136.8] · human · the note names the action's kind, and a 0-pool
+  record closes at the last eligible pass with nothing said.
 
 ## 12. Combat's steps
 - **12.1 Additional strikes, v2** — one source a round per side (Quickness [CEL]'s outside-the-limit rider never stacks); no impulse
