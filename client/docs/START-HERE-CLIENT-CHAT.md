@@ -17,11 +17,13 @@ origin/main` before a PR; CI runs it on the PR's added lines.
 
 | What | Version | Where |
 | --- | --- | --- |
-| client | **v2.6.190** (THE PUBLIC REPOSITORY, comments only: where a comment quoted the owner it says the same in our own words, and no player is named; every script's tokens are v2.6.189's but the VERSION line. Before: v2.6.189, THE HANDOFFS ANSWERED, PR #115. Every release since v1.4: `docs/elysium-CHANGELOG.md`) | `client/elysium-vtes-bord.html`, copied to `/` |
-| server | **srv-2.6.54** (THE PUBLIC REPOSITORY, comments only; every token is srv-2.6.53's but the VERSION line. Before: srv-2.6.53, THE SEARCH IS TOLD) | `client/elysium-server.js`, copied to `/` |
-| bot (consumed) | **v0.6.241** beside the suite (consumed at v2.6.189: `docs/handoffs/REPLY-to-bot-2026-11-26-v0.6.241.md`; their public-repository handoff of 26 Nov answered at v2.6.190: `docs/handoffs/REPLY-to-bot-2026-11-27-public-repository.md`) | the 8-file bundle at `/` and in `bot/` — never edited here |
-| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.190 / srv-2.6.54 (the header only: no verb, field or line) | `client/ELYSIUM-PROTOCOL.md` |
-| last gates | client **433/0** (bot v0.6.241 beside, no skips; v2.6.189 and srv-2.6.53 against the new suites 433/0 and 103/0, every test line the same) · acorn's tokens equal but the VERSION strings · dispatch 103/0 · protocol 6/0 · canary 283/0 · endpoint 40/0 · soak `--control` fired · the bot project's hotseat gate in a scratch copy 12/0 · both embed checks · B1 byte-identical · check-versions green incl. the root and `SHA256SUMS` · served-check (after the commit) · public-scan self-test 23/0 and `--diff` clean on the branch | run from `client/` |
+| client | **v2.6.191** (BLOOD ON THE WHEEL, pure client: a key held while scrolling on a card moves blood between it and your pool -- Settings ▸ Table picks the key, Shift by default; two unbound shortcuts do the same; a double-click of the middle button resets the view; bot v0.6.242's guide embedded. Before: v2.6.190, THE PUBLIC REPOSITORY, PR #116. Every release since v1.4: `docs/elysium-CHANGELOG.md`) | `client/elysium-vtes-bord.html`, copied to `/` |
+| server | **srv-2.6.54**, unchanged at v2.6.191 (THE PUBLIC REPOSITORY, comments only; every token is srv-2.6.53's but the VERSION line. Before: srv-2.6.53, THE SEARCH IS TOLD) | `client/elysium-server.js`, copied to `/` |
+| bot (consumed) | **v0.6.242** beside the suite (the bundle's cleanup release, consumed at v2.6.191: `docs/handoffs/REPLY-to-bot-2026-11-27-v0.6.242.md`, which also carries the owner's answer to O-46. Before: v0.6.241, consumed at v2.6.189) | the 8-file bundle at `/` and in `bot/` -- never edited here |
+| protocol | `ELYSIUM-PROTOCOL.md` header v2.6.191 / srv-2.6.54 (the header only: no verb, field or line) | `client/ELYSIUM-PROTOCOL.md` |
+| last gates | client **439/0** (bot v0.6.242 beside, no skips; v2.6.190 against the new suite 432/7: the embed check and the six new tests) · twelve mutations of the new code, each caught · dispatch 103/0 · protocol 6/0 · canary 283/0 · endpoint 40/0 · soak `--control` fired · both embed checks · B1 byte-identical · check-versions green incl. the root and `SHA256SUMS` · public-scan `--diff` clean · headless Chrome with real wheel, key and middle-button events 17/17 (v2.6.190 fails the gestures) | run from `client/` |
+
+**Deploy v2.6.191 (BLOOD ON THE WHEEL, 27 Nov):** purge the client; the server is unchanged (srv-2.6.54). Bot v0.6.242 reached main with its own PR: if `/elysium-bot.js` and `/elysium-cardfx.json` were not purged then, purge them now. If v2.6.190 is not live yet, the one purge covers it (its server restart as below).
 
 **Deploy v2.6.190 + srv-2.6.54 (THE PUBLIC REPOSITORY, 27 Nov):** purge the client; the automated deploy restarts the server
 when it is empty (srv-2.6.54 behaves exactly as srv-2.6.53, so it can also wait for the next restart). The error digest's
@@ -41,7 +43,7 @@ head -40 docs/elysium-learnings.md
 # the bundle beside the suite (gitignored — copy, never commit):
 cp ../elysium-bot.js ../elysium-cardfx.js ../elysium-cardfx.json ../elysium-twd-profile.js ../elysium-twd-profile.json ../elysium-twd-archetypes.js ../elysium-twd-archetypes.json ../START-HERE-BOTS.html .
 node check-versions.js             # must end green: code, doc headers, AND the root == client/ + bot/ gate
-node test-client-logic.js          # 433 passed, 0 failed (with the bundle beside)
+node test-client-logic.js          # 439 passed, 0 failed (with the bundle beside)
 python3 tools/public-scan.py --diff origin/main   # before a PR: no chat quotes, no names of private persons
 ```
 
@@ -84,20 +86,20 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
    The owner merges.
 8. Update this file's version block when a release went out.
 
-## Open right now (27 Nov 2026, after v2.6.190)
+## Open right now (27 Nov 2026, after v2.6.191)
 
-- **Built in v2.6.190 (the public repository, on the owner's go):** the history frozen in the data repo, the rest rewritten
-  in place, the release comments only, the scan in CI (`client/CLAUDE.md` top entry; journal: DET PUBLIKA REPOT). The data
-  repo's pull request with `client-history/` and the words file goes first.
-- **Waiting on the owner (the bot project's questions, nothing to build yet):** O-53 -- the playtest's resolution panel,
-  proposals A–E (the action in one line, 'Waiting for: you' with only the valid answers, an action timeline, a bot referee
-  owns RESOLVE and ×, safe counts made automatic), main's to build after the go-ahead, plus three table questions;
-  O-46 -- a human's window on a bot's master: the 3.1 s beat or a tempo wait.
-- **On the bot side:** their bundle's cleanup release (v0.6.242) brings a new guide to embed; their Help ▸ Bots text for the
-  hub, the ring and the hold; consuming our licence reply (`bot/README.md` → `LICENSE`); their guide's body says 218
-  curated beside its footer's 221. After v2.6.190 they refresh their read-only copies in `bot/` (their scan skips them
-  until then).
-- **Not run this round:** a browser (no behaviour changed; the token comparison is the proof).
+- **Built in v2.6.191 (on the owner's go):** the move between a card's blood and your pool on a key + scroll, its two shortcuts, the
+  middle button's double-click; bot v0.6.242 consumed (`client/CLAUDE.md` top entry; journal: BLOD PÅ HJULET). Built in v2.6.190:
+  the public repository (the data repo's pull request with `client-history/` and the words file goes first).
+- **O-46 answered by the owner (27 Nov):** no tempo wait for a bot's master. The beat stays as it is, a silent window: a player who
+  holds Sudden Reversal says Hold on. Nothing to build on either side; told to the bot project in the v0.6.242 reply.
+- **Waiting on the owner:** O-53 -- the playtest's three table questions and the resolution panel's proposals A–E (the action in
+  one line, the answers that are valid now as buttons, an action timeline, a bot referee owns RESOLVE and ×, safe counts made
+  automatic), main's to build after the go-ahead.
+- **On the bot side:** their Help ▸ Bots text for the hub, the ring and the hold; consuming our licence reply (`bot/README.md` →
+  `LICENSE`); refreshing their read-only copies in `bot/` (client v2.6.191, the PROTOCOL header; the server is unchanged).
+- **Not run this round:** a real Windows or macOS mouse (headless Chrome's Shift + wheel stays vertical, so the horizontal shape
+  Chrome sends on Windows was sent by hand), Firefox, Safari, a touchpad (with Ctrl as the key, a pinch over a card moves blood).
 
 ## Carried from before (as they stood on 26 Nov; some may have been settled in chat since -- check before building)
 
@@ -105,6 +107,8 @@ The full gate list and the delivery ritual: `client/CLAUDE.md` → "Verification
   kept on the server, that the host can rewind to (proposed as a live rewind for everyone); C -- the one-button transfer
   (with the helpers on and the phase bar on Influence, scrolling or Ctrl+clicking an uncontrolled vampire already moves
   pool to blood and counts the transfer; we asked which setup they played in).
+  (v2.6.191: Shift + scroll on a vampire moves blood between it and the pool in any phase and without the helpers, and two
+  shortcuts do the same; that may be the answer to C.)
 - **The tutorial, round 2 (offered after v2.6.186):** a chapter replayed from the picker resumes through `startHotseat`
   (turn 1, the first seat acting), so Interacting with opponents' target and hand-off steps do not fit a replay, and the
   globes come back at their default spots; short mentions of what the tour does not know yet (Table layout, bot seats and

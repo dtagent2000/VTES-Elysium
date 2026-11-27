@@ -6914,7 +6914,7 @@ test('v2.6.181 the middle button pans the table from anywhere (the owner: a midd
     T.delete('l3mode');
     { const e = ev({}); A.midPanStart(e); assert(!e.prevented && !e.stopped && !A._mpan, 'L2 and a seat visit: the press is left alone'); }
     eq(A.midTableBtn(ev({ type: 'mousedown' })), false, '...and so is its mousedown');
-    T.add('l3mode');
+    T.add('l3mode'); A._mclick = null;   // v2.6.191: the helicopter press above, released where it went down, and this one would be a double-click (the reset) -- this test is about the pan
     A.midPanStart(ev({})); const before = JSON.stringify(A.l3pan);
     A.midPanMove(ev({ type: 'pointermove', clientX: 50, clientY: 0 })); eq(A._mpan.lx, 50, 'a move in the helicopter view (its frame not drawn yet)');
     T.delete('l3mode');
@@ -7773,6 +7773,168 @@ testB('v2.6.189 LIVE: a REAL bot (v0.6.237+) bled by a human with a bounce card 
     const after = await until(() => { const s = A.botPanelRead(b); return s.step !== 'resolve-late' ? s : null; }, 5000);
     assert(after, 'and it leaves the rung');
   } finally { A.botPanelOpen = false; delete A.hotBots[2]; b.close(); A.localTable = false; HB.reset([]); A.MP_HANDLERS.log = log0; A.MP_HANDLERS.chat = chat0; A.net.roster = []; A.net.hot = null; if (fk) fk.done(); }
+});
+
+/* ---------- v2.6.191: BLOOD ON THE WHEEL -- the move's key + scroll, its shortcuts, the middle button's double-click (27 Nov 2026) ---------- */
+function xfTable(A){   // a fresh table: pool 10, a ready vampire with 2 blood, an uncontrolled one, a hand card; toasts recorded
+  A.clearTable({});
+  const s = A.state; s.pool = 10; s.phase = -1; s.turn = 5;
+  const v = A.makeCard('Wheel Vampire', 'crypt'); A.move(v, 'ready', { x: 120, y: 60, faceDown: false }); v.blood = 2;
+  const u = A.makeCard('Hidden One', 'crypt'); A.move(u, 'uncontrolled', { x: 30, y: 20, faceDown: true }); u.blood = 0;
+  const h = A.makeCard('Hand Card', 'lib'); A.move(h, 'hand', {});
+  const toasts = []; A.toast = m => toasts.push(String(m));
+  return { v, u, h, toasts };
+}
+function wev(o){ return Object.assign({ type: 'wheel', deltaY: 0, deltaX: 0, deltaMode: 0, shiftKey: false, ctrlKey: false, metaKey: false, altKey: false, clientX: 0, clientY: 0, preventDefault(){}, stopPropagation(){} }, o); }
+function tick(A, c, o){ c.wlast = 0; A.cardWheel(c, wev(o)); }   // one wheel notch, past the 160 ms resistance
+
+test('v2.6.191 the move\'s key + scroll on a card moves blood between the card and your pool, so one side gains what the other loses -- up from the pool, down back; Shift\'s horizontal wheel (deltaY 0, the step in deltaX) reads the same; the key held, the token under the pointer does not matter; plain scroll is untouched; an empty pool or a card with no blood stops it with a toast; one undo point per burst', () => {
+  const A = loadClient(CLIENT); const { v, h, toasts } = xfTable(A);
+  if (typeof A.cardWheel !== 'function' || typeof A.poolBloodMove !== 'function') throw new Error('cardWheel / poolBloodMove missing (before v2.6.191)');
+  eq(A.conv.xferWheel, 'shift', 'Shift by default');
+  const u0 = A.undoStack.length;
+  tick(A, v, { shiftKey: true, deltaY: -100 });
+  eq(v.blood, 3, 'Shift + scroll up: +1 blood on the card'); eq(A.state.pool, 9, '...and -1 pool');
+  tick(A, v, { shiftKey: true, deltaY: 0, deltaX: -100 });
+  eq(v.blood, 4, 'Chrome and macOS send Shift + wheel as horizontal (deltaY 0): up is still up'); eq(A.state.pool, 8);
+  tick(A, v, { shiftKey: true, deltaY: 0, deltaX: 100 });
+  eq(v.blood, 3, 'and down is down (v2.6.190 read deltaY alone: every Shift notch counted down)'); eq(A.state.pool, 9);
+  eq(A.undoStack.length, u0 + 1, 'three notches, one undo point');
+  A.cardWheel(v, wev({ shiftKey: true, deltaY: -100 })); eq(v.blood, 3, 'the 160 ms resistance holds for the move too');
+  tick(A, v, { deltaY: -100 }); eq(v.blood, 4, 'plain scroll: the token under the pointer, as before'); eq(A.state.pool, 9, '...and the pool stays');
+  tick(A, v, { shiftKey: true, deltaY: 0, deltaX: 0 }); eq(v.blood, 4, 'a notch with no step moves nothing'); eq(A.state.pool, 9);
+  A.state.pool = 0; tick(A, v, { shiftKey: true, deltaY: -100 });
+  eq(v.blood, 4, 'an empty pool: nothing moves'); eq(A.state.pool, 0); assert(toasts.some(t => /^Your pool is empty\.$/.test(t)), 'and a toast says so: ' + JSON.stringify(toasts));
+  A.state.pool = 3; v.blood = 0; tick(A, v, { shiftKey: true, deltaY: 100 });
+  eq(v.blood, 0, 'no blood on the card: nothing moves'); eq(A.state.pool, 3); assert(toasts.some(t => /has no blood to move\.$/.test(t)), 'a toast names the card: ' + JSON.stringify(toasts));
+  eq(A.poolBloodMove(h, 1), false, 'a card in the hand takes no blood'); eq(A.state.pool, 3);
+  eq(A.poolBloodMove(v, 0), false, 'no step, no move');
+  eq(A.wheelStep(wev({ deltaY: -3 })), 1); eq(A.wheelStep(wev({ deltaY: 7 })), -1); eq(A.wheelStep(wev({ deltaX: 5 })), -1); eq(A.wheelStep(wev({})), 0);
+});
+
+test('v2.6.191 Settings > Table picks the move\'s key -- Shift, Ctrl (Cmd on a Mac), Alt or Off; the other keys are plain scroll then; while the key is held the felt and the pool globes leave the wheel alone, except with Ctrl (a touchpad\'s pinch keeps zooming the felt)', () => {
+  const A = loadClient(CLIENT); const { v } = xfTable(A);
+  const H = o => A.xferWheelHeld(wev(o)), S = o => A.xferWheelSwallow(wev(o));
+  A.conv.xferWheel = 'shift'; eq(H({ shiftKey: true }), true); eq(H({ ctrlKey: true }), false); eq(H({ altKey: true }), false); eq(S({ shiftKey: true }), true, 'Shift: the felt and the globes do nothing');
+  A.conv.xferWheel = 'ctrl'; eq(H({ ctrlKey: true }), true); eq(H({ metaKey: true }), true, 'Cmd too'); eq(H({ shiftKey: true }), false); eq(S({ ctrlKey: true }), false, 'Ctrl: the pinch still zooms');
+  tick(A, v, { shiftKey: true, deltaY: -100 }); eq(v.blood, 3, 'with Ctrl chosen, Shift + scroll is plain scroll'); eq(A.state.pool, 10);
+  tick(A, v, { ctrlKey: true, deltaY: -100 }); eq(v.blood, 4); eq(A.state.pool, 9, 'Ctrl + scroll moves');
+  A.conv.xferWheel = 'alt'; eq(H({ altKey: true }), true); eq(S({ altKey: true }), true); eq(H({ shiftKey: true }), false);
+  A.conv.xferWheel = 'off'; eq(H({ shiftKey: true }), false); eq(H({ ctrlKey: true }), false); eq(H({ altKey: true }), false); eq(S({ shiftKey: true }), false, 'Off: the wheel is what it was');
+  tick(A, v, { shiftKey: true, deltaY: -100 }); eq(v.blood, 5); eq(A.state.pool, 9, 'Off: Shift + scroll is plain scroll');
+  A.conv.xferWheel = 'shift';
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  const felt = html.slice(html.indexOf("board.addEventListener('wheel'"), html.indexOf('let _l4PanPrev=0;'));
+  assert(felt.indexOf('if(xferWheelSwallow(e)) return;') > felt.indexOf('e.preventDefault();') && felt.indexOf('if(xferWheelSwallow(e)) return;') < felt.indexOf('l3zoomTo('), 'the felt: refused its default, then no zoom while the key is held');
+  assert(html.indexOf("$('#dockPool')?.addEventListener('wheel',e=>{ e.preventDefault(); e.stopPropagation(); if(xferWheelSwallow(e)) return;") > 0, 'the dock\'s pool globe');
+  assert(html.indexOf("e.preventDefault(); e.stopPropagation();   // v2.6.103: see #dockPool above\n  if(xferWheelSwallow(e)) return;") > 0, 'the pool globe');
+  assert(html.indexOf("el.addEventListener('wheel',e=>{ e.preventDefault(); e.stopPropagation(); if(xferWheelSwallow(e)) return; const now=Date.now(); if(now-state.wlast<160) return; state.wlast=now; bumpPool(") > 0, 'the Classic board\'s own globe');
+  eq(A.CONV_DEFAULTS.xferWheel, 'shift'); assert(A.SETTINGS_CONV_KEYS.includes('xferWheel'), 'in the profile: (custom) sees it, Reset restores it');
+  assert(/<select id="convXferWheel"><option value="shift">Shift \+ scroll<\/option><option value="ctrl">Ctrl \+ scroll<\/option><option value="alt">Alt \+ scroll<\/option><option value="off">Off<\/option><\/select>/.test(html), 'the row');
+  const m = html.slice(html.indexOf('<div class="modal" id="settingsModal">'), html.indexOf('<div class="modal" id="logModal">'));
+  const tab = m.slice(m.indexOf('>Table</div>'), m.indexOf('>Play helpers</div>'));
+  assert(tab.indexOf('id="convXferWheel"') > tab.indexOf('id="convBotRingHold"') && tab.indexOf('id="convXferWheel"') < tab.indexOf('set-advbtn'), 'in Table, beside the bot ring, before the Advanced fold');
+  assert(html.indexOf("$('#convXferWheel')?.addEventListener('change',e=>{ const v=e.target.value; conv.xferWheel=(v==='ctrl'||v==='alt'||v==='off')?v:'shift'; saveConv(); buildMouseRows(); });") > 0, 'a change is saved, and the fixed-controls row follows it');
+  assert(html.indexOf("if(s.xferWheel==='shift'||s.xferWheel==='ctrl'||s.xferWheel==='alt'||s.xferWheel==='off') conv.xferWheel=s.xferWheel;") > 0 && html.indexOf("if(c.xferWheel==='shift'||c.xferWheel==='ctrl'||c.xferWheel==='alt'||c.xferWheel==='off') conv.xferWheel=c.xferWheel;") > 0, 'read back at start, and from an imported settings file');
+  assert(html.indexOf("{ const _xw=$('#convXferWheel'); if(_xw) _xw.value=conv.xferWheel; }") > 0, 'the dialog shows the stored choice');
+  A.conv.xferWheel = 'alt'; eq(JSON.stringify(A.settingsDiff(A.settingsProfile(), A.settingsDefaults('full'))), JSON.stringify(['conv.xferWheel']), 'another key is a deviation Reset undoes');
+  const row = A.MOUSE_FIXED.find(r => typeof r[0] === 'function'); assert(row, 'Fixed controls lists the move');
+  eq(row[0](), 'Alt + scroll on a card', 'its chip follows the setting'); A.conv.xferWheel = 'off'; eq(row[0](), 'Off (Settings ▸ Table)'); A.conv.xferWheel = 'shift'; eq(row[0](), 'Shift + scroll on a card');
+  A.buildMouseRows();   // a computed chip paints without a throw
+  assert(html.indexOf('<kbd>Shift+scroll</kbd> on a card = move blood between it and your pool (Settings ▸ Table picks the key)') > 0, 'the ? controls name it');
+});
+
+test('v2.6.191 in the Influence phase with the helpers on, the move on an uncontrolled vampire IS the helper\'s transfer -- the pool moves once, the transfer is counted, exactly as plain scroll there; an empty pool refuses it before the helper', () => {
+  const A = loadClient(CLIENT); const { u, toasts } = xfTable(A);
+  A.net.helperPolicy = null; A.conv.tournament = false; A.helper.on = true; A.helper.warn = true;
+  A.state.phase = 3; A.state.phaseActs.influence = 4; A.state.phaseUsed.influence = 0;
+  eq(A.phaseMax(3), 4, 'four transfers this turn');
+  tick(A, u, { shiftKey: true, deltaY: -100 });
+  eq(u.blood, 1, '+1 blood'); eq(A.state.pool, 9, '-1 pool, once (not twice)'); eq(A.state.phaseUsed.influence, 1, 'one transfer counted');
+  tick(A, u, { deltaY: -100 });
+  eq(u.blood, 2); eq(A.state.pool, 8); eq(A.state.phaseUsed.influence, 2, 'plain scroll there does the same');
+  A.state.pool = 0; tick(A, u, { shiftKey: true, deltaY: -100 });
+  eq(u.blood, 2, 'an empty pool: the move refuses'); eq(A.state.phaseUsed.influence, 2, 'nothing counted'); assert(toasts.some(t => /^Your pool is empty\.$/.test(t)));
+  A.state.pool = 5; A.helper.on = false;
+  tick(A, u, { shiftKey: true, deltaY: -100 });
+  eq(u.blood, 3, 'helpers off: still a move'); eq(A.state.pool, 4, 'the pool moves with it (plain scroll would not)'); eq(A.state.phaseUsed.influence, 2, 'and no transfer is counted');
+});
+
+test('v2.6.191 two shortcuts move blood too, unbound (+ and - can go there instead of the plain adjust) -- the selected card first, as + and - read it, else the card under the pointer, else a toast; binding + to one takes it from Pool +1', () => {
+  const A = loadClient(CLIENT); const { v, u, h, toasts } = xfTable(A);
+  const by = {}; for (const a of A.ACTIONS) by[a.id] = a;
+  if (!by.xferIn || !by.xferOut) throw new Error('xferIn / xferOut missing (before v2.6.191)');
+  for (const id of ['xferIn', 'xferOut']) { eq(by[id].grp, 'adv', id + ' sits in Shortcuts, advanced'); eq(by[id].def, '', id + ' starts unbound'); eq(A.keyBinds[id], '', id + ' unbound on a fresh install'); }
+  assert(/^Move 1 pool → blood/.test(by.xferIn.label) && /^Move 1 blood → pool/.test(by.xferOut.label), 'the labels say the direction');
+  eq(A.ACTIONS.filter(a => a.grp === 'basic').length, 8, 'the eight basic rows stay eight (v2.6.88)');
+  eq(A.keyBindsReconcile({ poolPlus: '+', poolMinus: '-' }).length, 0, 'a stored set of keys keeps every binding: the newcomers have no default to clash');
+  const chip = { classList: { add(){}, remove(){} }, textContent: '' }, ke = k => ({ key: k, preventDefault(){}, stopImmediatePropagation(){} });
+  A.startListen(chip, by.xferIn); A.captureKey(ke('+'));
+  eq(A.keyBinds.xferIn, '+', 'bound by hand'); eq(A.keyBinds.poolPlus, '', 'Pool +1 gave + up (one key, one action)');
+  A.startListen(chip, by.xferOut); A.captureKey(ke('-')); eq(A.keyBinds.xferOut, '-'); eq(A.keyBinds.poolMinus, '');
+  const kd = k => A.keyDispatch({ key: k, target: { matches: () => false }, preventDefault(){} });
+  A.selectOnly(v); A._lastBoardHover = u;
+  eq(kd('+'), true, 'the key runs'); eq(v.blood, 3, 'the selected card wins over the one under the pointer'); eq(A.state.pool, 9);
+  eq(kd('-'), true); eq(v.blood, 2); eq(A.state.pool, 10, 'and back');
+  A.state.selected.clear(); kd('+'); eq(u.blood, 1, 'nothing selected: the card under the pointer'); eq(A.state.pool, 9);
+  A._lastBoardHover = h; const n0 = toasts.length; kd('+'); eq(A.state.pool, 9, 'a hand card under the pointer is no target');
+  A._lastBoardHover = null; kd('-'); eq(A.state.pool, 9);
+  assert(toasts.slice(n0).length === 2 && toasts.slice(n0).every(t => /^Select a card in play, or point at one, to move blood between it and your pool\.$/.test(t)), 'each says what it needs: ' + JSON.stringify(toasts.slice(n0)));
+});
+
+testA('v2.6.191 one log line per scroll, when the scrolling is done -- XFER_LOG_MS after the last notch, a slow scroll included; the board goes to the table at once', async () => {
+  const A = loadClient(CLIENT); const { v } = xfTable(A); const L = captureLog(A);
+  const moved = () => L.text().filter(t => / blood (from|to) your pool \(pool → \d+\)\.$/.test(t));
+  try {
+    eq(A.XFER_LOG_MS, 1000, 'one second');
+    A.saveDirty = false; tick(A, v, { shiftKey: true, deltaY: -100 }); eq(A.saveDirty, true, 'the board is marked for the table at the first notch, not with the line');
+    await new Promise(r => setTimeout(r, 700)); tick(A, v, { shiftKey: true, deltaY: -100 });   // a slow scroll: 0.7 s between two notches
+    await new Promise(r => setTimeout(r, 700)); eq(moved().length, 0, 'still scrolling (0.7 s after the last notch): no line yet');
+    await new Promise(r => setTimeout(r, 500));
+    eq(JSON.stringify(moved()), JSON.stringify(['Wheel Vampire: moved 2 blood from your pool (pool → 8).']), 'one line for the whole scroll');
+    tick(A, v, { shiftKey: true, deltaY: 100 }); tick(A, v, { shiftKey: true, deltaY: 100 }); tick(A, v, { shiftKey: true, deltaY: 100 });
+    await new Promise(r => setTimeout(r, 1150));
+    eq(moved().length, 2); eq(moved()[1], 'Wheel Vampire: moved 3 blood to your pool (pool → 11).', 'back to the pool: its own line');
+    tick(A, v, { shiftKey: true, deltaY: -100 }); tick(A, v, { shiftKey: true, deltaY: 100 });
+    await new Promise(r => setTimeout(r, 1150)); eq(moved().length, 2, 'up and down again in one scroll: nothing moved, no line');
+  } finally { L.restore(); }
+});
+
+test('v2.6.191 the middle button\'s double-click resets the view as the reset button does -- two presses within MID_DBL_MS, neither moving, the second within MID_DBL_PX of the first; the second pans nothing and holds its release; a press that panned, a slow pair, a far pair or a third press are not doubles; the helicopter view and the Classic board only', () => {
+  const A = loadClient(CLIENT), T = A.__stubEl.classList._t, dims = A.__stubEl._dims;
+  if (typeof A.l3ResetView !== 'function') throw new Error('l3ResetView missing (before v2.6.191)');
+  dims.clientWidth = 1004; dims.clientHeight = 616; dims.getBoundingClientRect = () => ({ left: 0, top: 0, right: 1004, bottom: 616, width: 1004, height: 616, x: 0, y: 0 });
+  const inBoard = { closest: sel => (sel === '#board' ? {} : null) };
+  const ev = o => { const e = Object.assign({ type: 'pointerdown', button: 1, buttons: 4, pointerType: 'mouse', pointerId: 1, clientX: 100, clientY: 100, timeStamp: 1000, target: inBoard }, o); e.prevented = false; e.stopped = false; e.preventDefault = () => { e.prevented = true; }; e.stopPropagation = () => { e.stopped = true; }; return e; };
+  const away = () => { A.l3zoom = 1.7; A.l3pan = { x: 40, y: -25 }; }, home = () => A.l3zoom === 1 && JSON.stringify(A.l3pan) === '{"x":0,"y":0}';
+  const click = (t, x, y) => { A.midPanStart(ev({ timeStamp: t, clientX: x, clientY: y })); A.midPanEnd(ev({ type: 'pointerup', buttons: 0, timeStamp: t + 90, clientX: x + 1, clientY: y })); };
+  try {
+    T.add('l3mode'); T.add('l4mode'); A._mclick = null;
+    eq(A.MID_DBL_MS, 500); eq(A.MID_DBL_PX, 6);
+    away(); click(1000, 100, 100);
+    assert(!home(), 'one click changes nothing'); assert(A._mclick && A._mclick.t === 1000, 'it is remembered as a first click');
+    const d2 = ev({ timeStamp: 1300, clientX: 103, clientY: 98 }); A.midPanStart(d2);
+    assert(home(), 'the second press: zoom 1, the table centred -- the reset button\'s view');
+    assert(d2.prevented && d2.stopped, 'the press is the table\'s (no autoscroll, nothing under it sees it)');
+    assert(A._mpan && A._mpan.dbl, 'it holds the pointer to its release');
+    const mv = ev({ type: 'pointermove', clientX: 220, clientY: 180 }); A.midPanMove(mv); assert(mv.stopped, 'its moves are its own'); assert(home(), '...and pan nothing');
+    A.midPanEnd(ev({ type: 'pointerup', buttons: 0, timeStamp: 1380, clientX: 220, clientY: 180 })); eq(A._mpan, null, 'its release ends it'); assert(home(), 'the view stays where the reset put it, the release too'); eq(A._mclick, null, 'and starts no new click');
+    away(); A.midPanStart(ev({ timeStamp: 1450 })); assert(!home() && A._mpan && !A._mpan.dbl, 'a third press right after is a plain press: no second reset'); A.midPanEnd(ev({ type: 'pointerup', buttons: 0, timeStamp: 1500 }));
+    A._mclick = null; away(); click(3000, 100, 100); A.midPanStart(ev({ timeStamp: 3000 + 501 })); assert(!home(), 'slower than MID_DBL_MS: a pan, not a reset'); A.midPanEnd(ev({ type: 'pointerup', buttons: 0, timeStamp: 3600 }));
+    A._mclick = null; away(); click(5000, 100, 100); A.midPanStart(ev({ timeStamp: 5200, clientX: 108 })); assert(!home(), 'further than MID_DBL_PX from the first: a pan'); A.midPanEnd(ev({ type: 'pointerup', buttons: 0, timeStamp: 5260, clientX: 108 }));
+    A._mclick = null; away(); A.midPanStart(ev({ timeStamp: 7000 })); A.midPanMove(ev({ type: 'pointermove', clientX: 160, clientY: 100 })); A.midPanMove(ev({ type: 'pointermove', clientX: 101, clientY: 100 }));
+    A.midPanEnd(ev({ type: 'pointerup', buttons: 0, timeStamp: 7100, clientX: 101, clientY: 100 })); eq(A._mclick, null, 'a press that panned (and came back) is no click');
+    away(); click(9000, 100, 100); A.midPanStart(ev({ timeStamp: 9000 - 5 })); assert(!home(), 'a press stamped before the click (another clock) is no double'); A.midPanEnd(ev({ type: 'pointerup', buttons: 0, timeStamp: 9100 }));
+    T.delete('l4mode'); A._mclick = null; away(); click(11000, 100, 100); A.midPanStart(ev({ timeStamp: 11200 })); assert(home(), 'the helicopter view too'); A.midPanEnd(ev({ type: 'pointerup', buttons: 0, timeStamp: 11260 }));
+    T.delete('l3mode'); A._mclick = null; away(); A.midPanStart(ev({ timeStamp: 13000 })); A.midPanStart(ev({ timeStamp: 13200 })); assert(!home() && !A._mpan, 'L2 and a seat visit: the middle button is left alone');
+    T.add('l3mode'); away(); A.l3ResetView(); assert(home(), 'l3ResetView is the reset');
+  } finally { T.delete('l3mode'); T.delete('l4mode'); for (const k of Object.keys(dims)) delete dims[k]; A._mclick = null; }
+  const html = require('fs').readFileSync(CLIENT, 'utf8');
+  assert(html.indexOf("$('#l3zoomReset')?.addEventListener('click', ()=>l3ResetView());") > 0 && html.indexOf("$('#l3resetBtn')?.addEventListener('click', ()=>l3ResetView());") > 0, 'both reset buttons call the same function the double-click calls');
+  assert(html.indexOf('<kbd>Middle button</kbd> hold + drag = pan the table from anywhere (Helicopter · Classic) · <kbd>double-click</kbd> = reset the view') > 0, 'the ? controls name it');
+  const rows = API.MOUSE_FIXED.map(r => (typeof r[0] === 'function' ? r[0]() : r[0]));
+  assert(rows.indexOf('Middle button: double-click') > -1 && rows.indexOf('Middle button: hold + drag') > -1, 'Fixed controls lists both middle-button gestures');
+  assert(rows.indexOf('Scroll on the felt (in a room)') === -1, 'and no longer says the felt\'s wheel cycles view levels');
 });
 
 /* ---------- async sections run after the sync battery, then the summary ---------- */
