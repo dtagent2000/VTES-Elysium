@@ -17188,7 +17188,11 @@ async function connectWithRetry(client, tries = 30){
        line ended stood at an earlier action, not at the next one; (k) a window an attempt held opens again when that attempt is withdrawn
        (the counter closed); (l) only a seat that may block holds anything -- a cross-table seat's shout holds neither the target's window
        nor, at the acting bot, the target's attempt; (m) a record of a human's earlier action is superseded by the next 'Any blocks?';
-       (n) the note names me when the actor is not my predator (an unnamed 'vote N' reaches the actor's prey bot only).
+       (n) the note names me when the actor is not my predator (an unnamed 'vote N' reaches the actor's prey bot only). Pass 2: (o) the
+       prey's Pass inside its own attempt, said before my window is born, declines nothing, while the attempt stands or after it failed;
+       (p) a card line's action: an attempt left at an earlier action (the prey's, or another seat's) does not stand at it; (q) a record
+       stays at its own action's card (the row first, then the minion's card); (r) a stray attempt by a seat that may not block shadows
+       no legal one, at the blocking bot and at the acting bot.
        LAST LINE OF 189 is the closing brace below. */
     {
       console.log('\n[189] v0.6.245 -- one block attempt at a time (11.11), a human’s No (4.25), the turn-end note (11.12)');
@@ -17387,7 +17391,7 @@ async function connectWithRetry(client, tries = 30){
       { const P = mk9('Hanna', 2, PA); P.board = [V9('p5', 'Colette', 4)]; P.hand = []; actorPub9(P); blocks9(P, false);
         P._onLog('Claude', 'Belinde (G6) bleeds for 2.'); await sleep(100);   // a bleed at me, passed; Claude never says It resolves
         const stale = !!P.pending; await sleep(5);
-        P._onLog('Claude', 'Belinde (G6) plays Creeping Sabotage.'); P._onSay({ who: 'Claude', i: SI('Any blocks?') });
+        P._onLog('Claude', 'Sully plays Creeping Sabotage.'); P._onSay({ who: 'Claude', i: SI('Any blocks?') });   // pass 2, C: a new action is another minion's (the record's own minion's card is its own action's)
         const asked = !!P._pq && P.chats.some(c => /lose pool/.test(c));
         ok(stale && asked && !P.pending,
            '189m a record of a human’s earlier action is superseded by the next "Any blocks?" -- the prey asks its pool question again (got ' + JSON.stringify({ stale, asked }) + '; pass 1: it answered nothing, and the predator waited for it)');
@@ -17401,6 +17405,87 @@ async function connectWithRetry(client, tries = 30){
         ok(/tell me "@Lisa vote 2"\.$/.test(note),
            '189n the note names me when the actor is not my predator, as the damage grammar needs (got ' + JSON.stringify(note) + '; pass 1: the unnamed phrase reached the actor’s prey bot)');
         quiet9(W); }
+
+      // o) the egress review, pass 2, A: the prey's Pass inside its own attempt, said before my window is born, declines nothing -- nor once its attempt has failed
+      { const PJ = [{ seat: 1, name: 'Claude', online: true }, { seat: 2, name: 'Bob', online: true }, { seat: 3, name: 'Viktor', online: true, bot: true }, { seat: 4, name: 'Lisa', online: true, bot: true }];
+        const fails = 'Block: Stealth 1 vs Intercept 0 — block fails.';
+        const Q = mk9('Lisa', 4, PJ); Q.board = [V9('q10', 'Ayelech', 4)]; Q.hand = []; actorPub9(Q); blocks9(Q, true);
+        Q._onLog('Claude', 'Belinde (G6) plays Creeping Sabotage.'); Q._onSay({ who: 'Claude', i: SI('Any blocks?') }); Q._onSay({ who: 'Claude', i: SI('Yes') }); await sleep(5);
+        Q._onSay({ who: 'Bob', i: SI('Block!') }); Q._onLog('Bob', 'Nora blocks.'); Q._onSay({ who: 'Bob', i: SI('Pass') });   // Bob's Pass resolves his own attempt (B)
+        Q._onChat('Claude', '3');   // my window is born now, while Bob's attempt stands
+        const born = Q.pending && Q.pending.waitingFor;
+        await sleep(80); Q._onLog('Claude', fails); await sleep(120);
+        const held = !Q.says.includes('Block!');
+        Q._onSay({ who: 'Bob', i: SI('No block') }); await sleep(120);   // Bob's decline, after his failed attempt
+        const opened = Q.says.includes('Block!'); quiet9(Q);
+        // the same with the failed verdict before my pool question is answered
+        const R = mk9('Lisa', 4, PJ); R.board = [V9('q11', 'Ayelech', 4)]; R.hand = []; actorPub9(R); blocks9(R, true);
+        R._onLog('Claude', 'Belinde (G6) plays Creeping Sabotage.'); R._onSay({ who: 'Claude', i: SI('Any blocks?') }); R._onSay({ who: 'Claude', i: SI('Yes') }); await sleep(5);
+        R._onSay({ who: 'Bob', i: SI('Block!') }); R._onLog('Bob', 'Nora blocks.'); R._onSay({ who: 'Bob', i: SI('Pass') }); R._onLog('Claude', fails);
+        R._onChat('Claude', '3'); await sleep(120);
+        const bornR = R.pending && R.pending.waitingFor;
+        ok(born === 'Bob' && held && opened && bornR === 'Bob' && !R.says.includes('Block!'),
+           '189o the prey’s Pass inside its own attempt declines nothing for a window born after it -- while the attempt stands or once it failed; the prey’s decline after it opens the window (got ' + JSON.stringify({ born, held, opened, bornR, said: R.says }) + '; pass 2: the window was born open and the predator attempted over the prey)');
+        quiet9(R); }
+
+      // p) pass 2, B: an attempt no line ended at an earlier action, with the next action a card line ("Any blocks?", no row) -- the prey's new attempt holds me
+      { const PJ = [{ seat: 1, name: 'Claude', online: true }, { seat: 2, name: 'Bob', online: true }, { seat: 3, name: 'Viktor', online: true, bot: true }, { seat: 4, name: 'Lisa', online: true, bot: true }];
+        const pub2 = u => { u.table = { 1: { pub: { pool: 20, cards: [{ id: 'b2', name: 'Belinde (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }, { id: 'b3', name: 'Sully', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }] } } }; };
+        const run = async keep => { const Q = mk9('Lisa', 4, PJ); Q.board = [V9('q12', 'Ayelech', 4)]; Q.hand = []; pub2(Q); blocks9(Q, true);
+          Q._onLog('Claude', 'Belinde (G6) hunts.'); Q._onSay({ who: 'Bob', i: SI('Block!') }); Q._onLog('Bob', 'Nora blocks.');   // action 1: settled by word, no line
+          if(!keep) quiet9(Q); await sleep(10);   // keep: the record of action 1 lingers (no It resolves) and the next "Any blocks?" supersedes it
+          Q._onLog('Claude', 'Sully plays Creeping Sabotage.'); Q._onSay({ who: 'Claude', i: SI('Any blocks?') }); Q._onSay({ who: 'Claude', i: SI('Yes') }); await sleep(5);
+          Q._onSay({ who: 'Bob', i: SI('Block!') }); Q._onLog('Bob', 'Nora blocks.'); Q._onChat('Claude', '3');
+          const wf = Q.pending && Q.pending.waitingFor;
+          Q._onSay({ who: 'Bob', i: SI('Pass') }); await sleep(120);
+          const r = { wf, wfAfter: Q.pending && Q.pending.waitingFor, said: Q.says.slice() }; quiet9(Q); return r; };
+        const a = await run(false), b = await run(true);
+        // ... and another seat's attempt left standing at an earlier action (Nina's at Bob's hunt, where I hold no record) does not keep the prey's from being recorded
+        const PN = [{ seat: 1, name: 'Claude', online: true }, { seat: 2, name: 'Bob', online: true }, { seat: 3, name: 'Nina', online: true }, { seat: 4, name: 'Lisa', online: true, bot: true }];
+        const Q = mk9('Lisa', 4, PN); Q.board = [V9('q14', 'Ayelech', 4)]; Q.hand = []; pub2(Q); blocks9(Q, true);
+        Q._onLog('Bob', 'Nora hunts.'); Q._onSay({ who: 'Nina', i: SI('Block!') }); Q._onLog('Nina', 'Kim blocks.');   // Bob's hunt: Nina (his prey) blocks, no line ends it; Lisa is cross-table
+        await sleep(10);
+        Q._onLog('Claude', 'Sully plays Creeping Sabotage.'); Q._onSay({ who: 'Claude', i: SI('Any blocks?') }); Q._onSay({ who: 'Claude', i: SI('Yes') }); await sleep(5);
+        Q._onSay({ who: 'Bob', i: SI('Block!') }); Q._onLog('Bob', 'Nora blocks.'); Q._onChat('Claude', '3');
+        Q._onSay({ who: 'Bob', i: SI('Pass') }); await sleep(120);
+        const c = { st: Q._standing && Q._standing.who, wfAfter: Q.pending && Q.pending.waitingFor, said: Q.says.slice() }; quiet9(Q);
+        ok(a.wf === 'Bob' && a.wfAfter === 'Bob' && !a.said.includes('Block!') && b.wf === 'Bob' && b.wfAfter === 'Bob' && !b.said.includes('Block!') && c.st === 'Bob' && c.wfAfter === 'Bob' && !c.said.includes('Block!'),
+           '189p a card line’s action: the prey’s new attempt is fresh against it and its Pass declines nothing -- the earlier record cleared or superseded, or another seat’s old attempt (got ' + JSON.stringify({ a, b, c }) + '; pass 2: the old stamp stood, the Pass read as a decline and the predator attempted)');
+      }
+
+      // q) pass 2, C: a record is not superseded by its own action's card -- the row first, then the minion's card and "Any blocks?" (my block on the counter); a bleed row, then its action card
+      { const P = mk9('Hanna', 2, PA); P.board = [V9('p6', 'Colette', 4)]; P.hand = []; actorPub9(P); blocks9(P, true);
+        P._onLog('Claude', 'Belinde (G6) takes an undirected action.'); await sleep(100);
+        const mine = !!(P.pending && P.pending.blockerVamp);
+        P._onLog('Claude', 'Belinde (G6) plays Creeping Sabotage.'); P._onSay({ who: 'Claude', i: SI('Any blocks?') });
+        const kept = { pending: !!P.pending, bv: !!(P.pending && P.pending.blockerVamp), pq: !!P._pq }; quiet9(P);
+        const P2 = mk9('Hanna', 2, PA); P2.board = [V9('p7', 'Colette', 4)]; P2.hand = []; actorPub9(P2); blocks9(P2, false);
+        P2._onLog('Claude', 'Belinde (G6) bleeds for 2.'); await sleep(5);
+        P2._onLog('Claude', 'Belinde (G6) plays Computer Hacking.'); P2._onSay({ who: 'Claude', i: SI('Any blocks?') });
+        const kept2 = { kind: P2.pending && P2.pending.kind, pq: !!P2._pq };
+        ok(mine && kept.pending && kept.bv && !kept.pq && kept2.kind === 'bleed' && !kept2.pq,
+           '189q a record stays at its own action’s card: my block keeps its record, a bleed keeps its bleed (got ' + JSON.stringify({ mine, kept, kept2 }) + '; pass 2: both were superseded and the pool question asked)');
+        quiet9(P2); }
+
+      // r) pass 2, D: a stray attempt (a seat that may not block) shadows no legal one -- my record's side and the acting bot's
+      { const PK = [{ seat: 1, name: 'Claude', online: true }, { seat: 2, name: 'Bob', online: true }, { seat: 3, name: 'Nina', online: true }, { seat: 4, name: 'Lisa', online: true, bot: true }];
+        const Q = mk9('Lisa', 4, PK); Q.board = [V9('q13', 'Ayelech', 4)]; Q.hand = []; actorPub9(Q); blocks9(Q, true);
+        Q._onLog('Claude', 'Belinde (G6) hunts.');
+        Q._onSay({ who: 'Nina', i: SI('Block!') });   // cross-table: Nina may not block Claude's hunt
+        Q._onSay({ who: 'Bob', i: SI('Block!') }); Q._onLog('Bob', 'Nora blocks.'); Q._onSay({ who: 'Bob', i: SI('Pass') }); await sleep(120);
+        const side = { st: Q._standing && Q._standing.who, wf: Q.pending && Q.pending.waitingFor, said: Q.says.slice() }; quiet9(Q);
+        const PD = [{ seat: 1, name: 'Hanna', online: true }, { seat: 2, name: 'Nina', online: true }, { seat: 3, name: 'Claude', online: true }, { seat: 4, name: 'Viktor', online: true, bot: true }];
+        const V = mk9('Viktor', 4, PD); const cv = V9('c5', 'Chelsea Blake (G6)', 4, { locked: true }); V.board = [cv]; V.hand = [];
+        V._actingVamp = { v: cv, n: 0, played: new Set(), target: null, kind: 'political' };
+        V._askBlock('Chelsea Blake calls Kine Resources Contested. Block?');
+        V._onSay({ who: 'Nina', i: SI('Block!') }); V._onLog('Nina', 'Stray One attempts to block.');   // cross-table
+        V._onLog('Hanna', 'Donny Kowalczyk blocks.');   // the prey, by line only
+        const by1 = V._ask && V._ask.attemptBy;
+        V._onSay({ who: 'Claude', i: SI('Block!') }); V._onLog('Claude', 'Wauneka (G6) blocks.');   // the predator, while the prey's attempt stands
+        const act = { by1, by2: V._ask && V._ask.attemptBy, opp: V._lastBlockerName, refused: V.rows.filter(x => x.ty === 'second-attempt').length };
+        ok(side.st === 'Bob' && side.wf === 'Bob' && !side.said.includes('Block!') && act.by1 === 'Hanna' && act.by2 === 'Hanna' && act.opp === 'Donny Kowalczyk' && act.refused >= 1,
+           '189r a stray attempt shadows no legal one: the prey’s attempt holds the predator bot, and at the acting bot the prey’s line takes the contest and the predator’s is refused (got ' + JSON.stringify({ side, act }) + '; pass 2: the stray took the record, and the predator was taken up over the prey)');
+        quiet9(V); }
     }
 
 
