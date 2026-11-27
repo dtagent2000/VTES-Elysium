@@ -148,5 +148,14 @@
   "NOT RUN": 0
  },
  "seconds": 403,
+ "ci": {
+  "head": "cf2cf29",
+  "runs": [
+   "2878/0",
+   "2878/0",
+   "2878/0"
+  ],
+  "gates": "success"
+ },
  "egress": "26 findings (half-done 20, unproven 3, stale-doc 3) in 6 passes (Opus 5, Fable 4, Fable 5, Fable 5, Fable 3, Fable 4), 22 fixed, 4 listed"
 }

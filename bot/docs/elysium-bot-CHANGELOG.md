@@ -21,7 +21,7 @@ The entries of 9 Sep – 27 Nov 2026 (bot v0.1 to v0.6.243 and the rounds withou
   resolves the human's own attempt (no decline); a later attempt keeps the actor's booked stealth. Riders (D-92): a human's No
   answers a block question (4.25); the turn-end note is silent at 0 pool and names the action otherwise, a human's 0-pool record
   closing at the bot's decline (11.12). Register 11.13–11.17 new. Section 189.
-  *Gates:* `tools/gates.sh --sim` on `r11-11` `58cb57d` + the working tree (28 Nov; bytes `421f5256` / `c92475b9` / cardfx `21ef103f`): PASS 20 · FAIL 0 · SKIPPED 0 (sim-240 240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 421f5256 c92475b9 21ef103f). CI's suite ×3: not read.
+  *Gates:* `tools/gates.sh --sim` on `r11-11` `58cb57d` + the working tree (28 Nov; bytes `421f5256` / `c92475b9` / cardfx `21ef103f`): PASS 20 · FAIL 0 · SKIPPED 0 (sim-240 240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 421f5256 c92475b9 21ef103f). CI's suite 2878/0 ×3, `bot-gates` success on `cf2cf29`.
   *Egress:* 26 findings (half-done 20, unproven 3, stale-doc 3) in 6 passes (Opus 5, Fable 4, Fable 5, Fable 5, Fable 3, Fable 4), 22 fixed, 4 listed
   *Report:* `reports/REPORT-11-11-2026-11-27.md`.
 
