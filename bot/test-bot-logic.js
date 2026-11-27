@@ -17197,7 +17197,7 @@ async function connectWithRetry(client, tries = 30){
        (t) a bot's reaction line is no newer action (the 240 after pass 3's first fix). Pass 4: (m) the note's "bleed N" lands while
        the next pool question is open; (u) the record's own row after its card, a typed "no block" at the Yes / No stage, the note's
        non-bleed form, a card whose name holds a period. Pass 5: (m) with no note owed "bleed N" at How much? is the answer; (u) the
-       action's own row does not end the prey's standing attempt.
+       action's own row does not end the prey's standing attempt. Pass 6: (v) the owed note's three ends.
        LAST LINE OF 189 is the closing brace below. */
     {
       console.log('\n[189] v0.6.245 -- one block attempt at a time (11.11), a human’s No (4.25), the turn-end note (11.12)');
@@ -17584,6 +17584,27 @@ async function connectWithRetry(client, tries = 30){
            && !dot.pending && dot.pq,
            '189u the record’s own row after its card is no newer action; a typed "no block" is a decline, not the pool question’s No; the non-bleed note and its "@<bot> bleed N"; a name with a period (got ' + JSON.stringify({ row, typed, sup, dot }) + '; pass 4: the predator never weighed, the bot said No block for the actor, the phrase was swallowed, Mr. Winthrop read as no action; pass 5: the row ended the prey’s standing attempt)');
         quiet9(P); }
+
+      // v) the egress review, pass 6: the owed note's three ends -- its phrase landing, It resolves, the turn's end: after each, "bleed 2" at How much? is the answer again
+      { const owe = async (end) => { const P = mk9('Hanna', 2, PA); P.board = [V9('p12', 'Colette', 4)]; P.hand = []; actorPub9(P); blocks9(P, false); P.pool = 20; P.turnSeat = 1;
+          P._onLog('Claude', 'Belinde (G6) bleeds for 2.'); await sleep(100); await sleep(5);
+          P._onLog('Claude', 'Sully plays Creeping Sabotage.'); P._onSay({ who: 'Claude', i: SI('Any blocks?') });   // superseded: the note is owed
+          const owed = !!P._noteOwed;
+          if(end === 'land'){ P._onChat('Claude', 'bleed 2'); P._onSay({ who: 'Claude', i: SI('Yes') }); }   // the phrase lands at Yes / No; then Yes
+          else {
+            P._onChat('Claude', 'No'); await sleep(5);   // Sully's action costs nothing
+            if(end === 'resolves') P._onSay({ who: 'Claude', i: SI('It resolves') });
+            else { P._dispatch({ t: 'turn', seat: 3 }); P._dispatch({ t: 'turn', seat: 1 }); }
+            await sleep(5);
+            P._onLog('Claude', 'Tara plays Creeping Sabotage.'); P._onSay({ who: 'Claude', i: SI('Any blocks?') }); P._onSay({ who: 'Claude', i: SI('Yes') });
+          }
+          const pool0 = P.pool; P._onChat('Claude', 'bleed 2');   // at How much?: the answer 2, no damage
+          const r = { owed, pool0, pool: P.pool, amount: P.pending && P.pending.amount }; quiet9(P); return r; };
+        const land = await owe('land'), res = await owe('resolves'), turn = await owe('turn');
+        const fine = x => x.owed && x.pool === x.pool0 && x.amount === 2;
+        ok(fine(land) && land.pool0 === 18 && fine(res) && res.pool0 === 20 && fine(turn) && turn.pool0 === 20,
+           '189v the supersede note is owed until its phrase lands, It resolves or the turn ends -- after each, "bleed 2" at How much? is the answer 2 again (got ' + JSON.stringify({ land, res, turn }) + '; pass 6: no check held the three ends)');
+      }
     }
 
 

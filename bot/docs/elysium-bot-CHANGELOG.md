@@ -20,7 +20,7 @@ The entries of 9 Sep – 27 Nov 2026 (bot v0.1 to v0.6.243 and the rounds withou
   earlier action superseded by the next "Any blocks?" of a new action, noted when pool was at stake); a human blocker's Pass
   resolves the human's own attempt (no decline); a later attempt keeps the actor's booked stealth. Riders (D-92): a human's No
   answers a block question (4.25); the turn-end note is silent at 0 pool and names the action otherwise, a human's 0-pool record
-  closing at the bot's decline (11.12). Register 11.13–11.16 new. Section 189.
+  closing at the bot's decline (11.12). Register 11.13–11.17 new. Section 189.
   *Gates:* `tools/gates.sh --sim` on `r11-11` `4f9e81f` + the working tree (27 Nov; bytes `421f5256` / `6c42c2e0` / cardfx `21ef103f`): PASS 20 · FAIL 0 · SKIPPED 0 (sim-240 240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 421f5256 6c42c2e0 21ef103f). CI's suite ×3: not read.
   *Egress:* 22 findings (half-done 18, unproven 2, stale-doc 2) in 5 passes (Opus 5, Fable 4, Fable 5, Fable 5, Fable 3), 20 fixed, 2 listed
   *Report:* `reports/REPORT-11-11-2026-11-27.md`.

@@ -510,6 +510,14 @@ Who may answer an action or a card, and in which window; a line read after its w
   egress review: a stray shout froze the only legal blocker), so a bot may attempt while such an attempt stands; the acting bot
   counts one only from a seat a "Hold on…" promoted. [the 11.11 round] · human (salubri holds 2: a test precon) · that minion's
   Eagle's Sight [AUS] line makes its attempt stand.
+- **11.17 An action's menu row after its card line is a second record** -- the row the client's Actions menu writes for an undirected
+  card action (`takes an undirected action`, `calls a political action`: the protocol, v2.6.137) opens a record of its own
+  (`_parseUndirected`, its announce now), so after the human's card, "Any blocks?" and the pool answer it replaces the asked record
+  (the stake dropped: amount 0 at T6), and a block attempt made between the card and the row is older than the new announce, so the
+  prey's Pass inside it reads as a decline and the bot predator attempts over it (D-149 broken in that order; v0.6.244 let it
+  attempt anyway). [the 11.11 round's review, pass 6; the stake: the base too] · human (one human: the card, "Any blocks?", then
+  the menu row) · one record per action across its card line, its row and the pool question -- the earliest announce, the row's
+  direction, the answer's stake -- with 11.15's remembered action in a field of its own.
 
 ## 12. Combat's steps
 - **12.1 Additional strikes, v2** — one source a round per side (Quickness [CEL]'s outside-the-limit rider never stacks); no impulse
