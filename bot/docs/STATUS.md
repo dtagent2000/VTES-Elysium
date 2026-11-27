@@ -5,12 +5,12 @@
 <!-- /round.py:versions -->
 
 <!-- round.py:deploy -->
-**Deploy state** (read at the round's end, 27 Nov): `main` `ae774bb` carries bot v0.6.243 at the root, with client v2.6.192 / srv-2.6.54. Open pull requests: #120 `card-chain` (draft); the private data repo: none.
+**Deploy state** (read at the round's end, 27 Nov): `main` `ae774bb` carries bot v0.6.243 at the root, with client v2.6.192 / srv-2.6.54. Open pull requests: #120 `card-chain` (draft); the private data repo: #9 `words-d146-d147-2026-11-27`.
 <!-- /round.py:deploy -->
 
 <!-- round.py:gates -->
 ## Last gates (`docs/round-record.json`)
-`tools/gates.sh` on `docs-diet` `eb0f3c8` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 16 · FAIL 0 · SKIPPED 0 — check 35 of 35 scripts parse · lint clean · canary 235/0 · canary-root 235/0 · cardfx 516/0 · precon 18 precons, no problems · ledger-self 81/0 · sheet-self 23/0 · cross-self 19/0 · ana-gates-self 35/0 · hb1 11/0 (0 skip) · doc-budget bootstrap 39238 / 50000 · standing pages 183455 / 184000 · public-scan-self 35/0 · round-self 24/0 · public-scan 0 hits in 0 files · test-doc-budget every case red, the baseline and the allowed moves green. CI's suite 2841/0 ×3, `bot-gates` success on `cca8d0c`.
+`tools/gates.sh` on `card-chain` `27c5f5d` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 18 · FAIL 0 · SKIPPED 0 — check 38 of 38 scripts parse · lint clean · canary 235/0 · canary-root 235/0 · cardfx 518/0 · precon 18 precons, no problems · ledger-self 81/0 · sheet-self 23/0 · cross-self 19/0 · table-self abstract table 1.0.0: 6/0 (536 ms) · reader 871 rows, 360 gated, 257 read, 92 unread (92 listed, 0 new), 0 stale, 11 no value · self-test 7/0 · bench 821 kept rows, 230 with a scenario, 297 scenarios, 296 played right, 1 rows wrong (1 listed, 0 new), 0 stale · self-test 5/0 · ana-gates-self 35/0 · hb1 11/0 (0 skip) · doc-budget bootstrap 40148 / 50000 · standing pages 186627 / 187000 · public-scan-self 35/0 · round-self 24/0 · public-scan 0 hits in 0 files. CI's suite ×3: not read.
 <!-- /round.py:gates -->
 
 ## Next (the owner's order of 26–27 Nov: D-144, D-145, D-147)
