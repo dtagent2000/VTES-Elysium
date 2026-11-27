@@ -26,7 +26,7 @@ STATUS's Next, BOARD line deleted; RULINGS / LESSONS when they changed) and bot/
 its gate section and the egress line → claude/HANDOFF.md rewritten. In a round with a bot change, ask the owner before the merge whether to play a real match in the human
 seat to evaluate it, and add what it teaches to the play notes (.claude/skills/bot-play-notes). Commit and push as
 soon as a step is green. The round's last question card asks the owner to merge, naming what merges and in which order;
-on his yes Claude merges (the data repo's PR, then the main PR's auto-merge on a green bot-gates). One round per chat.
+on his yes Claude merges (the data repo's PR, then the main PR once bot-gates is green). One round per chat.
 
 RELEASE: bash bot/tools/release.sh X.Y.Z (BOT_VERSION, the bundle copied to the root; never edit the root in place).
 

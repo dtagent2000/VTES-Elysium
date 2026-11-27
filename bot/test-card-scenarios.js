@@ -145,7 +145,7 @@ function scenarioFor(card, e, mo, win, crypt){
     return { what: 'A: bleed ' + M + ' at +' + S + ' stealth', spec: { acting: 1, seats: [me, { name: 'Viktor', pool: 20, hand: [], ready: [{ name: blocker, blood: 4, locked: !(S > 0) }] }, IDLE] },   // a card's stealth is worth something only against an unlocked blocker
       check: r => { const q = T.linesOf(r, 1, new RegExp('plays ' + esc(card) + ' — bleeds \\S.* for (\\d+)'))[0], ann = T.linesOf(r, 1, new RegExp('^' + esc(V) + ' bleeds for (\\d+)\\.$'))[0];
         const qm = q && q.txt.match(/ for (\d+)/), am = ann && ann.txt.match(/for (\d+)\./), t0 = T.tallyOf(r, 1, 'block')[0];
-        const blood = ann ? T.bloodAt(r, 1, V, ann) : null, paid = blood === bloodFor(e, crypt, V) - cost;   // the cost at the announce
+        const blood = ann ? T.bloodAt(r, 1, V, ann) : null, paid = blood === bloodFor(e, crypt, V) - cost;   // the first board push after the announce line: the cost paid (a blocked action's refund comes later: a push order that moves turns a paid card red, never a false pass)
         const okM = !!qm && +qm[1] === M && !!am && +am[1] === M, okS = !!t0 && (t0.a | 0) === S;
         return { ok: okM && paid && (win.key !== 'stealth' || okS), got: q ? q.txt + ' / ' + (ann ? ann.txt : 'no announce') + ' / counter ' + (t0 ? t0.a : 'none') + (paid ? '' : ' / blood ' + blood + ', cost ' + cost) : 'not played as the bleed: ' + T.linesOf(r, 1).map(x => x.txt).filter(x => /bleed/.test(x)).slice(0, 2).join(' | ') }; } };
   }
@@ -202,6 +202,10 @@ async function selfTest(){
   /* planted: a card not played (a stealth card a vampire without the discipline holds: the table's bot cannot play it) */
   const r3 = await runBench({ cards: { 'Lost in Crowds': { stealth: { obf: 'agree' } } }, gaps: { bench: {} } }, fx, { run: spec => { spec.seats[0].ready[0].name = T.pickVampire({ disc: 'aus', exact: true, noText: true, without: ['obf'] }); return T.runWindow(spec); } });
   ok(r3.newFails.length === 1 && /not played/.test(r3.newFails[0].runs[0].got), 'planted: a card the bot does not play is a new failure (' + (r3.newFails[0] ? r3.newFails[0].runs[0].got.slice(0, 80) : 'none') + ')');
+  /* planted: a cost the bot does not pay (the bench expects one more blood than Conditioning costs) is a new failure */
+  const fx5 = JSON.parse(JSON.stringify(fx)); fx5.lib['Conditioning'].cost = { blood: 2 };
+  const r5 = await runBench({ cards: { 'Conditioning': { bleed: { dom: 'agree' } } }, gaps: { bench: {} } }, fx5, {});
+  ok(r5.newFails.length === 1 && /cost 2/.test(r5.newFails[0].runs[0].got), 'planted: a cost the bot does not pay is a new failure (' + (r5.newFails[0] ? r5.newFails[0].runs[0].got.slice(-30) : 'none') + ')');
   /* planted: a listed gap whose row passes now is stale; a listed gap with no such row is stale */
   const r4 = await runBench({ cards: { 'Lost in Crowds': { stealth: { obf: 'agree' } } }, gaps: { bench: { 'Lost in Crowds': { stealth: { obf: '7.6' } }, 'No Such Card': { bleed: '7.6' } } } }, fx, {});
   ok(r4.stale.length === 2, 'planted: a listed row that passes now and a listed row that does not exist are each stale (got ' + r4.stale.length + ')');

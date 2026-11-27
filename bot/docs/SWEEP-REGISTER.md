@@ -312,8 +312,8 @@ A key the compiler writes and a reader reads in another shape, or a sentence sha
   bleed (a shape the compiler should merge) or an action of its own (unbuilt), each read against its text in its round. The
   pool-damage actions are the same reading outside the gate's paths: `_bestPoolDmgActionFor` books no stealth at its announce (Choir,
   Clio's Kiss, Edge Vitiation, Precision, Harmony and Rise of the Fallen carry a header `actStealth`). [the card chain's reader gate]
-  · reachable (Entrancement: ravnos, pathcathari, ministry; The Platinum Protocol: ministry; Break the Bonds: ravnos) / latent (the
-  rest) · the bleed and pool-damage finders book `_cardActStealth(e, mo)`.
+  · reachable (Entrancement: ravnos, pathcathari, ministry; The Platinum Protocol: ministry; Break the Bonds: ravnos; Fleetness:
+  banuhaqim) / latent (the rest) · the bleed and pool-damage finders book `_cardActStealth(e, mo)`.
 
 - **9.14 Two shapes the card chain's review saw** — Rise of the Fallen's `poolDmg: 1` reads as a pool-damage action, where the text puts
   the card in play with a trigger ("Your prey burns 1 pool after resolution of each action during which you have burned corruption
@@ -425,7 +425,7 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
 - **10.25 A modifier's "or" option** — Fata Morgana [CHI], Power of One [pre], Revelation of the Serpent, Subversion [CEL] and [PRE] print
   "+1 bleed (limited), or +1 stealth and +1 bleed (limited)" (KRCG), Virtuosa [mel] "+1 stealth and +2 bleed (limited), or +2 bleed
   (limited)": our entries carry only the combined mode, `_bestBleedModifierFor` skips a mode with stealth, so the plain bleed is never
-  played after the block window (Subversion and Virtuosa have no other bleed mode) and the combined one adds no bleed (10.17). [the card
+  played after the block window (only Power of One has another bleed mode, its [pot]) and the combined one adds no bleed (10.17). [the card
   chain's egress review, pass 1] · reachable (Revelation of the Serpent: ministry; Subversion: pathcathari) / latent (the rest) · a
   second, stealth-free mode for the option, and 10.17's fix for the combined one.
 - **10.23 Family values no reader takes on a card in play, an ally or a reaction** — Blessings of the Loa's bleed (a master),
