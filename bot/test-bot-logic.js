@@ -7625,7 +7625,7 @@ async function connectWithRetry(client, tries = 30){
   ok(d1.spend === false && d4.spend === true && /a modifier in hand worth 3/.test(d4.why), '115a the same bleed of 1 at P(intercept) 0.5: bare -> no stealth; with a Conditioning (+3) in hand -> stealth. ' + d4.why);
   ok(m.decide('spend-stealth', { pInt: 0.9, stakes: 4, announced: 1, pump: 3 }).spend === false, '115a ...a blocker who surely out-intercepts is still not chased (insight holds)');
   const src115 = require('fs').readFileSync(require('path').join(__dirname, 'elysium-bot.js'), 'utf8');
-  ok(/av\.kind === 'bleed' \|\| \(av\.kind == null && av\.target\)/.test(src115) && /stakes: annN \+ pump/.test(src115), '115b the call site adds the best playable bleed modifier for a BLEED only (a hunt has no target and gets no pump)');
+  ok(/av\.kind === 'bleed' \|\| \(av\.kind == null && av\.target\)/.test(src115) && /stakes: annN \+ own \+ pump/.test(src115), '115b the call site adds the best playable bleed modifier for a BLEED only (a hunt has no target and gets no pump)');
   const col = { id: 'm1', kind: 'crypt', name: 'Colette (G6)', zone: 'ready', blood: 4, locked: true, attached: [] }; m.board = [col]; m.hand = ['Conditioning', 'Lost in Crowds'];
   const bm = m._bestBleedModifierFor(col, new Set(), false); ok(bm && bm.n >= 2, '115b fixture: Colette can pump the bleed with Conditioning (' + JSON.stringify(bm && { name: bm.name, n: bm.n }) + ')');
   const f = mk115({ deckName: 'ventrue' }); const alice = { id: 'v1', kind: 'crypt', name: 'Alice Chen (G6)', zone: 'ready', blood: 3, locked: true, attached: [] }; f.board = [alice]; f.hand = ['Freak Drive'];
@@ -17142,16 +17142,17 @@ async function connectWithRetry(client, tries = 30){
         const second = hand => { const { u } = mkA(hand, 'l3'); u.tally = { mode: 'block', a: 0, b: 1 }; u._ask = { contested: true }; let ctx = null; const dec = u.decide.bind(u);
           u.decide = (q, c) => { if(q === 'spend-stealth'){ ctx = c; return { spend: false, tag: 'probe' }; } return dec(q, c); };
           u._stealthSecondLook(); return ctx ? ctx.stakes : null; };
-        const keepOf = (hand, cm) => { const { u, v, av } = mkA(hand, 'l5'); if(cm) u._combatMind = () => true; const st = u._bestStealthFor(v, av.played, 2); return st ? st.name : null; };
+        const keepOf = (hand, cm) => { const { u, v, av } = mkA(hand, 'l5'); u._combatMind = () => !!cm; const st = u._bestStealthFor(v, av.played, 2); return st ? st.name : null; };   // the mind forced either way (the fixture's own is a combat mind)
         const hidden = () => { const { u, v, av } = mkA(['C1b Test Pump', 'Bonding', 'Lost in Crowds', 'Conditioning'], 'l4'); u.fx.lib['C1b Test Pump'] = { t: ['mod'], modes: [{ at: null, fx: { bleed: 3 } }] };
           const st = u._bestStealthFor(v, av.played, 2); return st ? st.name : null; };   // a non-limited +3 (a stub: no printed one is that large) is the best modifier in hand and must not hide Conditioning's limited +3
         const got = { vn: !!vn, withCond: pickOf(['Bonding', 'Lost in Crowds', 'Conditioning']), withCond2: pickOf(['Lost in Crowds', 'Bonding', 'Conditioning']),
                       noCond: pickOf(['Lost in Crowds', 'Bonding']), noCond2: pickOf(['Bonding', 'Lost in Crowds']), stakesBond: stakes(['Bonding', 'Conditioning']), stakesLic: stakes(['Lost in Crowds', 'Conditioning']),
                       secondBond: second(['Bonding', 'Conditioning']), secondLic: second(['Lost in Crowds', 'Conditioning']), hidden: hidden(),
                       spyLast: keepOf(['Spying Mission', 'Bonding', 'Conditioning']), spyLast2: keepOf(['Bonding', 'Spying Mission', 'Conditioning']),
-                      dualKept: keepOf(['Swallowed by the Night', 'Bonding', 'Conditioning'], true), dualKept2: keepOf(['Bonding', 'Swallowed by the Night', 'Conditioning'], true) };
+                      dualKept: keepOf(['Swallowed by the Night', 'Bonding', 'Conditioning'], true), dualKept2: keepOf(['Bonding', 'Swallowed by the Night', 'Conditioning'], true),
+                      dualCalm: keepOf(['Bonding', 'Swallowed by the Night', 'Conditioning'], false) };   // outside a combat mind the older tie-breaks keep the hand's order: the slot does not spend Swallowed by the Night first
         ok(got.vn && got.withCond === 'Lost in Crowds' && got.withCond2 === 'Lost in Crowds' && got.noCond === 'Bonding' && got.noCond2 === 'Bonding' && got.stakesBond === 2 && got.stakesLic === 4 &&
-           got.secondBond === 2 && got.secondLic === 4 && got.hidden === 'Lost in Crowds' && got.spyLast === 'Bonding' && got.spyLast2 === 'Bonding' && got.dualKept === 'Bonding' && got.dualKept2 === 'Bonding',
+           got.secondBond === 2 && got.secondLic === 4 && got.hidden === 'Lost in Crowds' && got.spyLast === 'Bonding' && got.spyLast2 === 'Bonding' && got.dualKept === 'Bonding' && got.dualKept2 === 'Bonding' && got.dualCalm === 'Bonding',
            '188l at +1 stealth Lost in Crowds leaves the slot to Conditioning (+3), and Bonding [DOM] wins without it, in either hand order; the spend’s stakes at both looks: Bonding with Conditioning 1 + 1 (Conditioning refused), Lost in Crowds with it 1 + 3; a larger non-limited modifier does not hide the limited one; and the keep rules outrank the slot: Spying Mission still goes last (D-60), Swallowed by the Night is kept in a combat mind (D-24, O-8), Bonding spent instead (got ' + JSON.stringify(got) + '; the round’s first builds took the first card in hand and counted Conditioning after Bonding)'); }
 
       // m) the egress review: the block decision counts Corpse Balloon [VIC]'s +1 during a directed action, as the pick does
