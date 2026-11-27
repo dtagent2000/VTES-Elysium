@@ -244,7 +244,8 @@ a legal play the bot refuses.
 - **8.4 A discipline line's own capacity** (Hall of Hades' Court [dom]: `_voteBoosts` plays it past its line's capacity; The
   Missing Voice [cel]); **Enkil Cog** (`_bestBleedModifierFor` reads no requirement: its capacity 10 and "after resolution of a
   successful bleed"). [w6 §8] · latent.
-- **8.5 Conditions not tagged** — Faerie Wards [aus] (the directed condition with an ally-or-younger clause); the leftover +1
+- **8.5 Conditions not tagged** — Faerie Wards [aus] (the directed condition with an ally-or-younger clause); Hag's Wrinkles' "Only
+  usable during an equip action" (KRCG; C1b's sample: its stealth agrees, the gate is not read); the leftover +1
   intercept mode of The Mole plays at any action (Dogged Pursuit [ANI] and Speak with Spirits [SPI] were corrected in C1, v0.6.243); the condition sentences' untagged
   variants (their list: `specs/spec-card-sweep-2026-11-18.md`'s status block, "The finished decks' round"). [w6 §8; B] · latent
   (the named cards: no deck) / reachable (the list's Protected District, "… or during the polling step": nosferatu ×4).
@@ -398,7 +399,8 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
 - **10.19 Granted actions** — an action a card lets a minion take later ("burn this card as a +1 stealth political action", "the
   attached vampire can enter combat … as a +1 stealth Ⓓ action", "may take a +1 stealth action") has no key of ours: since C1
   (compiler v1.12.0) its number is no longer the card's own, and the cross-check flags 152 granted actions that carry a stealth,
-  intercept or bleed. [C1] · human (the readers' rounds: a human's granted action at the table) / latent (the bots take none).
+  intercept or bleed; Khazar's Diary (Endless Night)'s wraith from an ash heap at 7 counters is still compiled as an [NEC] mode of the
+  card's own (C1b's sample). [C1; C1b] · human (the readers' rounds: a human's granted action at the table) / latent (the bots take none).
 - **10.20 The blocking minion's malus** — "the blocking minion gets -1 intercept" (Forced Confessional's `icpVs` with `who:
   ['this']` is the precedent; Perfect Paragon's for allies and younger vampires) on Call of the Hungry Dead [nec], Dominant
   Personality [pot]/[pre], Form of the Bat [pro], Mole's Tunneling [ani], Random Patterns [AUS][DEM], Smoke and Mirrors [obt],

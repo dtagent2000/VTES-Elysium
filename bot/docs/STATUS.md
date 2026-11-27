@@ -1,11 +1,11 @@
 # STATUS — Elysium Bots (the one place for the state, D-142; its marked blocks are generated: `tools/round.py status`, D-145)
 
 <!-- round.py:versions -->
-**Bot v0.6.244** · arena v1.4.17 · sim table v1.1.0 · cardfx compiler v1.12.0, curated 301 · hotseat tool v1.5.0 · coverage tool v1.1.56 · card ledger v1.3.0 · review sheet v1.1.0 · cross-check v1.2.0 · precon generator v1.1.1 · `krcg-v5.js` v1.0.0 · `ana-gates.py` v1.1.4 · abstract table v1.0.0 · reader gate v1.0.0 · scenario bench v1.0.0 · the chat tools v1.0.0 · `tools/public-scan.py` v1.1.1 · `tools/round.py` v1.0.1 · the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51; the root's release is client v2.6.192 / srv-2.6.54 (the canary's second run).
+**Bot v0.6.244** · arena v1.4.17 · sim table v1.1.0 · cardfx compiler v1.13.0, curated 301 · hotseat tool v1.5.0 · coverage tool v1.1.56 · card ledger v1.3.0 · review sheet v1.1.0 · cross-check v1.2.0 · precon generator v1.1.1 · `krcg-v5.js` v1.0.0 · `ana-gates.py` v1.1.4 · abstract table v1.0.0 · reader gate v1.1.0 · scenario bench v1.1.0 · the chat tools v1.0.0 · `tools/public-scan.py` v1.1.1 · `tools/round.py` v1.0.1 · the read-only copies in bot/ are client v2.6.179 / protocol v2.6.179 / srv-2.6.51; the root's release is client v2.6.192 / srv-2.6.54 (the canary's second run).
 <!-- /round.py:versions -->
 
 <!-- round.py:deploy -->
-**Deploy state** (read at the round's end, 27 Nov): `main` `ae774bb` carries bot v0.6.243 at the root, with client v2.6.192 / srv-2.6.54. Open pull requests: #120 `card-chain` (draft); the private data repo: #9 `words-d146-d147-2026-11-27`.
+**Deploy state** (read at the round's end, 27 Nov): `main` `8271308` carries bot v0.6.243 at the root, with client v2.6.192 / srv-2.6.54. Open pull requests: #121 `c1b` (draft); the private data repo: none.
 <!-- /round.py:deploy -->
 
 <!-- round.py:gates -->
