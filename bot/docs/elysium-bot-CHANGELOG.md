@@ -14,13 +14,13 @@ The two pending lines are `tools/round.py save`'s to render, from `docs/round-re
 The entries of 9 Sep – 27 Nov 2026 (bot v0.1 to v0.6.243 and the rounds without a release to C1) are frozen in
 `history/elysium-bot-CHANGELOG-to-v0.6.243.md`.
 
-- **C1b (27 Nov 2026, bot v0.6.244; PR #121)** — D-148 (the owner's card, the recommended options). The card chain's gaps fixed:
+- **C1b (27 Nov 2026, bot v0.6.244; PR #121)** — D-148 (the owner's card). The card chain's gaps fixed:
   a bleed card's header stealth (9.13); a stealth mode's bleed and its limited slot (10.17), said once the blocks are
   declined, a reduction before it read off the actor's total; at the same stealth a stealth card's bleed wins unless a limited
   modifier adds more, the owner's keep rules first; the "or" option (10.25); the actor's title and sect (7.5); a mode's price and the
   action's form (7.6). Compiler v1.13.0. Readers, 164 verdicts: the 13 other V5 decks' flagged cards (10.26), the extra-cost
   flags (7.9), the agreeing rows' sample (6 of 60 ours wrong: C1c). Unread rows 92 → 65.
-  *Gates:* `tools/gates.sh --sim --smokes` on `c1b` `6ebc0e8` + the working tree (27 Nov; bytes `41d04006` / `f67335d4` / cardfx `21ef103f`): PASS 20 · FAIL 1 · SKIPPED 0 (sim-240 240 matches: DIVERGED 115, SAME-PLAY 125 · 0.6.243 -> 0.6.244, with the version put back: 240 matches: DIVERGED 115, SAME-PLAY 125 · ana-gates PASS (6 of 6) · bytes 41d04006 f67335d4 21ef103f; v5-smokes FAIL 13 of 14 smokes PASS · banuhaqim:FAIL (5 of 6)). CI's suite ×3: not read. v5-smokes: banuhaqim's steal pair is on v0.6.243's bytes too, the same seed (re-run)
+  *Gates:* `tools/gates.sh --sim --smokes` on `c1b` `6ebc0e8` + the working tree (27 Nov; bytes `41d04006` / `f67335d4` / cardfx `21ef103f`): PASS 20 · FAIL 1 · SKIPPED 0 (sim-240 240 matches: DIVERGED 115, SAME-PLAY 125 · 0.6.243 -> 0.6.244, with the version put back: 240 matches: DIVERGED 115, SAME-PLAY 125 · ana-gates PASS (6 of 6) · bytes 41d04006 f67335d4 21ef103f; v5-smokes FAIL 13 of 14 smokes PASS · banuhaqim:FAIL (5 of 6)). CI's suite 2854/0 ×3, `bot-gates` success on `19bd8ae`. v5-smokes: banuhaqim's steal pair is on v0.6.243's bytes too, the same seed (re-run)
   *Egress:* 12 findings (stale-doc 4, half-done 3, unproven 3, rule-missed 2) in 3 passes (Opus 6, Fable 4, Fable 2), 12 fixed (pass 3's two unreviewed), 0 listed
   *Report:* `reports/REPORT-c1b-2026-11-27.md`.
 

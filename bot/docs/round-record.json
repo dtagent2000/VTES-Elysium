@@ -155,6 +155,15 @@
   "NOT RUN": 0
  },
  "seconds": 662,
+ "ci": {
+  "head": "19bd8ae",
+  "runs": [
+   "2854/0",
+   "2854/0",
+   "2854/0"
+  ],
+  "gates": "success"
+ },
  "egress": "12 findings (stale-doc 4, half-done 3, unproven 3, rule-missed 2) in 3 passes (Opus 6, Fable 4, Fable 2), 12 fixed (pass 3's two unreviewed), 0 listed",
  "note": "v5-smokes: banuhaqim's steal pair is on v0.6.243's bytes too, the same seed (re-run)"
 }
