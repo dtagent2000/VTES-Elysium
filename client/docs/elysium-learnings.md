@@ -1,8 +1,16 @@
 # Elysium - Learnings & Working Notes
 
-> **This doc reflects Elysium v2.6.129 (client v2.6.191 / server v2.6.54 / bot v0.6.242 tested beside the suite, last updated 27 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
+> **This doc reflects Elysium v2.6.129 (client v2.6.192 / server v2.6.54 / bot v0.6.242 tested beside the suite, last updated 27 November 2026).** Always work from the newest copy: if an older project snapshot disagrees with the chat's latest delivered output, the higher version number wins.
 
 > **Compaction note (2026-09-09):** the June–July per-version learning sections (v1.5 … v2.5.x) are reduced to a title-only index at the end of this document; their full text, and the 25 July bot-harness recipe, live verbatim in `elysium-learnings-archive-2026-09-09.md` (NOT in the project — ask Johan for it when a title needs its story). Everything from the launch week onward, and the timeless sections (Technical learnings, pitfalls, how Johan works, the cheat sheet, the z-index map), is complete.
+
+**27 Nov 2026, later still (THE TOUR LEARNS THE WHEEL — v2.6.192):**
+- **A tutorial text that names a setting reads the setting.** The move's key is a choice, so the pool step names it through
+  `tutXferKey()` and says nothing when the move is off, as the shortcuts' texts read `keyBinds` through `tutKey`.
+- **Add to a pinned sentence, do not reword it.** The v2.6.181 test pins the two panning sentences; the double-click went after them.
+- **One step can be checked in a browser without its chapter.** Set `tut` by hand (`active`, `secId`, `steps`, `idx` one before the
+  step), add `on` to `#tutLayer`, start `tutTick` and call `tutGo(1)`: step 0's `onEnter` never runs. A Structured step on a Classic
+  table moves on by itself, so read its bubble in the same evaluate that shows it.
 
 **27 Nov 2026, later (BLOOD ON THE WHEEL — v2.6.191):**
 - **Shift turns a mouse wheel horizontal in Chrome and on macOS.** The event arrives with `deltaY` 0 and the step in `deltaX`, so

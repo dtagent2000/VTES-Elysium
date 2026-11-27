@@ -2,6 +2,25 @@
 
 *Journalen skrivs på svenska, med den nyaste posten först. De 190 posterna från 4 augusti till 26 november 2026 är frysta, hela och ordagranna, i det privata data-repot (`dtagent2000/VTES-Elysium-data`, `client-history/elysium-session-journal-2026-11-26.md`; se `docs/history/README.md`). Från 27 november bär journalen inga chattcitat och inga namn på privatpersoner, och ägaren nämns efter roll.*
 
+## [TUTORIALEN LÄR SIG HJULET] (27 november 2026, klient v2.6.192, srv-2.6.54 oförändrad)
+
+Ägaren mergade v2.6.191 och ville att tutorialen lär ut de nya kontrollerna. Jag föreslog att göra det i samma chatt med
+tre korta tillägg i befintliga steg, och ägaren sa kör.
+
+Classic-kapitlets zoomsteg och Structured-kapitlets Overview-anteckning säger nu att ett dubbelklick på mushjulet
+återställer vyn. Båda tilläggen står efter meningarna om att panorera med hjulet, som ett test från v2.6.181 låser.
+Poolsteget i Crypt & influence berättar att tangent + scroll på en vampyr flyttar blod mellan den och poolen i en enda
+gest, när som helst i spelet. Steget namnger den tangent som Settings ▸ Table har (tutXferKey) och säger ingenting när
+flytten är avslagen. Inget steg, ingen gate och inget mål ändrades, och flytten klarar poolstegets gate.
+
+Grindar: klient 440/0 (bot v0.6.242 bredvid). v2.6.191 mot den nya sviten ger 439/1, alltså det nya testet. Fyra mutationer
+av texterna fångades alla, och lintern för utfasade fraser från v2.6.186 är grön. I headless Chrome visade jag de tre
+stegen ett och ett och gjorde gesterna medan de stod uppe: 12 av 12.
+
+Osäkert:
+- Kapitlen är inte körda från början till slut, bara de tre stegen var för sig.
+- Poolstegets bubbla är längre nu. På en liten skärm kan den täcka mer av bordet.
+
 ## [BLOD PÅ HJULET] (27 november 2026, klient v2.6.191, srv-2.6.54 oförändrad)
 
 Ägaren bad om tre kontroller och frågade samtidigt efter handoffs från bottsidan.
