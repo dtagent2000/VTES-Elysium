@@ -77,7 +77,7 @@ function entropy32(){   // v0.6.220: a 32-bit seed from the platform -- Node's c
 }
 const fs     = IS_NODE ? require('fs')     : null;
 
-const BOT_VERSION = '0.6.244';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
+const BOT_VERSION = '0.6.245';   // the version only; the release note is in docs/elysium-bot-CHANGELOG.md
 // (v0.6.152 note moved to elysium-bot-CHANGELOG.md)
 // (v0.6.151 note moved to elysium-bot-CHANGELOG.md)
 // v0.6.119c (18 Sep 2026, THE STRATEGY LAYER -- B2 step 3, elysium-bot-strategy-layer-spec.md): layer 3 of the project owner's four-layer model as ONE plan per turn -- this.plan = { phase build/mid/end, posture lunge/hold/build/race, target, home, floor, reads } built by _strategize() at unlock and at the minion head from the table model + my own offensive ledger (_myForecast: best bleed per body, hand cards counted once, x my measured hit rate; preyTto = prey pool / forecast). Consumers, the ONLY places tactics read it: _keepBlocker (plan.home: inside the horizon H = 3, the SMALLEST number of bodies whose expected blocks buy one whole predator turn -- 119's first cut, EV per body, held racing decks home and was replaced after serie-b2s3 -- the grinding quota as floor while the predator reaches me inside 2H, lunge = 0), the influence loop + planner (_poolFloorEff: one expected predator turn of pool, x1.25 -- computed and emitted, consumed only with o.planFloor after the two series showed no gain), the action scorer (offW on bleed/pd/card/creep, econW on equip/fetch/recruit/strength/peek, the structural stock pick yields at preyTto <= 1.5), the rush scorer (target.dir x1.25 for a disabling deck whose predator reaches it inside H). NO persona term inside (debt 2): three personas read the same plan. One emit: `plan`. Section 93 (diag-93.js). Null point: serie-b2null-all.
@@ -1424,9 +1424,10 @@ class Bot {
         if(this.pending && m.seat !== this.turnSeat){
           /* the acting turn ended with my pending bleed unresolved — never
              auto-apply stale damage; the chat grammar is the safety valve.  */
-          this.chat('Note: an unresolved bleed at me expired with the turn — if it landed, tell me "bleed ' + this.pending.amount + '".');
+          if((this.pending.amount | 0) > 0) this.chat(this._expiredNote(this.pending));   // v0.6.245 (the sweep register 11.12): nothing at stake, nothing to tell -- a human's 0-pool employ was 'an unresolved bleed at me … bleed 0'
           this._clearPending('turn change');
         }
+        if(m.seat !== this.turnSeat) this._standing = null;   // v0.6.245 (11.11): an attempt never stands past its turn
         if(m.seat !== this.turnSeat && this.turnSeat && this.opp && this.opp[this.turnSeat] && this.opp[this.turnSeat].memo) this._hMemoTurnEnd(this.turnSeat);   // v0.6.225: their turn ended -- an open record resolves; the answer window closes (or lasts their next turn)
         if(m.seat !== this.turnSeat){ this._srWindowClosed('the turn changed', false); this._srSent = null; this._releaseHolds('action', 'combat'); }   // v0.6.239 (the egress review, findings 1 and 2): the last turn's 'as played' windows, actions and combats are over -- a reaction's 'Do not replace until after this action' is released here, never inside its action (_flushDraws releases in my own turn only). Drawn at the end of this dispatch when the next turn is another seat's; when it is mine, at my master phase's flush, counted in _handCount until then (pass 2, finding 4: a draw sent here was still in flight when Dreams' +2 read the hand)
         if(m.seat !== this.turnSeat){ this._turnActN = 0; this._turnSerial = (this._turnSerial | 0) + 1; }   // v0.6.217: + the turn's serial (Monster's 'once each turn' = once in each player's turn [ANK 20180719-4])   // v0.6.215 (V5 wave 3): the actions announced in this turn's minion phase so far (Channel 10: 'not usable during the first action in a minion phase')
@@ -1455,6 +1456,10 @@ class Bot {
         { const prevA = (this.tally && this.tally.mode === 'block') ? (this.tally.a | 0) : null; if(m && m.mode === 'block' && (prevA === null || (m.a | 0) !== prevA)){ this._aAt = Date.now(); this._aWho = m.who || null; } }   // v0.6.171: when the block counter's stealth last CHANGED (a bot actor's tally is closed only by a mode change, so a through action leaves its 'a' standing for the next)
         if(this.started){ if(!this.ev) this.ev = new EventLog(); const prev = this.tally || {}, f = {}; ['mode','a','b','ph','rd','rng','pr','ce','rl','nx','sa','sb','ea','eb','ga','gb','pa','pb'].forEach(k => { if(m[k] !== undefined && m[k] !== prev[k]) f[k] = m[k]; }); if(Object.keys(f).length) this.ev.push({ kind: 'tally', who: m.who || null, seat: m.who ? this._seatOfName(m.who) : 0, fields: f }); }   // v0.6.176; v0.6.178 (review): only the fields that CHANGED -- every relay carries the whole state, so 'fields present' said nothing
         this.caps.tally = true; this.tally = m;
+        if(this._standing && m.mode !== 'block'){   // v0.6.245 (11.11): the counter left block mode -- the attempt that stood is over: withdrawn (closed), or a combat began (it succeeded with no verdict line, as two humans may play it)
+          const s0 = this._standing, p0 = this.pending; this._standing = null;
+          if(m.mode === 'combat' && p0 && !p0.blockerVamp && !p0.routeVamp && s0.at >= (p0.annAt || 0) && !this.out) this._verdictAsTarget(true);   // another seat blocked the action: my record of it ends, no combat of mine
+        }
         if(this._phaseWait && m && m.mode === 'combat' && m.who && m.who !== this.o.name) this._phaseNudge(m.who, m.ph, 'tally');   // v0.6.165: a human stepping ph past the step answers it
         if(m && m.who !== this.o.name) this._fTallyAt = Date.now();   // v0.6.147: a counter written by SOMEBODY ELSE reached me -- the relay carries tally, the net below stands down
         if(m.mode === 'block' && this._ask && this._ask.contested && this._actingVamp && !this.out){ if(m.who && m.who !== this.o.name) this._restartAskTimer(); try { this._stealthSecondLook(); } catch(e){ this.o.log('second-look error:', e.message); } }   // v0.6.143c; v0.6.153: a foreign counter move is table activity -- the verdict clock restarts (v0.6.115's silence principle), so a bot blocker's intercept card landing after ITS beat is never overtaken
@@ -1467,7 +1472,7 @@ class Bot {
           else if(wasVote) rc.done('the counter was closed'); }
         if(m.mode !== 'vote' && wasVote) this._onVoteClose();                  // P0: the referendum closed -- the once-guard re-arms   // M2 (spec §7.5-D): the table never waits on a bot with no titles; v0.4.2: the ousted stay quiet
         if(m.mode === null && this._ask && this._ask.contested){   // v0.3.9 (the project owner): a null tally with no verdict line = the block was WITHDRAWN (the × cancel) — reopen the window fresh
-          this._ask.contested = false;
+          this._ask.contested = false; this._attemptOver(this._ask);   // v0.6.245: the withdrawn attempt is over
           this._restartAskTimer();
           this._armReactTimer();
         } },
@@ -3274,7 +3279,7 @@ class Bot {
     const actorUnlocked = ((tpub && tpub.cards) || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && c.name !== info.vamp).length;
     const preySeat = this.nextLive(actorSeat);
     const waitingFor = (role === 'predator' && preySeat !== this.seat && this.live(preySeat)) ? this.seatName(preySeat) : null;   // the prey answers first; a 2-live-player table collapses prey and predator onto me
-    this.pending = { who, amount: cls.amount | 0, kind: 'undirected', sub, T: cls.T, role, actorSeat, actorUnlocked, actingVampName: info.vamp, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor, note: cls.note, card: info.card || null };
+    this.pending = { who, amount: cls.amount | 0, kind: 'undirected', sub, T: cls.T, role, actorSeat, actorUnlocked, actingVampName: info.vamp, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor, note: cls.note, card: info.card || null, annAt: Date.now() };   // v0.6.245: annAt -- the action's announce (_standingFor, _commitBlock's fresh stealth)
     this.o.log('undirected window: ' + sub + ' by ' + who + ' (' + cls.T + ', I am ' + role + (waitingFor ? ', waiting for ' + waitingFor : '') + ')');
     if(sub === 'leave') this.pending.declined = true;   // v0.6.128: a block here is no combat -- it is an offer to diablerise, which the bot never takes (debt 25c); Pass at once so the actor does not wait out the clock
     if(!waitingFor) this._reactWindow();
@@ -3287,7 +3292,7 @@ class Bot {
     if(!unlocked) return false;                                        // nobody to block with -- comply as before
     if(this.pending) this._clearPending('superseded by rush');
     const role = (this.nextLive(actorSeat) === this.seat) ? 'prey' : (this.prevLive(actorSeat) === this.seat) ? 'predator' : 'cross';
-    this.pending = { who, amount: 0, kind: 'rush', sub: 'rush', T: 'T5', role, actorSeat, actorUnlocked: 0, actingVampName: rusherVamp, rushTarget: vc.name, targetActs: !(ro && ro.targetActs === false), noLock: !!(ro && ro.noLock), via: (ro && ro.via) || null, card: (ro && ro.card) || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: !!(this._famedMine && this._famedMine.has(vc.name)) };   // v0.6.202: targetActs -- Deep Song [ANI]: the rushed vampire is the acting minion of the combat
+    this.pending = { who, amount: 0, kind: 'rush', sub: 'rush', T: 'T5', role, actorSeat, actorUnlocked: 0, actingVampName: rusherVamp, rushTarget: vc.name, targetActs: !(ro && ro.targetActs === false), noLock: !!(ro && ro.noLock), via: (ro && ro.via) || null, card: (ro && ro.card) || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: !!(this._famedMine && this._famedMine.has(vc.name)), annAt: Date.now() };   // v0.6.202: targetActs -- Deep Song [ANI]: the rushed vampire is the acting minion of the combat
     if(ro && ro.lvl) this.pending.lvl = ro.lvl; if(ro && ro.ceBan) this.pending.ceBan = ro.ceBan; if(ro && ro.rushTo) this.pending.rushTo = ro.rushTo;   // v0.6.236: a rush card's level and its ban on my combat-ends strikes travel on the pending to the comply (_complyRush)
     this._reactWindow();
     return true;
@@ -3298,7 +3303,7 @@ class Bot {
     if(!(this.board.some(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked) || !!this._wakeCard())) return false;   // nobody to block with -- comply
     if(this.pending) this._clearPending('superseded by an action at my card');
     const role = (this.nextLive(actorSeat) === this.seat) ? 'prey' : (this.prevLive(actorSeat) === this.seat) ? 'predator' : 'cross';
-    this.pending = { who, amount: 0, kind: 'rush', sub: 'burnCard', T: 'T6', role, actorSeat, actorUnlocked: 0, actingVampName: actorVamp, rushTarget: null, burnCardId: card.id, burnCard: card.name, targetActs: false, noLock: true, via: 'burnCard', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: false };
+    this.pending = { who, amount: 0, kind: 'rush', sub: 'burnCard', T: 'T6', role, actorSeat, actorUnlocked: 0, actingVampName: actorVamp, rushTarget: null, burnCardId: card.id, burnCard: card.name, targetActs: false, noLock: true, via: 'burnCard', contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor: null, famedTarget: false, annAt: Date.now() };
     if(this.o.jackBurn && this._isJackName(card.name)) this.pending.cardWorth = +this._myJackWorth(card).toFixed(2);   // v0.6.224 (D-114 spec §5): what my Jack still takes from my prey
     else if(!this._isJackName(card.name) && this._w5UseWorth(this._w5E(card.name))){ const w = this._cardWorth(card, this.seat), w2 = steal ? this._cardWorth(card, actorSeat) : null; if(w) this.pending.cardWorth = +Math.max(0, w.worth - (w2 ? w2.worth : 0)).toFixed(2); }   // v0.6.230 (V5 wave 5, D-119 (2)): the defence weighs the card's worth to me -- stolen, also what it then does for its new owner
     if(steal) this.pending.steal = true;
@@ -4587,7 +4592,7 @@ class Bot {
     const actorUnlocked = ((tpub && tpub.cards) || []).filter(c => c && c.kind === 'crypt' && c.zone === 'ready' && !c.locked && c.name !== vampName).length;
     const preySeat = this.nextLive(actorSeat);
     const waitingFor = (role === 'predator' && preySeat !== this.seat && this.live(preySeat)) ? this.seatName(preySeat) : null;
-    this.pending = { who, amount, kind: 'undirected', sub: 'political', T: amount > 0 ? 'T1' : 'T6', role, actorSeat, actorUnlocked, actingVampName: vampName, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor, note: rt.card + (amount ? ' would cost me ' + amount : ' costs me nothing'), card: rt.card };
+    this.pending = { who, amount, kind: 'undirected', sub: 'political', T: amount > 0 ? 'T1' : 'T6', role, actorSeat, actorUnlocked, actingVampName: vampName, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), waitingFor, note: rt.card + (amount ? ' would cost me ' + amount : ' costs me nothing'), card: rt.card, annAt: Date.now() };
     this.o.log('undirected window: political (' + rt.card + ') by ' + who + ' (' + this.pending.T + ', I am ' + role + ', stake ' + amount + (waitingFor ? ', waiting for ' + waitingFor : '') + ')');
     if(!waitingFor) this._reactWindow();
     return true;
@@ -7837,6 +7842,7 @@ class Bot {
   }
   _announceTallyA(raw){
     this._clearCombatStashes();      // v0.6.103 (#1): a new action of MINE starts with an empty handshake -- whatever was stashed belonged to an earlier combat (mine or somebody else's)
+    this._standing = null;           // v0.6.245 (11.11): and no attempt of another action stands at mine
     this._lastBlockerName = null; this._lastBlockerSeat = 0;   // B-55e-b: every new announce starts with no known blocker              // VA review (2 Aug, SOURCE-VERIFIED reversal): the rulebook says stealth/intercept 'can decrease even below 0' and the block verdict is the RAW >= comparison (vekn.net Detailed Turn Sequence + FAQ 3.22: 'Can I block a 0-stealth action if I have -1 intercept?' -- negatives are all possible, so NO) -- the earlier floor-at-0 design was WRONG and would have let a bare Christine block and a Royce shed his tax. EVERY block-mode announce routes here: the actor-side RAW total is stored (for _bumpTallyA's arithmetic) and written AS-IS to the wire; the L12.block regex was widened to -?\d+ the same round. -9 is a sanity cap only.
     this._actStealthRaw = raw | 0;
     this._writeTally({ mode: 'block', a: Math.min(99, Math.max(-9, raw | 0)), b: 0 });   // v0.6.113 (THE HELPER GATE): was `if(this.caps.tally)` -- the bot's own stealth on the shared counter IS the structured outcome announcement the project owner wants the resolvers for (humans and bots read the same number), so it never waits for a human to open a counter first; the write is also what lets the bot declare a verdict itself when the clock runs out (see _askTimeout)
@@ -8530,7 +8536,7 @@ class Bot {
     const realOwner = owner || who;
     if(this.pending && this.pending.lateWait) this._lateWordEnd(this.pending, 'left');   // v0.6.237 (the egress review): its wait for the actor's word ends with it (its reminder fired on a dead pending)
     if(this.pending) this._flushRelock(this.pending, 'replaced');   // v0.6.228 (the egress review, finding 5): a new action's pending ends the last one -- its Eyes of the Wild Gangrels lock again
-    this.pending = { who: realOwner, amount, kind: kind || 'bleed', actingVampName: actingVampName || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set() };
+    this.pending = { who: realOwner, amount, kind: kind || 'bleed', actingVampName: actingVampName || null, contested: false, reacted: new Set(), blockerVamp: null, declined: false, attempted: new Set(), annAt: Date.now() };
     if(extra) Object.assign(this.pending, extra);   // v0.6.220 (wave A's riders): set BEFORE _reactWindow -- a block decision taken in this tick reads them (peekSup set after it gave Castellan and The Dowager 0 on every Revelations)   // fas B (16 July): kind 'bleed' | 'pool' -- pool damage is NOT a bleed: _reactWindow suppresses bounce, _applyPending skips the Edge transfer   // fas A+ (16 July): vampire IDs that already made a FAILED block attempt this action -- the rulebook (the project owner's steg-3 reading, verified steg 5): a failed attempt means retrying with a DIFFERENT minion; the same one never goes again   // steg 3 (15 July): `declined` -- see _reactWindow
     this.o.log('pending bleed armed: ' + amount + ' from ' + realOwner + (actingVampName ? ' (' + actingVampName + ')' : '') + (owner && owner !== who ? ' (via bounce from ' + who + ')' : ''));
     this._reactWindow();
@@ -8676,7 +8682,7 @@ class Bot {
     }
     this.send({ t: 'log', html: '<b>' + esc(av.v.name) + '</b> plays <b>' + esc(cb.name) + '</b>: cancels the block attempt by <b>' + esc(who) + '</b> \u2014 that minion cannot try again.' });   // L12.cancel
     this.push();
-    a.contested = false;   // the attempt died outright; the window continues for OTHER minions
+    a.contested = false; this._attemptOver(a);   // the attempt died outright; the window continues for OTHER minions
     this._restartAskTimer();
   }
   _onPayCancel(owner, card){         // the actor's side: a blocking minion's controller burned the pool for my card in its open window
@@ -8872,6 +8878,7 @@ class Bot {
     if(!this.pending || this.out) return;
     const p = this.pending;
     if(p.passTimer) clearTimeout(p.passTimer);
+    { const sa = this._standingFor(p); if(sa){ this.o.log('react window: ' + sa.who + '’s block attempt (' + (sa.vamp || 'a minion') + ') stands -- nothing of mine until its verdict'); return; } }   // v0.6.245 (11.11, part 1): one attempt at a time -- its verdict line reopens this window (_verdictAsTarget), its success ends my record
     if(p.lateWait) this._lateWordEnd(p, 'answer');   // v0.6.237: the human actor's modifier ended the wait for their word -- here, before the early returns (the egress review, pass 2: a Pass below left the wait live, and it swallowed the actor's It resolves)
     p._lateGen = (p._lateGen | 0) + 1;              // and a late bounce already on its beat (_lateWordGo) is void: this evaluation decides
     if(this._blockBar && this._blockBar.who === p.who && this._blockBar.bar !== 'allies' && !p.declined){ p.declined = true; p.barred = this._blockBar.card; this.o.log('react window: ' + this._blockBar.card + ' \u2014 my vampires cannot block this action (reactions only)'); this._emit('block-barred', { by: p.who, card: this._blockBar.card }); }   // v0.6.127 (L12.blockBar): every blocker I have is a vampire -- the block is off the table, a bounce or a reducer is not
@@ -8905,7 +8912,7 @@ class Bot {
        the project owner's block-finality rule to reactions too). Only when declined AND
        nothing to bounce with is the immediate no-theatre Pass right. */
     if(p.declined && this._maybeArchon(p)) return;   // v0.6.215 (V5 wave 3): a reopened window (a modifier raised the bleed to 4+) after blocks are declined
-    if(p.declined && !bounce){ this.say('Pass'); this._lateSettle(p); return; }   // v0.6.237: a late flow's word heard in a gap settles here (_lateSettle)
+    if(p.declined && !bounce){ this.say('Pass'); this._lateSettle(p); this._closeZeroRecord(p); return; }   // v0.6.237: a late flow's word heard in a gap settles here (_lateSettle). v0.6.245 (11.12): a human's 0-pool undirected action ends here for me
     /* v0.6.204 (R3, play-test 14 Oct F6, cosmetic): against a BOT actor my 'Hold on...' is theatre (bots never operate the hold), and at
        the client's pace it reached the table between the actor's announce and its question ("Block? (21s -> no)" 0.2 s after it). It
        now waits for that question, and is dropped once my answer has gone out. Against a human it is said at once, as before; paceMs 0
@@ -8931,6 +8938,7 @@ class Bot {
     p.passTimer = setTimeout(() => {
       p._thinkQ = false;   // v0.6.204 (F6): my answer goes out now -- a thinking line after it would be out of order
       if(this.pending !== p || this.out) return;
+      { const sa = this._standingFor(p); if(sa){ this.o.log('react window: ' + d.why + ' -- but ' + sa.who + '’s block attempt (' + (sa.vamp || 'a minion') + ') stands: nothing of mine until its verdict'); return; } }   // v0.6.245 (11.11, part 1): it came in my react delay
       if(this._archonFor(p)){ this._maybeArchon(p); return; }   // v0.6.215 (V5 wave 3): a bleed of 4+ at me and Archon Investigation in hand -- I decline the block (only my minions may block a bleed at me) and burn the bleeder: worth more than a bounce (the 4+ goes nowhere) and than a block (no combat to win)
       if(d.bounce && bounce && this.o.lateBounce !== 0 && p.declined && !actorP.bot){
         if(p.lateDue && p._lateWord){ this.o.log('react window: ' + d.why + ' \u2192 ' + p.who + ' gave the word in my react delay (' + p._lateWord + '): the bounce on the total now'); this._lateBounceNow(p); }   // the egress review, pass 2: the word came while I weighed the modifier -- it stands
@@ -8943,7 +8951,7 @@ class Bot {
         this._emit('defence-plan', { tag: 'ask-total', amount: p.amount | 0 });
         this._lateWordWait(p, 'first');   // v0.6.237: the wait for the actor's word under the tempo (was a fixed 4 s grace, modGraceMs; v0.6.198 made it hold-aware, v0.6.204 started it on the wire)
       }
-      else { this.o.log('react window: ' + d.why); p.declined = true; this.say('Pass'); if(p.burnCardId) this._complyBurnCard(p); else if(p.kind === 'rush') this._complyRush(p); this._lateSettle(p); }   // v0.6.217: an action at my card burns it on my Pass. v0.6.107 (B1): declining a rush = the rushed vampire locks and fights   // steg 3: the decline itself -- final for BLOCKS (never set on a failed ATTEMPT; that path re-enters via _onLog's L12.block fail handler with declined still false). steg 5: no longer final for the whole window -- see above.
+      else { this.o.log('react window: ' + d.why); p.declined = true; this.say('Pass'); if(p.burnCardId) this._complyBurnCard(p); else if(p.kind === 'rush') this._complyRush(p); this._lateSettle(p); this._closeZeroRecord(p); }   // v0.6.245 (11.12): _closeZeroRecord   // v0.6.217: an action at my card burns it on my Pass. v0.6.107 (B1): declining a rush = the rushed vampire locks and fights   // steg 3: the decline itself -- final for BLOCKS (never set on a failed ATTEMPT; that path re-enters via _onLog's L12.block fail handler with declined still false). steg 5: no longer final for the whole window -- see above.
     }, reactMs);
   }
   /* v0.6.237 (the project owner's playtest, 24 Nov: after asking, the bot did not wait for the reaction and played Deflection at once): against a
@@ -9230,7 +9238,7 @@ class Bot {
     }
     if(!blocker && !plan){           // fas A+ (16 July): no un-attempted candidate remains -- retrying with the SAME minion is illegal, so this is a genuine end of the road: decline (final for blocks, steg 5) instead of looping a doomed Block!/fails cycle
       this.o.log('block: no un-attempted candidate remains \u2014 declining');
-      p.contested = false; p.declined = true; this.say('Pass');
+      p.contested = false; p.declined = true; this.say('Pass'); this._closeZeroRecord(p);   // v0.6.245 (11.12)
       return;
     }
     p.attemptVamp = blocker || plan.vamp; p._cancelComing = null;   // v0.6.233 (V5 wave 6a): the vampire this attempt raises, named before the shout -- an answer delivered inside it (the hotseat bridge, L-92: True Love's Face's 'as played' window) reads it; a new attempt has no cancel coming
@@ -9254,7 +9262,7 @@ class Bot {
       else if(plan.kind === 'stray'){ if(p._cancelComing) return; if(this._strayUnlockBurn(plan.vamp)) blocker = plan.vamp; }   // v0.6.233: no ally burned for an attempt a declined True Love's Face counter ends
       if(!blocker){                  // belt: the route failed at play time (a shift under the await) -- withdraw honestly rather than attempt with nobody
         this.o.log('block: the locked-blocker route failed at play time \u2014 declining');
-        p.contested = false; p.declined = true; p.blockerVamp = null; p.routeVamp = null; this.say('Pass');
+        p.contested = false; p.declined = true; p.blockerVamp = null; p.routeVamp = null; this.say('Pass'); this._closeZeroRecord(p);   // v0.6.245 (11.12)
         return;
       }
     }
@@ -9266,7 +9274,8 @@ class Bot {
     const baseSt = p.kind === 'undirected' ? 1 : 0;   // the rulebook default: directed 0, undirected +1
     const humanActor = !!(p.who && this._isHumanName(p.who));
     const aStanding = (this.tally && this.tally.mode === 'block') ? (this.tally.a | 0) : null;
-    const aFresh = aStanding === null ? null : (!humanActor ? aStanding : ((this._aAt && this._obs && this._obs.who === p.who && (this._aAt >= this._obs.at || (this._aWho === p.who && this._aAt >= this._obs.at - 3000))) ? aStanding : null));   // v0.6.171 (pre-handover review): a HUMAN actor's 'a' counts only if it changed after their announce -- a bot actor's earlier action that went through leaves its stealth on the counter (the tally is closed only by a mode change), and the next human bleed read it as its own
+    const annAt = p.annAt || ((this._obs && this._obs.who === p.who) ? this._obs.at : 0);   // v0.6.245 (11.11, part 4): the action's OWN announce -- _obs is replaced by any later play line (the prey's intercept card at the C1b playtest), and the second attempt then re-seeded the default over the actor's booked stealth (a=0 over 1)
+    const aFresh = aStanding === null ? null : (!humanActor ? aStanding : ((this._aAt && annAt && (this._aAt >= annAt || (this._aWho === p.who && this._aAt >= annAt - 3000))) ? aStanding : null));   // v0.6.171 (pre-handover review): a HUMAN actor's 'a' counts only if it changed after their announce -- a bot actor's earlier action that went through leaves its stealth on the counter (the tally is closed only by a mode change), and the next human bleed read it as its own
     const stealthNow = (!humanActor && aFresh != null) ? aFresh : Math.max(aFresh == null ? 0 : aFresh, baseSt);   // v0.6.219 (the graded readings): a BOT actor's counter is its raw stealth, written at its own announce -- Ariane's and Kalyani's undirected 0 is not floored at the default 1 (the floor stays for a human's unbooked counter)
     if(humanActor && aFresh == null && blocker) this._writeTally({ mode: 'block', a: baseSt });   // v0.6.171: seed the human's side with the rulebook default (0 directed / 1 undirected) so the counter and the verdict read the true numbers   // v0.6.169 (the project owner: the bot played intercept at once against a declared bleed with no stealth): directed actions carry 0 stealth, undirected +1
     const baseIcp = blocker ? this._equipIntercept(blocker, p) + this._hostedIntercept(blocker, p) + this._cryptIntercept(blocker, p) : 0;
@@ -10792,6 +10801,16 @@ class Bot {
       const v = !(reason === 'block succeeded' && bv && bv.id === rl.id) && (this.board || []).find(c => c && c.id === rl.id && c.kind === 'crypt' && c.zone === 'ready');
       if(v && !v.locked){ v.locked = true; this._emit('relock', { vamp: v.name, card: rl.card, why: reason }); this.note(v.name + ' locks again: it did not block this action (' + rl.card + ').'); this.push(); } });
   }
+  _expiredNote(p){                   // v0.6.245 (the sweep register 11.12): the turn-end note names what expired -- a bleed is a bleed; any other action with my pool at stake says whose action it was
+    const n = p.amount | 0;
+    if(p.kind === 'bleed') return 'Note: an unresolved bleed at me expired with the turn — if it landed, tell me "bleed ' + n + '".';
+    const pol = p.sub === 'political' || !!p.political;
+    return 'Note: ' + p.who + '’s ' + (pol ? 'referendum' : 'action') + (p.card ? ' (' + p.card + ')' : '') + ' was still unresolved when the turn ended, with ' + n + ' pool at stake for me — if it cost me pool, tell me "' + (pol ? 'vote ' : 'bleed ') + n + '".';
+  }
+  _closeZeroRecord(p){               // v0.6.245 (11.12): my decline of a HUMAN's undirected action that costs me nothing ends my part in it -- nothing lands on my pool at its resolution, so the record closes now, silently (it lingered to the turn's end and said 'bleed 0', and a lingering record kept me from the next 'Any blocks?'). A bot actor always says It resolves: unchanged
+    if(!p || this.pending !== p || p.kind !== 'undirected' || (p.amount | 0) > 0 || !this._isHumanName(p.who) || (p.relock && p.relock.length)) return;   // an Eyes of the Wild relock waits for the action's resolution
+    this._clearPending('declined, nothing at stake');
+  }
   _clearPending(reason){
     if(this._vWait) this._vwEnd('left');   // v0.6.204 (F10): the verdict wait dies with the pending
     this._reactManeuverGrant = false; this._reactManeuverGrantVamp = null;   // N1 belt: a failed block means no resulting combat -- the Guard Dogs rider dies with the pending
@@ -11231,6 +11250,7 @@ class Bot {
     }
     if((m = t.match(L12.block))){
       const success = m[3] === 'succeeds';
+      this._standing = null;   // v0.6.245 (11.11): the attempt that stood has its verdict
       if(!this._ask && this._oppLastAct && Date.now() - this._oppLastAct.at < 120000){   // v0.6.118: their action met a verdict -- the hit rate the forecast reads
         const la = this._oppLastAct; if(success && la.offensive) this._minionRec(la.seat, la.vamp).blocked++;   // v0.6.118d: only an OFFENSIVE action's block counts against the hit rate
         if(la.a > 0) this._opp(la.seat).stealthUsed.push(la.a);
@@ -11238,7 +11258,7 @@ class Bot {
       }
       if(this._ask){                                                 // as ACTOR: the referendum answers my Block? itself
         if(success) return this._answer('block', who || 'the table');
-        this._ask.contested = false;                                 // failed block: contest settled, window continues
+        this._ask.contested = false; this._attemptOver(this._ask);   // failed block: contest settled, window continues (v0.6.245: the attempt is over)
         this._restartAskTimer();
         return;
       }
@@ -11246,6 +11266,7 @@ class Bot {
       return;
     }
     if((m = t.match(L12.cancel))){
+      if(this._standing && this._standing.who === m[3]) this._standing = null;   // v0.6.245 (11.11): the attempt that stood died outright
       /* fas C (16 July): my block attempt was CANCELLED (Elder Impersonation-class).
          m[3] names ME (the blocking player). The failed minion is already in
          pending.attempted (registered at attempt time, fas A+), so this is exactly
@@ -11471,6 +11492,8 @@ class Bot {
     }
     if((m = t.match(L12.attempt)) || (m = t.match(L12.attemptIcp)) || (m = t.match(L12.interceptPlay)) || (m = t.match(L12.blockAct))){   // v0.6.106 (#14): another seat's block attempt -- the blocker's vampire name (latest attempt wins) + the table climate counter; v0.6.110 (R2, #12): + the client's `NAME blocks.`
       { const st = this._seatOfName(who); if(st && st !== this.seat){ const oo = this._opp(st); const ip = t.match(L12.interceptPlay); if(ip) oo.icpSum = (oo.icpSum | 0) + (parseInt(ip[3], 10) | 0); else oo.blockTries = (oo.blockTries | 0) + 1; } }   // v0.6.129: oppIntercept's writers -- an attempt line counts the try, an intercept line adds to it
+      if(who !== this.o.name) this._noteStanding(who, m[1]);   // v0.6.245 (11.11): another seat's attempt stands until its verdict
+      { const a2 = this._ask; if(a2 && a2.contested && a2.attemptBy && who !== this.o.name && who !== a2.attemptBy){ this._refuseAttempt(a2, who, m[1]); return; } }   // v0.6.245 (11.11, part 1): a second seat's attempt line while one stands at my action -- not taken up, and it renames no blocker (the verdict's combat is the standing attempt's: at the C1b playtest it went to the second blocker)
       this._noteBlockAttempt(m[1], false, this._seatOfName(who));
       /* v0.6.110 (R2, #12, the project owner): when the player runs the Block action BEFORE the
          Block! phrase, it is the block, and the bot does not wait for the phrase. The
@@ -11626,6 +11649,39 @@ class Bot {
      Engage: SAY[0] or an anchored chat 'hold on'. Release: the sayer's next
      flow phrase (say 1/2/3/4/7) or chat 'carry on'/'resume'/'it resolves'.
      The gate lives in _pace(); acks are chat lines; reminder on MY turn.   */
+  /* v0.6.245 (the sweep register 11.11; RULINGS D-149, the owner's go-ahead on the four parts): ONE BLOCK ATTEMPT AT A TIME. The
+     rulebook, who may attempt to block: an undirected action "can be blocked by the acting Methuselah's prey or predator, with the prey
+     getting the first opportunity to block"; "a minion can attempt to block as many times as they wish as long as another minion is not
+     already blocking"; and its detailed course of an action, B: while an attempt stands "no other minion can attempt to block until this
+     block attempt is resolved", which happens "once every Methuselah has passed". At the C1b playtest two bots blocked one human action
+     (two combats), and at a bot's referendum a human prey's Pass inside the human's own attempt let the bot predator attempt over it.
+     _standing is another seat's attempt as the table showed it: its attempt line (a human's 'Block!' shout too -- a human may shout
+     before right-clicking; a bot always sends its line, and a bot whose route failed after its shout says Pass with no line), until
+     its verdict line, a cancel of it, the counter leaving block mode, 'It resolves', my own announce or the turn's end. A pending reads
+     it through _standingFor (an attempt seen since the pending's own action was announced, p.annAt). */
+  _noteStanding(who, vamp){
+    if(!who || who === this.o.name) return;
+    const s = this._standing;
+    if(s && s.who !== who) return;   // the attempt that stands stays the one; a second seat's line while it does is no attempt of its own
+    this._standing = { who, vamp: vamp || (s && s.vamp) || null, at: s ? s.at : Date.now() };
+  }
+  _standingFor(p){ const s = this._standing; return (s && p && s.who !== this.o.name && s.at >= (p.annAt || 0)) ? s : null; }
+  _preyDeclined(who, via){           // the prey's word at an undirected action I am the predator of: a decline opens my window; inside the prey's own standing attempt it resolves that attempt (B: everybody passed), and I go on waiting
+    const p = this.pending; if(!p || !p.waitingFor || p.waitingFor !== who) return false;
+    const sa = this._standingFor(p);
+    if(sa && sa.who === who){ this.o.log('the prey ' + who + ' passes inside its own block attempt (' + (sa.vamp || 'a minion') + ', ' + via + ') -- that resolves the attempt, it declines nothing: I wait for the verdict'); return true; }
+    p.waitingFor = null; p.contested = false; this._reactWindow(); return true;
+  }
+  _refuseAttempt(a, who, vamp){      // the acting side (part 1): a second seat's attempt while one stands is not taken up -- the counter, the blocker's name and the verdict stay the standing attempt's
+    this._emit('second-attempt', { who, vamp: vamp || null, standing: a.attemptBy, human: this._isHumanName(who) });
+    a._refused = a._refused || new Set();
+    if(a._refused.has(who)) return;   // said once per seat and attempt
+    a._refused.add(who);
+    this.o.log('block attempt by ' + who + ' not taken up: ' + a.attemptBy + '’s attempt stands (one at a time)');
+    const sv = (this._lastBlockerSeat && this._lastBlockerSeat === this._seatOfName(a.attemptBy) && this._lastBlockerName) || a.attemptBy;
+    if(this._isHumanName(who)) this.chat('Trainbot: ' + this._spoken(sv) + '’s block attempt is still standing — one block attempt at a time.');   // the owner's go-ahead (D-149): an instruction to a human (the tier rule)
+  }
+  _attemptOver(a){ if(a){ a.attemptBy = null; a._refused = null; } }   // the standing attempt at my action is resolved (a verdict, a cancel, the counter withdrawn)
   _noteBlockAttempt(vamp, own, seat){   // v0.6.202: + the attempt line's sender seat (the actor's handshake asks whether its blocker is a bot even when the name chain broke). v0.6.106 (#14): one site for both readers -- others' attempts arrive as frozen log lines, my own are noted at _commitBlock. The name is what the actor's handshake filter keys on (_expectedOppVamp); the counter is v0.6.93's table block climate (READ = BASE; consumers are documented, not built)
     if(!own && vamp){ this._lastBlockerName = vamp; this._lastBlockerAt = Date.now(); this._lastBlockerSeat = seat | 0; this._condStealthAdjust(); this._condStealthLook(); }   // v0.6.110 (R2, #12): the stamp is what the Who-blocks grace compares against. v0.6.228: a conditional stealth of my action follows the new blocker (_condStealthAdjust), and a card that counts only against a named blocker gets its look (_condStealthLook)
     this._tableBlockAttempts = (this._tableBlockAttempts | 0) + 1;
@@ -11774,6 +11830,9 @@ class Bot {
     if(phrase === 'It resolves' && this._refActor && this._refActor.who === m.who) this._refActor = null;   // v0.6.127
     if(phrase === 'It resolves' && this._blockBar && this._blockBar.who === m.who) this._blockBar = null;   // v0.6.127: the bar dies with its action
     if(phrase === 'It resolves' && this._refT && this._refT.who === m.who) this._refT = null;   // v0.6.124: the caller's action is over -- so are its terms (the result line normally got here first)
+    if(phrase === 'It resolves') this._standing = null;   // v0.6.245 (11.11): the action is over, and with it any attempt that stood
+    if(phrase === 'Pass' || phrase === 'No block' || phrase === 'No reaction') (this._declAt || (this._declAt = {}))[m.who] = Date.now();   // v0.6.245 (11.11): a seat's last decline -- a predator window born after its prey's word reads it (_openAskedWindow)
+    if(phrase === 'Block!' && this._isHumanName(m.who)) this._noteStanding(m.who, null);   // v0.6.245 (11.11): a human's shout is an attempt before its line names the minion (a bot always sends its line; its shout alone may end in a Pass when its route failed)
     if(this._refCall && !this._refCall.closed && !this._ask){         // v0.6.122: MY referendum is polling -- the project owner (18 Sep): Hold on buys thinking time, 'It resolves' from anyone ends the wait and I announce the outcome at once; Pass = no votes
       const rc = this._refCall, sp = (this.players || []).find(q => q && q.name === m.who);
       if(phrase === 'It resolves'){ rc.paused.delete(m.who); rc.done('resolved by ' + m.who); return; }
@@ -11783,7 +11842,7 @@ class Bot {
     /* as ACTOR: my Block? window listens to the table's phrases */
     if(this._ask){
       const a = this._ask;
-      if((phrase === 'Block!' || phrase === 'No block' || phrase === 'No reaction' || phrase === 'Pass' || (a.reactionsOnly && phrase === 'No')) && this._staleAnswer(a, m.who, phrase)) return;   // v0.6.206
+      if((phrase === 'Block!' || phrase === 'No block' || phrase === 'No reaction' || phrase === 'Pass' || phrase === 'No') && this._staleAnswer(a, m.who, phrase)) return;   // v0.6.206. v0.6.245 (the sweep register 4.25): 'No' at a block question too -- the question says 'say "block" or "no"'
       if(phrase === 'Hold on\u2026'){                               // someone is thinking — pause my timeout
         /* v0.6.108 (client handoff item 1, MEASURED deadlock): bots never
            operate the hold — the same doctrine _holdHook already applies,
@@ -11814,6 +11873,7 @@ class Bot {
            never stalls the table. If the line came first (above), the shout is
            the same attempt and the handler must not run twice. */
         if(a._lineBlockFrom === m.who){ if(a._whoT){ clearTimeout(a._whoT); a._whoT = null; } return; }
+        if(a.contested && a.attemptBy && a.attemptBy !== m.who) return this._refuseAttempt(a, m.who);   // v0.6.245 (11.11, part 1): one attempt at a time -- before the shout's own bookkeeping (the Who-blocks grace, _sayBlockFrom)
         a._sayBlockFrom = m.who; a._sayBlockAt = Date.now();
         if(a._whoT) clearTimeout(a._whoT);
         const hp2 = (this.players || []).find(q => q && q.name === m.who);
@@ -11829,7 +11889,7 @@ class Bot {
         return this._onBlockAttempt(m.who);
       }
       if(a.reactionsOnly && phrase === 'Yes'){ const hpY = (this.players || []).find(q => q && q.name === m.who); if(!(hpY && hpY.bot)){ a.pausedBy.add(m.who); if(a.timer){ clearTimeout(a.timer); a.timer = null; a.deadline = null; } } return; }   // v0.6.144 (the project owner): 'Yes' to 'Any reaction?' on a bleed total = I am reacting, wait for me (the Hold on... semantics)
-      if(phrase === 'No block' || phrase === 'No reaction' || phrase === 'Pass' || (a.reactionsOnly && phrase === 'No')){   // v0.6.144: 'No' answers a reactions-only question at once
+      if(phrase === 'No block' || phrase === 'No reaction' || phrase === 'Pass' || phrase === 'No'){   // v0.6.144: 'No' answers a reactions-only question at once. v0.6.245 (4.25): and a block question -- its prompt names it ('say "block" or "no"'), and the typed 'no' already answered it (_chatDecline); a human's 'No' waited out the clock at the C1b playtest
         this._lastDecline = { who: m.who, phrase, at: Date.now() };   // 'No block' declines the BLOCK only -- the custom is then to hear the bleed total; 'No reaction' / 'Pass' decline everything
         a.pausedBy.delete(m.who);
         /* steg 2 (15 July): was hardcoded to MY OWN prey -- broke down the moment
@@ -11838,6 +11898,13 @@ class Bot {
            _onLog's L12.bleed handler); falls back to preySeat for hunt, which has
            no target/bounce concept at all, preserving the old behaviour there. */
         if(a.undirected){                                              // v0.6.107 (B1): prey AND predator may block; the ask closes when both have declined (or the timer speaks)
+          if(a.contested && a.attemptBy === m.who && this._isHumanName(m.who)){   /* v0.6.245 (the sweep register 11.11, part 3; RULINGS D-149): a HUMAN blocker's Pass
+               inside the human's own attempt resolves that attempt -- the verdict from the counter, as a directed target's Pass does below -- and is
+               no pass of the seat: after a failed verdict that seat may attempt again or decline (the rulebook's detailed course, B then A). At
+               the C1b playtest it counted as the prey's pass, the bot predator then attempted over the human's standing block and took its combat */
+            if(!a.pausedBy.size){ if(a.plan && a.plan.noClock){ a._end = 'answer'; this._askTimeout(); return; } if(!a.timer) this._restartAskTimer(); }
+            return;
+          }
           if(a.eligible.has(m.who)){
             a.passed.add(m.who);
             if([...a.eligible].every(n => a.passed.has(n)) && !a.pausedBy.size){
@@ -11865,8 +11932,8 @@ class Bot {
     /* as TARGET: resolution + contest signals for the pending bleed */
     if(this.pending){
       if((this.pending.lateWait || this.pending.lateDue) && m.who === this.pending.who && (phrase === 'It resolves' || phrase === 'No' || phrase === 'Pass' || phrase === 'No reaction') && this._lateWord(this.pending, phrase)) return;   // v0.6.237: the actor's word -- no more modifiers; I react to the total now (It resolves no longer lands the bleed past my bounce)
-      if(this.pending.role === 'predator' && this.pending.waitingFor === m.who && (phrase === 'No block' || phrase === 'No reaction' || phrase === 'Pass')){   // v0.6.107 (B1): the prey declined -- the predator's window opens now (rulebook: prey first, then predator)
-        this.pending.waitingFor = null; this.pending.contested = false; this._reactWindow(); return;
+      if(this.pending.role === 'predator' && this.pending.waitingFor === m.who && (phrase === 'No block' || phrase === 'No reaction' || phrase === 'Pass' || (phrase === 'No' && !this._isHumanName(this.pending.who)))){   // v0.6.107 (B1): the prey declined -- the predator's window opens now (rulebook: prey first, then predator). v0.6.245 (11.11): inside the prey's own standing attempt its Pass resolves that attempt and I wait (_preyDeclined); 4.25: a bot actor's block question takes 'No' (a human actor's 'No' may answer a pool question)
+        this._preyDeclined(m.who, 'say'); return;
       }
       if(phrase === 'Block!'){ this.pending.contested = true; return; }
       if(phrase === 'It resolves' && m.who === this.pending.who){
@@ -11969,10 +12036,18 @@ class Bot {
        the stake from _obs) -- it just gets no block step: declined from birth, no react window, nothing said. */
     const political = /calls a political action/.test(o.verb || '');
     const noRights = (political || o.directed === false) && crossTable;   // v0.6.200 (point 1): every undirected action -- only the actor's prey and predator may block one (the rulebook); a cross-table seat keeps the stake, as for a referendum
-    this.pending = { who: o.who, amount: o.poolLoss, kind: 'asked', sub: 'asked', T: 'T1', role: 'target', actorSeat: o.seat, actorUnlocked, directed: o.directed,   // v0.6.200: an undirected action (a referendum, a hunt) is never a bleed -- the Edge stays where it is
-                     actingVampName: o.vamp, contested: false, reacted: new Set(), blockerVamp: null, declined: noRights, attempted: new Set(), waitingFor: null };
-    this.o.log('asked window: ' + o.verb + ' by ' + o.who + ' (' + o.poolLoss + ' pool if it resolves)' + (noRights ? ' -- cross-table: no block rights on an undirected action, the stake stands for the vote' : ''));
-    if(noRights) return;
+    /* v0.6.245 (the sweep register 11.11, part 2; RULINGS D-149): an action not known to be directed (undirected, or a card with no Ⓓ the
+       bot can read) is the actor's prey's to block first and its predator's after the prey has declined -- this window had no order at
+       all: at the C1b playtest both bots of a human's Creeping Sabotage weighed it at once and both blocked. The decision is the T1
+       pool scorer's as before (the role does not enter it); the predator's window opens on the prey's word (_preyDeclined), or at once
+       when that word came before my pool question was answered (_declAt). */
+    const preySeat = this.nextLive(o.seat), role = (o.directed !== true && !crossTable) ? (preySeat === this.seat ? 'prey' : 'predator') : 'target';
+    let waitingFor = (role === 'predator' && preySeat !== this.seat && this.live(preySeat)) ? this.seatName(preySeat) : null;
+    if(waitingFor && this._declAt && (this._declAt[waitingFor] || 0) >= (o.at || 0) && !this._standingFor({ annAt: o.at })) waitingFor = null;
+    this.pending = { who: o.who, amount: o.poolLoss, kind: 'asked', sub: 'asked', T: 'T1', role, actorSeat: o.seat, actorUnlocked, directed: o.directed,   // v0.6.200: an undirected action (a referendum, a hunt) is never a bleed -- the Edge stays where it is
+                     actingVampName: o.vamp, contested: false, reacted: new Set(), blockerVamp: null, declined: noRights, attempted: new Set(), waitingFor, annAt: o.at, card: o.card || null, political };   // v0.6.245: annAt (the action's announce), card and political (the turn-end note, _expiredNote)
+    this.o.log('asked window: ' + o.verb + ' by ' + o.who + ' (' + o.poolLoss + ' pool if it resolves)' + (noRights ? ' -- cross-table: no block rights on an undirected action, the stake stands for the vote' : '') + (waitingFor ? ' -- I am the predator: waiting for ' + waitingFor : ''));
+    if(noRights || waitingFor) return;
     this._reactWindow();
   }
 
@@ -12331,6 +12406,8 @@ class Bot {
         return;
       } }
     const a = this._ask; if(!a) return;
+    if(a.contested && a.attemptBy && a.attemptBy !== who) return this._refuseAttempt(a, who);   // v0.6.245 (11.11, part 1): one attempt at a time
+    a.attemptBy = who;   // v0.6.245: the seat whose attempt this contest is (its Pass resolves it: part 3)
     this._combatArmed = true;   // v0.6.103 (#1): somebody attempts to block MY action -- their early strike line may legitimately arrive before my Blocked branch enters _resolveCombat
     const av = this._actingVamp;
     if(av){ av.attemptAt = Date.now(); this._condStealthAdjust(); }   // v0.6.228 (round F): this attempt's stamp -- a blocker name noted before it (an earlier attempt's) is stale for a conditional stealth (_condBlockerKind); the attempt's own line, first or after the shout, is fresh. A shout alone takes a booked conditional stealth off until its line names a blocker it reaches (the egress review, finding 4)
@@ -12357,7 +12434,7 @@ class Bot {
           this.send({ t: 'log', html: '<b>' + esc(av.v.name) + '</b> plays <b>' + esc(cb.name) + '</b>: cancels the block attempt by <b>' + esc(who) + '</b> \u2014 that minion cannot try again.' });
 
           this.push();
-          a.contested = false;                 // no contest exists -- the attempt died outright; the window continues for OTHER minions
+          a.contested = false; this._attemptOver(a);   // no contest exists -- the attempt died outright; the window continues for OTHER minions
           this._restartAskTimer();
         });
         return;
@@ -12599,6 +12676,9 @@ class Bot {
         return;
       }
     }
+    if(/^\s*(pass|no block|no reaction)\s*[.!]*\s*$/i.test(txt)) (this._declAt || (this._declAt = {}))[who] = Date.now();   // v0.6.245 (11.11): the typed decline, as the quick phrase's (_openAskedWindow)
+    if(this.pending && this.pending.role === 'predator' && this.pending.waitingFor === who && !/^\s*no votes? from me\b/i.test(txt)
+       && (/^\s*(pass|no block|no reaction)\b/i.test(txt) || (/^\s*(no|nej)\b/i.test(txt) && !this._isHumanName(this.pending.who))) && this._preyDeclined(who, 'chat')) return;   // v0.6.245 (11.11, part 2): the prey's typed decline, as its quick phrase (a bare 'no' only at a bot actor's question: a human actor's may answer a pool question)
     /* answers to a pending Block? question — from anyone; the table referees */
     if(this._ask){
       if(/^\s*block\b/i.test(txt))            return this._answer('block', who);
@@ -12681,6 +12761,10 @@ class Bot {
     if(!a || this._staleAnswer(a, who, 'chat decline', 'chat')) return;
     if(a.pausedBy) a.pausedBy.delete(who);
     if(a.undirected){
+      if(a.contested && a.attemptBy === who && this._isHumanName(who)){   // v0.6.245 (11.11, part 3): the say branch's rule, mirrored -- a human blocker's word inside the human's own attempt resolves it
+        if(!a.pausedBy.size){ if(a.plan && a.plan.noClock){ a._end = 'answer'; this._askTimeout(); return; } if(!a.timer) this._restartAskTimer(); }
+        return;
+      }
       if(a.eligible && a.eligible.has(who)){
         a.passed.add(who);
         if([...a.eligible].every(n => a.passed.has(n)) && !a.pausedBy.size){
@@ -12830,7 +12914,7 @@ class Bot {
         this.push();
         if(iB >= sA) return a.resolve({ what: 'block', who: null });
         /* failed contest: the action continues -- same shape as an inbound 'fails' verdict */
-        this._ask = a; a.contested = false; a.timer = null; a.t0 = Date.now(); a._end = null; a._held = false; a._wired = false; this._restartAskTimer();   // v0.6.194: the reopened window is a wait of its own (its own row)
+        this._ask = a; a.contested = false; this._attemptOver(a); a.timer = null; a.t0 = Date.now(); a._end = null; a._held = false; a._wired = false; this._restartAskTimer();   // v0.6.194: the reopened window is a wait of its own (its own row)
         return;
       }
     this._answer('no', null);   // v0.6.194: through _answer, so the wait row is written and the reminder cleared (was: this._ask = null; a.resolve(...))
