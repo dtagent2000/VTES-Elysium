@@ -1,9 +1,9 @@
 {
  "schema": 1,
  "tool": "tools/gates.sh",
- "date": "2026-11-27",
+ "date": "2026-11-28",
  "branch": "r11-11",
- "head": "4f9e81f",
+ "head": "58cb57d",
  "dirty": true,
  "base": "origin/main",
  "merge_base": "60c59e8",
@@ -16,7 +16,7 @@
  },
  "bytes": {
   "elysium-bot.js": "421f5256",
-  "test-bot-logic.js": "6c42c2e0",
+  "test-bot-logic.js": "c92475b9",
   "elysium-cardfx.json": "21ef103f"
  },
  "gates": [
@@ -42,19 +42,19 @@
    "gate": "canary-root",
    "result": "PASS",
    "count": "235/0",
-   "seconds": 2
+   "seconds": 1
   },
   {
    "gate": "cardfx",
    "result": "PASS",
    "count": "524/0",
-   "seconds": 3
+   "seconds": 2
   },
   {
    "gate": "precon",
    "result": "PASS",
    "count": "18 precons, no problems",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "ledger-self",
@@ -66,7 +66,7 @@
    "gate": "sheet-self",
    "result": "PASS",
    "count": "23/0",
-   "seconds": 1
+   "seconds": 0
   },
   {
    "gate": "cross-self",
@@ -77,32 +77,32 @@
   {
    "gate": "table-self",
    "result": "PASS",
-   "count": "abstract table 1.0.0: 6/0 (441 ms)",
-   "seconds": 0
+   "count": "abstract table 1.0.0: 6/0 (416 ms)",
+   "seconds": 1
   },
   {
    "gate": "reader",
    "result": "PASS",
    "count": "871 rows, 363 gated, 286 read, 65 unread (65 listed, 0 new), 0 stale, 12 no value · self-test 8/0",
-   "seconds": 1
+   "seconds": 0
   },
   {
    "gate": "bench",
    "result": "PASS",
    "count": "821 kept rows, 235 with a scenario, 306 scenarios, 306 played right, 0 rows wrong (0 listed, 0 new), 0 stale · self-test 5/0",
-   "seconds": 15
+   "seconds": 13
   },
   {
    "gate": "ana-gates-self",
    "result": "PASS",
    "count": "35/0",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "hb1",
    "result": "PASS",
    "count": "11/0 (0 skip)",
-   "seconds": 2
+   "seconds": 1
   },
   {
    "gate": "hotseat",
@@ -114,7 +114,7 @@
    "gate": "doc-budget",
    "result": "PASS",
    "count": "bootstrap 39337 / 50000 · standing pages 186898 / 187000",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "public-scan-self",
@@ -137,8 +137,8 @@
   {
    "gate": "sim-240",
    "result": "PASS",
-   "count": "240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 421f5256 6c42c2e0 21ef103f",
-   "seconds": 324
+   "count": "240 matches: SAME-PLAY 240 · 0.6.244 -> 0.6.245, with the version put back: 240 matches: IDENTICAL 240 · ana-gates PASS (6 of 6) · bytes 421f5256 c92475b9 21ef103f",
+   "seconds": 323
   }
  ],
  "totals": {
@@ -147,6 +147,6 @@
   "SKIPPED": 0,
   "NOT RUN": 0
  },
- "seconds": 406,
- "egress": "22 findings (half-done 18, unproven 2, stale-doc 2) in 5 passes (Opus 5, Fable 4, Fable 5, Fable 5, Fable 3), 20 fixed, 2 listed"
+ "seconds": 403,
+ "egress": "26 findings (half-done 20, unproven 3, stale-doc 3) in 6 passes (Opus 5, Fable 4, Fable 5, Fable 5, Fable 3, Fable 4), 22 fixed, 4 listed"
 }
