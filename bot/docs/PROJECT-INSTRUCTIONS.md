@@ -1,9 +1,9 @@
-# Elysium Bots — project instruction (27 Nov 2026, after the documentation diet, D-145; the older blocks are in git history)
+# Elysium Bots — project instruction (27 Nov 2026, after the card chain, D-146; the older blocks are in git history)
 
 Paste the block below into the claude.ai project's instruction field (RULINGS D-139, D-140, D-141). It names the rolling handoff
 (`claude/HANDOFF.md`, which the lead rewrites at the end of every round), the setup script, the agents, CI's suite ×3, the
-review's models, the question about a real match at the end of a round, a verdict for every unsure item, and the public
-repository's rule (no chat quotes, no names of private persons). The project keeps this instruction, `START-HERE-BOTS-CHAT.md`
+review's models, the question about a real match at the end of a round, the merge on the owner's yes (D-146), a verdict
+for every unsure item, and the public repository's rule (no chat quotes, no names of private persons). The project keeps this instruction, `START-HERE-BOTS-CHAT.md`
 (a copy of the repo's `bot/docs/` page), the handoff and the owner's reviews of other projects. Dated reports live in
 `bot/docs/reports/`.
 
@@ -25,7 +25,8 @@ and every pass of a round without a bot change, on Fable) → the docs (the CHAN
 STATUS's Next, BOARD line deleted; RULINGS / LESSONS when they changed) and bot/tools/round.py save → the PR with
 its gate section and the egress line → claude/HANDOFF.md rewritten. In a round with a bot change, ask the owner before the merge whether to play a real match in the human
 seat to evaluate it, and add what it teaches to the play notes (.claude/skills/bot-play-notes). Commit and push as
-soon as a step is green. The owner merges. One round per chat.
+soon as a step is green. The round's last question card asks the owner to merge, naming what merges and in which order;
+on his yes Claude merges (the data repo's PR, then the main PR's auto-merge on a green bot-gates). One round per chat.
 
 RELEASE: bash bot/tools/release.sh X.Y.Z (BOT_VERSION, the bundle copied to the root; never edit the root in place).
 

@@ -1,4 +1,4 @@
-# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (20 October 2026; the workflow 26–27 Nov, D-139, D-140, D-145)
+# START-HERE-BOTS-CHAT.md — the only file a new bot chat needs before it has cloned (20 October 2026; the workflow 26–27 Nov, D-139, D-140, D-145, D-146)
 
 **Repo:** https://github.com/dtagent2000/VTES-Elysium — `main` is the truth; `bot/` is this project.
 **Now:** the versions, the deploy state and the last gates are in `bot/docs/STATUS.md` (generated from the code, git and the round
@@ -38,5 +38,5 @@ BOARD line → analyse / propose / the go-ahead ("kör") when it is a design que
 PR for CI's suite ×3 → egress review → the docs (the CHANGELOG entry on its template, the round's report, STATUS's Next, BOARD;
 RULINGS / LESSONS when they changed; a HANDOFF when main must act) and `tools/round.py save` → commit + push often → PR against
 `main` with its gate section → in a round with a bot change, ask the owner before the merge about a real match in the human seat
-→ the owner merges. A release additionally runs `tools/release.sh`. The round record, the CHANGELOG entry, the report and the PR
+→ the round's last card asks the owner to merge, and Claude merges on his yes (D-146). A release additionally runs `tools/release.sh`. The round record, the CHANGELOG entry, the report and the PR
 body are the record; STATUS holds the state; the project's handoff points to them (one place for each fact, HARNESS; D-142, D-145).

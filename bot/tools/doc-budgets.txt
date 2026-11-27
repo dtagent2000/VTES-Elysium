@@ -2,13 +2,13 @@
 # one out: a page that runs out borrows from another (one budget down, one up) or moves a line to docs/history/archive-<page>.md;
 # `total` and `bootstrap` rise only with a D-line the base's RULINGS does not have (the owner's yes), named on their line, and
 # the pages' budgets together rise no further than the total. Their history is git's and the CHANGELOG's.
-total      184000  D-145
+total      187000  D-147
 bootstrap   50000
-bot/CLAUDE.md             13500
+bot/CLAUDE.md             13900
 bot/docs/STATUS.md         4800
 bot/docs/BOARD.md         18000
-bot/docs/RULINGS.md       69000
+bot/docs/RULINGS.md       70500
 bot/docs/LESSONS.md       19000
 bot/docs/ARCHITECTURE.md  25500
-bot/docs/HARNESS.md       14500
-bot/docs/HOWTO.md         24500
+bot/docs/HARNESS.md       14800
+bot/docs/HOWTO.md         25200
