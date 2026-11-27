@@ -510,7 +510,7 @@ ok(fx.counts.libLock >= 140,
   const nm = mode('Night Moves', 'obf');
   ok(nm && nm.fx.actStealth === 3 && nm.fx.bleedAct === true, 'Night Moves [obf]: bleed action with built-in actStealth 3 (announce-side tally booking, bot v0.6.11, reads actStealth||stealth)');
   let nAct = 0; for(const n in fx.lib) for(const m of fx.lib[n].modes || []) if(m.fx && m.fx.actStealth) nAct++;
-  ok(nAct >= 420 && nAct <= 440, 'actStealth volume sane (' + nAct + ', 429 expected -- v1.5.5\'s known-but-empty STOP rule pruned 24 redundant-true header inheritances (Putrescent/Children of Stone-class): a discipline mode of a "+N stealth action" card no longer re-carries the header\'s actStealth)');
+  ok(nAct >= 385 && nAct <= 400, 'actStealth volume sane (' + nAct + ', 393 expected -- v1.5.5\'s known-but-empty STOP rule pruned 24 redundant-true header inheritances (Putrescent/Children of Stone-class): a discipline mode of a "+N stealth action" card no longer re-carries the header\'s actStealth; v1.12.0 (C1): 429 -> 393, a granted action\'s stealth is not the card\'s own, and the conditional ones sit on plusIf)');
 
   /* keyword-sentence scan: trifle (colon + combination forms) and archetype */
   ok(fx.lib['Dabbler'].trifle === true && fx.lib['Dabbler'].archetype === true, 'Dabbler: "Archetype. Trifle." combination — both keywords tagged (line-start anchors defeated by combos)');
@@ -587,7 +587,7 @@ ok(fx.counts.libLock >= 140,
   ok(c['Skidmark (G4)'].archFull === true && c['Skidmark (G4)'].fx.noReplaceActing === true, 'Skidmark: archFull — FULL-BY-ARCHITECTURE, the _flushDraws proof lives in the note');
   ok(['Wauneka (G6)', 'Rosalina Cortez (G6)', 'Mustafa Rahman (G2)', 'Ayelech (G6)'].every(n => c[n] && !c[n].fx),
      'vanilla/title-only vampires stay fx-free (Wauneka, Rosalina, Mustafa, Ayelech)');
-  ok(fx.counts.curated === 221, 'curated count = 170 lib + 51 crypt = 221 (got ' + fx.counts.curated + ') -- 25 Nov (the exactness round, bot v0.6.241): + Aire of Elation, The Warrens (merges: the sweep register 7.1 and 7.2, fx.plusIf), Mirror Walk (a merge: [THA]\u2019s fx.blockedLockEnd); 20 Nov (the Banu Haqim pilot, compiler v1.11.0): + Biothaumaturgic Experiment, Shadow of the Beast, New Moon Sigil, Priority Contract, Night Terrors (the first merge opt-ins: each layer carries its remainder only); 18 Nov (V5 wave 6b, bot v0.6.234): + Shadow Cloak, Sleep Unseen, Absolute Tyranny; 18 Nov (V5 wave 6a, bot v0.6.233): + True Love\'s Face, Hunting the Quarry; 18 Nov (V5 wave 5b, bot v0.6.232): + Sudden Reversal, Yawp Court, Week of Nightmares; 17 Nov (V5 wave 5a, bot v0.6.230): + Tension in the Ranks, Anarch Revolt, Frontal Assault, Forward Momentum, Privileged Position, Mob Connections, Garibaldi-Meucci Museum, Powerbase: Los Angeles, Carver\u2019s Meat Packing and Storage, The Rack, The Hungry Coyote, The Coven, Piper, D\u00eda de los Muertos, Cursed Abattoir; 14 Nov (round F, bot v0.6.228): + Perfect Paragon, Elysium: The Palace of Versailles, Eyes of the Wild; 12 Nov (crypt wave A, bot v0.6.219): + 31 vampires (the bleed, strength, intercept, stealth, vote and dodge forms, D-108); 3 Nov (V5 wave 4): + Oblivion, Charisma, Depravity, Terrifying Visage, Monster, Saulot\u2019s Avenging Fist, Saulot\u2019s Guiding Wisdom, Regent, Toreador Grand Ball, Change of Target, Scalpel Tongue, Toreador Justicar; 2 Nov (V5 wave 3): + 20 masters (Anarch Railroad, Backways, Elysian Fields, Fortune Teller Shop, Opium Den, Creepshow Casino, Market Square, Channel 10, KRCG News Radio, Wall Street Night, Unholy Sacrament, Family Gathering, Carfax Abbey, Burial Site Hunting Ground, Art Museum, Ecoterrorists, Powerbase: Montreal, Haqim\u2019s Law: Retribution, Club Illusion, Archon Investigation); 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep); 16 Oct (R4): + the six V5 masters (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Haven Uncovered); 29 Oct (V5 wave 1): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor\u2019s Hand, Sword of the Archangel, Invigorate; 29 Oct (V5 wave 2): + Flash, Resist Earth\u2019s Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn');
+  ok(fx.counts.curated === 301, 'curated count = 250 lib + 51 crypt = 301 (got ' + fx.counts.curated + ') -- 27 Nov (C1, bot v0.6.243): + 80 merges, the readers\u2019 corrections of the stealth / intercept / bleed family; 25 Nov (the exactness round, bot v0.6.241): + Aire of Elation, The Warrens (merges: the sweep register 7.1 and 7.2, fx.plusIf), Mirror Walk (a merge: [THA]\u2019s fx.blockedLockEnd); 20 Nov (the Banu Haqim pilot, compiler v1.11.0): + Biothaumaturgic Experiment, Shadow of the Beast, New Moon Sigil, Priority Contract, Night Terrors (the first merge opt-ins: each layer carries its remainder only); 18 Nov (V5 wave 6b, bot v0.6.234): + Shadow Cloak, Sleep Unseen, Absolute Tyranny; 18 Nov (V5 wave 6a, bot v0.6.233): + True Love\'s Face, Hunting the Quarry; 18 Nov (V5 wave 5b, bot v0.6.232): + Sudden Reversal, Yawp Court, Week of Nightmares; 17 Nov (V5 wave 5a, bot v0.6.230): + Tension in the Ranks, Anarch Revolt, Frontal Assault, Forward Momentum, Privileged Position, Mob Connections, Garibaldi-Meucci Museum, Powerbase: Los Angeles, Carver\u2019s Meat Packing and Storage, The Rack, The Hungry Coyote, The Coven, Piper, D\u00eda de los Muertos, Cursed Abattoir; 14 Nov (round F, bot v0.6.228): + Perfect Paragon, Elysium: The Palace of Versailles, Eyes of the Wild; 12 Nov (crypt wave A, bot v0.6.219): + 31 vampires (the bleed, strength, intercept, stealth, vote and dodge forms, D-108); 3 Nov (V5 wave 4): + Oblivion, Charisma, Depravity, Terrifying Visage, Monster, Saulot\u2019s Avenging Fist, Saulot\u2019s Guiding Wisdom, Regent, Toreador Grand Ball, Change of Target, Scalpel Tongue, Toreador Justicar; 2 Nov (V5 wave 3): + 20 masters (Anarch Railroad, Backways, Elysian Fields, Fortune Teller Shop, Opium Den, Creepshow Casino, Market Square, Channel 10, KRCG News Radio, Wall Street Night, Unholy Sacrament, Family Gathering, Carfax Abbey, Burial Site Hunting Ground, Art Museum, Ecoterrorists, Powerbase: Montreal, Haqim\u2019s Law: Retribution, Club Illusion, Archon Investigation); 20 Sep: + Second Tradition: Domain; 25 Sep: + Bowl of Convergence (the [AUS] paid intercept, sweep pilot), + Legion, + Madman\u2019s Quill (full sweep); 16 Oct (R4): + the six V5 masters (Elder Library, Ventrue Headquarters, The Labyrinth, Guardian Angel, Wasserschloss Anif, Haven Uncovered); 29 Oct (V5 wave 1): + Villein, Quickness, Pursuit, Arms of Ahriman, Claws of the Dead, Sculpt the Flesh, Wall of Filth, Rutor\u2019s Hand, Sword of the Archangel, Invigorate; 29 Oct (V5 wave 2): + Flash, Resist Earth\u2019s Grasp, Slam, Hunger of Marduk, Rage of Apedemak, Torn Signpost, Form of the Wolf, Monstrous Form, Soul Burn');
   { const C = fx.crypt, F = n => (C[n] && C[n].fx) || {};   // v0.6.219 (crypt wave A, RULINGS D-108): 31 vampires -- the whole-entry overlay keeps the base facts (cap, disc, the title and votes, the V5 Path), each form as its reader reads it
     const WA = ['Catalina Vega (G6)', 'Kamile Paukstys (G6)', 'Kasim Bayar (G6)', 'Marchesa Liliana (G6)', 'Mora, the Death Seer (G6)', 'Nonu Dis (G6)',
       'Agnieszka, Tempter of Legions (G6)', 'Ashur-uballit, Son of the Abyss (G6)', 'Huldu, The Desecrator (G6)', 'Aaradhya, The Callous Tyrant (G6)', 'Sreelekha (G7)',
@@ -1178,13 +1178,27 @@ ok(fx.counts.libLock >= 140,
     const shippedTxt = (() => { try { return fs.readFileSync(here('elysium-cardfx.json'), 'utf8'); } catch (e) { return null; } })();
     /* compiler v1.11.0 (20 Nov 2026, the Banu Haqim pilot): the guard that went red on purpose when the first entry opted in now pins the
        first opt-ins -- exactly the pilot's five opt in, and exactly their compiled and committed entries carry merged and handKeys */
-    const PILOT = ['Biothaumaturgic Experiment', 'New Moon Sigil', 'Night Terrors', 'Priority Contract', 'Shadow of the Beast', 'Aire of Elation', 'The Warrens', 'Mirror Walk'], srt = x => JSON.stringify((x || []).slice().sort());   // v0.6.241: + the exactness round's three (7.1, 7.2, Mirror Walk [THA])
+    const C1M = [   // v0.6.243 (C1): the readers' corrections of the stealth / intercept / bleed family, 80 merges (their notes begin 'C1 (27 Nov 2026')
+      'Abbot', 'Achilles\' Heel', 'Anarch Manifesto, An', 'Asanbonsam Ghoul', 'Baltimore Purge', 'Bear-Baiting', 'Blessings of the Loa',
+      'Blithe Acceptance', 'Bloodstone', 'Bloodwork', 'Canopic Jar', 'Carlton Van Wyk', 'Charigger, The Axe', 'Charnas the Imp',
+      'Codex of the Edenic Groundskeepers', 'Communal Haven: Temple', 'Corpse Balloon', 'Cãoera', 'Defender of the Haven', 'Divine Sign',
+      'Dogged Pursuit', 'Dream World', 'Ears of the Hare', 'Form of Mist', 'Giuseppe, Gravedigger', 'Gravebound Drone', 'Guard Duty',
+      'Guinea-Bissau Carnival', 'Hexaped', 'Hidden Pathways', 'High Aye', 'Illuminate', 'Ilomba', 'Inevitability of the Void', 'Lock',
+      'Marijava Ghoul', 'Marked Territory', 'Ministry', 'Mirror\'s Visage', 'Mithraic Cultist', 'Mole\'s Tunneling', 'No Secrets From the Magaji',
+      'Nosferatu Performance Art', 'Pallid', 'Pentex™ Loves You!', 'Phased Motion Detector', 'Pocket Out of Time', 'Priestess of Sekhmet',
+      'Protection Racket', 'Psalm of the Damned', 'Psychic Veil', 'Pulled Fangs', 'Rampage', 'Samuel Haight', 'Scarlet Lore', 'Sense the Sin',
+      'Shell Break', 'Sins of the Cauchemar', 'Siren\'s Lure', 'Songs of the Distant Vitae', 'Soul Painting', 'Speak with Spirits', 'Special Report',
+      'Stone Travel', 'Strained Vitae Supply', 'Sunset Strip, Hollywood', 'Swarm', 'Taking the Skin: Minion', 'The Ancestor\'s Talisman',
+      'The Portrait', 'The Rumor Mill, Tabloid Newspaper', 'The Unmasking', 'Tremere Convocation', 'Under Siege', 'Unholy Penance',
+      'Unleash the Hounds', 'Unlicensed Taxicab', 'Voices of the Castle', 'Warning Sirens', 'Watchtower: The Wolves Feed'];
+    const PILOT = ['Biothaumaturgic Experiment', 'New Moon Sigil', 'Night Terrors', 'Priority Contract', 'Shadow of the Beast', 'Aire of Elation', 'The Warrens', 'Mirror Walk'].concat(C1M), srt = x => JSON.stringify((x || []).slice().sort());   // v0.6.241: + the exactness round's three (7.1, 7.2, Mirror Walk [THA]); v0.6.243: + C1's 80
     const shipped = (() => { try { return JSON.parse(shippedTxt); } catch (e) { return null; } })();
     const mergedIn = lib => Object.keys((lib && lib.lib) || {}).filter(n => lib.lib[n].merged !== undefined || lib.lib[n].handKeys !== undefined);
+    const delOnly = n => { const L = curated.lib[n] || {}, ms = L.modes || []; return ms.some(m => m.drop === true) || ms.some(m => Object.values(m.fx || {}).some(v => v === null)); };   // v0.6.243 (C1): a correction that only deletes compiled keys sets no hand key
     ok(srt(realOpt) === srt(PILOT) && !!a && srt((ra.merged || []).map(m => m.name)) === srt(PILOT) && srt(mergedIn(a)) === srt(PILOT)
-       && PILOT.every(n => a.lib[n].merged === true && a.lib[n].src === 'hand' && Array.isArray(a.lib[n].handKeys) && a.lib[n].handKeys.length > 0)
+       && PILOT.every(n => a.lib[n].merged === true && a.lib[n].src === 'hand' && Array.isArray(a.lib[n].handKeys) && (a.lib[n].handKeys.length > 0 || delOnly(n)))
        && !!shipped && srt(mergedIn(shipped)) === srt(PILOT) && (shippedTxt.match(/"merged":true/g) || []).length === PILOT.length,
-       'the real opt-ins are the pilot\u2019s five and the exactness round\u2019s three (' + realOpt.length + ': ' + realOpt.join(', ') + '): exactly their compiled and committed entries carry merged and handKeys (until v1.11.0 this guard held that none opted in)'); }
+       'the real opt-ins are the pilot\u2019s five, the exactness round\u2019s three and C1\u2019s 80 (' + realOpt.length + ': ' + realOpt.join(', ') + '): exactly their compiled and committed entries carry merged and handKeys (until v1.11.0 this guard held that none opted in)'); }
 }
 /* end: the merge of hand entries */
 /* The Banu Haqim pilot (20 Nov 2026, compiler v1.11.0; spec-sweep-pilot-2026-11-20.md §3.1, RULINGS D-125 / D-127 / D-132): the whole-mode
@@ -1596,5 +1610,39 @@ ok(fx.counts.libLock >= 140,
     ok(LG.fidelityProblems(stale, regE, () => true).length === 2, 'planted: a gap no register entry has and a state the entry does not name are both reported');
   }
 }
+/* v1.12.0 (27 Nov 2026, C1: the V5 sweep's first family -- stealth, intercept, bleed -- against zero-vtes's definitions; spec-card-sweep
+   §11.8, gen-cross-check.js): a GRANTED action's stealth is not the card's own (the compiler's GRANTED_STEALTH), and the readers'
+   corrections ride as merge entries (cardfx-curated.json, notes 'C1 (27 Nov 2026 ...'). A value whose condition no reader of ours checks
+   yet sits on fx.plusIf with an `unread` condition, which the bot's _plusIf fails closed. */
+{
+  const own = (n, k) => (fx.lib[n] && fx.lib[n].modes || []).filter(m => m.fx && m.fx[k] !== undefined);
+  ok(['Archon', 'Alastor', 'Kuta', 'War of Ages', 'Camarilla Threat'].every(n => !own(n, 'actStealth').length),
+    'C1: a political card\'s granted burn or combat action ("... as a +1 stealth political action") is not its own stealth (Archon, Alastor, Kuta, War of Ages, Camarilla Threat)');
+  ok(!own('Aversion', 'stealth').length && own('Bonecraft', 'strike').length === 2 && !own('Bonecraft', 'stealth').length,
+    'C1: a reaction\'s and a combat card\'s granted burn action carry no stealth (Aversion [VAL]; Bonecraft keeps its strike)');
+  ok(['Powerbase: Barranquilla', 'The Shard, London', 'Ventrue Directorate Assembly', 'Arms Dealer', 'Filchware\'s Pawn Shop'].every(n => !own(n, 'stealth').length),
+    'C1: the other granted phrasings -- "+1 stealth during that action", "may take a +1 stealth action", "as an undirected +1 stealth equip action"');
+  ok(own('Charming Lobby', 'actStealth').some(m => m.fx.actStealth === 1) && own('Children of Stone', 'actStealth').some(m => m.fx.actStealth === 2),
+    'C1: a card\'s own "+N stealth action." stays (Charming Lobby 1, Children of Stone 2)');
+  const bp = own('Baltimore Purge', 'plusIf')[0];
+  ok(!own('Baltimore Purge', 'actStealth').length && bp && bp.fx.plusIf.add.actStealth === 1 && bp.fx.plusIf.if.selfClan === 'Ravnos',
+    'C1: Baltimore Purge is a +1 stealth action only for a Ravnos (plusIf selfClan)');
+  const sl = mode('Scarlet Lore', 'MYT'), mv = mode('Mirror\'s Visage', 'CHI');
+  ok(sl && sl.fx.actStealth === 2 && mv && mv.fx.stealth === 1 && mv.fx.plusIf && mv.fx.plusIf.add.stealth === 1 && /undirected/.test(mv.fx.plusIf.if.unread),
+    'C1: Scarlet Lore [MYT] 2 (the opening +1 and its additional +1); Mirror\'s Visage [CHI] +1, +2 when undirected');
+  const ws = fx.lib['Warning Sirens'].modes || [], ss = mode('Speak with Spirits', 'SPI'), ba = mode('Blithe Acceptance', 'obf');
+  ok(ws.length === 2 && ws.filter(m => m.fx.intercept === 1).length === 1 && ws.filter(m => m.fx.dodge === true).length === 1 && !ws.some(m => m.fx.intercept && m.fx.dodge),
+    'C1: Warning Sirens\' two uses are two modes (+1 intercept, or a dodge)');
+  ok(ss && ss.fx.intercept === undefined && ss.fx.interceptPaid === 1 && ss.fx.interceptPaidBlood === 1 && ba && ba.fx.actStealth === undefined && ba.fx.bearerStat && ba.fx.bearerStat.stealth === 1,
+    'C1: Speak with Spirits [SPI]\'s +1 intercept costs 1 blood; Blithe Acceptance\'s +1 stealth is its bearer\'s, not the action\'s');
+  const pr = (fx.lib['Protection Racket'].modes || [])[0];
+  ok(pr && pr.fx.intercept === 1 && pr.fx.plusIf && pr.fx.plusIf.add.intercept === 1 && /titled/.test(pr.fx.plusIf.if.unread),
+    'C1: Protection Racket +1 intercept, +2 against a titled acting minion (the condition unread: SWEEP-REGISTER 7.5)');
+  const IFK = new Set(['selfClan', 'selfTitled', 'unread']), badIf = [];
+  for (const n in fx.lib) for (const m of fx.lib[n].modes || []) if (m.fx && m.fx.plusIf){ const pi = m.fx.plusIf;
+    if (!pi.add || typeof pi.add !== 'object' || !Object.keys(pi.add).length || !pi.if || !Object.keys(pi.if).length || Object.keys(pi.if).some(k => !IFK.has(k)) || (pi.if.unread !== undefined && !(typeof pi.if.unread === 'string' && pi.if.unread.length > 8))) badIf.push(n); }
+  ok(!badIf.length, 'C1: every plusIf names what it adds and a condition the vocabulary knows (selfClan, selfTitled, or an unread condition in words)' + (badIf.length ? ': ' + badIf.join(', ') : ''));
+}
+
 console.log('\n' + passN + '/' + failN + (failN ? ' — FAIL' : ' — all green'));
 process.exit(failN ? 1 : 0);

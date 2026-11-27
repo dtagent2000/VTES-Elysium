@@ -22,6 +22,7 @@
      { "family": { "<ours>": { "ours": ["<our fx key>", ...], "theirs": ["<their token>", ...] }, ... },
        "formula": ["<their token whose value is computed>", ...], "formulaOf": { "<formula token>": "<ours>", ... },
        "conditional": ["<their wrapper token whose inner values apply only if ...>"],
+       "granted": ["<their token that marks an ability as an action the card grants>"],
        "flags": [ { "name": "...", "what": "...", "theirs": ["<token>", "Req:<token>", "Actor:<token>"], "ours": ["<key>", ...],
                     "unless": ["<their token that makes the flag moot>"], "exceptTypes": ["<our card type the rule skips>"] }, ... ] }
    A token is matched as a call (`Name(3)`, `Name(3, true)`), a struct (`Name { n: 3, ...}`), a stat layer (`Stat:Name` for
@@ -34,9 +35,10 @@
    leveled ones ("+1 stealth action." before the discipline lines) is read at a line no leveled mode names (v1.1.0).
    A card in play (IN_PLAY): its play mode and each of its abilities are read one by one, and a key's value is the largest of them
    (two uses of +1 are two uses, not +2); when their uses that carry a key outnumber our modes that carry it, the flag "another
-   use" says so (v1.1.0).
+   use" says so (v1.1.0). An ability that GRANTS an action (the pairing's "granted" tokens: "burn this card as a +1 stealth action")
+   is not the card's own number on either side: its values are left out of the family and the flag "granted action" names it.
 
-   Usage (from inside bot/): node gen-cross-check.js --zero DIR [--pairing FILE] [--out FILE.md] [--json FILE] [--decks k1,k2] [--card NAME]
+   Usage (from inside bot/): node gen-cross-check.js --zero DIR [--pairing FILE] [--cardfx FILE] [--out FILE.md] [--json FILE] [--decks k1,k2] [--card NAME]
                              node gen-cross-check.js --self-test       (fixed inputs: no zero-vtes, no vtes.json) */
 
 const fs = require('fs'), path = require('path'), cp = require('child_process');
@@ -175,9 +177,11 @@ function crossCheck(o){   // o: { lib, cards (vtes.json), defs, ctx, P, decks: {
     const decks = Object.keys(o.decks || {}).filter(d => o.decks[d].has(name)), t = e.t || [];
     const head = headOf(e), inPlay = t.some(x => IN_PLAY.has(x)), stats = inPlay;   // a card in play: its abilities and its bearer's stats are its effect
     const own = m => theirFamily({ text: [m.text].concat(def && def.macro ? [def.args || ''] : []).join('\n,') }, o.ctx, o.P, stats);   // a macro-built card: its own arguments carry its numbers
-    const uses = inPlay && def ? def.abilities.map(a => theirFamily({ text: a.text }, o.ctx, o.P, stats)) : [];   // v1.1.0: each ability of a card in play is a use of its own
+    const granted = a => (o.P.granted || []).some(tok => valuesOf(expand(a.text, o.ctx), tok).length > 0);   // v1.1.0: an ability that grants an action
+    const uses = inPlay && def ? def.abilities.filter(a => !granted(a)).map(a => theirFamily({ text: a.text }, o.ctx, o.P, stats)) : [];   // v1.1.0: each other ability of a card in play is a use of its own
     const args = def && def.macro ? theirFamily({ text: def.args || '' }, o.ctx, o.P, stats) : {};
-    const theirOf = m => largest((uses.length && !def.modes.length ? [args] : [own(m)]).concat(uses));   // no modes: their abilities stand in for them (pairModes), each counted once
+    const standIn = !!def && !def.modes.length;   // no modes: their abilities stand in for them (pairModes), each counted once
+    const theirOf = m => largest((standIn && (inPlay || granted(m)) ? [args] : [own(m)]).concat(uses));
     let pms = pairModes(e, def, text), byCard = false;
     if (!pms){   // the levels cannot be paired: the card's values, all levels together (ours from every mode, theirs from every mode)
       byCard = true;
@@ -217,6 +221,10 @@ function crossCheck(o){   // o: { lib, cards (vtes.json), defs, ctx, P, decks: {
       if (!hit.length || ms.some(m => (rule.unless || []).some(tok => hasToken(m, o.ctx, tok)))) continue;
       if ((e.modes || []).some(mo => oursHas(e, mo, rule.ours || [])) || oursHas(e, null, rule.ours || [])) continue;
       flags.push({ card: name, t, level: 'all', flag: rule.name, what: rule.what || '', tokens: hit, ours: null, decks, src: e.src || '' });
+    }
+    if (def) for (const a of def.abilities.filter(granted)){   // v1.1.0: a granted action that carries a family value: not modelled by us
+      const fa = theirFamily({ text: a.text }, o.ctx, o.P, true), ks = Object.keys(fa);
+      if (ks.length) flags.push({ card: name, t, level: '-', flag: 'granted action', what: 'an action the card grants carries ' + ks.map(k => k + ' ' + (fa[k].formula ? 'X' : fa[k].base !== null ? fa[k].base : '(+' + fa[k].cond + ' if)')).join(', ') + ' (not the card\'s own number; no key of ours models a granted action)', tokens: [], ours: null, decks, src: e.src || '' });
     }
     if (def && inPlay) for (const key of Object.keys(o.P.family || {})){   // v1.1.0: their uses that carry a key outnumber our modes that carry it
       const tu = (def.modes.length ? def.modes.map(own) : []).concat(uses).filter(f => f[key]).length;
@@ -278,17 +286,19 @@ function selfTest(quiet){
     'pub static ONLY_E: CardDef = CardDef { name: "Only E", modes: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Veil(1)]) ], ..CARD };',
     'pub static VEIL_H: CardDef = CardDef { name: "Veil H", modes: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Veil(1)]), mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Veil(1), Effect::EndIfCaught]) ], ..CARD };',
     'pub static HEAD_I: CardDef = CardDef { name: "Head I", modes: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Veil(1)]), mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Veil(1)]) ], ..CARD };',
+    'pub static POST_K: CardDef = CardDef { name: "Post K", abilities: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Grant(1), Effect::Veil(1)]) ], ..CARD };',
     'pub static POST_J: CardDef = CardDef { name: "Post J", abilities: &[ mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Layer(Modifier::Bearer { stat: Stat::Guard, n: 1, during: &[], who: Bearer::Any })]), mode_of(&[Window::W], Actor::ActingMinion, &[], &[Effect::Layer(Modifier::Bearer { stat: Stat::Guard, n: 1, during: &[], who: Bearer::Any })]) ], ..CARD };'
   ].join('\n');
   const { defs, ctx } = RS.parseDefs(src, '');
   const P = { family: { veil: { ours: ['stealth', 'actStealth'], theirs: ['Veil', 'Stat:Veil'] }, guard: { ours: ['intercept'], theirs: ['Stat:Guard'] } },
-    formula: ['VeilX'], formulaOf: { VeilX: 'veil' }, conditional: ['Gate'],
+    formula: ['VeilX'], formulaOf: { VeilX: 'veil' }, conditional: ['Gate'], granted: ['Grant'],
     flags: [ { name: 'end-if-caught', theirs: ['EndIfCaught'], ours: ['blockedLockEnd'] }, { name: 'who plays it', theirs: ['Actor:OtherReady'], ours: ['playedBy'] },
              { name: 'cost', theirs: ['PayRed'], ours: ['selfPay'] } ] };
   const cards = [ { name: 'Cloak A', card_text: '[obf] +1 veil.\n[OBF] +2 veil, and end if caught.' }, { name: 'Cloak B', card_text: '+1 veil, +1 more if X.' },
     { name: 'Ward C', card_text: '+2 guard.' }, { name: 'Scry D', card_text: 'X veil; pay 2.' }, { name: 'Only E', card_text: '[dom] +1 veil.' }, { name: 'Ours F', card_text: '+1 veil.' },
     { name: 'Lines G', card_text: '[ani] +1 veil.\n[ANI] +2 veil.' }, { name: 'Veil H', card_text: '+1 veil.\n[obf] Hide.\n[OBF] Hide, and end if caught.' },
-    { name: 'Head I', card_text: '+1 veil action.\n[dom] Look.\n[DOM] Look twice.' }, { name: 'Post J', card_text: 'Lock: +1 guard to yours. Lock and pay: +1 guard to another.' } ];
+    { name: 'Head I', card_text: '+1 veil action.\n[dom] Look.\n[DOM] Look twice.' }, { name: 'Post J', card_text: 'Lock: +1 guard to yours. Lock and pay: +1 guard to another.' },
+    { name: 'Post K', card_text: 'Any minion can burn this card as a +1 veil action.' } ];
   const lib = {
     'Cloak A': { t: ['mod'], modes: [ { at: 'OBF', fx: { stealth: 2 } }, { at: 'obf', fx: { stealth: 1 } } ] },     // our modes out of order: paired by `at`
     'Cloak B': { t: ['mod'], modes: [ { at: null, fx: { stealth: 1 } } ] },                                         // the condition missing
@@ -299,10 +309,11 @@ function selfTest(quiet){
     'Lines G': { t: ['mod'], modes: [ { at: 'ani', fx: { stealth: 1 } } ] },                                        // [ANI] has no mode of ours
     'Veil H': { t: ['mod'], modes: [ { at: null, fx: { stealth: 1 } } ] },                                         // our only mode, level-free (v1.1.0)
     'Head I': { t: ['action'], modes: [ { at: null, fx: { actStealth: 1 } }, { at: 'DOM', fx: {} } ] },            // the level-free mode at [dom] (v1.1.0)
-    'Post J': { t: ['master'], modes: [ { at: null, lock: true, fx: { intercept: 1 } } ] } };                       // two uses of +1 in play (v1.1.0)
+    'Post J': { t: ['master'], modes: [ { at: null, lock: true, fx: { intercept: 1 } } ] },                        // two uses of +1 in play (v1.1.0)
+    'Post K': { t: ['master'], modes: [ { at: null, fx: {} } ] } };                                                // a granted action's +1 (v1.1.0)
   const r = crossCheck({ lib, cards, defs, ctx, P, decks: { deckx: new Set(['Cloak A', 'Ward C']) } });
   const row = (c, lv, k) => r.fam.find(x => x.card === c && x.level === lv && x.key === k);
-  ok(defs.size === 8 && ctx && ctx.statics.has('PLUS_ONE_VEIL'), 'the parser reads eight invented definitions and keeps the shared const');
+  ok(defs.size === 9 && ctx && ctx.statics.has('PLUS_ONE_VEIL'), 'the parser reads nine invented definitions and keeps the shared const');
   ok(row('Cloak A', 'obf', 'veil') && row('Cloak A', 'obf', 'veil').verdict === 'agree' && row('Cloak A', 'OBF', 'veil').verdict === 'agree', 'levels pair by `at` against the text\'s lines, whatever our modes\' order');
   ok(r.flags.some(x => x.card === 'Cloak A' && x.level === 'OBF' && x.flag === 'end-if-caught') && !r.flags.some(x => x.card === 'Cloak A' && x.level === 'obf' && x.flag === 'end-if-caught'), 'a rider on the superior mode only is flagged there only');
   const b = r.fam.find(x => x.card === 'Cloak B');
@@ -321,6 +332,7 @@ function selfTest(quiet){
   ok(hi('dom') && hi('dom').verdict === 'agree' && hi('DOM') && hi('DOM').verdict === 'agree', 'a level-free mode beside a leveled one is read at a line no leveled mode names (v1.0.0: no mode of ours)');
   ok(pj.length === 2 && pj.every(x => x.verdict === 'agree' && x.theirs.base === 1 && x.theirs.uses === 2), 'a card in play: two uses of +1 read as +1, not +2 (v1.0.0: 2, differ; got ' + JSON.stringify(pj.map(x => [x.verdict, x.theirs])) + ')');
   ok(r.flags.some(x => x.card === 'Post J' && x.flag === 'another use') && !r.flags.some(x => x.card === 'Ward C' && x.flag === 'another use'), 'their uses outnumbering our modes are flagged ("another use"), one use against one mode is not');
+  ok(!r.fam.some(x => x.card === 'Post K') && r.flags.some(x => x.card === 'Post K' && x.flag === 'granted action' && /veil 1/.test(x.what)), 'a granted action\'s +1 is no family value of the card; the flag names it (v1.0.0: theirs only)');
   const md = report(r, { commit: 'test', defs: defs.size, lib: Object.keys(lib).length, pairing: 'test', P });
   ok(/\| Ward C \| `-` \| guard \| 1 \| 2 \| differ \| deckx \|/.test(md) && /### deckx: /.test(md), 'the report renders a differing row with its deck, and the flags by deck');
   ok(!/Veil|Guard|Gate|EndIfCaught|PayRed/.test(fs.readFileSync(__filename, 'utf8').split('/* ---- the self-test')[0]), 'the tool\'s code above the self-test names none of the self-test\'s invented tokens');
@@ -330,7 +342,7 @@ function selfTest(quiet){
   const fam = CP && CP.family && typeof CP.family === 'object' ? CP.family : {}, fOf = CP && CP.formulaOf && typeof CP.formulaOf === 'object' ? CP.formulaOf : null;
   ok(CP && Object.keys(fam).length > 0 && Object.values(fam).every(v => v && strs(v.ours) && strs(v.theirs))
      && strs(CP.formula) && fOf && CP.formula.every(t => fOf[t] in fam) && Object.keys(fOf).every(t => CP.formula.includes(t))
-     && strs(CP.conditional) && Array.isArray(CP.flags) && CP.flags.length > 0
+     && strs(CP.conditional) && (CP.granted === undefined || strs(CP.granted)) && Array.isArray(CP.flags) && CP.flags.length > 0
      && CP.flags.every(g => g && typeof g.name === 'string' && g.name && typeof g.what === 'string' && g.what && strs(g.theirs) && strs(g.ours)
        && (g.unless === undefined || strs(g.unless)) && (g.exceptTypes === undefined || strs(g.exceptTypes))),
      'the committed pairing (' + PAIRING + ', D-140) parses and has the header\'s shape');
@@ -342,12 +354,12 @@ if (require.main === module){
   const a = process.argv.slice(2), opt = k => { const i = a.indexOf(k); return i >= 0 ? a[i + 1] : null; };
   if (a.includes('--self-test')) process.exit(selfTest(false) ? 0 : 1);
   const zero = opt('--zero'), pairing = opt('--pairing') || here(PAIRING), out = opt('--out'), js = opt('--json'), only = opt('--card');
-  if (!zero){ console.error('usage: node gen-cross-check.js --zero DIR [--pairing FILE] [--out FILE.md] [--json FILE] [--decks k1,k2] [--card NAME] [--all] | --self-test'); process.exit(2); }
+  if (!zero){ console.error('usage: node gen-cross-check.js --zero DIR [--pairing FILE] [--cardfx FILE] [--out FILE.md] [--json FILE] [--decks k1,k2] [--card NAME] [--all] | --self-test'); process.exit(2); }
   const repo = path.resolve(__dirname, '..');
   for (const [what, p] of [['--zero', zero], ['--out', out], ['--json', js]]) if (p && RS.insideRepo(p, repo)){ console.error('gen-cross-check: ' + what + ' must be outside the repository (spec-card-sweep §5): ' + p); process.exit(2); }
   if (!fs.existsSync(here('vtes.json'))){ console.error('gen-cross-check: vtes.json is missing beside the tool (bash tools/setup.sh)'); process.exit(2); }
   const P = JSON.parse(fs.readFileSync(pairing, 'utf8'));
-  const cards = JSON.parse(fs.readFileSync(here('vtes.json'), 'utf8')), lib = JSON.parse(fs.readFileSync(here('elysium-cardfx.json'), 'utf8')).lib;
+  const cards = JSON.parse(fs.readFileSync(here('vtes.json'), 'utf8')), lib = JSON.parse(fs.readFileSync(opt('--cardfx') || here('elysium-cardfx.json'), 'utf8')).lib;   // v1.1.0: --cardfx reads a scratch compile
   const cdir = path.join(zero, 'crates', 'engine', 'src', 'cards'), modrs = path.join(cdir, 'mod.rs');
   const { defs, ctx } = RS.parseDefs(fs.readFileSync(path.join(cdir, 'defs.rs'), 'utf8'), fs.existsSync(modrs) ? fs.readFileSync(modrs, 'utf8') : '');
   let commit = '?'; try { commit = cp.execFileSync('git', ['-C', zero, 'log', '-1', '--format=%h %cs'], { encoding: 'utf8' }).trim(); } catch (e){ commit = '? (not a git checkout)'; }

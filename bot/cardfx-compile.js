@@ -98,7 +98,18 @@
 
 const fs = require('fs');
 
-const FXC_VERSION = '1.11.4';   // 20 Nov 2026 (the pilot's review, pass 3): 'As above, but for NR + X ranged damage' is strike N, the printed floor (Eldritch Glimmer [THA] 4R), as the compiler reads every 'N + X'
+const FXC_VERSION = '1.12.0';   // 27 Nov 2026 (C1, the V5 sweep's first family: stealth, intercept, bleed against zero-vtes's definitions): a GRANTED action's stealth is not the card's own (GRANTED_STEALTH below)
+// const FXC_VERSION_1114 = '1.11.4';   // 20 Nov 2026 (the pilot's review, pass 3): 'As above, but for NR + X ranged damage' is strike N, the printed floor (Eldritch Glimmer [THA] 4R), as the compiler reads every 'N + X'
+/* v1.12.0 (C1, spec-card-sweep §11.8; the cross-check gen-cross-check.js): an action a card lets a minion take LATER is not the stealth
+   of the card's own play -- "Vampires can call a referendum to burn this card as a +1 stealth political action" (Archon and twenty
+   political cards), "The attached vampire can enter combat with a vampire as a +1 stealth Ⓓ action" (Alastor), "Any minion may burn this
+   card as a +1 stealth Ⓓ action" (Aversion [VAL]). The generic matcher read the number as the card's stealth, and the action rename
+   made it the card's actStealth: a bot that called Archon announced +1 stealth. No key of ours models a granted action yet, so its
+   number is dropped (the cross-check sets their granted abilities apart). The card's own stealth stays: an opening '+N stealth
+   action.', 'this action is at +N stealth', a modifier's '+N stealth'. */
+const GRANTED_STEALTH = /\bas an? (?:(?:un)?directed )?\+(?:[0-9]+|X) stealth\b[^.]*?\baction\b|\+(?:[0-9]+|X) stealth (?:on|during|when attempting) that action|\b(?:may|can) take an? \+(?:[0-9]+|X) stealth (?:[a-z]+ )?action/gi;
+   // also 'Any minion can burn this card as a \u24b9 action; Tremere get +1 stealth during that action' (six masters), 'as an undirected +1 stealth
+   // equip action' (Filchware's Pawn Shop) and 'Arms Dealer may take a +1 stealth action to ...' (three allies)
 // const FXC_VERSION_1113 = '1.11.3';   // 20 Nov 2026 (the pilot's review, pass 2: F1-F3, F7): the coarse maneuver / press / dodge / additional strike reads also skip an opponent's cost, a restriction ('may use maneuvers or presses only if'), a cancel and the opponent's act as a trigger; 'the press step' is a time word; 'aggravated' in a negated or neutralised clause is not aggr (extractFx); 'maneuver, only usable to go / get to long / close range' is maneuverTo; a hand strike beside 'this minion cannot' gets no handBonus; 'As above, but' with its own strike replaces the inherited strike keys (libModes); `flight` on a crypt entry that prints 'Flight [FLIGHT].'; the contract, noContracts and flight markers survive a curated entry
 // const FXC_VERSION_1112 = '1.11.2';   // 20 Nov 2026 (the pilot's review of executor B2, P7): two markers -- `contract` on a library entry whose keyword is 'Contract.' / 'Unique contract.' (7 cards), `noContracts` on a crypt entry that prints 'Contracts cannot be placed on <name>.' (Iliana (G2) alone). Every other entry compiles byte for byte as in v1.11.1
 // const FXC_VERSION_1111 = '1.11.1';   // 20 Nov 2026 (the Banu Haqim pilot's review, findings D1-D3): the coarse maneuver / press / dodge / additional strike reads skip a negated clause ('the opposing minion cannot dodge ...') and an opponent's grant ('the opposing minion gets an optional press') -- they were the player's own (extractFx); 'As [x] above, but (the strike is) at +N damage' replaces an inherited handBonus (Charge of the Buffalo [SPI], Lead Fist [VIS]: 1 -> 2; libModes); the whole-mode readings read 'with an additional optional maneuver' and 'but enter combat with <target>' on a rush's 'As above' line (Nose of the Hound [spi] / [SPI]), 'Strike: hand strike, aggravated.' (Donnybrook [pro]), a discipline line's own type bracket and opening '+N stealth action.' (Steely Tenacity [qui], refused by its header), and list an 'As [x] above' line whose reference they refused. Every other entry compiles byte for byte as in v1.11.0
@@ -223,7 +234,8 @@ function extractFx(t0){
     put('stealthLater', num(m[1]));
     t = t.replace(m[0], '');
   }
-  { const ts = t.replace(/\+(?:[0-9]+|X) stealth during [^.]{0,30}next/gi, '');   // v1.5.5: FUTURE stealth ("+1 stealth during their next action", Tangle Atropos' Hand -- 1-card class) is not instant stealth; stripping keeps the scanned, playable key honest
+  { const ts = t.replace(/\+(?:[0-9]+|X) stealth during [^.]{0,30}next/gi, '')   // v1.5.5: FUTURE stealth ("+1 stealth during their next action", Tangle Atropos' Hand -- 1-card class) is not instant stealth; stripping keeps the scanned, playable key honest
+      .replace(GRANTED_STEALTH, '');   // v1.12.0 (C1, the V5 sweep's first family): a GRANTED action's stealth is not the card's own
     if((m = ts.match(/\+([0-9]+|X) stealth/i))) put('stealth', num(m[1])); }
   /* defense */
   if((m = t.match(/\+([0-9]+|X) intercept/i))) put('intercept', num(m[1]));

@@ -69,6 +69,9 @@
  "conditional": [
   "If"
  ],
+ "granted": [
+  "DeclareAction"
+ ],
  "flags": [
   {
    "name": "condition",
@@ -118,6 +121,7 @@
    "name": "extra cost",
    "what": "a cost paid inside the effect (blood, pool, life, conviction)",
    "theirs": [
+    "BurnActorBlood",
     "PayBlood",
     "PayPool",
     "PayPoolX",
