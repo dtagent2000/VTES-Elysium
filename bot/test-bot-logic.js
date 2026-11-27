@@ -17192,7 +17192,8 @@ async function connectWithRetry(client, tries = 30){
        prey's Pass inside its own attempt, said before my window is born, declines nothing, while the attempt stands or after it failed;
        (p) a card line's action: an attempt left at an earlier action (the prey's, or another seat's) does not stand at it; (q) a record
        stays at its own action's card (the row first, then the minion's card); (r) a stray attempt by a seat that may not block shadows
-       no legal one, at the blocking bot and at the acting bot.
+       no legal one, at the blocking bot and at the acting bot. Pass 3: (s) the prey's decline while my pool question is open counts,
+       typed too, and a record no It resolves ended takes no word on the next action; (m) a superseded staked record gets its note.
        LAST LINE OF 189 is the closing brace below. */
     {
       console.log('\n[189] v0.6.245 -- one block attempt at a time (11.11), a human’s No (4.25), the turn-end note (11.12)');
@@ -17393,8 +17394,9 @@ async function connectWithRetry(client, tries = 30){
         const stale = !!P.pending; await sleep(5);
         P._onLog('Claude', 'Sully plays Creeping Sabotage.'); P._onSay({ who: 'Claude', i: SI('Any blocks?') });   // pass 2, C: a new action is another minion's (the record's own minion's card is its own action's)
         const asked = !!P._pq && P.chats.some(c => /lose pool/.test(c));
-        ok(stale && asked && !P.pending,
-           '189m a record of a human’s earlier action is superseded by the next "Any blocks?" -- the prey asks its pool question again (got ' + JSON.stringify({ stale, asked }) + '; pass 1: it answered nothing, and the predator waited for it)');
+        const noted = P.chats.some(c => c === 'Note: an unresolved bleed at me was overtaken by Claude’s next action — if it landed, tell me "bleed 2".');   // after pass 3: the bleed it held is not dropped unsaid
+        ok(stale && asked && !P.pending && noted,
+           '189m a record of a human’s earlier action is superseded by the next "Any blocks?" -- the prey asks its pool question again, and the bleed it held gets the expiry note (got ' + JSON.stringify({ stale, asked, noted, chats: P.chats }) + '; pass 1: it answered nothing, and the predator waited for it; after pass 3: the superseded bleed was dropped unsaid)');
         quiet9(P); }
 
       // n) finding 5: the note names me when the actor is not my predator (an unnamed "vote N" reaches the actor's prey bot only)
@@ -17475,17 +17477,45 @@ async function connectWithRetry(client, tries = 30){
         Q._onSay({ who: 'Bob', i: SI('Block!') }); Q._onLog('Bob', 'Nora blocks.'); Q._onSay({ who: 'Bob', i: SI('Pass') }); await sleep(120);
         const side = { st: Q._standing && Q._standing.who, wf: Q.pending && Q.pending.waitingFor, said: Q.says.slice() }; quiet9(Q);
         const PD = [{ seat: 1, name: 'Hanna', online: true }, { seat: 2, name: 'Nina', online: true }, { seat: 3, name: 'Claude', online: true }, { seat: 4, name: 'Viktor', online: true, bot: true }];
-        const V = mk9('Viktor', 4, PD); const cv = V9('c5', 'Chelsea Blake (G6)', 4, { locked: true }); V.board = [cv]; V.hand = [];
+        const V = mk9('Viktor', 4, PD, { whoBlocksGraceMs: 30 }); const cv = V9('c5', 'Chelsea Blake (G6)', 4, { locked: true }); V.board = [cv]; V.hand = [];
         V._actingVamp = { v: cv, n: 0, played: new Set(), target: null, kind: 'political' };
         V._askBlock('Chelsea Blake calls Kine Resources Contested. Block?');
         V._onSay({ who: 'Nina', i: SI('Block!') }); V._onLog('Nina', 'Stray One attempts to block.');   // cross-table
         V._onLog('Hanna', 'Donny Kowalczyk blocks.');   // the prey, by line only
         const by1 = V._ask && V._ask.attemptBy;
+        await sleep(5); V._onSay({ who: 'Hanna', i: SI('Block!') }); await sleep(80);   // her shout after her line (a later ms than the line's): the same attempt (pass 3: the takeover marks the line)
+        const who9 = V.chats.filter(c => /Who blocks\?/.test(c)).length;
         V._onSay({ who: 'Claude', i: SI('Block!') }); V._onLog('Claude', 'Wauneka (G6) blocks.');   // the predator, while the prey's attempt stands
-        const act = { by1, by2: V._ask && V._ask.attemptBy, opp: V._lastBlockerName, refused: V.rows.filter(x => x.ty === 'second-attempt').length };
-        ok(side.st === 'Bob' && side.wf === 'Bob' && !side.said.includes('Block!') && act.by1 === 'Hanna' && act.by2 === 'Hanna' && act.opp === 'Donny Kowalczyk' && act.refused >= 1,
+        const act = { by1, who9, by2: V._ask && V._ask.attemptBy, opp: V._lastBlockerName, refused: V.rows.filter(x => x.ty === 'second-attempt').length };
+        ok(side.st === 'Bob' && side.wf === 'Bob' && !side.said.includes('Block!') && act.by1 === 'Hanna' && act.who9 === 0 && act.by2 === 'Hanna' && act.opp === 'Donny Kowalczyk' && act.refused >= 1,
            '189r a stray attempt shadows no legal one: the prey’s attempt holds the predator bot, and at the acting bot the prey’s line takes the contest and the predator’s is refused (got ' + JSON.stringify({ side, act }) + '; pass 2: the stray took the record, and the predator was taken up over the prey)');
         quiet9(V); }
+
+      // s) the egress review, pass 3: a prey's decline said while my pool question is open counts, typed too; and a record no It resolves ended takes no word on the next action
+      { const PJ = [{ seat: 1, name: 'Claude', online: true }, { seat: 2, name: 'Bob', online: true }, { seat: 3, name: 'Viktor', online: true, bot: true }, { seat: 4, name: 'Lisa', online: true, bot: true }];
+        const pub2 = u => { u.table = { 1: { pub: { pool: 20, cards: [{ id: 'b2', name: 'Belinde (G6)', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }, { id: 'b3', name: 'Sully', kind: 'crypt', zone: 'ready', locked: false, blood: 4 }] } } }; };
+        const Q = mk9('Lisa', 4, PJ); Q.board = [V9('q15', 'Ayelech', 4)]; Q.hand = []; pub2(Q); blocks9(Q, true);
+        Q._onLog('Claude', 'Sully plays Creeping Sabotage.'); Q._onSay({ who: 'Claude', i: SI('Any blocks?') }); Q._onSay({ who: 'Claude', i: SI('Yes') }); await sleep(5);
+        Q._onChat('Bob', 'pass');   // the prey's typed decline at the "How much?" stage
+        Q._onChat('Claude', '3'); await sleep(150);
+        const typed = { wf: Q.pending && Q.pending.waitingFor, said: Q.says.slice() }; quiet9(Q);
+        // the record of action 1 lingers with Bob's attempt settled by word; at action 2's card line Bob declines before "Any blocks?"
+        const R = mk9('Lisa', 4, PJ); R.board = [V9('q16', 'Ayelech', 4)]; R.hand = []; pub2(R); blocks9(R, true);
+        R._onLog('Claude', 'Belinde (G6) hunts.'); R._onSay({ who: 'Bob', i: SI('Block!') }); R._onLog('Bob', 'Nora blocks.'); await sleep(10);
+        R._onLog('Claude', 'Sully plays Creeping Sabotage.'); await sleep(5);
+        R._onSay({ who: 'Bob', i: SI('No block') }); await sleep(100);
+        const early = { said: R.says.slice(), inside: !!(R._declAt && R._declAt.Bob && R._declAt.Bob.inside) };
+        R._onSay({ who: 'Claude', i: SI('Any blocks?') }); R._onSay({ who: 'Claude', i: SI('Yes') }); await sleep(5); R._onChat('Claude', '3'); await sleep(150);
+        const late = { wf: R.pending && R.pending.waitingFor, said: R.says.slice() };
+        // ... and with no attempt left at action 1: the old record (waiting for Bob) does not open on Bob's word about action 2
+        const T = mk9('Lisa', 4, PJ); T.board = [V9('q17', 'Ayelech', 4)]; T.hand = []; pub2(T); blocks9(T, true);
+        T._onLog('Claude', 'Belinde (G6) hunts.'); await sleep(10);
+        T._onLog('Claude', 'Sully plays Creeping Sabotage.'); await sleep(5);
+        T._onSay({ who: 'Bob', i: SI('No block') }); await sleep(100);
+        const early2 = T.says.slice(); quiet9(T);
+        ok(typed.wf === null && typed.said.includes('Block!') && early.said.length === 0 && !early.inside && late.wf === null && late.said.includes('Block!') && early2.length === 0,
+           '189s the prey’s decline while my pool question is open counts, typed too; a record no It resolves ended takes no word on the next action, and an attempt left at it is not inside it (got ' + JSON.stringify({ typed, early, late, early2 }) + '; pass 3: the typed word was swallowed, the old record opened on it, and the decline read as inside the old attempt)');
+        quiet9(R); }
     }
 
 

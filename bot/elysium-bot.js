@@ -10802,11 +10802,11 @@ class Bot {
       const v = !(reason === 'block succeeded' && bv && bv.id === rl.id) && (this.board || []).find(c => c && c.id === rl.id && c.kind === 'crypt' && c.zone === 'ready');
       if(v && !v.locked){ v.locked = true; this._emit('relock', { vamp: v.name, card: rl.card, why: reason }); this.note(v.name + ' locks again: it did not block this action (' + rl.card + ').'); this.push(); } });
   }
-  _expiredNote(p){                   // v0.6.245 (the sweep register 11.12): the turn-end note names what expired -- a bleed is a bleed; any other action with my pool at stake says whose action it was
+  _expiredNote(p, next){             // v0.6.245 (the sweep register 11.12): the turn-end note names what expired -- a bleed is a bleed; any other action with my pool at stake says whose action it was. next: the record was superseded by the actor's next action (_onAnyBlocks), not ended by the turn
     const n = p.amount | 0, pol = p.sub === 'political' || !!p.political;
     const say = (this.seatName(this.predSeat()) === p.who ? '' : '@' + this.o.name + ' ') + (pol ? 'vote ' : 'bleed ') + n;   // (the egress review, finding 5) an unnamed 'bleed N' reaches the sender's prey bot only: any other seat is named
-    if(p.kind === 'bleed') return 'Note: an unresolved bleed at me expired with the turn — if it landed, tell me "' + say + '".';
-    return 'Note: ' + p.who + '’s ' + (pol ? 'referendum' : 'action') + (p.card ? ' (' + p.card + ')' : '') + ' was still unresolved when the turn ended, with ' + n + ' pool at stake for me — if it cost me pool, tell me "' + say + '".';
+    if(p.kind === 'bleed') return 'Note: an unresolved bleed at me ' + (next ? 'was overtaken by ' + p.who + '’s next action' : 'expired with the turn') + ' — if it landed, tell me "' + say + '".';
+    return 'Note: ' + p.who + '’s ' + (pol ? 'referendum' : 'action') + (p.card ? ' (' + p.card + ')' : '') + ' was still unresolved when ' + (next ? 'their next action began' : 'the turn ended') + ', with ' + n + ' pool at stake for me — if it cost me pool, tell me "' + say + '".';
   }
 
   _closeZeroRecord(p){               // v0.6.245 (11.12): my decline of a HUMAN's undirected action that costs me nothing ends my part in it -- nothing lands on my pool at its resolution, so the record closes now, silently (it lingered to the turn's end and said 'bleed 0', and a lingering record kept me from the next 'Any blocks?'). A bot actor always says It resolves: unchanged
@@ -11663,10 +11663,12 @@ class Bot {
      before right-clicking; a bot always sends its line, and a bot whose route failed after its shout says Pass with no line), until
      its verdict line, a cancel of it, the counter leaving block mode, 'It resolves', my own announce or the turn's end. A pending reads
      it through _standingFor (an attempt seen since the pending's own action was announced, p.annAt). */
+  _newerAction(o, p){ return !!(o && p && (o.at || 0) > (p.annAt || 0) && this._obsIsAction(o) && !(o.card && o.vamp === p.actingVampName)); }   // a remembered line that is an action after my record's -- not the record's own action's card (its minion's card after its row; the egress review, pass 2, C)
   _actNow(){                         // (the egress review, pass 2, B and D) the action an attempt line is at: my record's, else the pool question's, else a remembered action line (a reaction card's line is none)
-    const p = this.pending; if(p) return { seat: p.actorSeat || this._seatOfName(p.who), at: p.annAt || 0 };
+    const p = this.pending, o = this._obs;
+    if(p && !this._newerAction(o, p)) return { seat: p.actorSeat || this._seatOfName(p.who), at: p.annAt || 0 };   // (pass 3) a record no It resolves ended is overtaken by the next action's line, before "Any blocks?" supersedes it
     const q = this._pq; if(q && q.obs) return { seat: q.obs.seat, at: q.obs.at || 0 };
-    const o = this._obs; return (o && this._obsIsAction(o)) ? { seat: o.seat, at: o.at || 0 } : null;
+    return (o && this._obsIsAction(o)) ? { seat: o.seat, at: o.at || 0 } : null;
   }
   _noteStanding(who, vamp){
     if(!who || who === this.o.name) return;
@@ -11675,7 +11677,7 @@ class Bot {
     let s = this._standing;
     if(s && act && s.at < act.at){ this._standing = s = null; }   // (pass 1, finding 2; pass 2, B) an earlier action's attempt that no line ended is not this action's -- a card line's action too, before my record is born
     if(s && s.who !== who) return;   // the attempt that stands stays the one; a second seat's line while it does is no attempt of its own
-    this._standing = { who, vamp: vamp || (s && s.vamp) || null, at: Date.now() };   // (pass 2, B) stamped at its latest line: the readers ask only whether it came after the action's announce
+    this._standing = { who, vamp: vamp || (s && s.vamp) || null, at: Date.now() };   // (pass 2, B) stamped at its latest line -- a belt since pass 3 (_actNow reads the newer action line, so the drop above clears an old attempt first): the readers ask only whether it came after the action's announce
   }
   _standingCur(){ const s = this._standing, act = this._actNow(); return (s && !(act && s.at < act.at)) ? s : null; }   // (pass 2, A) the attempt that stands at the action now (not an earlier action's)
   _noteDecline(who){ (this._declAt || (this._declAt = {}))[who] = { at: Date.now(), inside: !!((this._standingCur() || {}).who === who) }; }   // a seat's last decline, said inside its own standing attempt or not (_openAskedWindow)
@@ -11697,6 +11699,7 @@ class Bot {
   }
   _preyDeclined(who, via){           // the prey's word at an undirected action I am the predator of: a decline opens my window; inside the prey's own standing attempt it resolves that attempt (B: everybody passed), and I go on waiting
     const p = this.pending; if(!p || !p.waitingFor || p.waitingFor !== who) return false;
+    if(this._newerAction(this._obs, p)){ this.o.log('the prey ' + who + ' declines (' + via + ') after a newer action line -- that action’s word (_declAt), not my record’s'); return false; }   // (the egress review, pass 3, the same reader as _actNow) a record no It resolves ended does not take the prey's word on the next action: its own window opens on it at birth
     const sa = this._standingFor(p);
     if(sa && sa.who === who){ this.o.log('the prey ' + who + ' passes inside its own block attempt (' + (sa.vamp || 'a minion') + ', ' + via + ') -- that resolves the attempt, it declines nothing: I wait for the verdict'); return true; }
     p.waitingFor = null; p.contested = false; this._reactWindow(); return true;
@@ -12012,8 +12015,10 @@ class Bot {
     { const o0 = this._obs, p0 = this.pending;   /* v0.6.245 (11.11; the egress review, finding 4): a record of a human's EARLIER action (no It resolves came) is superseded by
          the new action this prompt asks about, as a new announce line supersedes one (_parseUndirected) -- a prey bot that kept it answered nothing, and the
          predator now waits for the prey's word (the owner's decision A of 15 Sep: the next action overwrites the memory) */
-      if(p0 && !this._ask && !this._pq && o0 && o0.who === p0.who && this._isHumanName(o0.who) && (o0.at || 0) > (p0.annAt || 0) && this._obsIsAction(o0)
-         && !(o0.card && o0.vamp === p0.actingVampName) && !(p0.blockerVamp || p0.routeVamp || p0.lateWait)){ this._clearPending('superseded by a new action'); this._obs = o0; } }   // (pass 2, C) not the record's own action -- its minion's card after its row (a card action, a bleed's action card) -- nor a record with my block or my wait for the actor's word under way (another seat's shout, `contested`, ends nothing: the stale record of the C1b sighting had one)
+      if(p0 && !this._ask && !this._pq && o0 && o0.who === p0.who && this._isHumanName(o0.who) && this._newerAction(o0, p0)
+         && !(p0.blockerVamp || p0.routeVamp || p0.lateWait)){   // (pass 2, C) not the record's own action's card (_newerAction); a belt: my block or my wait for the actor's word runs on its own clock and ends first, and the next prompt supersedes the record after it (another seat's shout, `contested`, ends nothing: the stale record of the C1b sighting had one)
+        if((p0.amount | 0) > 0) this.chat(this._expiredNote(p0, true));   // (the lead's read after pass 3) a record with my pool at stake is not dropped unsaid: the turn-end note it would have reached, now
+        this._clearPending('superseded by a new action'); this._obs = o0; } }
     if(!this.started || this.out || this._ask || this.pending || this._pq) return;
     const o = this._obs;
     if(!o || o.seat === this.seat || Date.now() - o.at > 120000) return;   // nothing on record: silence, not a guess
@@ -12656,6 +12661,7 @@ class Bot {
     const txt = String(msg || '').trim();
     if(this._phaseWait) this._phaseNudge(who, txt, 'chat');   // v0.6.165: a human's quick phrase answers the combat step
     this._holdHook(who, -1, txt);                              // v0.6.95: chat-side hold fallback ('hold on' pauses, 'carry on'/'resume'/'it resolves' release)
+    if(/^\s*(pass|no block|no reaction)\s*[.!]*\s*$/i.test(txt)) this._noteDecline(who);   // v0.6.245 (11.11): the typed decline, as the quick phrase's (_openAskedWindow) -- here, before the pool question's branch returns (the egress review, pass 3)
     this._hMemoChat(who, txt);                                 // v0.6.225 (D-113 (3)): the owner's answer naming their Grand Ball's free Toreador
     if(this._refCall && !this._refCall.closed && /^(no votes from me|i abstain|abstain)\.?$/i.test(txt)){ this._refCall.heard.add(who); this._refCall.paused.delete(who); this._refCall.arm(); }   // v0.6.122: a bot's abstain bubble (and a human typing the same) counts as having spoken
     this._narrWho = who; this._parseCombatNarration(txt); this._narrWho = null;   /* v0.6.183 */   // v0.6.156: the four opp-parsers (taken / press / maneuver / Crows / Grapple) now live in ONE method fed from BOTH tiers -- see _parseCombatNarration
@@ -12719,7 +12725,6 @@ class Bot {
         return;
       }
     }
-    if(/^\s*(pass|no block|no reaction)\s*[.!]*\s*$/i.test(txt)) this._noteDecline(who);   // v0.6.245 (11.11): the typed decline, as the quick phrase's (_openAskedWindow)
     if(this.pending && this.pending.role === 'predator' && this.pending.waitingFor === who && !/^\s*no votes? from me\b/i.test(txt)
        && (/^\s*(pass|no block|no reaction)\b/i.test(txt) || (/^\s*(no|nej)\b/i.test(txt) && !this._isHumanName(this.pending.who))) && this._preyDeclined(who, 'chat')) return;   // v0.6.245 (11.11, part 2): the prey's typed decline, as its quick phrase (a bare 'no' only at a bot actor's question: a human actor's may answer a pool question)
     /* answers to a pending Block? question — from anyone; the table referees */
