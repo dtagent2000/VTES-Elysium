@@ -21,6 +21,6 @@ The entries of 9 Sep – 27 Nov 2026 (bot v0.1 to v0.6.243 and the rounds withou
   (every id kept); the budget a ceiling, one in, one out (CI fails a rise of the total with no new D-line); the standing pages
   207 → about 183 KB, nothing binding cut; the zero-vtes readings a section of the round's report; the old CHANGELOG, the
   register as it stood and nine delivered round specs frozen in `docs/history/`.
-  *Gates:* `tools/gates.sh` on `docs-diet` `eb0f3c8` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 16 · FAIL 0 · SKIPPED 0. CI's suite ×3: not read.
+  *Gates:* `tools/gates.sh` on `docs-diet` `eb0f3c8` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 16 · FAIL 0 · SKIPPED 0. CI's suite 2841/0 ×3, `bot-gates` success on `cca8d0c`.
   *Egress:* 12 findings (rule-missed 4, half-done 4, stale-doc 4) in 3 passes (Fable 11, Fable 1, Fable clean), 12 fixed, 0 listed
   *Report:* `reports/REPORT-docs-diet-2026-11-27.md`.
