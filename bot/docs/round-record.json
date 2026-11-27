@@ -3,7 +3,7 @@
  "tool": "tools/gates.sh",
  "date": "2026-11-27",
  "branch": "docs-diet",
- "head": "45475b1",
+ "head": "fb92225",
  "dirty": false,
  "base": "origin/main",
  "merge_base": "77c5ded",
@@ -52,7 +52,7 @@
    "gate": "precon",
    "result": "PASS",
    "count": "18 precons, no problems",
-   "seconds": 1
+   "seconds": 0
   },
   {
    "gate": "ledger-self",
@@ -64,7 +64,7 @@
    "gate": "sheet-self",
    "result": "PASS",
    "count": "23/0",
-   "seconds": 0
+   "seconds": 1
   },
   {
    "gate": "cross-self",
@@ -76,18 +76,18 @@
    "gate": "ana-gates-self",
    "result": "PASS",
    "count": "35/0",
-   "seconds": 1
+   "seconds": 0
   },
   {
    "gate": "hb1",
    "result": "PASS",
    "count": "11/0 (0 skip)",
-   "seconds": 1
+   "seconds": 2
   },
   {
    "gate": "doc-budget",
    "result": "PASS",
-   "count": "bootstrap 39238 / 50000 · standing pages 183373 / 184000",
+   "count": "bootstrap 39238 / 50000 · standing pages 183430 / 184000",
    "seconds": 0
   },
   {
@@ -99,14 +99,14 @@
   {
    "gate": "round-self",
    "result": "PASS",
-   "count": "22/0",
+   "count": "24/0",
    "seconds": 0
   },
   {
    "gate": "public-scan",
    "result": "PASS",
    "count": "0 hits in 0 files",
-   "seconds": 1
+   "seconds": 0
   },
   {
    "gate": "test-doc-budget",
@@ -121,6 +121,6 @@
   "SKIPPED": 0,
   "NOT RUN": 0
  },
- "seconds": 32,
- "egress": "(the review's pass 2 is running)"
+ "seconds": 31,
+ "egress": "(the review's pass 3 is running)"
 }

@@ -10,7 +10,7 @@
 
 <!-- round.py:gates -->
 ## Last gates (`docs/round-record.json`)
-`tools/gates.sh` on `docs-diet` `45475b1` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 16 · FAIL 0 · SKIPPED 0 — check 35 of 35 scripts parse · lint clean · canary 235/0 · canary-root 235/0 · cardfx 516/0 · precon 18 precons, no problems · ledger-self 81/0 · sheet-self 23/0 · cross-self 19/0 · ana-gates-self 35/0 · hb1 11/0 (0 skip) · doc-budget bootstrap 39238 / 50000 · standing pages 183373 / 184000 · public-scan-self 35/0 · round-self 22/0 · public-scan 0 hits in 0 files · test-doc-budget every case red, the baseline and the allowed moves green. CI's suite ×3: not read.
+`tools/gates.sh` on `docs-diet` `fb92225` (27 Nov; bytes `14d48ac8` / `bae2970e` / cardfx `c4b9545e`): PASS 16 · FAIL 0 · SKIPPED 0 — check 35 of 35 scripts parse · lint clean · canary 235/0 · canary-root 235/0 · cardfx 516/0 · precon 18 precons, no problems · ledger-self 81/0 · sheet-self 23/0 · cross-self 19/0 · ana-gates-self 35/0 · hb1 11/0 (0 skip) · doc-budget bootstrap 39238 / 50000 · standing pages 183430 / 184000 · public-scan-self 35/0 · round-self 24/0 · public-scan 0 hits in 0 files · test-doc-budget every case red, the baseline and the allowed moves green. CI's suite ×3: not read.
 <!-- /round.py:gates -->
 
 ## Next (the owner's order of 26–27 Nov: D-144, D-145)
