@@ -1,0 +1,189 @@
+{
+ "family": {
+  "stealth": {
+   "ours": [
+    "stealth",
+    "actStealth",
+    "lockStealth",
+    "lockStealthClan",
+    "lockStealthSect",
+    "lockStealthAt"
+   ],
+   "theirs": [
+    "AddStealth",
+    "Stat:Stealth"
+   ]
+  },
+  "intercept": {
+   "ours": [
+    "intercept",
+    "interceptPaid",
+    "lockIntercept",
+    "lockInterceptClan",
+    "lockInterceptOn",
+    "lockInterceptNotFirst",
+    "hostIntercept"
+   ],
+   "theirs": [
+    "AddIntercept",
+    "AttemptingIntercept",
+    "ByInterceptVsBearer",
+    "Stat:Intercept"
+   ]
+  },
+  "bleed": {
+   "ours": [
+    "bleed"
+   ],
+   "theirs": [
+    "bleed",
+    "BleedMod",
+    "Stat:Bleed"
+   ]
+  }
+ },
+ "formula": [
+  "AddInterceptX",
+  "AttemptingInterceptX",
+  "BleedModX",
+  "BleedPerPick",
+  "BurnForInterceptThisAction",
+  "PointsInterceptThisAction",
+  "PoolForInterceptThisAction",
+  "ReduceBleedX",
+  "StealthPerPick",
+  "TargetBurnsBloodForIntercept"
+ ],
+ "formulaOf": {
+  "AddInterceptX": "intercept",
+  "BleedModX": "bleed",
+  "StealthPerPick": "stealth",
+  "BleedPerPick": "bleed",
+  "AttemptingInterceptX": "intercept",
+  "BurnForInterceptThisAction": "intercept",
+  "PoolForInterceptThisAction": "intercept",
+  "PointsInterceptThisAction": "intercept",
+  "TargetBurnsBloodForIntercept": "intercept",
+  "ReduceBleedX": "bleed"
+ },
+ "conditional": [
+  "If"
+ ],
+ "granted": [
+  "DeclareAction"
+ ],
+ "flags": [
+  {
+   "name": "condition",
+   "what": "an effect that applies only if a condition holds",
+   "theirs": [
+    "If"
+   ],
+   "ours": [
+    "plusIf"
+   ]
+  },
+  {
+   "name": "block rider",
+   "what": "what happens to the action, the blocker or the combat when the action is blocked",
+   "theirs": [
+    "EndActionIfBlocked",
+    "EndBlockedAction",
+    "EndBlockedActionLocked",
+    "CancelCombatIfBlocked",
+    "MayCancelCombatIfBlocked",
+    "CancelBlockCombat",
+    "LockFailedBlockers",
+    "LockFailedBlockerIfSuccessful",
+    "LockBlocker",
+    "OnActingIfBlocked",
+    "BurnSourceIfBlocked",
+    "BurnEdgeIfBlocked",
+    "CloseEachRoundIfBlocked",
+    "BlockedCombatRider",
+    "StandInIfBlocked",
+    "BlockFails",
+    "BlockVoided",
+    "BlockerBurnsBlood",
+    "BlockerBurnsBloodOrLife",
+    "BlockerControllerBurnsPool",
+    "DamageBlocker"
+   ],
+   "ours": [
+    "blockedLockEnd",
+    "blockedPoolBurn",
+    "cancelBlock",
+    "cancelBlockPay",
+    "endCombatLock"
+   ]
+  },
+  {
+   "name": "extra cost",
+   "what": "a cost paid inside the effect (blood, pool, life, conviction)",
+   "theirs": [
+    "BurnActorBlood",
+    "PayBlood",
+    "PayPool",
+    "PayPoolX",
+    "PayLife",
+    "PayConviction",
+    "PayBloodPerCounter",
+    "PayPoolPerOtherEvent",
+    "PayPoolToCardController",
+    "PayActionWithCountersX",
+    "BurnUnlessControllerPays"
+   ],
+   "ours": [
+    "payBlood",
+    "interceptPaidBlood",
+    "transferCost",
+    "cancelBlockPay",
+    "costEdge",
+    "selfDmg",
+    "bloodBurn"
+   ]
+  },
+  {
+   "name": "who plays it",
+   "what": "a mode played by another minion than the acting or reacting one",
+   "theirs": [
+    "Actor:OtherOwnMinion",
+    "Actor:AnyReadyVampire",
+    "Actor:OwnOutOfCombat",
+    "Actor:ForOwnCombatant",
+    "Actor:AnyMethuselahsMinion",
+    "Actor:OutOfCombatVampire",
+    "Actor:UnlockedOutOfCombat",
+    "Actor:HostOutOfCombat"
+   ],
+   "ours": [
+    "playedBy"
+   ]
+  },
+  {
+   "name": "ongoing modifier",
+   "what": "a stat the card gives its bearer while it stays on a minion (an attached action, modifier or reaction card)",
+   "theirs": [
+    "Stat:Stealth",
+    "Stat:Intercept",
+    "Stat:Bleed",
+    "Stat:Strength",
+    "Stat:Capacity",
+    "Stat:Votes"
+   ],
+   "ours": [
+    "bearerStat"
+   ],
+   "exceptTypes": [
+    "equip",
+    "ally",
+    "retainer",
+    "master",
+    "event",
+    "power",
+    "location",
+    "conviction"
+   ]
+  }
+ ]
+}

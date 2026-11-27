@@ -3805,6 +3805,1452 @@
     }
    ],
    "note": "The exactness round (25 Nov 2026, bot v0.6.241; Claude's spot check of the base starters' auto entries, the project owner's go-ahead at 20:43; tremere holds 6). KRCG: '[tha] +1 stealth. [THA] As above, and if this action is blocked, lock the blocking minion and end the action before block resolution.' A merge over the compiled entry (its two +1 stealth modes and noReplace stay the compiler's): fx.blockedLockEnd on [THA] -- with knob riderTie 1 _bestStealthFor takes the [THA] mode over [tha] on the stealth tie (0 = the first mode, v0.6.240's), the play books it on the action and names the level, and _ifBlockedStep applies it when the action is blocked: the blocker is locked and the action ends unsuccessfully, before any other card [ANK 20220116; RTR 20180719] (on a leave-torpor action too: no diablerie, PIB 20121216). A bot blocker hears the rider at the stealth line (RIDER_STEALTH) and ends at its own verdict, locked, with no combat; one that missed it reads the actor's BLOCKED_LOCK line; a human locks their own minion."
+  },
+  "Abbot": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "an action directed at the bearer's controller or a card they control (the bearer's ongoing intercept)"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept is the bearer's, against actions directed at its controller only; not this action's."
+  },
+  "Protection Racket": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "the acting minion is titled"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the additional +1 intercept holds only against a titled acting minion (SWEEP-REGISTER 7.5)."
+  },
+  "Form of Mist": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "PRO",
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "after combat, the blocked action continues as if unblocked by burning 1 blood"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [PRO]: the +1 stealth belongs to the continued action after combat, not to this play."
+  },
+  "Gravebound Drone": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "OBL",
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "unread": "during a bleed action, by locking another copy of this ally (or, at [OBL], a Hecata burning 1 blood)"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the printed 1 bleed is the ally's own stat; the +1 holds only on its bleed action, paid by another copy or a Hecata."
+  },
+  "Baltimore Purge": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "actStealth": null,
+      "plusIf": {
+       "add": {
+        "actStealth": 1
+       },
+       "if": {
+        "selfClan": "Ravnos"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the action is at +1 stealth only if this vampire is Ravnos."
+  },
+  "Bloodwork": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "actStealth": null,
+      "plusIf": {
+       "add": {
+        "actStealth": 1
+       },
+       "if": {
+        "unread": "the Methuselah being bled controls a ready Sabbat vampire"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth holds only if the Methuselah bled controls a ready Sabbat vampire."
+  },
+  "Divine Sign": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "nec",
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 2
+       },
+       "if": {
+        "unread": "against the chosen minion only"
+       }
+      }
+     }
+    },
+    {
+     "at": "NEC",
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 2
+       },
+       "if": {
+        "unread": "against the chosen minion only"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +2 intercept holds only against the minion the action chose."
+  },
+  "Lock": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "actStealth": null,
+      "plusIf": {
+       "add": {
+        "actStealth": 1
+       },
+       "if": {
+        "unread": "the action is undirected: the card goes on a minion of your own"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth holds only when the action is undirected (a minion of your own)."
+  },
+  "No Secrets From the Magaji": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "when blocking a vampire"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept holds only when blocking a vampire."
+  },
+  "Nosferatu Performance Art": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "actStealth": null,
+      "plusIf": {
+       "add": {
+        "actStealth": 1
+       },
+       "if": {
+        "unread": "the acting Nosferatu has a capacity above 5"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the action is at +1 stealth only for a Nosferatu of capacity above 5."
+  },
+  "Rampage": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "pot",
+     "fx": {
+      "actStealth": null,
+      "plusIf": {
+       "add": {
+        "actStealth": 1
+       },
+       "if": {
+        "unread": "the location burned is one you control"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [pot]: the +1 stealth holds only against a location you control."
+  },
+  "Songs of the Distant Vitae": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "QUI",
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "unread": "against the controller of a vampire who hunted successfully since your last turn"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [QUI]: the +1 bleed holds only against the controller of a vampire who hunted since your last turn."
+  },
+  "Bear-Baiting": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 2
+       },
+       "if": {
+        "unread": "the top crypt card is not younger than the blocker's, against the blocker's controller"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +2 bleed holds only when the crypt comparison puts the card on the acting anarch, against the blocker's controller."
+  },
+  "High Aye": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "the action is undirected"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): +1 stealth, +2 when the action is undirected."
+  },
+  "Ministry": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "the acting vampire is Sabbat"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): +2 intercept, +3 against a Sabbat acting vampire."
+  },
+  "Mirror's Visage": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "CHI",
+     "fx": {
+      "stealth": 1,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "the action is undirected"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [CHI]: +1 stealth on a directed action, +2 on an undirected one."
+  },
+  "Sense the Sin": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "dai",
+     "fx": {
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "the acting minion has a corruption counter"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [dai]: +1 intercept, +2 against an acting minion with a corruption counter."
+  },
+  "Anarch Manifesto, An": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "an anarch bearer, on actions that require an anarch"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth holds only on actions that require an anarch."
+  },
+  "Asanbonsam Ghoul": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "against directed actions"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept holds only against directed actions."
+  },
+  "Canopic Jar": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "ser",
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "against the minion chosen when equipped"
+       }
+      }
+     }
+    },
+    {
+     "at": "SER",
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "against the minion chosen when equipped"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept holds only against the minion chosen when it was equipped."
+  },
+  "Carlton Van Wyk": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "against vampires"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept holds only against vampires."
+  },
+  "Communal Haven: Temple": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "your Sabbat vampires, against actions directed at your Sabbat vampires"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept holds only against actions directed at your own Sabbat vampires."
+  },
+  "Corpse Balloon": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "VIC",
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "against directed actions"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [VIC]: the +1 intercept holds only against directed actions."
+  },
+  "Giuseppe, Gravedigger": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "on actions that require Necromancy"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth holds only on actions that require Necromancy."
+  },
+  "Guinea-Bissau Carnival": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": "X"
+       },
+       "if": {
+        "unread": "a Laibon on a hunt action; X is that Laibon's Aye"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +X stealth holds only for a Laibon hunting, X its Aye."
+  },
+  "Hexaped": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": null,
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1,
+        "stealth": 1
+       },
+       "if": {
+        "unread": "the recruiter, bleeding a Methuselah who holds the link counter"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 bleed and +1 stealth go to its recruiter, bleeding the Methuselah who holds the link counter."
+  },
+  "Illuminate": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "when blocking a monster"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept holds only when blocking a monster."
+  },
+  "Marijava Ghoul": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "on actions that require Presence"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth holds only on actions that require Presence."
+  },
+  "Mithraic Cultist": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "during actions directed at Mithras or a card or member of his cult"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept holds only against actions directed at Mithras or his cult."
+  },
+  "Pallid": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "played out of turn against a vampire with no Aye, or a zombie ally"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept is its out-of-turn use against a vampire with no Aye or a zombie; the -1 stealth it puts on a Laibon is not modelled."
+  },
+  "Phased Motion Detector": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "obt",
+     "drop": true
+    },
+    {
+     "add": true,
+     "at": null,
+     "fx": {
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "once per action, when an action modifier requiring Chimerstry, Obfuscate or Obtenebration is played"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept is no [obt] level: it holds once per action, when such an action modifier is played."
+  },
+  "Priestess of Sekhmet": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "unread": "against a prey who controls a ready Camarilla vampire"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 bleed holds only against a prey who controls a ready Camarilla vampire."
+  },
+  "Samuel Haight": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "unread": "on his own bleed action, once per action, by burning 1 life"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): his printed bleed is 0; the +1 is a once-per-action bonus he pays with 1 life on his own bleed."
+  },
+  "Special Report": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "paid with 1 pool, once per action"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept costs 1 pool, once per action."
+  },
+  "Sunset Strip, Hollywood": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "lock it: every vampire, on hunt actions, until your next unlock phase"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): locked, it gives every vampire +1 stealth on hunt actions only."
+  },
+  "The Ancestor's Talisman": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "during actions that require Dominate or Presence"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept holds only during actions that require Dominate or Presence."
+  },
+  "The Unmasking": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "intercept": 1
+       },
+       "if": {
+        "unread": "allies only, against vampires"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept goes to allies only, against vampires."
+  },
+  "Tremere Convocation": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "a Tremere, on actions that require Thaumaturgy"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth holds only for a Tremere on actions that require Thaumaturgy; [THA] adds none."
+  },
+  "Watchtower: The Wolves Feed": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "Black Hand vampires"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth goes to Black Hand vampires only."
+  },
+  "Achilles' Heel": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "unread": "Blood Brothers of the chosen circle, against the host's controller, while the host is in torpor"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 bleed holds only for the chosen circle's Blood Brothers against the torpid host's controller."
+  },
+  "Unlicensed Taxicab": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "actStealth": 2,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "the bearer, on hunt, recruit and employ actions"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the equip action is at 2 stealth in all (an equip's +1, R-14, and the card's additional +1); the bearer's +1 holds only on hunt, recruit and employ actions."
+  },
+  "Charnas the Imp": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "actStealth": 1
+       },
+       "if": {
+        "unread": "the target minion is controlled by another Methuselah"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth is the employ action's own, only when the target minion is another Methuselah's."
+  },
+  "Ilomba": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "actStealth": 1
+       },
+       "if": {
+        "unread": "the target minion is controlled by another Methuselah"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth is the employ action's own, only when the target minion is another Methuselah's."
+  },
+  "Swarm": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "actStealth": 1
+       },
+       "if": {
+        "unread": "the target minion is controlled by another Methuselah"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth is the employ action's own, only when the target minion is another Methuselah's."
+  },
+  "Bloodstone": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null,
+      "intercept": null,
+      "plusIf": {
+       "add": {
+        "actStealth": 1
+       },
+       "if": {
+        "unread": "the minion it is put on is controlled by another Methuselah"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth is the equip action's own, only on another Methuselah's minion; the +2 intercept (against its bearer) is not modelled."
+  },
+  "Charigger, The Axe": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": "X",
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "on hunt actions"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the bleed bonus is one per soul counter (X); the +1 stealth holds only on hunt actions."
+  },
+  "Inevitability of the Void": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "AUS+NEC",
+     "fx": {
+      "bleed": "X"
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [AUS][NEC]: +1 bleed for every 10 cards in the target's ash heap (X)."
+  },
+  "Unleash the Hounds": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "VIS",
+     "fx": {
+      "bleed": "X"
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [VIS]: +1 bleed for each ready vampire of the enslaving clan you control (X)."
+  },
+  "Blessings of the Loa": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": "X"
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the bleed bonus is a count of the prey's torpid vampires (X), for a Samedi of capacity 4 or more."
+  },
+  "Cãoera": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": "X"
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the bleed bonus is one per life above 2 (X)."
+  },
+  "Under Siege": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept belongs to the counters' later burn, not to this action."
+  },
+  "Codex of the Edenic Groundskeepers": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "drop": true
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +3 bleed is a granted bleed action with a condition (not modelled); the bearer's -2 stealth on bleeds is not modelled either."
+  },
+  "Shell Break": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": null,
+      "intercept": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 bleed and +1 intercept belong to the wraith retainer that comes later, not to this action."
+  },
+  "Soul Painting": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "aus",
+     "drop": true
+    },
+    {
+     "at": "AUS+PRE",
+     "fx": {
+      "intercept": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept goes to the minions blocking the bearer, a cost to the bearer; the card needs Auspex and Presence together."
+  },
+  "The Portrait": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 bleed belongs to the follow-up bleed a revealed crypt card of cost 7 to 10 allows, not to this action."
+  },
+  "Dogged Pursuit": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "ANI",
+     "fx": {
+      "intercept": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [ANI]: the +1 intercept is a later burn by the minion carrying the card, not this reaction's."
+  },
+  "Pulled Fangs": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth belongs to the two actions that burn it (granted), not to this card."
+  },
+  "Sins of the Cauchemar": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "AUS",
+     "fx": {
+      "intercept": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [AUS]: the +1 intercept lasts against the bearer's bleeds on you; it is not this reaction's."
+  },
+  "Taking the Skin: Minion": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "abo",
+     "fx": {
+      "bleed": null,
+      "stealth": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 bleed and +1 stealth are lasting bonuses on the bearer's bleeds, not this play's (not modelled)."
+  },
+  "Unholy Penance": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "PRE",
+     "fx": {
+      "bleed": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [PRE]: the +1 bleed is against the controller of the minion carrying the card, after combat (not modelled)."
+  },
+  "Dream World": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "PRE",
+     "fx": {
+      "bleed": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [PRE]: the +1 bleed lasts for your minions this turn, not this action's (not modelled)."
+  },
+  "Psychic Veil": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "obf",
+     "fx": {
+      "actStealth": null
+     }
+    },
+    {
+     "at": "OBF",
+     "fx": {
+      "actStealth": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the card prints no stealth for this action; the turn-long +1 on your later actions is not modelled."
+  },
+  "Guard Duty": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 intercept belongs to the granted block, paid and conditional (not modelled)."
+  },
+  "Marked Territory": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +2 intercept belongs to its later burn, against actions directed at you (not modelled)."
+  },
+  "Defender of the Haven": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +2 intercept is the slave Gargoyle's lasting bonus against directed actions (not modelled)."
+  },
+  "Strained Vitae Supply": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "stealth": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the card takes away the hunt's +1 stealth; it gives none (not modelled)."
+  },
+  "Hidden Pathways": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "obf",
+     "fx": {
+      "actStealth": null
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [obf] prints no stealth for this action; [OBF] is a +1 stealth action."
+  },
+  "Scarlet Lore": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "MYT",
+     "fx": {
+      "actStealth": 2
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [MYT]: +1 stealth action with an additional +1: 2."
+  },
+  "Blithe Acceptance": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "obf",
+     "fx": {
+      "actStealth": null,
+      "bearerStat": {
+       "stealth": 1
+      }
+     }
+    },
+    {
+     "at": "OBF",
+     "fx": {
+      "actStealth": null,
+      "bearerStat": {
+       "stealth": 1
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): the +1 stealth is the bearer's after the card is put on it, not this action's."
+  },
+  "Speak with Spirits": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "SPI",
+     "fx": {
+      "intercept": null,
+      "interceptPaid": 1,
+      "interceptPaidBlood": 1
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [SPI]: the +1 intercept costs 1 blood, once per action."
+  },
+  "The Rumor Mill, Tabloid Newspaper": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "intercept": null,
+      "interceptPaid": 1,
+      "interceptPaidBlood": 1
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): locked, it lets the chosen vampire burn 1 blood for +1 intercept."
+  },
+  "Warning Sirens": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "dodge": null
+     }
+    },
+    {
+     "add": true,
+     "at": null,
+     "fx": {
+      "dodge": true
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): two uses: +1 intercept to a minion a directed action targets, or a dodge in combat."
+  },
+  "Ears of the Hare": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "pro",
+     "fx": {
+      "intercept": null,
+      "interceptPaid": 1,
+      "interceptPaidBlood": 1
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [pro]: the +1 intercept costs 1 blood."
+  },
+  "Voices of the Castle": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "tha",
+     "fx": {
+      "intercept": null,
+      "interceptPaid": 1,
+      "interceptPaidBlood": 1
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [tha]: the +1 intercept costs 1 blood."
+  },
+  "Mole's Tunneling": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "SPI",
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 2
+       },
+       "if": {
+        "unread": "paid with 1 blood"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [SPI]: the +2 stealth costs 1 blood; the [ani] blocker malus is not modelled."
+  },
+  "Pocket Out of Time": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "obt",
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "paid with 1 blood"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [obt]: the +1 stealth costs 1 blood."
+  },
+  "Stone Travel": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "obt",
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "paid with 1 blood"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [obt]: the +1 stealth costs 1 blood."
+  },
+  "Siren's Lure": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "cel",
+     "fx": {
+      "stealth": null,
+      "plusIf": {
+       "add": {
+        "stealth": 1
+       },
+       "if": {
+        "unread": "paid with 2 blood"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [cel]: the +1 stealth costs 2 blood."
+  },
+  "Psalm of the Damned": {
+   "merge": true,
+   "modes": [
+    {
+     "at": "pre",
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "unread": "paid with 1 pool"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): [pre]: the +1 bleed costs 1 pool."
+  },
+  "Pentex™ Loves You!": {
+   "merge": true,
+   "modes": [
+    {
+     "at": null,
+     "fx": {
+      "bleed": null,
+      "plusIf": {
+       "add": {
+        "bleed": 1
+       },
+       "if": {
+        "unread": "the chosen Sabbat vampire pays 1 blood, once during the action"
+       }
+      }
+     }
+    }
+   ],
+   "note": "C1 (27 Nov 2026, the V5 sweep's first family against zero-vtes: stealth, intercept, bleed): locked, it lets the chosen Sabbat vampire buy +1 bleed for 1 blood, once during the action."
   }
  },
  "crypt": {

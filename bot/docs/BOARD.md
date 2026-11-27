@@ -1,4 +1,4 @@
-# BOARD — the open asks (26 Nov 2026, v0.6.242). A line is deleted when done; found work is added as a line (a card
+# BOARD — the open asks (27 Nov 2026, v0.6.243). A line is deleted when done; found work is added as a line (a card
 problem the sweep finds: an entry in `SWEEP-REGISTER.md`, D-135).
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. The owner orders the board; a round takes one line
@@ -21,10 +21,10 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 sweep** (D-125, D-130, D-132: exactness first; `specs/spec-card-sweep-2026-11-18.md` §11): every printed effect first
   asked who else in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. **B**, the
-  pilot, is built (v0.6.236, D-134). Next **C**, concentrated (§11.8): several families a round over the whole library, the first building
-  the cross-check tool and taking `stealth` / `actStealth`, `intercept`, `bleed`, then combat, then the rest of §11.4's horizon;
-  parallel readers of the differing cards against KRCG's text, a separate reviewer; the bots' readers of a human's play in
-  rounds of their own, the first right after C's first. C's riders: the title family; the ledger's grade column (spec §11.10);
+  pilot, is built (v0.6.236, D-134). **C** goes concentrated (§11.8): **C1** is built (v0.6.243, D-144): the cross-check tool and
+  `stealth` / `actStealth`, `intercept`, `bleed` over the whole library, `cardfx-exact.json`. Next C1b (below), the bots' first
+  readers of a human's play (their rounds of their own, D-132), then C2 (combat), then the rest of §11.4's horizon; parallel
+  readers of the differing cards against KRCG's text, a separate reviewer. C's riders: the title family; the ledger's grade column (spec §11.10);
   Hunting the Quarry (`specs/spec-sweep-pilot-2026-11-20.md` §3.3). The problems the sweep finds, and its earlier riders, are in
   `SWEEP-REGISTER.md` (D-135; below). **D**, the starters' remainder where a starter needs it, with its strategy baseline.
   Crypt waves (D-108): B = the rest by class, the 13 partial copies first. A deck joins the menu by D-108; before the deck
@@ -66,7 +66,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
   Precognition and Spirit's Touch [AUS], 13.10 a host's income picked with no host) wait in their classes until their class's
   round.
 - **The fidelity pass** (D-138): `cardfx-fidelity.json` and CARDS.md's `text-checked` / `exact` per deck; the five base starters
-  were read in v0.6.241. Next the other 13 V5 decks' cards, a deck a round or riding with C's families (D-132). *Done when* every
+  were read in v0.6.241. Next the other 13 V5 decks' flagged cards (C1b, D-144 (1)), with the family's second pass (§11.7). *Done when* every
   deck's text-checked is N/N and each gap it finds is in the register.
 - **1. Retainers: version and holder** (R-47): next; its design question first (where another seat's retainer's version comes from).
 - **2. `aggr` misreads.**

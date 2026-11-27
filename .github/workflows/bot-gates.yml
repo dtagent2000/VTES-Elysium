@@ -142,6 +142,9 @@ jobs:
         run: |
           node gen-review-sheet.js --self-test 2>&1 | tee "$RUNNER_TEMP/sheet.txt"
           if grep -q 'SKIPPED' "$RUNNER_TEMP/sheet.txt"; then echo "::error::the review sheet's self-test skipped a check (no symlink here)"; exit 1; fi
+      - name: The cross-check's self-test (gen-cross-check --self-test; invented cards and effect names, no zero-vtes checkout)
+        if: ${{ !cancelled() }}
+        run: node gen-cross-check.js --self-test
       - name: The TWDA reader's self-test (twda.py --self-test)
         if: ${{ !cancelled() }}
         run: python3 twda.py --self-test

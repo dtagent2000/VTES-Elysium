@@ -85,8 +85,12 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 #    "Binding rules by area" and the measurement rules to HARNESS "Measurements" (the bootstrap from 49,953 bytes to under 40 KB), HARNESS's
 #    "One place for each fact" and the narrower review passes, and RULINGS by role: "the owner" is four bytes longer than the name it
 #    replaced on about 200 places, and D-142 is new; the quotes it paraphrased gave some back. Nothing binding was cut.
-PAGES="$B/CLAUDE.md:14500 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:82000 $D/LESSONS.md:21500
-       $D/ARCHITECTURE.md:29500 $D/HARNESS.md:14500 $D/HOWTO.md:24000"
+#    HOWTO 24 -> 25 KB on 27 Nov (C1, the cross-check tool, rebased onto the cleanup round): its how-to; the page stood 21 bytes
+#    under its ceiling, with nothing left there that is history. RULINGS 82 -> 84 KB and the total 205 -> 207 KB the same day (C1,
+#    bot v0.6.243): D-144 (the owner's four answers on C1's card) on a page that stood 49 bytes under its ceiling, its lines rulings,
+#    not history; and the cross-check's how-to.
+PAGES="$B/CLAUDE.md:14500 $D/STATUS.md:5000 $D/BOARD.md:19000 $D/RULINGS.md:84000 $D/LESSONS.md:21500
+       $D/ARCHITECTURE.md:29500 $D/HARNESS.md:14500 $D/HOWTO.md:25000"
 total=0
 for pb in $PAGES; do
   f=${pb%:*}; lim=${pb##*:}
@@ -96,7 +100,7 @@ for pb in $PAGES; do
 done
 boot=0; for f in "$R/CLAUDE.md" "$B/CLAUDE.md" "$D/STATUS.md" "$D/BOARD.md"; do boot=$((boot + $(wc -c < "$f" | tr -d ' '))); done
 if [ "$boot" -gt 50000 ]; then bad "bootstrap is $boot bytes, budget 50000"; else ok "bootstrap $boot / 50000"; fi
-if [ "$total" -gt 205000 ]; then bad "standing pages total $total bytes, budget 205000"; else ok "standing pages $total / 205000"; fi
+if [ "$total" -gt 207000 ]; then bad "standing pages total $total bytes, budget 207000"; else ok "standing pages $total / 207000"; fi
 
 # 2. paths named in the standing pages: a backticked token that looks like a file or a folder
 missing=0

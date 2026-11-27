@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
-/* gen-review-sheet.js v1.0.1 (20 Nov 2026, cardfx compiler v1.10.0: a merged entry's origins read its layer, spec-card-sweep §4.4;
+/* gen-review-sheet.js v1.1.0 (26 Nov 2026, C1: parseDefs also returns each mode's source text, a macro-built card's arguments and the
+   shared items' context, for gen-cross-check.js; v1.0.1 20 Nov 2026, cardfx compiler v1.10.0: a merged entry's origins read its layer, spec-card-sweep §4.4;
    v1.0.0 19 Nov 2026, bot v0.6.234; RULINGS D-125, D-126; docs/specs/spec-card-sweep-2026-11-18.md §3.1, §4.1, §5)
    -- THE REVIEW SHEET: one deck's library cards, each with what decides its reading and what proposes one, so a round splits every
    printed effect into T1 (a key the compiler gives), T2 (shared: printed by two or more library cards) and T3 (the unique remainder)
@@ -29,7 +30,7 @@
                              node gen-review-sheet.js --self-test                             (fixed inputs: no zero-vtes, no vtes.json) */
 
 const fs = require('fs'), path = require('path'), cp = require('child_process');
-const VERSION = '1.0.1';
+const VERSION = '1.1.0';
 const here = f => path.join(__dirname, f);
 
 /* ---- names: KRCG's and zero-vtes's spellings meet here (NFKD, the trademark sign, an article moved to the front) ---- */
@@ -138,13 +139,13 @@ function parseDefs(src, helpers){   // helpers: more source read for its `const 
   }
   const defs = new Map(), effUse = new Map();
   for (const c of cardDefs){
-    const seen = new Set([c.static]), one = it => { const t = tokensOf(it, ctx, seen); return { windows: [...t.Window], actor: [...t.Actor], reqs: [...t.Requirement], effects: [...t.Effect] }; };
+    const seen = new Set([c.static]), one = it => { const t = tokensOf(it, ctx, seen); return { windows: [...t.Window], actor: [...t.Actor], reqs: [...t.Requirement], effects: [...t.Effect], text: it }; };   // v1.1.0: the mode's own source text (gen-cross-check.js reads its numbers)
     const all = tokensOf(c.body + c.args, ctx, seen), argE = [...tokensOf(c.args, ctx, seen).Effect];
-    const d = { static: c.static, name: c.name, macro: c.macro, modes: itemsOf(c.body, 'modes', ctx).map(one), abilities: itemsOf(c.body, 'abilities', ctx).map(one), argEffects: argE, effects: [...all.Effect], windows: [...all.Window] };
+    const d = { static: c.static, name: c.name, macro: c.macro, modes: itemsOf(c.body, 'modes', ctx).map(one), abilities: itemsOf(c.body, 'abilities', ctx).map(one), argEffects: argE, effects: [...all.Effect], windows: [...all.Window], args: c.args };   // v1.1.0: a macro-built card's own arguments
     const k = normName(c.name); if (!defs.has(k)) defs.set(k, d);
     for (const e of d.effects) effUse.set(e, (effUse.get(e) || 0) + 1);
   }
-  return { defs, effUse };
+  return { defs, effUse, ctx };   // v1.1.0: ctx (the shared statics, macros and helpers) for a reader that expands a mode's text
 }
 
 /* ---- our side: each key's origin on this card, the dropped keys, the register's rows ---- */
@@ -360,4 +361,4 @@ if (require.main === module){
   const text = sheet(o);
   if (o.out){ fs.writeFileSync(o.out, text); console.error('gen-review-sheet v' + VERSION + ': ' + o.deck + ' -> ' + o.out); } else process.stdout.write(text + '\n');
 }
-module.exports = { VERSION, normName, parseCsv, parseDefs, keyOrigins, registerState, tierOf, sheetRow, oursLine, discLines, insideRepo };
+module.exports = { VERSION, normName, parseCsv, parseDefs, keyOrigins, registerState, tierOf, sheetRow, oursLine, discLines, insideRepo, matchEnd, topLevelItems };

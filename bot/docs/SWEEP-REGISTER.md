@@ -138,6 +138,22 @@ is a handoff first. Bot-to-bot gaps are marked.
   vampire named. RIDER_STEALTH reads only the bot's `: +N stealth.` shape and nothing is said at the block, so the bot's blocker
   begins its combat. [the exactness round; its egress review, pass 3] · human · a reader for the client's play line (the level;
   the actor from the line or the action); with the helper off, the human says it (a chat word the blocker reads, as `bounce`).
+- **4.21 A human's Carrion Crows** — the environmental damage of a human's Crows (1R [ani], 2R [ANI], each round during normal strike
+  resolution) is not applied to the bot's minion: the bot narrates the strike alone and does not read a later change on the counter.
+  Not 12.3 (the bot's own prevention against Crows). [Claude's playtest game 2, 25 Nov, 1474.3 and 2817; the 26 Nov handoff's
+  check] · human · a reader of a human's Crows play line (its level) that adds the damage in each round's strike resolution.
+- **4.22 A human's The Dowager (+1 intercept during directed actions)** — at Claude's playtest table the printed +1 was not counted
+  on the block counter (game 2, the panel's point 4: Claude's own Dowager, in the human's Nosferatu starter, blocking). The
+  bot blocker writes its own crypt intercept (`_cryptIntercept`); which side missed it at that table is not traced. [Claude's
+  playtests, 25 Nov; D-111 (6), BOARD's measurement debt] · human · trace it at the next human table: a bot's Dowager blocking a
+  human's directed action, and a human's Dowager blocking a bot's (the bot could seed a human blocker's printed intercept into an
+  untouched counter, as it seeds a human actor's stealth).
+- **4.23 A human's Pass at the strike step** — the bot counts it as no strike (0 damage), but the rulebook makes the hand strike the
+  default: "Each minion chooses their strike … by default from a hand strike" and "The default strike is a hand strike"
+  (https://archon.vekn.net/help/rules#choose-strike, #hand-strike). Seen with a second gap: after a human's combat card the bot
+  moves to the next step, so the human's next Pass answers one step later (Claude's strike step became a Pass, 2797.6 → 2816.8).
+  [Claude's playtest game 2, 25 Nov] · human · a human's Pass, or no strike line by the step's end, reads as a hand strike (the
+  minion's strength at close range, nothing at long range); the step waits for the human's answer to its own question.
 
 ## 5. Maneuvers: direction and source
 Which way a maneuver goes, and where a maneuver comes from (a card, equipment, a grant).
@@ -175,11 +191,32 @@ A value the text conditions or caps, compiled as a plain number.
   fails any other closed, and these entries carry the plain value: Protection Racket's "with an additional +1 intercept if the
   acting minion is titled" (KRCG; `{intercept: 1}`), Ministry's additional +1 intercept if the acting vampire is Sabbat, Sense the
   Sin [dai]'s if the acting minion has corruption counters, The Mausoleum, Venice's additional +1 vote while Ventrue Headquarters
-  is not in play (`cardfx-sharing.json`'s plusIf row: owed). [the exactness round's egress review, pass 3] · **active**
+  is not in play (`cardfx-sharing.json`'s plusIf row: owed). Since C1 (v0.6.243) the first three carry their +1 on `plusIf` with an
+  `unread` condition (7.6); the readers are what is left. [the exactness round's egress review, pass 3] · **active**
   (Protection Racket: v0.6.241's V5 smokes, 13 plays, gangrel 8 and ravnos 5; 7 against a titled actor, Donny Kowalczyk ×2,
   Alexander Silverson, The Dowager, Lloyd Brooks ×2 and Larissa Moreira, each booked at +1) / latent (Ministry, Sense the Sin,
   The Mausoleum: no deck) · conditions on the acting minion (titled, sect, corruption) read where the intercept is summed against
   a known actor; the Mausoleum's a check of the table.
+
+- **7.6 C1's unread conditions** — the stealth / intercept / bleed family's corrections (v0.6.243) keep a value the text conditions on
+  `fx.plusIf` with an `unread` condition in words, which `_plusIf` fails closed (and the stealth and actStealth paths do not call it):
+  on directed actions (Asanbonsam Ghoul, Corpse Balloon [VIC]); against the chosen minion (Divine Sign, Canopic Jar); an undirected
+  action (High Aye, Mirror's Visage [CHI], Lock); against vampires, monsters or as an ally (Carlton Van Wyk, No Secrets From the
+  Magaji, Illuminate, The Unmasking); on actions that require a discipline, an anarch or a clan (Anarch Manifesto, Giuseppe,
+  Marijava Ghoul, The Ancestor's Talisman, Tremere Convocation, Watchtower: The Wolves Feed); the acting minion (Protection Racket,
+  Ministry, Sense the Sin [dai]: 7.5; Nosferatu Performance Art's capacity); the target or its controller (Bloodwork, Priestess of
+  Sekhmet, Songs of the Distant Vitae [QUI], Rampage [pot], and the employ or equip action's own +1 on another's minion: Charnas the
+  Imp, Ilomba, Swarm, Bloodstone); a price in blood or pool (Special Report, Mole's Tunneling [SPI], Pocket Out of Time [obt], Stone
+  Travel [obt], Siren's Lure [cel], Psalm of the Damned [pre], Pentex™ Loves You!, Samuel Haight); and one each (Abbot, Achilles'
+  Heel, Bear-Baiting, Communal Haven: Temple, Form of Mist [PRO]: 9.8, Gravebound Drone [OBL], Guinea-Bissau Carnival, Hexaped,
+  Mithraic Cultist, Pallid, Phased Motion Detector, Sunset Strip, Unlicensed Taxicab, Charigger's hunt stealth; Baltimore Purge's
+  `selfClan` Ravnos, which the actStealth path does not read). And the bought intercept `interceptPaid` on a hand reaction or a
+  location (Ears of the Hare [pro], Voices of the Castle [tha], Speak with Spirits [SPI], The Rumor Mill): `_equipPaidIntercept`
+  reads it on equipment and `_bestUnlockReactFor` on an unlock reaction only, and Speak with Spirits [SPI] is an unlock reaction by
+  its text (a locked vampire unlocks and attempts to block) whose mode carries no `unlock` or `when`, as Eyes of the Wild's does.
+  Unlicensed Taxicab's own `actStealth` 2: the equip announce books the basic +1 only (`_bestEquipActionFor`'s stealth is 0). [C1's readers and the lead] · missed (Protection Racket: 7.5,
+  active; Abbot: pathcaine ×1, Gravebound Drone: pathdeath) / latent (the rest: no deck) · a reader per condition kind where the
+  number is summed, the price paid where the bot plays the card; the cross-check compares the condition (`plusIf`) with theirs.
 
 ## 8. Requirements, conditions and gates
 A requirement or a condition the text prints and a finder does not ask (the five playability layers' second and third, HARNESS), or
@@ -198,8 +235,7 @@ a legal play the bot refuses.
   Missing Voice [cel]); **Enkil Cog** (`_bestBleedModifierFor` reads no requirement: its capacity 10 and "after resolution of a
   successful bleed"). [w6 §8] · latent.
 - **8.5 Conditions not tagged** — Faerie Wards [aus] (the directed condition with an ally-or-younger clause); the leftover +1
-  intercept modes of Dogged Pursuit, The Mole and Speak with Spirits [SPI] (a locked vampire's route, "Once this action, this
-  vampire can burn 1 blood to get +1 intercept", compiled as a plain +1) play at any action; the condition sentences' untagged
+  intercept mode of The Mole plays at any action (Dogged Pursuit [ANI] and Speak with Spirits [SPI] were corrected in C1, v0.6.243); the condition sentences' untagged
   variants (their list: `specs/spec-card-sweep-2026-11-18.md`'s status block, "The finished decks' round"). [w6 §8; B] · latent
   (the named cards: no deck) / reachable (the list's Protected District, "… or during the polling step": nosferatu ×4).
 - **8.6 The act-again point after a failed referendum** — an unblocked political action succeeded whatever its referendum did
@@ -236,8 +272,8 @@ A key the compiler writes and a reader reads in another shape, or a sentence sha
   (a reaction's votes, a location's stealth with no lock), as Priority Contract's was before the pilot. [sweep §4.3: found on the
   way] · latent (no deck holds them).
 - **9.8 Form of Mist [PRO]** — "Strike: combat ends. After combat ends, if this vampire was blocked, they can burn 1 blood to
-  continue the action with +1 stealth as if unblocked" (KRCG): the entry reads a combat end and a bare +1 stealth, never the
-  continued action. [sweep §4: the six misreads, row C] · **missed** (the ministry smoke: Vivian VI, blocked as the acting vampire,
+  continue the action with +1 stealth as if unblocked" (KRCG): the entry reads a combat end, never the continued action (since C1,
+  v0.6.243, its +1 stealth sits on `plusIf`, unread: 7.6). [sweep §4: the six misreads, row C] · **missed** (the ministry smoke: Vivian VI, blocked as the acting vampire,
   ended the combat with it in match 6 and the action stopped, pass 3's read; its four other combat-end plays in the ministry and
   tzimisce smokes not sorted by role) · the continue offered after the combat end, its blood paid.
 - **9.9 Black Forest Base and Powerbase: Madrid** — the base's "Requires a ready Sabbat vampire" and its referendum to gain 2 pool
@@ -247,6 +283,11 @@ A key the compiler writes and a reader reads in another shape, or a sentence sha
   C column] · reachable (lasombra ×1; not played in the lasombra smoke).
 - **9.11 The compiler's known misses** — `bloodAdd` and `bloodAddTo` on 59 card-keys. [sweep §4: row C] · reachable (C's harvest
   item).
+- **9.12 A granted action's Ⓓ marks the card's mode `dir`** — the compiler reads Ⓓ per segment, so a card in play whose only Ⓓ is in
+  an action it grants ("Any vampire may burn this location as a Ⓓ action": Black Forest Base, Remover, Heartrender, many masters and
+  allies) carries `dir: true` on a mode that is no directed play; the political cards lost theirs with their granted stealth in C1
+  (v0.6.243). [C1's readers] · latent (no reader of a card in play's `dir` found) · read Ⓓ with the granted clause stripped, as
+  GRANTED_STEALTH strips its stealth.
 
 ## 10. Unbuilt modes, targets and riders
 A printed mode, target or rider the bots do not play on their own cards, or do not read when they meet it.
@@ -328,6 +369,26 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   rules 6.1.4); the entry's `own-ready` and the handler pick only mine, and v0.6.241 holds the card while I have no ready vampire:
   no legal object in the first round, a choice where another seat has one. [the exactness round's egress review, pass 2] · latent
   (no bot gives another seat blood: no ally is modelled).
+- **10.19 Granted actions** — an action a card lets a minion take later ("burn this card as a +1 stealth political action", "the
+  attached vampire can enter combat … as a +1 stealth Ⓓ action", "may take a +1 stealth action") has no key of ours: since C1
+  (compiler v1.12.0) its number is no longer the card's own, and the cross-check flags 152 granted actions that carry a stealth,
+  intercept or bleed. [C1] · human (the readers' rounds: a human's granted action at the table) / latent (the bots take none).
+- **10.20 The blocking minion's malus** — "the blocking minion gets -1 intercept" (Forced Confessional's `icpVs` with `who:
+  ['this']` is the precedent; Perfect Paragon's for allies and younger vampires) on Call of the Hungry Dead [nec], Dominant
+  Personality [pot]/[pre], Form of the Bat [pro], Mole's Tunneling [ani], Random Patterns [AUS][DEM], Smoke and Mirrors [obt],
+  Stygian Shroud [obl] and Suppressing Fire; with a condition or a count on Council of Seraphim (a non-Sabbat blocker), Will-o'-the-
+  Wisp [chi] (X+1 points), Iara and Lambreta (a lock). [C1's readers] · missed (Dominant Personality: pathpower; Form of the Bat:
+  gangrel, tzimisce; Stygian Shroud: hecata, lasombra) / latent (the rest) · `icpVs` on each mode, the window "when a minion
+  attempts to block".
+- **10.21 Maluses and lasting bonuses the family does not model** — a stealth malus on a bearer or a group (Banshee Ironwail, New in
+  Town, Pallid on a Laibon, Vivienne Géroux, Festivo dello Estinto, Codex of the Edenic Groundskeepers' -2 on bleeds); Peacemaker's
+  bleed malus on every minion this action; Bloodstone's +2 intercept against its bearer; and the lasting or later values C1 took
+  off the play they were booked on (Taking the Skin: Minion, Psychic Veil, Dream World [PRE], Defender of the Haven, Sins of the
+  Cauchemar [AUS], Dogged Pursuit [ANI], Marked Territory, Guard Duty, Under Siege, Shell Break, The Portrait's follow-up bleed,
+  Unholy Penance [PRE], Codex's granted bleed, Strained Vitae Supply's -1 on hunts). Blithe Acceptance's bearer stealth is the first
+  `bearerStat`. [C1's readers] · missed (Codex: ministry; Under Siege: pathcaine, pathcathari, pathpower) / latent (the rest).
+- **10.22 Punish [COMBAT]** — the entry models the [ACTION] half (a +1 stealth action); "As [ACTION] above, but put this card on the
+  opposing vampire as a hand strike" is a combat use the entry's mode does not split out. [C1's readers] · latent (no deck).
 
 ## 11. Windows: who is asked, and when
 Who may answer an action or a card, and in which window; a line read after its window closed.
