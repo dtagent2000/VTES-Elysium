@@ -35,7 +35,7 @@ What those sources hold that is done, or is not a problem, is listed at the end.
 
 **The classes** (1–6: Claude's list of the evening, under the owner's go-ahead, 4 and 5 broadened to another seat's play and a maneuver's
 source; 7–13: the migration's sorting, Claude's; 14: v0.6.238's and v0.6.239's egress reviews; Claude orders the rounds, D-137).
-Active entries: 7.5, 8.3, 10.17, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 10.16, 12.2, 13.10.
+Active entries: 7.5, 8.3, 10.17, 11.1. Missed: 4.6, 5.2, 8.6, 9.8, 10.1, 10.2, 10.16, 10.24, 12.2, 13.10.
 
 ## 1. Retainers: version and holder
 A retainer with a discipline icon is employed only by a minion with that discipline, and the level used fixes its version
@@ -218,6 +218,11 @@ A value the text conditions or caps, compiled as a plain number.
   active; Abbot: pathcaine ×1, Gravebound Drone: pathdeath) / latent (the rest: no deck) · a reader per condition kind where the
   number is summed, the price paid where the bot plays the card; the cross-check compares the condition (`plusIf`) with theirs.
 
+- **7.7 A family value of X** — Unleash the Hounds [VIS] ("+1 bleed for each ready vampire of the enslaving clan you control",
+  KRCG) and Inevitability of the Void [AUS][NEC] (+1 bleed for every 10 cards in the target's ash heap) carry `bleed: 'X'`; the finders take a number only, so the mode is never played.
+  Shell Game's stealth X is the same shape (not gated: the bot plays no mode of it). [the card chain's reader gate] · latent (no
+  deck) · a count the reader computes from the table where the text names it, the mode skipped where it cannot.
+
 ## 8. Requirements, conditions and gates
 A requirement or a condition the text prints and a finder does not ask (the five playability layers' second and third, HARNESS), or
 a legal play the bot refuses.
@@ -286,8 +291,23 @@ A key the compiler writes and a reader reads in another shape, or a sentence sha
 - **9.12 A granted action's Ⓓ marks the card's mode `dir`** — the compiler reads Ⓓ per segment, so a card in play whose only Ⓓ is in
   an action it grants ("Any vampire may burn this location as a Ⓓ action": Black Forest Base, Remover, Heartrender, many masters and
   allies) carries `dir: true` on a mode that is no directed play; the political cards lost theirs with their granted stealth in C1
-  (v0.6.243). [C1's readers] · latent (no reader of a card in play's `dir` found) · read Ⓓ with the granted clause stripped, as
+  (v0.6.243). Atonement and Dive into Madness [DEM] are the same reading on a card put on the acting vampire: their only Ⓓ is the
+  burn action the card grants (C1's readers' side notes, read in the card chain round: `docs/reports/readers-card-chain-2026-11-27.json`).
+  [C1's readers] · latent (no reader of a card in play's `dir` found) · read Ⓓ with the granted clause stripped, as
   GRANTED_STEALTH strips its stealth.
+
+- **9.13 A bleed card's stealth or bleed outside the mode it plays** — Cat Burglary ("+1 stealth action. [cel] Ⓓ Bleed", KRCG), Concordance,
+  Greater Curse, Soul Decoration, Songs of the Distant Vitae, The Eternal Mask and Undue Influence print the action's stealth on the
+  header: `_bestBleedCardFor` books the played mode's `actStealth` (or `stealth`) only, where `_cardActStealth` (the rush, the attach,
+  the employ) reads the level-free header too, so the bleed is announced at 0 stealth. A level's stealth or bleed in a mode of its
+  own beside the bleed (Brutal Influence [POT], Dream World [PRE], Entrancement [PRE], Gremlins [myt], Illegalism [chi] and [pre],
+  Rayzeel's Song [VAL], Smash and Grab [ani] and [pot], Spirit Marionette [OBE], The Ailing Spirit [OBE], Steely Tenacity [qui], The
+  Platinum Protocol [obf] and [pre], Break the Bonds [ani], Keystone Kine [nec]) is never played by the bleed finder: an add-on to the
+  bleed (a shape the compiler should merge) or an action of its own (unbuilt), each read against its text in its round. The
+  pool-damage actions are the same reading outside the gate's paths: `_bestPoolDmgActionFor` books no stealth at its announce (Choir,
+  Clio's Kiss, Edge Vitiation, Precision, Harmony and Rise of the Fallen carry a header `actStealth`). [the card chain's reader gate]
+  · reachable (Entrancement: ravnos, pathcathari, ministry; The Platinum Protocol: ministry; Break the Bonds: ravnos) / latent (the
+  rest) · the bleed and pool-damage finders book `_cardActStealth(e, mo)`.
 
 ## 10. Unbuilt modes, targets and riders
 A printed mode, target or rider the bots do not play on their own cards, or do not read when they meet it.
@@ -359,7 +379,9 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   · missed (Vessel; v0.6.241's 240: 366 of the 570 Vessels placed came after another seat had placed a Blood Doll in the same
   match, 156 matches; no bot burns one) / reachable (ventrue ×1: Anarch Troublemaker, against tremere's equipment) · the burn of
   an opponent's Blood Doll when Vessel is played; the equipment burn as the giver's choice when it is worth more than two locks.
-- **10.17 Bonding [DOM] spent for its stealth** — "+1 stealth and +1 bleed (limited)" (KRCG): `_spendStealthCard` adds the stealth
+- **10.17 Bonding [DOM] spent for its stealth** (and the same mode on Confusion [DEM], "+1 stealth and +1 bleed (limited)", Fata Morgana
+  [CHI], Power of One [pre], Revelation of the Serpent, Subversion [CEL] and [PRE], Virtuosa [mel]: the card chain's reader gate) —
+  "+1 stealth and +1 bleed (limited)" (KRCG): `_spendStealthCard` adds the stealth
   only, never the +1 bleed, and takes no limited slot, so Conditioning (limited) can follow in the same action ("one limited action
   modifier may increase the bleed amount per action", the advanced rules 3.7.1). [the exactness round's egress review, pass 2]
   · **active** (v0.6.241's 240: 208 stealth plays, 110 of their bleeds through without the +1, 18 followed by Conditioning in the
@@ -389,6 +411,24 @@ A printed mode, target or rider the bots do not play on their own cards, or do n
   `bearerStat`. [C1's readers] · missed (Codex: ministry; Under Siege: pathcaine, pathcathari, pathpower) / latent (the rest).
 - **10.22 Punish [COMBAT]** — the entry models the [ACTION] half (a +1 stealth action); "As [ACTION] above, but put this card on the
   opposing vampire as a hand strike" is a combat use the entry's mode does not split out. [C1's readers] · latent (no deck).
+
+- **10.23 Family values no reader takes on a card in play, an ally or a reaction** — Blessings of the Loa's bleed (a master),
+  Cãoera's (an ally: allies do not act in the bot), Charigger, The Axe's and Shaman's (a retainer's bleed and stealth for its bearer;
+  `_equipIntercept` reads a retainer's intercept only), Melange [AUS]'s bleed (a reaction). [the card chain's reader gate] · latent
+  (no deck) · the bearer readers take bleed and stealth beside intercept (Blithe Acceptance's `bearerStat` is the first).
+- **10.24 C1's readers' side notes, read in the card chain round** (27 Nov; the verdicts, sources and fixes:
+  `docs/reports/readers-card-chain-2026-11-27.json`; Atonement and Dive into Madness are 9.12's) — Enthrall's superior rider (draw
+  a crypt card after a bleed of 1 or more that went through, paying 1 blood) is missing; Gifts From Hereafter is "Only usable by a
+  ready unlocked vampire other than the acting wraith or zombie ally" (KRCG) and the entry carries no such gate, so the bot may play it
+  on its own vampire's bleed; Khabar: Glory lacks Unique, "Not usable if any non-mandatory actions have been performed this turn", the
+  4 pool when the prey is ousted and its burn in the unlock phase; Pulse of the Canaille [AUS]'s one per vampire; Brutal Influence
+  [pot]'s optional +X bleed from locking Orun; Soul Painting's level-free mode is its header, not a play; Abandoning the Flesh's
+  removal from the game; Draught of the Soul's "only after burning a vampire" and its blood; Shell Game unlocks a Blood Brother at
+  [san] too, two at [SAN]; The Guruhi Are the Land's hunt and equip uses; Walk of Caine's blood per pick and its circle cap; Madman's
+  Quill [AUS][DEM]'s +1 bleed for Dementation vampires against the Methuselah whose minion bears it; Drink the Blood of Ahriman [obt]'s `aggr` mode is a misread (the
+  text names aggravated damage only in its burn trigger). [C1's readers, read by bot-card-reader] · reachable (Gifts From Hereafter:
+  pathdeath) / missed (Enthrall: pathcathari) / latent (the rest) · eleven need a reader the bot has none of (the data file names
+  them); Soul Painting, Drink the Blood of Ahriman and Shell Game's [san] unlock are data fixes.
 
 ## 11. Windows: who is asked, and when
 Who may answer an action or a card, and in which window; a line read after its window closed.

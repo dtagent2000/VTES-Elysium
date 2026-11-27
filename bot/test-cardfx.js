@@ -1649,6 +1649,9 @@ ok(fx.counts.libLock >= 140,
         for (const sv of (typeof v === 'string' ? [v] : Object.values(v))){ const [w, id] = String(sv).split(' ');
           if (!ST.has(w)) P.push(card + ' ' + key + ': state ' + sv);
           else if (w === 'open' && !(id && regE.has(id))) P.push(card + ' ' + key + ': open names no register entry (' + sv + ')'); } } }
+    for (const [kind, g] of Object.entries((X && X.gaps) || {})) for (const [card, ks] of Object.entries(g || {})) for (const [key, v] of Object.entries(ks))   // the card chain's known gaps (D-147): a row of the record, a register entry
+      for (const id of (typeof v === 'string' ? [v] : Object.values(v))) { if (!regE.has(String(id))) P.push('gaps.' + kind + ' ' + card + ' ' + key + ': ' + id + ' is no register entry');
+        if (!((X.cards || {})[card] || {})[key]) P.push('gaps.' + kind + ' ' + card + ' ' + key + ': no such row in the record'); }
     return P; };
   ok(!!ex && !!regT2, 'cardfx-exact.json and docs/SWEEP-REGISTER.md read' + (exErr ? ' (' + exErr + ')' : ''));
   if (ex && regT2){
@@ -1657,7 +1660,8 @@ ok(fx.counts.libLock >= 140,
     for (const ks of Object.values(ex.cards)) for (const v of Object.values(ks)) for (const sv of (typeof v === 'string' ? [v] : Object.values(v))) { const w = String(sv).split(' ')[0]; tally[w] = (tally[w] || 0) + 1; }
     ok(P.length === 0 && Object.keys(ex.cards).length >= 700, 'the exactness record: ' + Object.keys(ex.cards).length + ' cards, ' + Object.entries(tally).map(([k, n]) => k + ' ' + n).join(' · ') + '; every card a library entry, every open gap a register entry' + (P.length ? '\n      ' + P.slice(0, 8).join('\n      ') : ''));
     const bad = JSON.parse(JSON.stringify(ex)), c0 = Object.keys(bad.cards)[0]; bad.cards[c0] = { stealth: 'open 99.99', bleed: 'maybe' }; bad.cards['No Such Card'] = { intercept: 'agree' };
-    ok(exProblems(bad, regE2, has).length === 3, 'planted: an open gap naming no register entry, an unknown state and an unknown card are each reported');
+    bad.gaps = { reader: { 'Abbot': { intercept: '99.98' }, 'Zip Line': { bleed: '7.6' } } };
+    ok(exProblems(bad, regE2, has).length === 5, 'planted: an open gap naming no register entry, an unknown state, an unknown card, a known gap naming no register entry and a known gap on no row of the record are each reported');
   }
   const IFK = new Set(['selfClan', 'selfTitled', 'unread']), badIf = [];
   for (const n in fx.lib) for (const m of fx.lib[n].modes || []) if (m.fx && m.fx.plusIf){ const pi = m.fx.plusIf;
