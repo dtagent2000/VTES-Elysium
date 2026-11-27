@@ -1773,12 +1773,17 @@ class Bot {
   _haqimAddMay(v){                   // v0.6.240 (the egress review): _playHaqimLaw's own conditions, read only (the discard pick reads the hand) -- no floor wait for a copy that keeps its cards
     const av = this._actingVamp; return !!(av && !av.bounced && av.target && (av.n | 0) >= 1 && this._haqimLawFor(v) && this._haqimDiscardPick(v, av.target));
   }
-  _sayOwedAdd(v){                    // v0.6.244 (C1b, SWEEP-REGISTER 10.17): the bleed a stealth card added in the contest (Bonding [DOM]: _spendStealthCard booked it on the action) -- said once the blocks are declined, in the frozen L12.add line a bot actor's modifiers use (the target's parser takes the running total; a bounce's new target too: the line names my vampire). false when nothing is owed
-    const av = this._actingVamp, ow = av && av.owedAdd; if(!ow || !(ow.n > 0) || !av.target) return false;
+  _sayOwedAdd(v){                    // v0.6.244 (C1b, SWEEP-REGISTER 10.17): the bleed a stealth card added in the contest (Bonding [DOM]: _spendStealthCard booked it on the action) -- said once the blocks are declined, in the frozen L12.add line a bot actor's modifiers use (the target's parser takes the running total; a bounce's new target too: the line names my vampire). Returns the +N said, or 0 when nothing is said
+    const av = this._actingVamp, ow = av && av.owedAdd; if(!ow || !(ow.n > 0) || !av.target) return 0;
     av.owedAdd = null;
-    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> adds +' + ow.n + ' bleed (= ' + av.n + ').' });   // PROTOCOL §12, frozen -- the target's L12.add parser
+    /* The target reduced the bleed before this line (Protected District in its reaction window, C1b's 240): its '(now N)' was N of a total
+       that lacked this bleed, and after its own reduction a bot target's L12.add parser adds +N to what it holds. So the +N is what its last
+       stated total lacks (ow.base, written by the reduce handlers), the '(= T)' my own total; nothing is said when the reduction ate it all. */
+    const k = typeof ow.base === 'number' ? Math.max(0, (av.n | 0) - ow.base) : ow.n;
+    if(k <= 0) return 0;
+    this.send({ t: 'log', html: '<b>' + esc(v.name) + '</b> adds +' + k + ' bleed (= ' + av.n + ').' });   // PROTOCOL §12, frozen -- the target's L12.add parser
     this.push();
-    return true;
+    return k;
   }
   _playHaqimLaw(v){                  // v0.6.215: the +1 -- the combat card to the ash heap, the frozen L12.add re-announce (Spying Mission's bank shape)
     const av = this._actingVamp; if(!av || av.bounced || !av.target || (av.n | 0) < 1) return false;
@@ -11178,12 +11183,18 @@ class Bot {
       return;
     }
     if((m = t.match(L12.reduce)) && this._actingVamp && this._actingVamp.target && who === this.seatName(this._actingVamp.target)){   // v0.6.200 (point 15): my bleed's target reduced it -- the amount is theirs to state ('now N'); no return: the line is still a card play for the event log
-      const now = parseInt(m[4], 10);
-      if(Number.isFinite(now) && now < (this._actingVamp.n | 0)){ this.o.log('bleed reduced (' + m[2] + '): ' + this._actingVamp.n + ' -> ' + now); this._actingVamp.n = now; this._actingVamp.reducedTo = now; }
+      const now = parseInt(m[4], 10), av = this._actingVamp;
+      if(av.ownTotal){   /* v0.6.244 (C1b's 240: 9 ledger faults): a stealth card's bleed is on my total since the contest (Bonding [DOM]) and, while its add
+           line is unsaid, not on the target's -- its '(now N)' lacks it. My total less the reduction is the bleed; the add line then says what N lacks. */
+        const by = parseInt(m[3], 10) | 0, was = av.n | 0; av.n = Math.max(0, was - by); av.reducedTo = av.n;
+        if(av.owedAdd && Number.isFinite(now)) av.owedAdd.base = now;
+        this.o.log('bleed reduced (' + m[2] + '): ' + was + ' -> ' + av.n + ' (the target states ' + now + ')');
+      } else if(Number.isFinite(now) && now < (av.n | 0)){ this.o.log('bleed reduced (' + m[2] + '): ' + av.n + ' -> ' + now); av.n = now; av.reducedTo = now; }
     }
     if((m = t.match(L12.reduceBy)) && this._actingVamp && this._actingVamp.target && who === this.seatName(this._actingVamp.target) && (!this._actingVamp.kind || this._actingVamp.kind === 'bleed')){   // v0.6.201 (the project owner, 16 Oct): a HUMAN target reduced my bleed with a card I do not know -- the client's Reduce line says by how much
       const by = parseInt(m[2], 10) | 0, was = this._actingVamp.n | 0;
-      if(by > 0){ this._actingVamp.n = Math.max(0, was - by); this._actingVamp.reducedTo = this._actingVamp.n; this.o.log('bleed reduced by ' + who + (m[3] ? ' (' + m[3] + ')' : '') + ': ' + was + ' -> ' + this._actingVamp.n); }
+      if(by > 0){ const ow = this._actingVamp.owedAdd; if(ow && ow.n > 0) ow.base = Math.max(0, (typeof ow.base === 'number' ? ow.base : was - ow.n) - by);   // v0.6.244 (C1b): the human's total lacks an unsaid stealth card's bleed (_sayOwedAdd)
+        this._actingVamp.n = Math.max(0, was - by); this._actingVamp.reducedTo = this._actingVamp.n; this.o.log('bleed reduced by ' + who + (m[3] ? ' (' + m[3] + ')' : '') + ': ' + was + ' -> ' + this._actingVamp.n); }
       return;
     }
     if((m = t.match(L12.spyNull))){   // v0.6.211: the actor made its bleed unsuccessful (Spying Mission [OBF]) -- nothing lands on me: no pool, no Edge
@@ -12089,7 +12100,7 @@ class Bot {
       if(st.bleed > 0 && av){   /* v0.6.244 (C1b, SWEEP-REGISTER 10.17): the mode's own bleed (Bonding [DOM]: '+1 stealth and +1 bleed (limited)') is the action's
            from now on, and takes its limited slot (no Conditioning after it). The table hears it in the frozen add line once the blocks are
            declined (_sayOwedAdd), where a bot actor's modifiers speak: an add line inside the contest ends a receiving bot's block (L12.add). */
-        av.n = (av.n | 0) + st.bleed; av.owedAdd = { n: ((av.owedAdd && av.owedAdd.n) | 0) + st.bleed, card: st.name };
+        av.n = (av.n | 0) + st.bleed; av.owedAdd = { n: ((av.owedAdd && av.owedAdd.n) | 0) + st.bleed, card: st.name }; av.ownTotal = true;   // ownTotal: a reduction is read off my total, never the target's stated one (the reduce handlers)
         if(st.limited) av.limitedUsed = true;
       }
     }
@@ -13964,8 +13975,9 @@ class Bot {
             if(this._actingVamp.archoned) break;   // v0.6.215: burned by Archon Investigation -- no more modifiers
             if(!owedTried){ owedTried = true; const ow = this._actingVamp.owedAdd;   // v0.6.244 (C1b, 10.17): a stealth card's own bleed, played in the contest (Bonding [DOM]) -- its add line first, with its reactions window (a modifier's shape)
               if(ow){ if(this._floorHeld()){ await this._floorClear(); if(this.out || this._actingVamp.archoned) continue; }
-                if(this._sayOwedAdd(v)){ pumped++;
-                  curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +' + ow.n + ' bleed (' + ow.card + ') — now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
+                const k = this._sayOwedAdd(v);
+                if(k > 0){ pumped++;
+                  curAns = await this._askBlock('Trainbot: ' + v.name + ' adds +' + k + ' bleed (' + ow.card + ') — now ' + this._actingVamp.n + ' on ' + this.seatName(this._actingVamp.target) + '. Any reaction?', { reactionsOnly: true });
                   await sleep(150);
                   if(curAns.what === 'block') break;
                   continue; } } }

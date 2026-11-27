@@ -17012,7 +17012,8 @@ async function connectWithRetry(client, tries = 30){
        (g) 7.6: a value sold for blood (fx.payBlood) -- Stone Travel [obt] not offered at 0 blood, its blood paid with the card; Ears of
        the Hare [pro] likewise on the intercept side; (h) 7.6: Mirror's Visage [CHI] +2 on an undirected action (the announce's form,
        _myActDirected), +1 on a bleed; (i) 7.6: Corpse Balloon [VIC]'s +1 intercept for its employer during a directed action only;
-       (j) the agreeing rows' sample: Rooftop Shadow is not usable when the acting minion has Celerity (notActorDisc).
+       (j) the agreeing rows' sample: Rooftop Shadow is not usable when the acting minion has Celerity (notActorDisc); (k) the round's
+       240: a target's reduction before the stealth card's add line is read off my own total, and the add line says what its total lacks.
        LAST LINE OF 188 is the closing brace below. */
     {
       console.log('\n[188] v0.6.244 -- C1b: the card chain’s gaps (a bleed card’s header, a stealth mode’s bleed, the or-option, prices, the actor and the action’s form)');
@@ -17112,6 +17113,21 @@ async function connectWithRetry(client, tries = 30){
         const ic = actor => { const b = u._bestInterceptFor(v, null, p(actor)); return b && b.name === 'Rooftop Shadow' ? b.s : null; };
         const got = { names: !!(vr && ac && an), cel: ic(ac), noCel: ic(an) };
         ok(got.names && got.cel === null && got.noCel === 1, '188j Rooftop Shadow [cel]: not usable against an acting minion with Celerity, +1 intercept otherwise (got ' + JSON.stringify(got) + ')'); }
+
+      // k) the round's 240 (9 ledger faults): the target reduces the bleed (Protected District, by 3) while Bonding's +1 is on my total and not yet on its
+      { const vn = pick8(c => sup8(c.disc, 'dom') && !has8(c.disc, 'pre') && !has8(c.disc, 'obf') && !has8(c.disc, 'cel'));
+        const run = (n0, by, how) => { const u = mk8(), v = V8('k1', vn, 4); u.board = [v]; u.hand = ['Bonding'];
+          const av = { v, n: n0, played: new Set(), target: 2, edgeLocked: false, limitedUsed: false, kind: 'bleed' }; u._actingVamp = av; u._cryptStealthMod(v, 'bleed');
+          const st = u._bestStealthFor(v, av.played, 2); if(!st || st.name !== 'Bonding') return { st: st && st.name };
+          u._spendStealthCard(st, av, {});
+          const reduce = () => u._onLog('Viktor', how === 'human' ? 'Viktor reduces the bleed by ' + by + '.' : '<b>Larissa</b> plays <b>Protected District</b> \u2014 reduces the bleed by ' + by + ' (now ' + Math.max(0, n0 - by) + ').');
+          let k; if(how === 'late'){ k = u._sayOwedAdd(v); reduce(); } else { reduce(); k = u._sayOwedAdd(v); }
+          return { n: av.n, k, adds: logs8(u).filter(l => /adds \+\d+ bleed/.test(l)) }; };
+        const got = { vn: !!vn, bot: run(3, 3), ate: run(1, 3), human: run(3, 3, 'human'), late: run(3, 3, 'late') };
+        const one = (r, line) => r.adds && r.adds.length === 1 && r.adds[0].endsWith(line);
+        ok(got.vn && got.bot.n === 1 && got.bot.k === 1 && one(got.bot, 'adds +1 bleed (= 1).') && got.ate.n === 0 && got.ate.k === 0 && got.ate.adds.length === 0 &&
+           got.human.n === 1 && got.human.k === 1 && one(got.human, 'adds +1 bleed (= 1).') && got.late.n === 1 && got.late.k === 1,
+           '188k a bleed of 3 with Bonding’s +1, reduced by 3 before the add line: my total is 1 (not the target’s "now 0") and "adds +1 bleed (= 1)." is said; a bleed of 1 reduced by 3 lands 0 and says nothing; a human’s "reduces the bleed by 3." the same; a reduction heard after the add line leaves 1 (got ' + JSON.stringify(got) + '; v0.6.244’s first build took the target’s 0: the 240’s 9 ledger faults, the Edge not taken)'); }
     }
 
 
