@@ -500,8 +500,10 @@ Who may answer an action or a card, and in which window; a line read after its w
 - **11.15 A reaction card's line drops the pool question's answer** -- `_pqAnswer` drops an answer once the short-term memory has
   moved on (`q.obs !== this._obs`; the owner's decision A of 15 Sep: the next action overwrites it), and any play line replaces
   that memory: a human prey's intercept card, played while a bot predator waits for the actor's answer, leaves the predator with no
-  window, and it says nothing. [the 11.11 round, a probe on v0.6.244 and v0.6.245] · human (two humans: the actor and the prey) ·
-  the answer is `q.obs`'s unless a new action (`_obsIsAction`) replaced it.
+  window, and it says nothing; the action's own menu row after its card does the same when it lands while the question is open
+  (every bot's answer dropped: no window, nothing deducted at It resolves). [the 11.11 round, a probe on v0.6.244 and v0.6.245;
+  the row: its review's pass 5, the base too] · human (the row with one human; the card with two) · the answer is `q.obs`'s unless
+  a newer action replaced it, the record's own minion's row being none (`_newerAction`).
 - **11.16 A cross-table block attempt never stands** -- Eagle's Sight [AUS]: "This vampire attempts to block the current action,
   ignoring the normal prey, predator or target restrictions" (KRCG; RTR 20020501), but the bot takes every attempt by a seat that is
   neither the actor's prey nor predator (nor a directed action's target) as a stray one that holds nothing (the 11.11 round's

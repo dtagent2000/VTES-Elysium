@@ -1427,7 +1427,7 @@ class Bot {
           if((this.pending.amount | 0) > 0) this.chat(this._expiredNote(this.pending));   // v0.6.245 (the sweep register 11.12): nothing at stake, nothing to tell -- a human's 0-pool employ was 'an unresolved bleed at me … bleed 0'
           this._clearPending('turn change');
         }
-        if(m.seat !== this.turnSeat) this._standing = null;   // v0.6.245 (11.11): an attempt never stands past its turn
+        if(m.seat !== this.turnSeat){ this._standing = null; this._noteOwed = null; }   // v0.6.245 (11.11): an attempt never stands past its turn, nor a superseded record's owed phrase (pass 5)
         if(m.seat !== this.turnSeat && this.turnSeat && this.opp && this.opp[this.turnSeat] && this.opp[this.turnSeat].memo) this._hMemoTurnEnd(this.turnSeat);   // v0.6.225: their turn ended -- an open record resolves; the answer window closes (or lasts their next turn)
         if(m.seat !== this.turnSeat){ this._srWindowClosed('the turn changed', false); this._srSent = null; this._releaseHolds('action', 'combat'); }   // v0.6.239 (the egress review, findings 1 and 2): the last turn's 'as played' windows, actions and combats are over -- a reaction's 'Do not replace until after this action' is released here, never inside its action (_flushDraws releases in my own turn only). Drawn at the end of this dispatch when the next turn is another seat's; when it is mine, at my master phase's flush, counted in _handCount until then (pass 2, finding 4: a draw sent here was still in flight when Dreams' +2 read the hand)
         if(m.seat !== this.turnSeat){ this._turnActN = 0; this._turnSerial = (this._turnSerial | 0) + 1; }   // v0.6.217: + the turn's serial (Monster's 'once each turn' = once in each player's turn [ANK 20180719-4])   // v0.6.215 (V5 wave 3): the actions announced in this turn's minion phase so far (Channel 10: 'not usable during the first action in a minion phase')
@@ -11145,7 +11145,8 @@ class Bot {
         if(reAim){ bleedOf.targetSeat = targetSeat || bleedOf.targetSeat; bleedOf.line = t; bleedOf.directed = this._actDirected(m[2], null, oseat, bleedOf.targetSeat); this._obs = bleedOf; } else {
         this._obs = { who, seat: oseat, vamp: m[1], verb: m[2], card: m[4] || null, line: t, at: Date.now(), poolLoss: null, targetSeat: targetSeat || null, directed: this._actDirected(m[2], m[4] || null, oseat, targetSeat) };
         if(!m[4]){ const bo = this._bleedOpen = this._bleedOpen || {}; if(m[3]) bo[oseat] = { vamp: m[1], obs: this._obs, at: Date.now() }; else delete bo[oseat]; }   // v0.6.237: an action row -- a bleed opens the seat's bleed (its re-announce is the same action), any other action closes it
-        if(!m[4]) this._standing = null;   // v0.6.245 (11.11; the egress review, finding 2): another seat's action ROW is a new action -- an attempt no line ended stood at the last one
+        const ownRow = !m[4] && ((prevObs && prevObs.who === who && prevObs.vamp === m[1] && /^plays /.test(prevObs.verb || '')) || (this.pending && this.pending.who === who && this.pending.actingVampName === m[1]) || (this._pq && this._pq.obs && this._pq.obs.who === who && this._pq.obs.vamp === m[1]));   // (the egress review, pass 5) the menu row of the action whose card was just played -- my record's or my open question's own minion -- is that action, not a new one
+        if(!m[4] && !ownRow) this._standing = null;   // v0.6.245 (11.11; the egress review, finding 2): another seat's action ROW is a new action -- an attempt no line ended stood at the last one
         if(!m[4] && oseat === this.turnSeat) this._turnActN = (this._turnActN | 0) + 1;   // v0.6.215: an action ROW (bleeds / hunts / calls / takes … action / attempts …), not a card play line -- a card action's row follows its play line, so each action counts once
         if(this._blockBar){ if(this._blockBar.who === who && this._blockBar.fresh) this._blockBar.fresh = false; else if(this._blockBar.who !== who) this._blockBar = null; }   // v0.6.127: the bar belongs to the announce that follows it; another Methuselah's action ends it
         /* v0.6.118: the per-minion ledger the forecast reads -- flush the previous action's stealth first */
@@ -11695,8 +11696,8 @@ class Bot {
     if(!o) return false;
     if(!o.card) return /^(bleeds for|hunts|calls a political action|attempts to rescue|takes an undirected action|takes a card action|commits diablerie)/.test(o.verb || '');
     const look = c => { const mm = c.match(/^(.+?) \[[a-zA-Z]+\]$/); return this.fxLookup(mm ? mm[1] : c); };
-    const raw = String(o.card); let h = look(raw) || look(raw.replace(/\s*(?::|\u2014|--)\s.*$/, '').trim());
-    if(!h && o.line){ const t = String(o.line).replace(/\s+Target:.*$/, '').replace(/^.*? plays /, '').trim(); h = look(t) || look(t.replace(/\.$/, '')); }   // (the egress review, pass 4) a name with a period in it (Mr. Winthrop, Praxis Seizure: Washington, D.C.): actObs ends the card at the first period   // a bot's play line names the card, then ': …' or ' — …' before its period (a human's ends at the card): the sim's 240 diverged on a bot's 'plays Eyes of Argus: may react as though unlocked.'
+    const raw = String(o.card); let h = look(raw) || look(raw.replace(/\s*(?::|\u2014|--)\s.*$/, '').trim());   // a bot's play line names the card, then ': …' or ' — …' before its period (a human's ends at the card): the sim's 240 diverged on a bot's 'plays Eyes of Argus: may react as though unlocked.'
+    if(!h && o.line){ const t = String(o.line).replace(/\s+Target:.*$/, '').replace(/^.*? plays /, '').trim(); h = look(t) || look(t.replace(/\.$/, '')); }   // (the egress review, pass 4) a name with a period in it (Mr. Winthrop, Praxis Seizure: Washington, D.C.): actObs ends the card at the first period
     return !!(h && h.kind === 'lib' && (h.e.t || []).some(t => t === 'action' || t === 'political' || t === 'ally' || t === 'equip' || t === 'retainer'));   // an unknown card is no action: no supersede and no overtaking, as before them
   }
   _preyDeclined(who, via){           // the prey's word at an undirected action I am the predator of: a decline opens my window; inside the prey's own standing attempt it resolves that attempt (B: everybody passed), and I go on waiting
@@ -11872,7 +11873,7 @@ class Bot {
     if(phrase === 'It resolves' && this._refActor && this._refActor.who === m.who) this._refActor = null;   // v0.6.127
     if(phrase === 'It resolves' && this._blockBar && this._blockBar.who === m.who) this._blockBar = null;   // v0.6.127: the bar dies with its action
     if(phrase === 'It resolves' && this._refT && this._refT.who === m.who) this._refT = null;   // v0.6.124: the caller's action is over -- so are its terms (the result line normally got here first)
-    if(phrase === 'It resolves') this._standing = null;   // v0.6.245 (11.11): the action is over, and with it any attempt that stood
+    if(phrase === 'It resolves'){ this._standing = null; this._noteOwed = null; }   // v0.6.245 (11.11): the action is over, and with it any attempt that stood (and a superseded record's owed phrase: pass 5)
     if(phrase === 'Pass' || phrase === 'No block' || phrase === 'No reaction') this._noteDecline(m.who);   // v0.6.245 (11.11): a seat's last decline -- a predator window born after its prey's word reads it (_openAskedWindow); one said inside the seat's own attempt declines nothing (the egress review, pass 2)
     if(phrase === 'Block!' && this._isHumanName(m.who)) this._noteStanding(m.who, null);   // v0.6.245 (11.11): a human's shout is an attempt before its line names the minion (a bot always sends its line; its shout alone may end in a Pass when its route failed)
     if(this._refCall && !this._refCall.closed && !this._ask){         // v0.6.122: MY referendum is polling -- the project owner (18 Sep): Hold on buys thinking time, 'It resolves' from anyone ends the wait and I announce the outcome at once; Pass = no votes
@@ -12019,7 +12020,7 @@ class Bot {
          predator now waits for the prey's word (the owner's decision A of 15 Sep: the next action overwrites the memory) */
       if(p0 && !this._ask && !this._pq && o0 && o0.who === p0.who && this._isHumanName(o0.who) && this._newerAction(o0, p0)
          && !(p0.blockerVamp || p0.routeVamp || p0.lateWait)){   // (pass 2, C) not the record's own action's card (_newerAction); a belt: my block or my wait for the actor's word runs on its own clock and ends first, and the next prompt supersedes the record after it (another seat's shout, `contested`, ends nothing: the stale record of the C1b sighting had one)
-        if((p0.amount | 0) > 0) this.chat(this._expiredNote(p0, true));   // (the lead's read after pass 3) a record with my pool at stake is not dropped unsaid: the turn-end note it would have reached, now
+        if((p0.amount | 0) > 0){ this.chat(this._expiredNote(p0, true)); this._noteOwed = { who: p0.who, at: Date.now() }; }   // (the lead's read after pass 3) a record with my pool at stake is not dropped unsaid: the turn-end note it would have reached, now
         this._clearPending('superseded by a new action'); this._obs = o0; } }
     if(!this.started || this.out || this._ask || this.pending || this._pq) return;
     const o = this._obs;
@@ -12677,7 +12678,7 @@ class Bot {
     /* v0.6.110 (R2, #11): typed answers to MY pool question, and the typed form
        of the prompt itself -- the quick phrases are the fast path, chat is the
        fallback the feedback explicitly asked for (a quick phrase or typed chat). */
-    const dmgLine = /^\s*(?:@?\S+[,:!]?\s+)?(bleed|vote)\s+\d{1,2}\s*$/i.test(txt);   // (the egress review, pass 4) the damage grammar's form: the supersede note asks for it while my next pool question is open -- it goes on to the grammar below
+    const dmgLine = !!this._noteOwed && /^\s*(?:@?\S+[,:!]?\s+)?(bleed|vote)\s+\d{1,2}\s*$/i.test(txt);   // (the egress review, passes 4 and 5) the damage grammar's form, while the supersede note that asks for it is owed: it goes on to the grammar below; otherwise "bleed 2" at How much? is the answer 2, as before
     if(this._pq && !dmgLine){
       if(this._pq.stage === 'yn'){
         if(/^\s*(yes|ja|yep|y)\b/i.test(txt))          return this._pqAnswer('yes', who);
@@ -12754,6 +12755,7 @@ class Bot {
       if(this.out) return this.note(this.o.name + ' is already ousted \u2014 the dead bleed no more.');
       const kind = dm[1].toLowerCase(), n = Math.min(30, parseInt(dm[2], 10) || 0);
       if(!n) return;
+      this._noteOwed = null;   // (pass 5) the note's phrase has landed
       this.pool -= n;
       if(this.pool > 0){
         this.push();
