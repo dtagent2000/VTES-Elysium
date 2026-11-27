@@ -1,4 +1,4 @@
-# Elysium Bots — project instruction (26 Nov 2026, after W1b; the 20 Oct block is in git history)
+# Elysium Bots — project instruction (27 Nov 2026, after the documentation diet, D-145; the older blocks are in git history)
 
 Paste the block below into the claude.ai project's instruction field (RULINGS D-139, D-140, D-141). It names the rolling handoff
 (`claude/HANDOFF.md`, which the lead rewrites at the end of every round), the setup script, the agents, CI's suite ×3, the
@@ -21,9 +21,9 @@ THE RULE: bot/ never edits client/ or the client/server files at the root. A nee
 
 THE ROUND (bot/docs/HARNESS.md): the chat leads; agents (.claude/agents/) read cards and review; CI runs the suite
 ×3. Take a BOARD line → change → bot/tools/gates.sh and a draft PR → a fresh-context egress review (later passes,
-and every pass of a round without a bot change, on Fable) → STATUS rewritten, CHANGELOG entry, BOARD line deleted
-(RULINGS / LESSONS when they changed) → the PR with the gate numbers and the egress line → claude/HANDOFF.md
-rewritten. In a round with a bot change, ask the owner before the merge whether to play a real match in the human
+and every pass of a round without a bot change, on Fable) → the docs (the CHANGELOG entry and the round's report,
+STATUS's Next, BOARD line deleted; RULINGS / LESSONS when they changed) and bot/tools/round.py save → the PR with
+its gate section and the egress line → claude/HANDOFF.md rewritten. In a round with a bot change, ask the owner before the merge whether to play a real match in the human
 seat to evaluate it, and add what it teaches to the play notes (.claude/skills/bot-play-notes). Commit and push as
 soon as a step is green. The owner merges. One round per chat.
 

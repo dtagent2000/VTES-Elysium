@@ -23,9 +23,9 @@ fixed entry is deleted in the round that fixes it (the CHANGELOG and the PR keep
 the PR. An active entry is fixed in a release of its own, not in its class's round (D-135; the order, D-137); it stays listed
 until then.
 
-**Migrated on 20 Nov** (each entry names its source): the pilot's riders (`specs/spec-sweep-pilot-2026-11-20.md` §6: *pilot*);
+**Migrated on 20 Nov** (each entry names its source): the pilot's riders (`history/specs/spec-sweep-pilot-2026-11-20.md` §6: *pilot*);
 BOARD's card lines under "Known, not built" (*B*); BOARD's "The V5 waves' riders", that is the waves' own sections (*w1*–*w4*: each
-spec's §4; *w5*: `specs/spec-v5-wave5-2026-11-17.md` §10 and §12.10; *w6*: `specs/spec-v5-wave6-2026-11-18.md` §8, its curation
+spec's §4; *w5*: `history/specs/spec-v5-wave5-2026-11-17.md` §10 and §12.10; *w6*: `history/specs/spec-v5-wave6-2026-11-18.md` §8, its curation
 queue included, and §9.1–§9.5); the V5 sweep line's problem riders (wave 2's second review, in *w2*; the latent reds, the ambers
 and the cards found on the way of `specs/spec-card-sweep-2026-11-18.md` §4.3: *sweep §4.3*; its row C's misreads and known misses,
 §4: *sweep §4*); RULINGS' card gaps O-3, O-4, O-21, O-23 and O-24 (stubs stay there). The criterion: a line about how a card is

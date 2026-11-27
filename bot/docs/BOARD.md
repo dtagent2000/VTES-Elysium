@@ -1,14 +1,13 @@
-# BOARD — the open asks (27 Nov 2026, v0.6.243). A line is deleted when done; found work is added as a line (a card
+# BOARD — the open asks (27 Nov 2026). A line is deleted when done; found work is added as a line (a card
 problem the sweep finds: an entry in `SWEEP-REGISTER.md`, D-135).
 
 Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. The owner orders the board; a round takes one line
 (or a few that belong together — the combining rule). Questions for the owner are not here: they are `RULINGS.md` O-lines.
 
 ## Product line (the owner's order, 19–20 Oct 2026; spec-cleanup §7)
-- **The chat round's rulings** (D-137, O-51): v0.6.240 built the floor, dropped the `(bot):` prefix and the human's tail to a
-  bot, and brought the recorder (`tools/chat-record.js`, `tools/ana-chat.py`); the owner rules every line and the questions R1–R9
-  in the ruling doc (O-51), the silent bot-vs-bot verdict wait among them (O-36). *Done when* each line has his ruling and
-  what he asks for is built, with a recording before and after. Docs: D-64, D-137, O-36, O-51.
+- **The chat round's rulings** (D-137, O-51): the owner rules every bot line and the questions R1–R9 in the ruling doc (O-51),
+  the silent bot-vs-bot verdict wait among them (O-36); the recorder is `tools/chat-record.js` + `tools/ana-chat.py`. *Done when*
+  each line has his ruling and what he asks for is built, with a recording before and after. Docs: D-64, D-137, O-36, O-51.
 - **The knowledge layer's Kevlar**: the owner: armour is valuable against aggravated-damage decks, priced by what the table's decks
   deal (the TWD profile). The bots deal aggravated damage (the gangrel, tzimisce, salubri and ministry precons) and the vest
   prevents it (R-39); the starters deal none, so the bench needs those decks. *Done when* the equipment scorer reads an
@@ -20,25 +19,22 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
   decisions, calibrated against the sim before any consumer). *Done when* the spec is in `specs/` and the owner has given the go-ahead.
   Docs: `specs/spec-cleanup-2026-10-20.md` §6.1; RULINGS D-83, O-32.
 - **The V5 sweep** (D-125, D-130, D-132: exactness first; `specs/spec-card-sweep-2026-11-18.md` §11): every printed effect first
-  asked who else in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. **B**, the
-  pilot, is built (v0.6.236, D-134). **C** goes concentrated (§11.8): **C1** is built (v0.6.243, D-144): the cross-check tool and
-  `stealth` / `actStealth`, `intercept`, `bleed` over the whole library, `cardfx-exact.json`. Next C1b (below), the bots' first
-  readers of a human's play (their rounds of their own, D-132), then C2 (combat), then the rest of §11.4's horizon; parallel
-  readers of the differing cards against KRCG's text, a separate reviewer. C's riders: the title family; the ledger's grade column (spec §11.10);
-  Hunting the Quarry (`specs/spec-sweep-pilot-2026-11-20.md` §3.3). The problems the sweep finds, and its earlier riders, are in
-  `SWEEP-REGISTER.md` (D-135; below). **D**, the starters' remainder where a starter needs it, with its strategy baseline.
-  Crypt waves (D-108): B = the rest by class, the 13 partial copies first. A deck joins the menu by D-108; before the deck
-  count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check` compares them). The root README credits
-  zero-vtes (D-128; main's, handoff). *Done when* C's horizon is reached, the 18 starters' rows are playable, every
-  hand-only key has its sharing answer and C's riders are done or ruled out. Docs: RULINGS D-84, D-102, D-104, D-108,
-  D-125 – D-127, D-130, D-132, D-134, D-135; `CARDS.md`; HOWTO.
+  asked who else in the library prints it; shared effects land library-wide, only the unique remainder is hand-curated. C goes
+  concentrated (§11.8): C1 is built (D-144); next C1b (below), the bots' first readers of a human's play (rounds of their own,
+  D-132), then C2 (combat), then the rest of §11.4's horizon. C's riders: the title family; the ledger's grade column (spec
+  §11.10); Hunting the Quarry (`history/specs/spec-sweep-pilot-2026-11-20.md` §3.3). **D**, the starters' remainder where a
+  starter needs it, with its strategy baseline. Crypt waves (D-108): B = the rest by class, the 13 partial copies first. A deck
+  joins the menu by D-108; before the deck count doubles, decks and `DECK_STRATEGY` become a data file (`gen-precon.js --check`
+  compares them). The root README credits zero-vtes (D-125; main's, handoff). *Done when* C's horizon is reached, the 18
+  starters' rows are playable, every hand-only key has its sharing answer and C's riders are done or ruled out. Docs: RULINGS
+  D-84, D-102, D-104, D-108, D-125 – D-127, D-130, D-132, D-134, D-135; `CARDS.md`; HOWTO.
 - **The official deck guides as each deck's strategy baseline** (the owner, 29 Oct; refined by the archetypes): D-112 checks each
   strategy line against its guide; Toreador's is done (D-118). *Done when* each deck's proposals have the owner's go-ahead or no.
   Docs: RULINGS D-43, O-33, D-112, D-118.
 - **Reads the bench round left** (D-118): my referendums' block rate at the table (proposal 2); a stealth bleeder read from
   its deck (proposal 7's loss); `keyLast`'s hold with two political cards; `engineW` only while no stock engine of mine is
   ready; the Ball's wait by expected payoff against punishment and risk (the owner, 17 Nov). *Done when* built and benched, or
-  ruled out. Docs: RULINGS D-118, O-43; `specs/spec-bench-round-2026-11-15.md`.
+  ruled out. Docs: RULINGS D-118, O-43; `history/specs/spec-bench-round-2026-11-15.md`.
 - **C5 — guards**: the leak test (static: the bot reads no global but its export; dynamic: after a sim match no bot state holds a
   card only another seat held, a planted leak the positive control; `_twdExpect` agrees across observers), flip counts on `decide`
   rows, the knob registry (`KNOBS`: every decision knob with a 0-path, persona thresholds as overlays), and the off-by-default knobs
@@ -86,8 +82,8 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
 
 ## Known, not built (bot side)
 - **The TWD profile's rebuild** (D-110, O-37, O-38): the shipped profile's 14 article-last keys (`Barrens, The` …) hold only
-  the merged decks' share; a few decks count twice. A v5 rebuild (scratch: 4,709 decks, Magnum under 10) drops a name the bot
-  records for two cards (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
+  the merged decks' share; a few decks count twice. A v5 rebuild drops a name the bot records for two cards
+  (`Pentex(TM) Subversion`, hacking's `Parthenon, The`). *Done when* the bot reads both files by KRCG id
   (or they carry every cardfx name), every deck's library names hit a key, and the rebuild ships with a sim footprint.
   Also: the v5 nicknames are aliases (types dropped in `krcg-v5.js`).
 - **Hand names out of the console outside debug** (main, 11 Nov: the security plan's item 6): an online host can read a bot's
@@ -149,7 +145,7 @@ Format: **ask**: why. *Done when* condition. Docs: the pages a round touches. Th
 - **Three ledger faults on fresh deals** (v0.6.223 too; `--bench none --seeds 3`): a VANISHED bleed, a bleed with no actor row,
   a steal's victim lost > stole. A lead (v0.6.227, the 600's match 167): a bleed that fizzles at a seat just ousted is read by
   the next prey as its own and books the pool (likelier since v0.6.227: the 600's fizzles 3 → 6). *Done when* `ana-gates.py` passes
-  there. Docs: CHANGELOG v0.6.224, v0.6.227.
+  there. Docs: the old CHANGELOG's v0.6.224 and v0.6.227.
 - **Two arena handshake misses** (v0.6.235's smokes; none in the sim): a match's end cut its last round (a Fame oust), and a rush
   chosen 1 ms after the rusher's combat sent its target to torpor met no opponent (a lagging view). *Done when* both are read.
 - **`ana-windows.py` does not know the floor** (v0.6.240): at the client's pace a bot answers a window after its question has left

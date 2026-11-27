@@ -4,7 +4,8 @@
 # The arena smoke, a new section's destructive check and main's client suite stay by hand (CLAUDE.md "Gates"):
 #   always     node --check on every bot/ script · the correctness lint (as CI) · the canary twice (bot/'s copies; the root's release
 #              with client/ELYSIUM-PROTOCOL.md) · test-cardfx · gen-precon --check · the self-tests (card ledger, review sheet,
-#              the cross-check, ana-gates, public-scan) · HB1 · doc-budget · public-scan (the name and quote scan on the lines the change adds, D-142)
+#              the cross-check, ana-gates, public-scan, round.py) · HB1 · doc-budget (against the base: a budget's rise needs a
+#              ruling; it runs round.py check, D-145) · public-scan (the name and quote scan on the lines the change adds, D-142)
 #   when hit   test-bot-hotseat.js (~1 min) when the bot, the hotseat tool or a read-only copy changed; test-doc-budget.sh when
 #              the doc check changed
 #   --sim      the footprint: the 240-match client design (the four starters, every seating x 10 deals) on the base's bundle and on
@@ -14,7 +15,8 @@
 #   --suite N  N full suite runs, each in a frozen snapshot (6 GB heap, timeout 900): only when CI cannot run (D-139)
 #   --all      both when-hit gates, whatever the diff (the flags stay flags)
 # Output: OUT/summary.md (the PR's table: a row per gate, the release bytes' sha256, the totals; rewritten after every gate, so a
-# poll sees progress) and OUT/<gate>.log. Exit 1 on a FAIL or a SKIPPED (a gate that skips did not run). OUT defaults to
+# poll sees progress), OUT/record.json (the same run as the round record: `tools/round.py save OUT` writes it into docs/ and
+# renders its copies, D-145) and OUT/<gate>.log. Exit 1 on a FAIL or a SKIPPED (a gate that skips did not run). OUT defaults to
 # /tmp/gates-<branch>-<time> and is never inside the repository. Run --sim, --smokes or --suite in the background and poll.
 # Usage: bash bot/tools/gates.sh [--base REF] [--out DIR] [--sim] [--smokes] [--suite N] [--all]
 set -u
@@ -42,7 +44,8 @@ MB=$(git -C "$R" merge-base "$base" HEAD 2>/dev/null) || { echo "gates.sh: no me
 changed=$( { git -C "$R" diff --name-only "$MB"; git -C "$R" ls-files --others --exclude-standard; } | sort -u )
 hit(){ [ "$all" = 1 ] || printf '%s\n' "$changed" | grep -qE "$1"; }
 
-ROWS="$OUT/.rows"; : > "$ROWS"; t_start=$(date +%s)
+ROWS="$OUT/.rows"; : > "$ROWS"; : > "$OUT/.rows.tsv"; t_start=$(date +%s)
+flags=""; [ "$sim" = 1 ] && flags="sim"; [ "$smokes" = 1 ] && flags="$flags smokes"; [ "$suite" -gt 0 ] && flags="$flags suite"; [ "$all" = 1 ] && flags="$flags all"
 count(){   # the gate's own count line, as its tool prints it (a composite gate's own RESULT line first)
   local l="$1" c
   c=$(grep -E '^RESULT: ' "$l" | tail -1 | cut -c9-); [ -n "$c" ] && { echo "$c"; return; }
@@ -53,7 +56,7 @@ count(){   # the gate's own count line, as its tool prints it (a composite gate'
   c=$(grep -oE '[0-9]+ precons, no problems' "$l" | tail -1); [ -n "$c" ] && { echo "$c"; return; }
   c=$(grep -oE '^[0-9]+ matches: .*' "$l" | tail -1); [ -n "$c" ] && { echo "$c"; return; }
   c=$(grep -oE '^gates: (PASS|FAIL) \([0-9]+ of [0-9]+\)' "$l" | tail -1); [ -n "$c" ] && { echo "$c"; return; }
-  grep -qE '^doc-budget: PASS' "$l" && { grep -oE 'bootstrap [0-9]+ / [0-9]+' "$l" | head -1; return; }
+  grep -qE '^doc-budget: PASS' "$l" && { grep -oE '(standing pages|bootstrap) [0-9]+ / [0-9]+' "$l" | head -2 | paste -sd'|' - | sed 's/|/ · /'; return; }
   c=$(grep -oE '[0-9]+ problems? \([0-9]+ errors?' "$l" | tail -1); [ -n "$c" ] && { echo "$c"; return; }
   tail -1 "$l" | cut -c1-80
 }
@@ -70,6 +73,16 @@ summary(){
     echo
     echo "gates: PASS $p · FAIL $f · SKIPPED $s ($(( $(date +%s) - t_start )) s)"
   } > "$OUT/summary.md"
+  python3 "$B/tools/round.py" record "$OUT" --branch "$branch" --head "$(git -C "$R" rev-parse --short HEAD)" \
+    --dirty "$( { git -C "$R" diff --quiet HEAD 2>/dev/null && [ -z "$(git -C "$R" ls-files --others --exclude-standard)" ]; } && echo 0 || echo 1)" \
+    --base "$base" --merge-base "$(git -C "$R" rev-parse --short "$MB")" --seconds "$(( $(date +%s) - t_start ))" --flags "$flags" \
+    --changed "$(printf '%s\n' "$changed" | grep -c .)" --changed-bot "$(printf '%s\n' "$changed" | grep -c '^bot/')" \
+    || { rm -f "$OUT/record.json"; echo "gates.sh: round.py record failed: OUT/record.json removed, so a save refuses" >&2; }
+}
+row(){   # row GATE RESULT COUNT SECONDS -- the PR table's row and the record's (OUT/.rows.tsv)
+  printf '| %s | %s | %s | %s s |\n' "$1" "$2" "$3" "$4" >> "$ROWS"
+  printf '%s\t%s\t%s\t%s\n' "$1" "$2" "$(printf '%s' "$3" | tr '\t' ' ')" "$4" >> "$OUT/.rows.tsv"
+  summary
 }
 gate(){   # gate NAME SKIPCHECK(0|1) CMD... -- runs CMD in bot/, logs to OUT/NAME.log, adds the row
   local name=$1 skipchk=$2; shift 2
@@ -77,8 +90,7 @@ gate(){   # gate NAME SKIPCHECK(0|1) CMD... -- runs CMD in bot/, logs to OUT/NAM
   t0=$(date +%s); ( cd "$B" && "$@" ) > "$log" 2>&1; rc=$?
   res=PASS; [ "$rc" = 0 ] || res=FAIL
   [ "$skipchk" = 1 ] && grep -q 'SKIPPED' "$log" && res=SKIPPED
-  printf '| %s | %s | %s | %s s |\n' "$name" "$res" "$(count "$log")" "$(( $(date +%s) - t0 ))" >> "$ROWS"
-  summary
+  row "$name" "$res" "$(count "$log")" "$(( $(date +%s) - t0 ))"
 }
 
 # ---- the gates (functions run in bot/) ----
@@ -86,7 +98,7 @@ g_check(){ local f bad=0 n=0; for f in *.js tools/*.js; do [ -f "$f" ] || contin
 g_lint(){ npx --yes eslint@10.13.0 -c tools/eslint.config.mjs --suppressions-location tools/eslint-suppressions.json . && echo "lint: clean"; }
 g_canary_root(){ local d; d=$(mktemp -d); cp test-bot-canary.js elysium-bot.js elysium-cardfx.json "$d/" && cp "$R/elysium-vtes-bord.html" "$R/client/ELYSIUM-PROTOCOL.md" "$d/" && (cd "$d" && node test-bot-canary.js); local rc=$?; rm -rf "$d"; return $rc; }
 g_vtes(){ [ -s vtes.json ] || { echo "vtes.json missing: bash tools/setup.sh"; return 1; }; "$@"; }
-g_docs(){ bash tools/doc-budget.sh; }
+g_docs(){ bash tools/doc-budget.sh --base "$MB"; }
 g_suite(){   # one frozen snapshot: bot/ copied, the root's client one level up (154f), the sha that ran beside the log
   local d="$OUT/snap-$1"; rm -rf "$d"; mkdir -p "$d/bot"; cp "$R/elysium-vtes-bord.html" "$d/"
   (tar --exclude='./serie-*' --exclude='./bench-*' -cf - .) | tar -xf - -C "$d/bot"
@@ -137,10 +149,11 @@ gate hb1 0 node diag-hb1-smoke.js
 hit '^bot/(elysium-bot\.js|elysium-bot-hotseat\.js|elysium-vtes-bord\.html|elysium-server\.js|ELYSIUM-PROTOCOL\.md|test-bot-hotseat\.js)$' && gate hotseat 1 node test-bot-hotseat.js
 gate doc-budget 0 g_docs
 gate public-scan-self 0 python3 tools/public-scan.py --self-test
+gate round-self 0 python3 tools/round.py --self-test
 gate public-scan 0 python3 tools/public-scan.py --diff "$MB"
 hit '^bot/tools/(test-)?doc-budget\.sh$' && gate test-doc-budget 0 bash tools/test-doc-budget.sh
 [ "$sim" = 1 ] && gate sim-240 0 g_sim
-[ "$sim" = 0 ] && printf '%s\n' "$changed" | grep -qE '^bot/(elysium-bot\.js|elysium-cardfx\.json|cardfx-curated\.json|cardfx-compile\.js)$' && { printf '| sim-240 | NOT RUN | the bot or cardfx changed: a behaviour change needs --sim | - |\n' >> "$ROWS"; summary; }
+[ "$sim" = 0 ] && printf '%s\n' "$changed" | grep -qE '^bot/(elysium-bot\.js|elysium-cardfx\.json|cardfx-curated\.json|cardfx-compile\.js)$' && row sim-240 "NOT RUN" "the bot or cardfx changed: a behaviour change needs --sim" -
 [ "$smokes" = 1 ] && gate v5-smokes 0 g_smokes
 i=1; while [ "$i" -le "$suite" ]; do gate "suite-$i" 0 g_vtes g_suite "$i"; i=$((i + 1)); done   # 178a4 passes silently without vtes.json
 summary

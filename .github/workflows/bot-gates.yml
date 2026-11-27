@@ -12,7 +12,8 @@
 # beside the bundle when the wire changes (its embedded-guide check is red by design until main re-embeds a new guide). A gate that
 # cannot find its inputs SKIPS with exit 0 by design (the canary's rule), so the steps below fail on a skip line. Added in round C4
 # (6 Nov 2026, the owner's yes to the clean-up spec's Q5, with best practice for the triggers and the required check); the suite's
-# three jobs and the aggregate check in W1; the name and quote scan in the cleanup round (D-142).
+# three jobs and the aggregate check in W1; the name and quote scan in the cleanup round (D-142); the round record and the
+# budgets' rise in the documentation diet (D-145).
 name: bot gates
 
 on:
@@ -151,6 +152,9 @@ jobs:
       - name: The series gates' self-test (ana-gates.py --self-test; a planted fault per gate)
         if: ${{ !cancelled() }}
         run: python3 ana-gates.py --self-test
+      - name: The round record's self-test (tools/round.py --self-test; its check runs in doc-budget below)
+        if: ${{ !cancelled() }}
+        run: python3 tools/round.py --self-test
       - name: "KRCG's TWDA: today's v5 file still reads (fetched to a temp dir; nothing written in bot/)"
         if: ${{ !cancelled() }}
         run: |
@@ -184,7 +188,8 @@ jobs:
           # baseline in this mode and each case in its own
           DOC_BUDGET_ROOT_DRIFT: ${{ github.event_name == 'pull_request' && 'fail' || 'warn' }}
         run: |
-          bash tools/doc-budget.sh
+          # on a pull request against its base (HEAD^1 of the merge commit): a budget's rise needs a new ruling (D-145)
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then bash tools/doc-budget.sh --base HEAD^1; else bash tools/doc-budget.sh; fi
           bash tools/test-doc-budget.sh
 
   suite:

@@ -6,7 +6,7 @@ its answer on 19 Nov (RULINGS D-126). On 19 Nov he answered the question about z
 code. Measured on main `6baf99b`. On 20 Nov the owner ruled the focus, exactness first, and a new order after B: the library by
 effect, then the starters' remainder (§11, RULINGS D-130). Later that morning he kept the pilot first and took the
 concentrated sweep and review until clean (§11.8, RULINGS D-132, D-133); his intention for after the alignment is §11.9.
-Step B, the pilot (Banu Haqim), is built: bot v0.6.236, RULINGS D-134, `specs/spec-sweep-pilot-2026-11-20.md` (its design, its
+Step B, the pilot (Banu Haqim), is built: bot v0.6.236, RULINGS D-134, `history/specs/spec-sweep-pilot-2026-11-20.md` (its design, its
 predictions and what was observed, its friction and its riders).
 
 **Step A1** (19 Nov, no bot change) built §4.1's first two items: the library table (`gen-card-ledger.js` v1.2.0, "The whole
@@ -575,7 +575,7 @@ distance from 980 to 1,543, and two days of new definitions the rest.
 - **#92's three compile failures beyond §4.4's letter** (the near miss on a mode's `when`, an added mode without `fx`, a half
   opt-in): each turns a silent mistake into a compile error. The owner's word is pending; none blocks the pilot.
 - **Their wrong readings.** Claude's proposal, not ruled: the noted ones are kept as a list in each round's PR, for the owner to pass
-  to zero-vtes's maintainer if he wishes. Answered 27 Nov (D-144 (3)): a report per round in `docs/reports/`.
+  to zero-vtes's maintainer if he wishes. Answered 27 Nov (D-144 (3)): reported each round, a section of the round's report since D-145.
 
 ### 11.7 Predictions for the first family (registered before its tool exists; D-93, L-44)
 A scratch scan on 20 Nov (appendix C; action modifiers and reactions only, the levels joined crudely): 443 entries, 376 with a

@@ -1,0 +1,135 @@
+{
+ "schema": 1,
+ "tool": "tools/gates.sh",
+ "date": "2026-11-27",
+ "branch": "docs-diet",
+ "head": "eb0f3c8",
+ "dirty": false,
+ "base": "origin/main",
+ "merge_base": "77c5ded",
+ "flags": [],
+ "changed": {
+  "all": 35,
+  "bot": 33
+ },
+ "bytes": {
+  "elysium-bot.js": "14d48ac8",
+  "test-bot-logic.js": "bae2970e",
+  "elysium-cardfx.json": "c4b9545e"
+ },
+ "gates": [
+  {
+   "gate": "check",
+   "result": "PASS",
+   "count": "35 of 35 scripts parse",
+   "seconds": 2
+  },
+  {
+   "gate": "lint",
+   "result": "PASS",
+   "count": "lint: clean",
+   "seconds": 5
+  },
+  {
+   "gate": "canary",
+   "result": "PASS",
+   "count": "235/0",
+   "seconds": 1
+  },
+  {
+   "gate": "canary-root",
+   "result": "PASS",
+   "count": "235/0",
+   "seconds": 1
+  },
+  {
+   "gate": "cardfx",
+   "result": "PASS",
+   "count": "516/0",
+   "seconds": 3
+  },
+  {
+   "gate": "precon",
+   "result": "PASS",
+   "count": "18 precons, no problems",
+   "seconds": 0
+  },
+  {
+   "gate": "ledger-self",
+   "result": "PASS",
+   "count": "81/0",
+   "seconds": 1
+  },
+  {
+   "gate": "sheet-self",
+   "result": "PASS",
+   "count": "23/0",
+   "seconds": 0
+  },
+  {
+   "gate": "cross-self",
+   "result": "PASS",
+   "count": "19/0",
+   "seconds": 0
+  },
+  {
+   "gate": "ana-gates-self",
+   "result": "PASS",
+   "count": "35/0",
+   "seconds": 1
+  },
+  {
+   "gate": "hb1",
+   "result": "PASS",
+   "count": "11/0 (0 skip)",
+   "seconds": 1
+  },
+  {
+   "gate": "doc-budget",
+   "result": "PASS",
+   "count": "bootstrap 39238 / 50000 · standing pages 183455 / 184000",
+   "seconds": 1
+  },
+  {
+   "gate": "public-scan-self",
+   "result": "PASS",
+   "count": "35/0",
+   "seconds": 0
+  },
+  {
+   "gate": "round-self",
+   "result": "PASS",
+   "count": "24/0",
+   "seconds": 0
+  },
+  {
+   "gate": "public-scan",
+   "result": "PASS",
+   "count": "0 hits in 0 files",
+   "seconds": 1
+  },
+  {
+   "gate": "test-doc-budget",
+   "result": "PASS",
+   "count": "test-doc-budget: every case red, the baseline and the allowed moves green",
+   "seconds": 14
+  }
+ ],
+ "totals": {
+  "PASS": 16,
+  "FAIL": 0,
+  "SKIPPED": 0,
+  "NOT RUN": 0
+ },
+ "seconds": 34,
+ "ci": {
+  "head": "cca8d0c",
+  "runs": [
+   "2841/0",
+   "2841/0",
+   "2841/0"
+  ],
+  "gates": "success"
+ },
+ "egress": "12 findings (rule-missed 4, half-done 4, stale-doc 4) in 3 passes (Fable 11, Fable 1, Fable clean), 12 fixed, 0 listed"
+}
