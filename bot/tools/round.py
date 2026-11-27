@@ -2,16 +2,17 @@
 """tools/round.py v1.0.0 -- the round record (RULINGS D-145, 27 Nov 2026; HARNESS "The round", "One place for each fact").
 
 A round's figures are written once. tools/gates.sh writes OUT/record.json beside OUT/summary.md (`record`, after every gate);
-`save` commits it as docs/round-record.json, the round's one source, and renders its copies from it: STATUS's generated blocks
-and the round's CHANGELOG entry's *Gates:* and *Egress:* lines; `render pr` prints the PR's gate section. `check` fails when a
-copy differs from a fresh render or a CHANGELOG entry leaves its template (tools/doc-budget.sh runs it, so do tools/gates.sh
-and CI). STATUS's versions come from the code (tools/doc-budget.sh checks them) and its deploy state from git and GitHub.
+`save` writes it as docs/round-record.json, the round's one source (the lead commits it), and renders its copies from it:
+STATUS's generated blocks and the round's CHANGELOG entry's *Gates:* and *Egress:* lines; `render pr` prints the PR's gate
+section. `check` fails when a copy differs from a fresh render (the versions block from the code too; with
+DOC_BUDGET_ROOT_DRIFT=warn a newer root release only warns) or a CHANGELOG entry leaves its template; tools/doc-budget.sh runs
+it, so do tools/gates.sh and CI. STATUS's deploy state comes from git and GitHub and is not checked (it needs the network).
 
   round.py record OUT --branch B --head H --dirty 0|1 --base REF --merge-base SHA --seconds N --flags F --changed N --changed-bot N
-  round.py save OUT [--ci] [--egress TEXT] [--note TEXT]   (--ci reads tools/ci-status.sh on HEAD; CI must have completed)
+  round.py save OUT [--ci] [--egress TEXT] [--note TEXT]   (--ci reads tools/ci-status.sh on HEAD: pushed, CI completed)
   round.py status            STATUS's three blocks: versions, deploy state, gates
   round.py render line|gates|pr
-  round.py check             exit 1 when a copy drifted or an entry left the template
+  round.py check             exit 1 when a copy drifted or an entry left the template (a WARN line does not fail)
   round.py --self-test
 """
 import datetime
@@ -311,6 +312,9 @@ def _field(entry_lines, name):
 
 def save(out, paths=HERE, ci=None, egress=None, note=None, today=None, prs=None, data_prs=None):
     rec = json.loads(read(os.path.join(out, 'record.json')))
+    prev = load_record(paths)
+    if not egress and prev and prev.get('branch') == rec.get('branch') and prev.get('egress'):
+        egress = prev['egress']           # a later save on the branch keeps the review's line unless a new one is given
     if ci:
         rec['ci'] = ci
     if egress:
@@ -350,8 +354,12 @@ def status(paths=HERE, today=None, prs=None, data_prs=None):
     write(paths.status, text)
 
 
+ROOTREL = re.compile(r"the root's release is client v[0-9.?]+ / srv-[0-9.?]+")
+
+
 def check(paths=HERE):
-    """[(ok, message)]: the record's copies and the CHANGELOG's template. tools/doc-budget.sh prints them."""
+    """[(ok, message)]: the record's copies, the versions block and the CHANGELOG's template; ok None = a warning.
+    tools/doc-budget.sh prints them."""
     res = []
     rec = load_record(paths)
     st = read(paths.status) if os.path.exists(paths.status) else ''
@@ -359,6 +367,15 @@ def check(paths=HERE):
     for name in BLOCKS:
         if get_block(st, name) is None:
             res.append((False, 'STATUS has no generated %s block (%s)' % (name, ' ... '.join(_marks(name)))))
+    have_v, want_v = get_block(st, 'versions'), render_versions(paths)
+    if have_v is not None and have_v != want_v:
+        if os.environ.get('DOC_BUDGET_ROOT_DRIFT') == 'warn' and ROOTREL.sub('', have_v) == ROOTREL.sub('', want_v):
+            res.append((None, "STATUS's versions block names another root release than the root's (main released since the last "
+                              "bot round, which re-renders it)"))
+        else:
+            res.append((False, "STATUS's versions block differs from the code's versions: tools/round.py status"))
+    elif have_v is not None:
+        res.append((True, "STATUS's versions block renders the code"))
     es = entries(cl)
     for start, lines in es:
         head = re.sub(r'^- \*\*(.*?)\*\*.*$', r'\1', lines[0])[:60]
@@ -389,8 +406,8 @@ def check(paths=HERE):
                     % (rec.get('branch'), rec.get('head'))))
     else:
         res.append((True, 'the CHANGELOG entry carries the round record\'s gate line'))
-        if rec.get('egress') and _field(carriers[0], 'Egress') != rec['egress']:
-            res.append((False, "the CHANGELOG entry's *Egress:* differs from the round record's"))
+        if _field(carriers[0], 'Egress') != rec.get('egress'):
+            res.append((False, "the CHANGELOG entry's *Egress:* is not the round record's (tools/round.py save --egress)"))
     return res
 
 
@@ -485,6 +502,26 @@ def self_test():
         save(out, P, today=datetime.date(2026, 1, 2), prs=[], data_prs=[])
         ok('`bcd2345`' in read(P.changelog) and all(o for o, m in check(P)), 'save: a second save on the branch re-renders')
         ok(get_block(read(P.status), 'versions').startswith('**Bot v9.8.7**'), 'the versions block starts with the bot')
+        # the versions block: a hand edit fails; a newer root release only warns outside a pull request
+        st = read(P.status)
+        write(P.status, st.replace('**Bot v9.8.7**', '**Bot v9.9.9**'))
+        ok(any(o is False and 'versions block differs' in m for o, m in check(P)), 'check: a hand-edited versions block fails')
+        write(P.status, st)
+        write(os.path.join(tmp, 'elysium-vtes-bord.html'), "const VERSION='2.6.1';\n")
+        write(os.path.join(tmp, 'elysium-server.js'), "const VERSION = '2.6.1';\n")
+        status(P, today=datetime.date(2026, 1, 2), prs=[], data_prs=[])
+        write(os.path.join(tmp, 'elysium-vtes-bord.html'), "const VERSION='2.6.2';\n")
+        os.environ['DOC_BUDGET_ROOT_DRIFT'] = 'warn'
+        warned = check(P)
+        del os.environ['DOC_BUDGET_ROOT_DRIFT']
+        ok(any(o is None for o, m in warned) and all(o is not False for o, m in warned), 'check: a newer root release warns in the warn mode')
+        ok(any(o is False and 'versions block differs' in m for o, m in check(P)), 'check: ... and fails on a pull request')
+        write(os.path.join(tmp, 'elysium-vtes-bord.html'), "const VERSION='2.6.1';\n")
+        # the egress line: typed by hand with no egress in the record fails
+        r3 = load_record(P)
+        r3.pop('egress', None)
+        write(P.record, json.dumps(r3))
+        ok(any(o is False and '*Egress:* is not' in m for o, m in check(P)), "check: an egress line the record does not carry fails")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     for f in fails:
@@ -537,8 +574,8 @@ def main(argv):
     if cmd == 'check':
         res = check()
         for o, m in res:
-            print(('ok    ' if o else 'FAIL  ') + m)
-        return 0 if all(o for o, m in res) else 1
+            print(('ok    ' if o else 'WARN  ' if o is None else 'FAIL  ') + m)
+        return 0 if all(o is not False for o, m in res) else 1
     print('round.py: unknown command %s' % cmd, file=sys.stderr)
     return 2
 

@@ -171,13 +171,11 @@ releases beside it: "Shared with main" below.
 | Root `CLAUDE.md` | shared: each side edits its own lines | the root | — |
 
 ## The three environments
-- **Online** (the server): the ledger narrates every resource change; `tally` and `bounty` are relayed; the bot is a remote
-  player. The arena spawns this server.
+- **Online** (the server, which the arena spawns): the ledger narrates every resource change; `tally` and `bounty` are relayed.
 - **Hotseat** (the client's `hotBridge`, no server): the bot seat is a remote player inside one HTML file; the bridge fans
   `log` / `say` / `chat` / `board` / `fx` / `tally` / `bounty` (after the send since client v2.6.177); the no-server net (`joined.srv`
   starts `hotseat-bridge`) handles ousts and bounties, and the tally net rebuilds a missing foreign tally from the frozen lines
-  (a belt timer of 60 % of askSecs, min 1.2 s). A bot spawned without `deckName` infers its deck from the object / printed name /
-  exact list (explicit wins; the built-in default gets none). The browser load: `o.transport` injects the dial, `o.cardfxData` the
+  (a belt timer of 60 % of askSecs, min 1.2 s). A bot spawned without `deckName` infers its deck (explicit wins). The browser load: `o.transport` injects the dial, `o.cardfxData` the
   parsed fx; suite section 75 is the browser gate (a vm sandbox with zero Node globals). The sim and the hotseat gate drive this
   bridge headless. A known asymmetry, left in deliberately (70g): with *Pool to predator* OFF a bot predator marks the human out
   and takes the 6 pool by itself offline (the no-server net keys on `joined.srv`), while online it does neither.

@@ -50,10 +50,11 @@ it (a 403 on CONNECT), clone `dtagent2000/VTES-Elysium-data` beside the monorepo
   The suite ×3 is CI's, the release gate: `bash tools/ci-status.sh` prints each run's count and the sha256 it ran. When CI cannot
   run, `tools/gates.sh --suite N` runs it here, each run in a frozen snapshot (`bot/` copied to scratch with the root's client one
   level up for 154f, `timeout 900`, ~300–600 s a run). The heap flag is not optional: at 4 GB the suite dies in section 180 (C6).
-- **The round record** (D-145) — after the round's last gates, with CI green on their head and the round's CHANGELOG entry
-  written (`*Gates:* (pending)`, `*Egress:* (pending)`): `python3 tools/round.py save DIR --ci --egress "<line>"` (`--note "<why>"`
-  for a FAIL the round explains) commits `docs/round-record.json` and renders STATUS's blocks and the entry's two lines; a later
-  save on the same branch renders them again. `round.py render pr DIR` prints the PR's gate section, `round.py status` re-renders
+- **The round record** (D-145) — after the round's last gates (`--out DIR`) and with the round's CHANGELOG entry written
+  (`*Gates:* (pending)`, `*Egress:* (pending)`), before committing: `python3 tools/round.py save DIR --egress "<line>"` (`--note
+  "<why>"` for a FAIL the round explains) writes `docs/round-record.json` and renders STATUS's blocks and the entry's two lines.
+  Push; when CI is green on HEAD, `round.py save DIR --ci` adds CI's suite runs (a later save on the branch keeps the egress
+  line unless a new one is given). `round.py render pr DIR` prints the PR's gate section, `round.py status` re-renders
   STATUS's versions and deploy blocks (after a release or a refresh of the copies), `round.py check` is doc-budget's section 4.
   A budget that runs out: borrow in `tools/doc-budgets.txt` (one down, one up) or archive (HARNESS "Upkeep").
 - **CI** (`.github/workflows/bot-gates.yml`, D-109): every PR that touches `bot/` or the bundle, every such push to `main` and a

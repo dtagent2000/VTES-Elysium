@@ -14,9 +14,9 @@
 - L-11 **Keep the rejected alternative as a document, not a code path** (16 Sep, the helper gate).
 - L-12 **Ask what the bot CANNOT do, not only which cards are inert** (18 Sep: a rule about a card's cost usually needs an action the bot lacks).
 - L-93 **A card that gets its consumer leaves the rules that held it** (18 Nov): Sudden Reversal got `_srFor`, but the dead-card rule still held it dead and the discard phase cycled it, with the suite green. When a held card plays, grep every rule that names it or its class as held, dead or skipped, and watch it fire in a sim.
-- L-96 **A ledger's FULL is about modes, not conditions** (18 Nov): two cards read FULL while their 'Only usable during an action directed at you' was read nowhere, and most of their intercept plays were illegal. A condition sentence is a class: tag it in the compiler, ask it in every finder, and let the ledger mark a card with the sentence and no tag PARTIAL.
+- L-96 **A ledger's FULL is about modes, not conditions** (18 Nov): two cards read FULL while their 'Only usable during an action directed at you' was read nowhere. A condition sentence is a class: tag it in the compiler, ask it in every finder, and let the ledger mark a card with the sentence and no tag PARTIAL.
 - L-100 **Reach is not fidelity** (25 Nov): 77/77 playable held a missing rider, two dropped +1s, an unpaid cost and a play with no target: the coverage tool sees the keys an entry carries, never a clause it leaves out. Count fidelity apart (`cardfx-fidelity.json`, CARDS.md's exact).
-- L-98 **A pattern that finds an effect's words also finds them negated** (20 Nov): "cannot strike: combat ends" compiled as the player's own strike, and the same words appeared as a time and as the opponent's cost. Read a sentence's subject and its "cannot" before its verb; a pattern refuses what it does not read whole; removing a misread key can expose a card it hid from a finder.
+- L-98 **A pattern that finds an effect's words also finds them negated** (20 Nov): "cannot strike: combat ends" compiled as the player's own strike. Read a sentence's subject and its "cannot" before its verb; a pattern refuses what it does not read whole; removing a misread key can expose a card it hid from a finder.
 
 ## Tests that lie
 - L-13 **A hook called by a unit test proves the hook, not its call site** (16 Oct, twice in one release: Arcane Library's lock, the probe reservation). Test a phase effect through the phase.
@@ -38,7 +38,7 @@
 ## Timing
 - L-25 **No await between a line and the window it opens** (17 Oct): a 150 ms sleep before the window lost answers at pace 0 for four weeks (v0.6.144 → v0.6.206; the pacing sleeps after a window stay); two windows in three ran out their clock.
 - L-26 **A guard about what the table has seen keys on the line the answer answers, not on my queue** (17 Oct).
-- L-92 **A send can deliver before it returns** (14 Nov): the hotseat bridge handed a line to the other bots inside the actor's `ws.send`, so an answer came before the line was marked sent and was taken for stale. Ask the state (the line has left the queue) at the answer's time, and never send inside a send (`_drain`). Since client v2.6.177's queued bridge it stays open only on a synchronous relay at pace 0; a microtask, not a macrotask, is the order the bots need.
+- L-92 **A send can deliver before it returns** (14 Nov): the hotseat bridge handed a line to the other bots inside the actor's `ws.send`, so an answer came before the line was marked sent. Ask the state (the line has left the queue) at the answer's time and never send inside a send (`_drain`); client v2.6.177's queued bridge leaves it open only on a synchronous relay at pace 0; a microtask is the order the bots need.
 - L-27 **A wait's clock starts when its question reaches the wire; a send queue is not a timeline** (15–16 Oct).
 - L-28 **Time the whole flow, not the wait you changed** (9 Oct); a shortened wait that was somebody's only window becomes an asked step.
 - L-29 **Pace the thing the rule is about** (17 Oct, the chat beat): the beat was separating everything, not two bubbles.
@@ -76,7 +76,7 @@
 - L-91 **A mirror bench cannot fire a knob's half that needs two seats on it** (14 Nov, round B): the owner's defence needs the
   owner and a burner both at 1; a bench pinned to the owner's deck measured it. Ask which seats each half needs.
 - L-94 **On the sim table a moved clone moves the draws** (18 Nov): an fx clone sent a beat earlier shifted the bridge's later draws and 28 of 240 matches DIVERGED with no decision changed. Predict a timing change as DIVERGED; ablate before reading one as a decision.
-- L-97 **A card shares a key only through the path that would play it** (19 Nov): zero-vtes's definitions share building blocks, while our single-card keys carry the actor, the window and the terms in their consumer; of 220 candidates 8 were carried as read. The ledger's FULL reads a key's name, not the path (L-96's case, by type): count reach on the path, then grade by text.
+- L-97 **A card shares a key only through the path that would play it** (19 Nov): our single-card keys carry the actor, the window and the terms in their consumer, so of 220 candidates sharing a sample card's effect 8 were carried as read. The ledger's FULL reads a key's name, not the path (L-96, by type): count reach on the path, then grade by text.
 
 ## Contracts, parsers and state
 - L-55 **A parser and its phrase are one contract; move the phrase's tier and the parser goes deaf** (22 Sep: six days of series with no combat handshake).
@@ -94,7 +94,7 @@
 - L-67 **A name variant in the curated layer is a silent miss for the other spelling** (19 Oct, Pentex); a comment that says "client-identical" is a claim — pin it with a test against the client's own code (19 Oct).
 - L-68 **A trailing `//` comment is a statement killer** (26 Sep); never tail-append to a line ending in a comment.
 - L-88 **What one mechanism keeps about a card belongs in the bot's own map, keyed by the card's id, not on the card** (13 Nov): a field stored on the vampire rode into every decide row and the pub and changed the footprint; a Map by id gave IDENTICAL. Tokens likewise derive from the fields the rules read (`_memoMap`).
-- L-89 **A flow that can be superseded stops at every await, not at one step** (13 Nov): a combat checked its token in one step while its other awaits still spoke, wrote and waited. Read the token at entry and check it after EVERY await; end the old flow's pending waits when the new one starts; prove it by superseding the real flow at each wait it passes (166e, 166i).
+- L-89 **A flow that can be superseded stops at every await, not at one step** (13 Nov): read the token at entry and check it after EVERY await; end the old flow's pending waits when the new one starts; prove it by superseding the real flow at each wait it passes (166e, 166i).
 - L-95 **New per-game state is reset in `started` in the same commit** (18 Nov; the egress class five rounds running): a flag a feature adds lives on into the next game at the table. Add it to the `started` reset beside its first use, and check that a new game starts clean.
 
 ## Tools and ways of working

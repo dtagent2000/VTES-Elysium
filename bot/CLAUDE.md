@@ -33,7 +33,7 @@ bundle (`elysium-bot.js`, `elysium-cardfx.json/.js`, `elysium-twd-profile.json/.
 
 ## Gates (the one complete list; HARNESS and the root CLAUDE.md point here; STATUS has the last known green numbers)
 - `bash tools/gates.sh` runs the fixed local gates below (two more when the diff touches them; `--sim` the footprint) and writes
-  the PR's table and the round record (`tools/round.py save` commits it, D-145); the rest by hand.
+  the PR's table and the round record (`tools/round.py save` writes it into `docs/`, D-145); the rest by hand.
 - `python3 tools/public-scan.py` — the public repository's name and quote scan on the lines a change adds (D-141, D-142);
   `tools/gates.sh` and CI run it, `--tree` reports the whole tree.
 - `test-bot-logic.js` ×3: CI's three parallel runs on the PR are the release gate (D-139; `tools/ci-status.sh` reads them; CI runs

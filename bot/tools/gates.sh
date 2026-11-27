@@ -15,8 +15,8 @@
 #   --suite N  N full suite runs, each in a frozen snapshot (6 GB heap, timeout 900): only when CI cannot run (D-139)
 #   --all      both when-hit gates, whatever the diff (the flags stay flags)
 # Output: OUT/summary.md (the PR's table: a row per gate, the release bytes' sha256, the totals; rewritten after every gate, so a
-# poll sees progress), OUT/record.json (the same run as the round record: `tools/round.py save OUT` commits it and renders its
-# copies, D-145) and OUT/<gate>.log. Exit 1 on a FAIL or a SKIPPED (a gate that skips did not run). OUT defaults to
+# poll sees progress), OUT/record.json (the same run as the round record: `tools/round.py save OUT` writes it into docs/ and
+# renders its copies, D-145) and OUT/<gate>.log. Exit 1 on a FAIL or a SKIPPED (a gate that skips did not run). OUT defaults to
 # /tmp/gates-<branch>-<time> and is never inside the repository. Run --sim, --smokes or --suite in the background and poll.
 # Usage: bash bot/tools/gates.sh [--base REF] [--out DIR] [--sim] [--smokes] [--suite N] [--all]
 set -u
@@ -56,7 +56,7 @@ count(){   # the gate's own count line, as its tool prints it (a composite gate'
   c=$(grep -oE '[0-9]+ precons, no problems' "$l" | tail -1); [ -n "$c" ] && { echo "$c"; return; }
   c=$(grep -oE '^[0-9]+ matches: .*' "$l" | tail -1); [ -n "$c" ] && { echo "$c"; return; }
   c=$(grep -oE '^gates: (PASS|FAIL) \([0-9]+ of [0-9]+\)' "$l" | tail -1); [ -n "$c" ] && { echo "$c"; return; }
-  grep -qE '^doc-budget: PASS' "$l" && { grep -oE '(standing pages|bootstrap) [0-9]+ / [0-9]+' "$l" | head -2 | paste -sd'|' | sed 's/|/ · /'; return; }
+  grep -qE '^doc-budget: PASS' "$l" && { grep -oE '(standing pages|bootstrap) [0-9]+ / [0-9]+' "$l" | head -2 | paste -sd'|' - | sed 's/|/ · /'; return; }
   c=$(grep -oE '[0-9]+ problems? \([0-9]+ errors?' "$l" | tail -1); [ -n "$c" ] && { echo "$c"; return; }
   tail -1 "$l" | cut -c1-80
 }
@@ -77,7 +77,7 @@ summary(){
     --dirty "$( { git -C "$R" diff --quiet HEAD 2>/dev/null && [ -z "$(git -C "$R" ls-files --others --exclude-standard)" ]; } && echo 0 || echo 1)" \
     --base "$base" --merge-base "$(git -C "$R" rev-parse --short "$MB")" --seconds "$(( $(date +%s) - t_start ))" --flags "$flags" \
     --changed "$(printf '%s\n' "$changed" | grep -c .)" --changed-bot "$(printf '%s\n' "$changed" | grep -c '^bot/')" \
-    || echo "gates.sh: round.py record failed: OUT/record.json not written" >&2
+    || { rm -f "$OUT/record.json"; echo "gates.sh: round.py record failed: OUT/record.json removed, so a save refuses" >&2; }
 }
 row(){   # row GATE RESULT COUNT SECONDS -- the PR table's row and the record's (OUT/.rows.tsv)
   printf '| %s | %s | %s | %s s |\n' "$1" "$2" "$3" "$4" >> "$ROWS"

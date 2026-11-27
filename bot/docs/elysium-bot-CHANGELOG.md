@@ -5,15 +5,18 @@ One entry a round, a release or not, on this template and at most 1,500 bytes (`
 
     - **vX.Y.Z, or the round's name (date[, bot vX.Y.Z, no bot change]; PR #n)** — what changed and why, in a few sentences,
       with the RULINGS lines and the BOARD line it answers.
-      *Gates:* (pending) — `tools/round.py save` renders it from `docs/round-record.json`. *Egress:* <n> findings (<classes>)
-      in <p> passes, <fixed> fixed, <listed> listed. *Report:* `reports/REPORT-<round>-<date>.md`.
+      *Gates:* (pending)
+      *Egress:* (pending)
+      *Report:* `reports/REPORT-<round>-<date>.md`.
+
+The two pending lines are `tools/round.py save`'s to render, from `docs/round-record.json`; each field starts its own line.
 
 The entries of 9 Sep – 27 Nov 2026 (bot v0.1 to v0.6.243 and the rounds without a release to C1) are frozen in
 `history/elysium-bot-CHANGELOG-to-v0.6.243.md`.
 
 - **The documentation diet (27 Nov 2026, bot v0.6.243, no bot change; PR #119)** — D-145: the owner's go-ahead on Claude's six
   steps after C1, and the recommended options on the round's card. A round's figures are written once, in the round record
-  (`tools/gates.sh` writes it; `tools/round.py` commits it, renders STATUS's gates block, this entry's two lines and the PR's
+  (`tools/gates.sh` writes it; `tools/round.py` saves it, renders STATUS's gates block, this entry's two lines and the PR's
   gate section, and fails on drift); this template, at most 1,500 bytes; STATUS generated but for Next; RULINGS holds the rule
   (every id kept); the budget a ceiling, one in, one out (CI fails a rise of the total with no new D-line); the standing pages
   207 → about 183 KB, nothing binding cut; the zero-vtes readings a section of the round's report; the old CHANGELOG, the

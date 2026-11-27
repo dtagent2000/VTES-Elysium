@@ -16,9 +16,9 @@ Scripts: `tools/setup.sh` (KRCG's data, zero-vtes at its pin), `tools/gates.sh` 
 one where it keeps a big read out of the lead's context or where independent eyes are the point (the review).
 
 ## One place for each fact (D-142, D-145)
-- **The round record**, `docs/round-record.json`: a round's figures, written once by `tools/gates.sh`; `tools/round.py save` commits
-  it with CI's suite runs and the egress line and renders its copies (STATUS's gates block, the CHANGELOG entry's *Gates:* and
-  *Egress:* lines, the PR's gate section); `round.py check`, in `tools/doc-budget.sh`, fails on a copy that differs.
+- **The round record**, `docs/round-record.json`: a round's figures, written once by `tools/gates.sh`; `tools/round.py save` writes
+  it into `docs/` with CI's suite runs and the egress line and renders its copies (STATUS's gates block, the CHANGELOG entry's
+  *Gates:* and *Egress:* lines, the PR's gate section); `round.py check`, in `tools/doc-budget.sh`, fails on a copy that differs.
 - **STATUS** holds the state: its versions and deploy blocks are generated (`round.py status`), Next and Not yet consumed are
   written by hand.
 - **The CHANGELOG entry** says what the round changed and why, on its template, at most 1,500 bytes (`round.py check`).
@@ -52,11 +52,13 @@ of other projects.
 5. **Commit and push as soon as a step is green** — context can run out. Small commits, English messages, the version in the
    message when it is a release.
 6. **Egress review** (fresh context, until clean: below). Its findings are fixed or listed in the PR body.
-7. **Docs:** the CHANGELOG entry on its template with `*Gates:* (pending)` and `*Egress:* (pending)`; the round's report; STATUS's
-   Next by hand; the BOARD line deleted, found lines added (a card problem: `SWEEP-REGISTER.md`, D-135); RULINGS when the owner
-   ruled (by role, the words to the data repo: D-141) or a rules reading changed; LESSONS only for a new CLASS of lesson; a HANDOFF
-   when main must act. Then, with CI green on the gates' head, `python3 tools/round.py save DIR --ci --egress "<line>"` (and
-   `--note` for a FAIL the round explains): the record committed, its copies rendered. `bash tools/doc-budget.sh` green.
+7. **Docs**, after the last gates run (`--out DIR`): the CHANGELOG entry on its template with `*Gates:* (pending)` and `*Egress:*
+   (pending)`; the round's report; STATUS's Next by hand; the BOARD line deleted, found lines added (a card problem:
+   `SWEEP-REGISTER.md`, D-135); RULINGS when the owner ruled (by role, the words to the data repo: D-141) or a rules reading
+   changed; LESSONS only for a new CLASS of lesson; a HANDOFF when main must act. Before committing them, `python3 tools/round.py
+   save DIR --egress "<line>"` (`--note` for a FAIL the round explains) writes the record and renders its copies, so no pending
+   line is pushed; `bash tools/doc-budget.sh` green; commit and push. When CI is green on that head, `round.py save DIR --ci`
+   (it reads CI on HEAD and keeps the egress line), commit and push again.
 8. **PR against `main`**: at the top what the round needs from the owner, then what changed and why in a few lines, the gate
    section (`python3 tools/round.py render pr DIR`), the sim footprint when it ran, and "anything I'm unsure about". CI must be
    green before the owner merges (a flake, or a red the PR did not cause: re-run once and say so, HOWTO "CI").
@@ -126,9 +128,8 @@ Main replies in `client/docs/handoffs/REPLY-to-bot-*.md`; a reply is consumed in
 handoff moves to docs/history/handoffs/ (`docs/history/README.md`). Never both halves in one PR.
 
 ## The handshake with the client's versions
-The read-only copies in `bot/` are refreshed from main's release (where each lives: ARCHITECTURE "Shared with main"), as a
-commit of their own ("copies: client vX / srv-Y"). The canary runs against both the copies and main's release (`tools/gates.sh`:
-canary, canary-root). STATUS's versions block names both; `tools/doc-budget.sh` checks them.
+The read-only copies in `bot/` are refreshed from main's release (ARCHITECTURE "Shared with main") in a commit of their own
+("copies: client vX / srv-Y"), then `tools/round.py status`; the canary runs against both (`tools/gates.sh`).
 
 ## Upkeep (between rounds, or when a check says so)
 - **The budget is a ceiling, one in, one out** (`tools/doc-budgets.txt`, D-145): a page that runs out borrows from another (one

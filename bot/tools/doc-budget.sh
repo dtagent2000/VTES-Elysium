@@ -25,6 +25,9 @@ bad(){ printf 'FAIL  %s\n' "$*"; fail=1; }
 BUD="$B/tools/doc-budgets.txt"
 [ -f "$BUD" ] || { echo "FAIL  no tools/doc-budgets.txt"; echo "doc-budget: FAIL"; exit 1; }
 lim(){ awk -v k="$1" '!/^#/ && $1 == k {print $2; exit}' "${2:-$BUD}"; }            # lim KEY [FILE]
+nonum=$(awk '!/^#/ && NF >= 1 && $2 !~ /^[0-9]+$/ {print $1}' "$BUD")                # every line's budget is a number
+[ -z "$nonum" ] || { echo "FAIL  tools/doc-budgets.txt: no number for $(echo $nonum)"; echo "doc-budget: FAIL"; exit 1; }
+for k in total bootstrap; do [ -n "$(lim "$k")" ] || { echo "FAIL  tools/doc-budgets.txt has no '$k' line"; echo "doc-budget: FAIL"; exit 1; }; done
 pagesum(){ awk '!/^#/ && NF >= 2 && $1 != "total" && $1 != "bootstrap" {s += $2} END {print s + 0}' "${1:-$BUD}"; }
 total_lim=$(lim total); boot_lim=$(lim bootstrap)
 PAGES=$(awk -v R="$R" '!/^#/ && NF >= 2 && $1 != "total" && $1 != "bootstrap" {print R "/" $1 ":" $2}' "$BUD")
@@ -48,6 +51,8 @@ else
   if [ ! -s "$old" ]; then
     ok "the base has no tools/doc-budgets.txt: this change brings it (the rise check starts with the next)"
   else
+    gone=$(awk '!/^#/ && NF >= 2 {print $1}' "$old" | while read -r k; do [ -n "$(lim "$k")" ] || printf '%s ' "$k"; done)
+    [ -z "$gone" ] || bad "a budget the base has is gone from tools/doc-budgets.txt: ${gone% } (a page leaves the ceiling only by a change of this check)"
     newids=$(comm -13 <(git -C "$R" show "$base:bot/docs/RULINGS.md" 2>/dev/null | grep -oE '^- \*\*D-[0-9]+\*\*' | grep -oE 'D-[0-9]+' | sort -u) \
                       <(grep -oE '^- \*\*D-[0-9]+\*\*' "$D/RULINGS.md" | grep -oE 'D-[0-9]+' | sort -u))
     for k in total bootstrap; do

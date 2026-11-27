@@ -102,7 +102,10 @@ green "a page borrows from another (HOWTO from $donor, one down, one up)"
 based; printf '%s\n' '- **D-999** (2026-12-31, the owner) — a test ruling.' >> "$T/bot/docs/RULINGS.md"
 setbud total $(( $(bud total) + 1000 )) D-999; setbud bot/docs/RULINGS.md $(( $(bud bot/docs/RULINGS.md) + 1000 )); commit raise
 green "the total rises with a new D-line, and a page with it"
+based; sed -i.bak '/^bot\/docs\/HOWTO\.md /d' "$BUD"; pad "$T/bot/docs/HOWTO.md" 5000; commit drop;   run "a page's line removed from the budgets" "is gone from"
 BASEARG=""
+fresh; sed -i.bak '/^total /d' "$BUD";                                                         run "the total's line removed" "has no 'total' line"
+fresh; sed -i.bak 's/^\(bot\/docs\/BOARD\.md  *\)[0-9]*/\1x/' "$BUD";                    run "a budget that is not a number" "no number for"
 rm -rf "$W"
 [ "$bad" = 0 ] && echo "test-doc-budget: every case red, the baseline and the allowed moves green" || echo "test-doc-budget: FAIL"
 exit $bad

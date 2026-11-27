@@ -12,9 +12,10 @@ to the recommended option of each question (the words: the private data repo's R
 
 ## What was built
 1. **One round record.** `tools/gates.sh` writes `record.json` beside its summary; `tools/round.py` v1.0.0 (`record`, `save`,
-   `status`, `render`, `check`, a self-test of 17 checks in `tools/gates.sh` and CI) commits it as `docs/round-record.json` with
-   CI's suite runs and the egress line, and renders its copies: STATUS's gates block, the CHANGELOG entry's *Gates:* and *Egress:*
-   lines, the PR's gate section. `round.py check`, run by `tools/doc-budget.sh`, fails when a copy differs.
+   `status`, `render`, `check`, a self-test in `tools/gates.sh` and CI) writes it as `docs/round-record.json` with CI's suite
+   runs and the egress line, and renders its copies: STATUS's gates block, the CHANGELOG entry's *Gates:* and *Egress:*
+   lines, the PR's gate section. `round.py check`, run by `tools/doc-budget.sh`, fails when a copy differs (STATUS's versions
+   block against the code too).
 2. **Short CHANGELOG entries.** A fresh working CHANGELOG on a template, at most 1,500 bytes an entry (checked); the 198 entries
    of 9 Sep – 27 Nov (512 KB) are frozen verbatim in `docs/history/elysium-bot-CHANGELOG-to-v0.6.243.md`.
 3. **STATUS generated for the most part:** the versions (from the code), the deploy state (from git and GitHub) and the gates
